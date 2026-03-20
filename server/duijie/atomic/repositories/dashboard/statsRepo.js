@@ -1,0 +1,97 @@
+const db = require('../../../config/db');
+
+function buildProjectFilter(auth) {
+  if (auth.role === 'client' && auth.clientId) {
+    return { where: 'AND p.client_id = ?', params: [auth.clientId] };
+  }
+  if (auth.role === 'member' && auth.userId) {
+    return { where: 'AND (p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?))', params: [auth.userId, auth.userId] };
+  }
+  return { where: '', params: [] };
+}
+
+module.exports = async (auth = {}) => {
+  const pf = buildProjectFilter(auth);
+  const isClient = auth.role === 'client';
+
+  const [[projects]] = await db.query(
+    `SELECT COUNT(*) as total, SUM(status = 'in_progress') as active, SUM(status = 'completed') as completed
+     FROM duijie_projects p WHERE p.is_deleted = 0 ${pf.where}`, pf.params
+  );
+
+  let clientsTotal = 0, stageMap = {}, contractStats = { total: 0, totalAmount: 0, activeCount: 0, activeAmount: 0 };
+  let overdueCount = 0, upcomingCount = 0, recentFollowUps = [], recentContracts = [];
+
+  if (!isClient) {
+    const [[clients]] = await db.query('SELECT COUNT(*) as total FROM duijie_clients WHERE is_deleted = 0');
+    clientsTotal = clients.total || 0;
+    const [stageDist] = await db.query('SELECT COALESCE(stage, "potential") as stage, COUNT(*) as count FROM duijie_clients WHERE is_deleted = 0 GROUP BY COALESCE(stage, "potential")');
+    for (const row of stageDist) stageMap[row.stage] = row.count;
+
+    const [[cs]] = await db.query(
+      `SELECT COUNT(*) as total, COALESCE(SUM(amount), 0) as totalAmount,
+       SUM(status = 'active') as activeCount, COALESCE(SUM(CASE WHEN status = 'active' THEN amount ELSE 0 END), 0) as activeAmount
+       FROM duijie_contracts`
+    );
+    contractStats = cs;
+
+    const [[of]] = await db.query(
+      `SELECT COUNT(DISTINCT f.client_id) as count FROM duijie_follow_ups f
+       INNER JOIN (SELECT client_id, MAX(id) as max_id FROM duijie_follow_ups GROUP BY client_id) latest ON f.id = latest.max_id
+       WHERE f.next_follow_date IS NOT NULL AND f.next_follow_date < CURDATE()`
+    );
+    overdueCount = of.count || 0;
+    const [[uf]] = await db.query(
+      `SELECT COUNT(DISTINCT f.client_id) as count FROM duijie_follow_ups f
+       INNER JOIN (SELECT client_id, MAX(id) as max_id FROM duijie_follow_ups GROUP BY client_id) latest ON f.id = latest.max_id
+       WHERE f.next_follow_date IS NOT NULL AND f.next_follow_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 3 DAY)`
+    );
+    upcomingCount = uf.count || 0;
+
+    [recentFollowUps] = await db.query(
+      `SELECT f.id, f.content, f.follow_type, f.created_at, c.name as client_name, c.id as client_id
+       FROM duijie_follow_ups f INNER JOIN duijie_clients c ON c.id = f.client_id AND c.is_deleted = 0
+       ORDER BY f.created_at DESC LIMIT 5`
+    );
+    [recentContracts] = await db.query(
+      `SELECT co.id, co.title, co.amount, co.status, co.created_at, c.name as client_name, c.id as client_id
+       FROM duijie_contracts co INNER JOIN duijie_clients c ON c.id = co.client_id AND c.is_deleted = 0
+       ORDER BY co.created_at DESC LIMIT 5`
+    );
+  }
+
+  const [[tasks]] = await db.query(
+    `SELECT COUNT(*) as total, SUM(t.status = 'todo') as pending, SUM(t.status = 'done') as done
+     FROM duijie_tasks t INNER JOIN duijie_projects p ON t.project_id = p.id
+     WHERE t.is_deleted = 0 AND p.is_deleted = 0 ${pf.where}`, pf.params
+  );
+
+  return {
+    totalProjects: projects.total || 0,
+    activeProjects: Number(projects.active) || 0,
+    completedProjects: Number(projects.completed) || 0,
+    totalClients: clientsTotal,
+    totalTasks: tasks.total || 0,
+    pendingTasks: Number(tasks.pending) || 0,
+    completedTasks: Number(tasks.done) || 0,
+    clientStages: {
+      potential: stageMap.potential || 0,
+      intent: stageMap.intent || 0,
+      signed: stageMap.signed || 0,
+      active: stageMap.active || 0,
+      lost: stageMap.lost || 0,
+    },
+    contracts: {
+      total: contractStats.total || 0,
+      totalAmount: Number(contractStats.totalAmount) || 0,
+      activeCount: Number(contractStats.activeCount) || 0,
+      activeAmount: Number(contractStats.activeAmount) || 0,
+    },
+    followUpAlerts: {
+      overdue: overdueCount,
+      upcoming: upcomingCount,
+    },
+    recentFollowUps,
+    recentContracts,
+  };
+};
