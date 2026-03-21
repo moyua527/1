@@ -100,7 +100,7 @@ export default function ClientDetail() {
   const handleSave = async () => {
     const e: Record<string, string> = {}
     if (!form.channel) e.channel = '请选择渠道'
-    if (!form.name.trim()) e.name = '请输入好友名称'
+    if (!form.name.trim()) e.name = '请输入客户名称'
     if (!form.company.trim()) e.company = '请输入公司名称'
     if (!form.email.trim()) e.email = '请输入邮箱'
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) e.email = '邮箱格式不正确'
@@ -120,9 +120,9 @@ export default function ClientDetail() {
 
   const handleDelete = async () => {
     setMenuOpen(false)
-    if (!(await confirm({ message: '确定删除此好友？删除后不可恢复。', danger: true }))) return
+    if (!(await confirm({ message: '确定删除此客户？删除后不可恢复。', danger: true }))) return
     const r = await clientApi.remove(id!)
-    if (r.success) { toast('好友已删除', 'success'); nav('/clients') }
+    if (r.success) { toast('客户已删除', 'success'); nav('/clients') }
     else toast(r.message || '删除失败', 'error')
   }
 
@@ -243,7 +243,7 @@ export default function ClientDetail() {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
         <button onClick={() => nav('/clients')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', padding: 4 }}><ArrowLeft size={20} /></button>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0f172a', margin: 0, flex: 1 }}>好友详情</h1>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0f172a', margin: 0, flex: 1 }}>客户详情</h1>
         <div ref={menuRef} style={{ position: 'relative' }}>
           <button onClick={() => setMenuOpen(!menuOpen)}
             style={{ background: menuOpen ? '#f1f5f9' : '#fff', border: '1px solid #e2e8f0', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, color: '#334155' }}>
@@ -253,7 +253,7 @@ export default function ClientDetail() {
             <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: '#fff', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0', minWidth: 180, zIndex: 100, overflow: 'hidden' }}>
               <div onClick={openEdit} style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14, color: '#334155' }}
                 onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')} onMouseLeave={e => (e.currentTarget.style.background = '#fff')}>
-                <Settings size={15} color="#64748b" /> 设置好友信息
+                <Settings size={15} color="#64748b" /> 设置客户信息
               </div>
               <div onClick={openHistory} style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14, color: '#334155' }}
                 onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')} onMouseLeave={e => (e.currentTarget.style.background = '#fff')}>
@@ -262,7 +262,7 @@ export default function ClientDetail() {
               <div style={{ borderTop: '1px solid #f1f5f9' }} />
               <div onClick={handleDelete} style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14, color: '#dc2626' }}
                 onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={e => (e.currentTarget.style.background = '#fff')}>
-                <Trash2 size={15} /> 删除好友
+                <Trash2 size={15} /> 删除客户
               </div>
             </div>
           )}
@@ -444,7 +444,7 @@ export default function ClientDetail() {
         {aiSuggestion ? (
           <div style={{ background: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: 10, padding: 14, fontSize: 14, color: '#334155', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{aiSuggestion}</div>
         ) : (
-          <div style={{ fontSize: 13, color: '#94a3b8', textAlign: 'center', padding: 12 }}>点击"获取建议"让 AI 分析好友数据并给出跟进建议</div>
+          <div style={{ fontSize: 13, color: '#94a3b8', textAlign: 'center', padding: 12 }}>点击"获取建议"让 AI 分析客户数据并给出跟进建议</div>
         )}
       </div>
 
@@ -511,7 +511,7 @@ export default function ClientDetail() {
         )}
       </div>
 
-      <Modal open={editOpen} onClose={() => setEditOpen(false)} title="设置好友信息">
+      <Modal open={editOpen} onClose={() => setEditOpen(false)} title="设置客户信息">
         {(() => { const ee = editErrors; const es: React.CSSProperties = { fontSize: 12, color: '#dc2626', marginTop: 4 }; const clr = (k: string) => setEditErrors(prev => { const n = { ...prev }; delete n[k]; return n }); return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
@@ -524,14 +524,14 @@ export default function ClientDetail() {
             {ee.channel && <div style={es}>{ee.channel}</div>}
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>好友阶段</label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>客户阶段</label>
             <select value={form.stage} onChange={e => setForm({ ...form, stage: e.target.value })}
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
               {Object.entries(stageMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
             </select>
           </div>
           <div>
-            <Input label="好友名称 *" value={form.name} onChange={e => { setForm({ ...form, name: e.target.value }); clr('name') }} />
+            <Input label="客户名称 *" value={form.name} onChange={e => { setForm({ ...form, name: e.target.value }); clr('name') }} />
             {ee.name && <div style={es}>{ee.name}</div>}
           </div>
           <div>

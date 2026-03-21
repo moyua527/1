@@ -14,9 +14,9 @@ interface Stats {
 }
 
 const stageConfig = [
-  { key: 'potential', label: '潜在好友', color: '#6b7280', bg: '#f3f4f6' },
-  { key: 'intent', label: '意向好友', color: '#2563eb', bg: '#dbeafe' },
-  { key: 'signed', label: '签约好友', color: '#7c3aed', bg: '#ede9fe' },
+  { key: 'potential', label: '潜在客户', color: '#6b7280', bg: '#f3f4f6' },
+  { key: 'intent', label: '意向客户', color: '#2563eb', bg: '#dbeafe' },
+  { key: 'signed', label: '签约客户', color: '#7c3aed', bg: '#ede9fe' },
   { key: 'active', label: '合作中', color: '#16a34a', bg: '#dcfce7' },
   { key: 'lost', label: '流失', color: '#dc2626', bg: '#fee2e2' },
 ]
@@ -47,7 +47,7 @@ export default function Dashboard() {
     { label: '进行中', value: stats.activeProjects, icon: TrendingUp, bg: '#fef3c7', color: '#d97706', path: '/projects' },
     { label: '已完成', value: stats.completedProjects, icon: CheckCircle, bg: '#dcfce7', color: '#16a34a', path: '/projects' },
     ...(canClients ? [
-      { label: '好友总数', value: stats.totalClients, icon: Users, bg: '#f3e8ff', color: '#7c3aed', path: '/clients' },
+      { label: '客户总数', value: stats.totalClients, icon: Users, bg: '#f3e8ff', color: '#7c3aed', path: '/clients' },
       { label: '合同总数', value: stats.contracts?.total || 0, icon: FileSignature, bg: '#dcfce7', color: '#16a34a', path: '/report' },
       { label: '生效合同额', value: '¥' + ((stats.contracts?.activeAmount || 0) / 10000).toFixed(1) + '万', icon: DollarSign, bg: '#fef3c7', color: '#d97706', path: '/report', isText: true },
     ] : []),
@@ -85,7 +85,7 @@ export default function Dashboard() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
               <Users size={20} color="#2563eb" />
               <span style={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>销售漏斗</span>
-              <span style={{ fontSize: 13, color: '#94a3b8' }}>好友阶段分布 · 共 {total} 位好友</span>
+              <span style={{ fontSize: 13, color: '#94a3b8' }}>客户阶段分布 · 共 {total} 位客户</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
               {stageConfig.map((s, i) => {
@@ -118,14 +118,14 @@ export default function Dashboard() {
           {stats.followUpAlerts.overdue > 0 && (
             <div onClick={() => nav('/clients')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 10, background: '#fef2f2', cursor: 'pointer', border: '1px solid #fecaca' }}>
               <AlertTriangle size={16} color="#dc2626" />
-              <span style={{ fontSize: 14, color: '#dc2626', fontWeight: 600 }}>{stats.followUpAlerts.overdue} 位好友</span>
+              <span style={{ fontSize: 14, color: '#dc2626', fontWeight: 600 }}>{stats.followUpAlerts.overdue} 位客户</span>
               <span style={{ fontSize: 13, color: '#dc2626' }}>跟进已过期</span>
             </div>
           )}
           {stats.followUpAlerts.upcoming > 0 && (
             <div onClick={() => nav('/clients')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 10, background: '#fffbeb', cursor: 'pointer', border: '1px solid #fde68a' }}>
               <Clock size={16} color="#d97706" />
-              <span style={{ fontSize: 14, color: '#d97706', fontWeight: 600 }}>{stats.followUpAlerts.upcoming} 位好友</span>
+              <span style={{ fontSize: 14, color: '#d97706', fontWeight: 600 }}>{stats.followUpAlerts.upcoming} 位客户</span>
               <span style={{ fontSize: 13, color: '#d97706' }}>3天内需跟进</span>
             </div>
           )}

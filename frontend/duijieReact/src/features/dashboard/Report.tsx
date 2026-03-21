@@ -123,11 +123,11 @@ export default function Report() {
           )}
         </div>
 
-        {/* 新增好友趋势 */}
+        {/* 新增客户趋势 */}
         <div style={section}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
             <Users size={18} color="#7c3aed" />
-            <span style={{ fontSize: 16, fontWeight: 600, color: '#334155' }}>新增好友 (近30天)</span>
+            <span style={{ fontSize: 16, fontWeight: 600, color: '#334155' }}>新增客户 (近30天)</span>
           </div>
           {clientDates.length === 0 ? (
             <div style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', padding: 30 }}>暂无数据</div>

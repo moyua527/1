@@ -12,7 +12,7 @@ import useIsMobile from './useIsMobile'
 const ALL_NAV_ITEMS = [
   { path: '/', label: '仪表盘', icon: LayoutDashboard, roles: ['admin', 'tech', 'business', 'member'] },
   { path: '/projects', label: '项目管理', icon: FolderKanban, roles: ['admin', 'tech', 'business', 'member'] },
-  { path: '/clients', label: '好友管理', icon: Users, roles: ['admin', 'business'] },
+  { path: '/clients', label: '客户管理', icon: Users, roles: ['admin', 'business'] },
   { path: '/tasks', label: '任务看板', icon: ListTodo, roles: ['admin', 'tech', 'business', 'member'] },
   { path: '/report', label: '数据报表', icon: BarChart3, roles: ['admin', 'business'] },
   { path: '/users', label: '用户管理', icon: Shield, roles: ['admin'] },
@@ -189,7 +189,7 @@ export default function Layout() {
                   <Copy size={14} /> 复制
                 </button>
               </div>
-              <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>分享此邀请码给新用户，对方注册后将自动成为你的好友</div>
+              <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>分享此邀请码给新用户，对方注册后将自动成为你的客户</div>
             </div>
             )}
 
