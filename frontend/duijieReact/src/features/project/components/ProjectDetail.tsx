@@ -6,12 +6,10 @@ import Avatar from '../../ui/Avatar'
 import { projectApi } from '../services/api'
 import { taskApi } from '../../task/services/api'
 import { milestoneApi } from '../../milestone/services/api'
-import { fileApi } from '../../file/services/api'
 import Button from '../../ui/Button'
 import Badge from '../../ui/Badge'
 import Input from '../../ui/Input'
 import ProgressBar from '../../ui/ProgressBar'
-import FileList from '../../file/components/FileList'
 import MessagePanel from '../../message/components/MessagePanel'
 import { confirm } from '../../ui/ConfirmDialog'
 import { toast } from '../../ui/Toast'
@@ -40,7 +38,7 @@ export default function ProjectDetail() {
   const [milestones, setMilestones] = useState<any[]>([])
   const [selectedMember, setSelectedMember] = useState<any>(null)
   const [searchParams, setSearchParams] = useSearchParams()
-  const validTabs = ['overview', 'tasks', 'files', 'messages'] as const
+  const validTabs = ['overview', 'tasks', 'milestones', 'messages'] as const
   type Tab = typeof validTabs[number]
   const urlTab = searchParams.get('tab') as Tab
   const tab: Tab = validTabs.includes(urlTab as any) ? urlTab! : 'overview'
@@ -102,7 +100,7 @@ export default function ProjectDetail() {
       </div>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-        {([['overview','概览'],['tasks','任务'],['files','文件'],['messages','消息']] as const).map(([k,v]) => (
+        {([['overview','概览'],['tasks','任务'],['milestones','里程碑'],['messages','消息']] as const).map(([k,v]) => (
           <button key={k} onClick={() => setTab(k as any)} style={{
             padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500,
             background: tab === k ? '#2563eb' : '#f1f5f9', color: tab === k ? '#fff' : '#64748b',
@@ -197,28 +195,6 @@ export default function ProjectDetail() {
           )}
         </div>
 
-        {/* 里程碑 */}
-        <div style={section}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>里程碑</h3>
-          </div>
-          {milestones.length === 0 ? <div style={{ color: '#94a3b8', fontSize: 14 }}>暂无里程碑</div> : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {milestones.map((m: any) => (
-                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: '#f8fafc', borderRadius: 8, cursor: 'pointer' }}
-                  onClick={async () => { await milestoneApi.toggle(String(m.id)); loadTasks() }}>
-                  {m.is_completed ? <CheckCircle size={20} color="#16a34a" /> : <Circle size={20} color="#94a3b8" />}
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: m.is_completed ? '#94a3b8' : '#0f172a', textDecoration: m.is_completed ? 'line-through' : 'none' }}>{m.title}</div>
-                    {m.due_date && <div style={{ fontSize: 12, color: '#94a3b8' }}>截止: {m.due_date}</div>}
-                  </div>
-                  {m.completed_at && <div style={{ fontSize: 11, color: '#16a34a' }}>已完成</div>}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
         {/* 创建任务弹窗 */}
         <Modal open={showCreateTask} onClose={() => { setShowCreateTask(false); setTaskForm({ title: '', description: '', due_date: '', priority: 'medium' }); setTaskFiles([]) }} title="添加任务">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -267,9 +243,6 @@ export default function ProjectDetail() {
                 setSubmitting(true)
                 const r = await taskApi.create({ project_id: Number(id), title: taskForm.title, description: taskForm.description, due_date: taskForm.due_date || undefined, priority: taskForm.priority })
                 if (r.success) {
-                  if (taskFiles.length > 0) {
-                    for (const f of taskFiles) await fileApi.upload(id!, f)
-                  }
                   toast('任务创建成功', 'success')
                   setShowCreateTask(false)
                   setTaskForm({ title: '', description: '', due_date: '', priority: 'medium' })
@@ -320,7 +293,28 @@ export default function ProjectDetail() {
           </div>
         </Modal>
       </>)}
-      {tab === 'files' && <div style={section}><FileList projectId={id!} /></div>}
+      {tab === 'milestones' && (
+        <div style={section}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>里程碑</h3>
+          </div>
+          {milestones.length === 0 ? <div style={{ color: '#94a3b8', fontSize: 14 }}>暂无里程碑</div> : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {milestones.map((m: any) => (
+                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: '#f8fafc', borderRadius: 8, cursor: 'pointer' }}
+                  onClick={async () => { await milestoneApi.toggle(String(m.id)); loadTasks() }}>
+                  {m.is_completed ? <CheckCircle size={20} color="#16a34a" /> : <Circle size={20} color="#94a3b8" />}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: m.is_completed ? '#94a3b8' : '#0f172a', textDecoration: m.is_completed ? 'line-through' : 'none' }}>{m.title}</div>
+                    {m.due_date && <div style={{ fontSize: 12, color: '#94a3b8' }}>截止: {m.due_date}</div>}
+                  </div>
+                  {m.completed_at && <div style={{ fontSize: 11, color: '#16a34a' }}>已完成</div>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       {tab === 'messages' && <div style={section}><MessagePanel projectId={id!} /></div>}
 
       <Modal open={!!selectedMember} onClose={() => setSelectedMember(null)} title="成员信息">
