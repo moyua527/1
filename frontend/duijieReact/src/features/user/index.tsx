@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Edit2, Shield, Loader2, Code2, Briefcase, User, MoreHorizontal, UserCheck, Megaphone, HeadphonesIcon, Eye, Users2, Search, Power } from 'lucide-react'
+import { Plus, Trash2, Edit2, Shield, Loader2, Code2, Briefcase, User, MoreHorizontal, UserCheck, Megaphone, HeadphonesIcon, Eye, Users2, Search, Power, Link2, Copy, Clock, CheckCircle2 } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { clientApi } from '../client/services/api'
 import Button from '../ui/Button'
@@ -38,15 +38,20 @@ export default function UserManagement() {
   const [menuOpen, setMenuOpen] = useState<number | null>(null)
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
+  const [inviteLinks, setInviteLinks] = useState<any[]>([])
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [inviteForm, setInviteForm] = useState({ preset_role: 'member', expires_hours: '72', note: '' })
 
   const load = () => {
     setLoading(true)
     Promise.all([
       fetchApi('/api/users'),
       clientApi.list(),
-    ]).then(([ur, cr]) => {
+      fetchApi('/api/invite-links'),
+    ]).then(([ur, cr, lr]) => {
       if (ur.success) setUsers(ur.data || [])
       if (cr.success) setClients(cr.data || [])
+      if (lr.success) setInviteLinks(lr.data || [])
     }).finally(() => setLoading(false))
   }
 
@@ -107,7 +112,10 @@ export default function UserManagement() {
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>用户管理</h1>
           <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>管理系统账号和角色权限 · 共 {users.length} 人</p>
         </div>
-        <Button onClick={() => { resetForm(); setShowCreate(true) }}><Plus size={16} /> 创建账号</Button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Button variant="secondary" onClick={() => setShowInviteModal(true)}><Link2 size={16} /> 邀请链接</Button>
+          <Button onClick={() => { resetForm(); setShowCreate(true) }}><Plus size={16} /> 创建账号</Button>
+        </div>
       </div>
       <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ position: 'relative', flex: '1 1 200px', maxWidth: 320 }}>
@@ -115,7 +123,7 @@ export default function UserManagement() {
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索用户名/昵称..." style={{ width: '100%', padding: '8px 12px 8px 36px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none', background: '#fff' }} />
         </div>
         <div style={{ display: 'flex', gap: 4, overflowX: 'auto', flexShrink: 0 }}>
-          {[{ key: 'all', label: '全部' }, ...Object.entries(roleMap).map(([k, v]) => ({ key: k, label: v.label }))].map(t => (
+          {[{ key: 'all', label: '全部' }, { key: 'pending', label: `待审批(${users.filter(u => u.is_active === 0).length})` }, ...Object.entries(roleMap).map(([k, v]) => ({ key: k, label: v.label }))].map(t => (
             <button key={t.key} onClick={() => setRoleFilter(t.key)} style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid ' + (roleFilter === t.key ? '#2563eb' : '#e2e8f0'), background: roleFilter === t.key ? '#eff6ff' : '#fff', color: roleFilter === t.key ? '#2563eb' : '#64748b', fontSize: 12, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }}>{t.label}</button>
           ))}
         </div>
@@ -126,6 +134,7 @@ export default function UserManagement() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {users.filter((u: any) => {
+            if (roleFilter === 'pending') return u.is_active === 0
             if (roleFilter !== 'all' && u.role !== roleFilter) return false
             if (search.trim()) {
               const q = search.trim().toLowerCase()
@@ -144,7 +153,7 @@ export default function UserManagement() {
                     <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 10, background: r.bg, color: r.color, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}>
                       <RIcon size={12} /> {r.label}
                     </span>
-                    {u.is_active === 0 && <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: '#fee2e2', color: '#dc2626', fontWeight: 600 }}>已禁用</span>}
+                    {u.is_active === 0 && <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: '#fffbeb', color: '#d97706', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 2 }}><Clock size={10} /> 待审批</span>}
                   </div>
                   <div style={{ fontSize: 13, color: '#64748b' }}>@{u.username}</div>
                   {u.manager_name && <div style={{ fontSize: 11, color: '#94a3b8' }}>上级: {u.manager_name}</div>}
@@ -159,6 +168,11 @@ export default function UserManagement() {
                       <button onClick={() => { setMenuOpen(null); openEdit(u) }} style={{ width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#334155' }} onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
                         <Edit2 size={14} /> 编辑
                       </button>
+                      {u.is_active === 0 && (
+                        <button onClick={async () => { setMenuOpen(null); const r2 = await fetchApi(`/api/users/${u.id}`, { method: 'PUT', body: JSON.stringify({ is_active: 1 }) }); if (r2.success) { toast('已审批激活', 'success'); load() } else toast(r2.message || '操作失败', 'error') }} style={{ width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#16a34a' }} onMouseEnter={e => (e.currentTarget.style.background = '#f0fdf4')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                          <CheckCircle2 size={14} /> 审批激活
+                        </button>
+                      )}
                       <button onClick={async () => { setMenuOpen(null); const active = u.is_active !== 0; const r2 = await fetchApi(`/api/users/${u.id}`, { method: 'PUT', body: JSON.stringify({ is_active: !active }) }); if (r2.success) { toast(active ? '已禁用' : '已启用', 'success'); load() } else toast(r2.message || '操作失败', 'error') }} style={{ width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: u.is_active !== 0 ? '#d97706' : '#16a34a' }} onMouseEnter={e => (e.currentTarget.style.background = '#fffbeb')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
                         <Power size={14} /> {u.is_active !== 0 ? '禁用' : '启用'}
                       </button>
@@ -257,6 +271,71 @@ export default function UserManagement() {
             <Button variant="secondary" onClick={() => { setShowEdit(false); setEditUser(null) }}>取消</Button>
             <Button onClick={handleUpdate} disabled={submitting}>{submitting ? '保存中...' : '保存'}</Button>
           </div>
+        </div>
+      </Modal>
+
+      {/* Invite Link Modal */}
+      <Modal open={showInviteModal} onClose={() => setShowInviteModal(false)} title="邀请链接管理">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ padding: 16, background: '#f8fafc', borderRadius: 10, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>生成新邀请链接</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: 12, color: '#64748b' }}>预设角色</label>
+                <select value={inviteForm.preset_role} onChange={e => setInviteForm({ ...inviteForm, preset_role: e.target.value })} style={{ width: '100%', padding: '6px 8px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}>
+                  {Object.entries(roleMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                </select>
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: 12, color: '#64748b' }}>有效期</label>
+                <select value={inviteForm.expires_hours} onChange={e => setInviteForm({ ...inviteForm, expires_hours: e.target.value })} style={{ width: '100%', padding: '6px 8px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}>
+                  <option value="24">24小时</option>
+                  <option value="72">3天</option>
+                  <option value="168">7天</option>
+                  <option value="720">30天</option>
+                  <option value="">永久</option>
+                </select>
+              </div>
+            </div>
+            <Input label="备注" placeholder="可选" value={inviteForm.note} onChange={e => setInviteForm({ ...inviteForm, note: e.target.value })} />
+            <Button onClick={async () => {
+              const r2 = await fetchApi('/api/invite-links', { method: 'POST', body: JSON.stringify({ preset_role: inviteForm.preset_role, expires_hours: inviteForm.expires_hours ? Number(inviteForm.expires_hours) : null, note: inviteForm.note }) })
+              if (r2.success) {
+                const url = `${window.location.origin}/?invite=${r2.data.token}`
+                navigator.clipboard.writeText(url).then(() => toast('链接已复制到剪贴板', 'success')).catch(() => toast('生成成功，请手动复制', 'success'))
+                load()
+              } else toast(r2.message || '生成失败', 'error')
+            }}><Link2 size={14} /> 生成并复制链接</Button>
+          </div>
+          {inviteLinks.length > 0 && (
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 8 }}>已生成的链接 ({inviteLinks.length})</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 300, overflowY: 'auto' }}>
+                {inviteLinks.map((link: any) => {
+                  const used = !!link.used_by
+                  const expired = link.expires_at && new Date(link.expires_at) < new Date()
+                  const status = used ? '已使用' : expired ? '已过期' : '可用'
+                  const statusColor = used ? '#16a34a' : expired ? '#dc2626' : '#2563eb'
+                  return (
+                    <div key={link.id} style={{ padding: '10px 12px', background: '#fff', borderRadius: 8, border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 12, display: 'flex', gap: 6, alignItems: 'center' }}>
+                          <span style={{ color: statusColor, fontWeight: 600, fontSize: 11, padding: '1px 6px', borderRadius: 4, background: used ? '#f0fdf4' : expired ? '#fef2f2' : '#eff6ff' }}>{status}</span>
+                          <span style={{ color: '#64748b' }}>角色: {roleMap[link.preset_role]?.label || link.preset_role}</span>
+                          {link.note && <span style={{ color: '#94a3b8' }}>· {link.note}</span>}
+                        </div>
+                        {used && <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>使用者: {link.used_by_name || link.used_by_username}</div>}
+                      </div>
+                      {!used && !expired && (
+                        <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/?invite=${link.token}`); toast('已复制', 'success') }} style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', color: '#64748b', display: 'flex' }}><Copy size={14} /></button>
+                      )}
+                      <button onClick={async () => { const r2 = await fetchApi(`/api/invite-links/${link.id}`, { method: 'DELETE' }); if (r2.success) { toast('已删除', 'success'); load() } }} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', color: '#dc2626', display: 'flex' }}><Trash2 size={14} /></button>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </Modal>
     </div>

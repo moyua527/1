@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import { authApi } from './services/api'
-import { setToken } from '../../bootstrap'
+import { setToken, fetchApi } from '../../bootstrap'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
-import { Lock, User, Mail, Phone, KeyRound } from 'lucide-react'
+import { Lock, User, Mail, Phone, KeyRound, Link2, CheckCircle2, Clock } from 'lucide-react'
 import { areaData } from '../../data/areaCode'
 
 interface Props { onLogin: (user: any) => void }
@@ -38,8 +38,23 @@ export default function LoginPage({ onLogin }: Props) {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
+  const [inviteToken, setInviteToken] = useState('')
+  const [inviteLinkRole, setInviteLinkRole] = useState('')
+  const [needApproval, setNeedApproval] = useState(false)
 
-  useEffect(() => { authApi.registerConfig().then(r => { if (r.success) setNeedInvite(r.data?.needInviteCode || false) }) }, [])
+  useEffect(() => {
+    authApi.registerConfig().then(r => { if (r.success) setNeedInvite(r.data?.needInviteCode || false) })
+    const params = new URLSearchParams(window.location.search)
+    const token = params.get('invite')
+    if (token) {
+      setInviteToken(token)
+      setMode('register')
+      fetchApi(`/api/invite-links/${token}/validate`).then(r => {
+        if (r.success) setInviteLinkRole(r.data.preset_role)
+        else { setError('邀请链接无效或已过期'); setInviteToken('') }
+      })
+    }
+  }, [])
 
   const resetForm = () => { setUsername(''); setPassword(''); setConfirmPwd(''); setNickname(''); setEmail(''); setPhone(''); setInviteCode(''); setGender(''); setProvince(''); setCity(''); setDistrict(''); setError(''); setSuccess('') }
 
@@ -70,17 +85,25 @@ export default function LoginPage({ onLogin }: Props) {
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('邮箱格式无效'); return }
     if (!gender) { setError('请选择性别'); return }
     if (!areaCode || areaCode.length !== 6) { setError('请选择完整的省/市/区'); return }
-    if (!inviteCode.trim()) { setError('请输入邀请码'); return }
+    if (!inviteToken && !inviteCode.trim()) { setError('请输入邀请码'); return }
     setLoading(true)
     try {
       const res = await authApi.register({
         username: username.trim(), password, nickname: nickname.trim() || undefined,
         email: email.trim() || undefined, phone: phone.trim() || undefined,
         gender: Number(gender), area_code: areaCode,
-        invite_code: inviteCode.trim() || undefined,
+        invite_code: inviteToken ? undefined : (inviteCode.trim() || undefined),
+        invite_token: inviteToken || undefined,
       })
-      if (res.success) { setSuccess('注册成功！即将跳转登录...'); setTimeout(() => switchMode('login'), 1500) }
-      else setError(res.message || '注册失败')
+      if (res.success) {
+        if (res.needApproval) {
+          setNeedApproval(true)
+          setSuccess('注册成功！请等待管理员审批后方可登录')
+        } else {
+          setSuccess('注册成功！即将跳转登录...')
+          setTimeout(() => switchMode('login'), 1500)
+        }
+      } else setError(res.message || '注册失败')
     } catch { setError('网络错误') }
     setLoading(false)
   }
@@ -163,7 +186,13 @@ export default function LoginPage({ onLogin }: Props) {
             <Input label="确认密码" type="password" placeholder="再次输入密码" value={confirmPwd} onChange={e => setConfirmPwd(e.target.value)} />
           )}
 
-          {mode === 'register' && (
+          {mode === 'register' && inviteToken && inviteLinkRole && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 8, background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+              <Link2 size={16} style={{ color: '#16a34a' }} />
+              <span style={{ fontSize: 13, color: '#15803d' }}>通过邀请链接注册，预设角色：<strong>{inviteLinkRole}</strong>，注册后直接激活</span>
+            </div>
+          )}
+          {mode === 'register' && !inviteToken && (
             <Input label="邀请码 *" placeholder="输入系统邀请码或他人专属邀请码" value={inviteCode} onChange={e => setInviteCode(e.target.value.toUpperCase())} />
           )}
 
@@ -175,9 +204,16 @@ export default function LoginPage({ onLogin }: Props) {
           </Button>
         </div>
 
-        {mode === 'register' && (
+        {mode === 'register' && needApproval && (
+          <div style={{ marginTop: 16, textAlign: 'center', padding: '12px 16px', borderRadius: 10, background: '#fffbeb', border: '1px solid #fde68a' }}>
+            <Clock size={20} style={{ color: '#d97706', margin: '0 auto 6px' }} />
+            <div style={{ fontSize: 13, color: '#92400e', fontWeight: 500 }}>注册成功，等待管理员审批</div>
+            <div style={{ fontSize: 12, color: '#b45309', marginTop: 4 }}>审批通过后即可登录使用系统</div>
+          </div>
+        )}
+        {mode === 'register' && !needApproval && !inviteToken && (
           <div style={{ marginTop: 16, textAlign: 'center', fontSize: 12, color: '#94a3b8' }}>
-            注册后默认为成员角色，管理员可调整权限
+            系统邀请码注册需管理员审批 · 个人邀请码注册直接激活
           </div>
         )}
       </form>

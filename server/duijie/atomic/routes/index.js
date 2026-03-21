@@ -121,8 +121,22 @@ router.put('/tickets/:id', auth, require('../controllers/ticket/updateController
 router.post('/tickets/:id/reply', auth, require('../controllers/ticket/replyController'));
 router.post('/tickets/:id/rate', auth, require('../controllers/ticket/rateController'));
 
-// Users (admin only)
+// Admin guard
 const adminOnly = roleGuard('admin');
+
+// Invite Links
+router.post('/invite-links', auth, adminOnly, require('../controllers/invite/createController'));
+router.get('/invite-links', auth, adminOnly, require('../controllers/invite/listController'));
+router.get('/invite-links/:token/validate', require('../controllers/invite/validateController'));
+router.delete('/invite-links/:id', auth, adminOnly, async (req, res) => {
+  try {
+    const db = require('../../config/db');
+    await db.query('DELETE FROM duijie_invite_links WHERE id = ?', [req.params.id]);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ success: false, message: e.message }); }
+});
+
+// Users (admin only)
 router.get('/users', auth, adminOnly, require('../controllers/user/listController'));
 router.post('/users', auth, adminOnly, require('../controllers/user/createController'));
 router.put('/users/:id', auth, adminOnly, require('../controllers/user/updateController'));
