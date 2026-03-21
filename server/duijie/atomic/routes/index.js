@@ -83,6 +83,7 @@ router.post('/tasks', auth, allStaff, require('../controllers/task/createControl
 router.get('/tasks', auth, allStaff, require('../controllers/task/listController'));
 router.put('/tasks/:id', auth, allStaff, require('../controllers/task/updateController'));
 router.patch('/tasks/:id/move', auth, allStaff, require('../controllers/task/moveController'));
+router.delete('/tasks/:id', auth, allStaff, require('../controllers/task/deleteController'));
 
 // Milestones
 router.post('/milestones', auth, require('../controllers/milestone/createController'));

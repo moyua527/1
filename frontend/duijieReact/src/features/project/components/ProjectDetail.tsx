@@ -1,17 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { ArrowLeft, Edit2, Trash2, User, Mail, Shield } from 'lucide-react'
+import { ArrowLeft, Trash2, User, Mail, Shield, ChevronDown, Plus, X, Upload, FileText, Image, CheckCircle, Circle } from 'lucide-react'
 import Modal from '../../ui/Modal'
 import Avatar from '../../ui/Avatar'
 import { projectApi } from '../services/api'
 import { taskApi } from '../../task/services/api'
+import { milestoneApi } from '../../milestone/services/api'
+import { fileApi } from '../../file/services/api'
 import Button from '../../ui/Button'
 import Badge from '../../ui/Badge'
+import Input from '../../ui/Input'
 import ProgressBar from '../../ui/ProgressBar'
 import FileList from '../../file/components/FileList'
 import MessagePanel from '../../message/components/MessagePanel'
 import { confirm } from '../../ui/ConfirmDialog'
-import MilestoneList from '../../milestone/components/MilestoneList'
 import { toast } from '../../ui/Toast'
 
 const statusMap: Record<string, { label: string; color: string }> = {
@@ -35,19 +37,44 @@ export default function ProjectDetail() {
   const nav = useNavigate()
   const [project, setProject] = useState<any>(null)
   const [tasks, setTasks] = useState<any[]>([])
+  const [milestones, setMilestones] = useState<any[]>([])
   const [selectedMember, setSelectedMember] = useState<any>(null)
   const [searchParams, setSearchParams] = useSearchParams()
-  const validTabs = ['overview', 'tasks', 'milestones', 'files', 'messages'] as const
+  const validTabs = ['overview', 'tasks', 'files', 'messages'] as const
   type Tab = typeof validTabs[number]
   const urlTab = searchParams.get('tab') as Tab
   const tab: Tab = validTabs.includes(urlTab as any) ? urlTab! : 'overview'
   const setTab = (t: Tab) => setSearchParams({ tab: t }, { replace: true })
 
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [showCreateTask, setShowCreateTask] = useState(false)
+  const [showDeleteTask, setShowDeleteTask] = useState(false)
+  const [taskForm, setTaskForm] = useState({ title: '', description: '', due_date: '', priority: 'medium' })
+  const [taskFiles, setTaskFiles] = useState<File[]>([])
+  const [deleteSelected, setDeleteSelected] = useState<Set<number>>(new Set())
+  const [submitting, setSubmitting] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  const loadTasks = () => {
+    if (!id) return
+    taskApi.list(id).then(r => { if (r.success) setTasks(r.data || []) })
+    milestoneApi.list(id).then(r => { if (r.success) setMilestones(r.data || []) })
+  }
+
   useEffect(() => {
     if (!id) return
     projectApi.detail(id).then(r => { if (r.success) setProject(r.data) })
-    taskApi.list(id).then(r => { if (r.success) setTasks(r.data || []) })
+    loadTasks()
   }, [id])
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setDropdownOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
 
   if (!project) return <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}>加载中...</div>
 
@@ -75,7 +102,7 @@ export default function ProjectDetail() {
       </div>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-        {([['overview','概览'],['tasks','任务'],['milestones','里程碑'],['files','文件'],['messages','消息']] as const).map(([k,v]) => (
+        {([['overview','概览'],['tasks','任务'],['files','文件'],['messages','消息']] as const).map(([k,v]) => (
           <button key={k} onClick={() => setTab(k as any)} style={{
             padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500,
             background: tab === k ? '#2563eb' : '#f1f5f9', color: tab === k ? '#fff' : '#64748b',
@@ -120,25 +147,29 @@ export default function ProjectDetail() {
         )}
       </>)}
 
-      {tab === 'tasks' && (
+      {tab === 'tasks' && (<>
         <div style={section}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>任务列表</h3>
+            <div ref={dropdownRef} style={{ position: 'relative' }}>
+              <button onClick={() => setDropdownOpen(!dropdownOpen)} style={{
+                display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8,
+                background: '#2563eb', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500,
+              }}>操作 <ChevronDown size={14} /></button>
+              {dropdownOpen && (
+                <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: '#fff', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0', minWidth: 120, zIndex: 10, overflow: 'hidden' }}>
+                  <button onClick={() => { setDropdownOpen(false); setShowCreateTask(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: '#334155' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#f1f5f9')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                    <Plus size={14} color="#2563eb" /> 添加任务
+                  </button>
+                  <button onClick={() => { setDropdownOpen(false); setDeleteSelected(new Set()); setShowDeleteTask(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: '#dc2626' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                    <Trash2 size={14} /> 删除任务
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-          <form onSubmit={async (e) => {
-            e.preventDefault()
-            const form = e.target as HTMLFormElement
-            const title = (form.elements.namedItem('taskTitle') as HTMLInputElement).value.trim()
-            if (!title) return
-            const r = await taskApi.create({ project_id: Number(id), title, created_by: 1 })
-            if (r.success) {
-              taskApi.list(id!).then(r2 => { if (r2.success) setTasks(r2.data || []) })
-              form.reset()
-            }
-          }} style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-            <input name="taskTitle" placeholder="输入任务标题，回车添加" style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none' }} />
-            <Button type="submit" style={{ padding: '8px 16px' }}>添加</Button>
-          </form>
           {tasks.length === 0 ? <div style={{ color: '#94a3b8', fontSize: 14 }}>暂无任务</div> : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {tasks.map((t: any) => {
@@ -147,11 +178,12 @@ export default function ProjectDetail() {
                   <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: '#f8fafc', borderRadius: 8 }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>{t.title}</div>
-                      {t.due_date && <div style={{ fontSize: 12, color: '#94a3b8' }}>截止: {t.due_date}</div>}
+                      {t.description && <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>{t.description}</div>}
+                      {t.due_date && <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>截止: {t.due_date}</div>}
                     </div>
                     <select value={t.status} onChange={async (e) => {
                       await taskApi.move(String(t.id), e.target.value)
-                      taskApi.list(id!).then(r2 => { if (r2.success) setTasks(r2.data || []) })
+                      loadTasks()
                     }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 13, color: '#334155', cursor: 'pointer' }}>
                       <option value="todo">待办</option>
                       <option value="in_progress">进行中</option>
@@ -164,9 +196,130 @@ export default function ProjectDetail() {
             </div>
           )}
         </div>
-      )}
 
-      {tab === 'milestones' && <div style={section}><MilestoneList projectId={id!} /></div>}
+        {/* 里程碑 */}
+        <div style={section}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>里程碑</h3>
+          </div>
+          {milestones.length === 0 ? <div style={{ color: '#94a3b8', fontSize: 14 }}>暂无里程碑</div> : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {milestones.map((m: any) => (
+                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: '#f8fafc', borderRadius: 8, cursor: 'pointer' }}
+                  onClick={async () => { await milestoneApi.toggle(String(m.id)); loadTasks() }}>
+                  {m.is_completed ? <CheckCircle size={20} color="#16a34a" /> : <Circle size={20} color="#94a3b8" />}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: m.is_completed ? '#94a3b8' : '#0f172a', textDecoration: m.is_completed ? 'line-through' : 'none' }}>{m.title}</div>
+                    {m.due_date && <div style={{ fontSize: 12, color: '#94a3b8' }}>截止: {m.due_date}</div>}
+                  </div>
+                  {m.completed_at && <div style={{ fontSize: 11, color: '#16a34a' }}>已完成</div>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 创建任务弹窗 */}
+        <Modal open={showCreateTask} onClose={() => { setShowCreateTask(false); setTaskForm({ title: '', description: '', due_date: '', priority: 'medium' }); setTaskFiles([]) }} title="添加任务">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <Input label="任务标题" placeholder="输入任务标题" value={taskForm.title} onChange={e => setTaskForm({ ...taskForm, title: e.target.value })} required />
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>任务描述</label>
+              <textarea value={taskForm.description} onChange={e => setTaskForm({ ...taskForm, description: e.target.value })} placeholder="描述任务内容..."
+                style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', minHeight: 80, fontFamily: 'inherit' }} />
+            </div>
+            <Input label="截止日期" type="date" value={taskForm.due_date} onChange={e => setTaskForm({ ...taskForm, due_date: e.target.value })} />
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>优先级</label>
+              <select value={taskForm.priority} onChange={e => setTaskForm({ ...taskForm, priority: e.target.value })}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
+                <option value="low">低</option>
+                <option value="medium">中</option>
+                <option value="high">高</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>附件（文件/图片）</label>
+              <input ref={fileInputRef} type="file" multiple style={{ display: 'none' }} onChange={e => {
+                if (e.target.files) setTaskFiles(prev => [...prev, ...Array.from(e.target.files!)])
+                if (fileInputRef.current) fileInputRef.current.value = ''
+              }} />
+              <button onClick={() => fileInputRef.current?.click()} style={{
+                display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8,
+                border: '1px dashed #cbd5e1', background: '#f8fafc', cursor: 'pointer', fontSize: 13, color: '#64748b', width: '100%', justifyContent: 'center',
+              }}><Upload size={14} /> 点击选择文件、图片</button>
+              {taskFiles.length > 0 && (
+                <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {taskFiles.map((f, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 8px', background: '#f1f5f9', borderRadius: 6, fontSize: 13 }}>
+                      {f.type.startsWith('image/') ? <Image size={14} color="#2563eb" /> : <FileText size={14} color="#64748b" />}
+                      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#334155' }}>{f.name}</span>
+                      <button onClick={() => setTaskFiles(prev => prev.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 2, display: 'flex' }}><X size={14} /></button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+              <Button variant="secondary" onClick={() => { setShowCreateTask(false); setTaskForm({ title: '', description: '', due_date: '', priority: 'medium' }); setTaskFiles([]) }}>取消</Button>
+              <Button disabled={submitting} onClick={async () => {
+                if (!taskForm.title.trim()) { toast('请输入任务标题', 'error'); return }
+                setSubmitting(true)
+                const r = await taskApi.create({ project_id: Number(id), title: taskForm.title, description: taskForm.description, due_date: taskForm.due_date || undefined, priority: taskForm.priority })
+                if (r.success) {
+                  if (taskFiles.length > 0) {
+                    for (const f of taskFiles) await fileApi.upload(id!, f)
+                  }
+                  toast('任务创建成功', 'success')
+                  setShowCreateTask(false)
+                  setTaskForm({ title: '', description: '', due_date: '', priority: 'medium' })
+                  setTaskFiles([])
+                  loadTasks()
+                } else toast(r.message || '创建失败', 'error')
+                setSubmitting(false)
+              }}>{submitting ? '创建中...' : '创建'}</Button>
+            </div>
+          </div>
+        </Modal>
+
+        {/* 删除任务弹窗 */}
+        <Modal open={showDeleteTask} onClose={() => setShowDeleteTask(false)} title="删除任务">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {tasks.length === 0 ? <div style={{ color: '#94a3b8', fontSize: 14, textAlign: 'center', padding: 20 }}>暂无任务可删除</div> : (<>
+              <div style={{ fontSize: 13, color: '#64748b', marginBottom: 4 }}>选择要删除的任务：</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 300, overflowY: 'auto' }}>
+                {tasks.map((t: any) => (
+                  <label key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: deleteSelected.has(t.id) ? '#fef2f2' : '#f8fafc', borderRadius: 8, cursor: 'pointer', border: deleteSelected.has(t.id) ? '1px solid #fca5a5' : '1px solid transparent' }}>
+                    <input type="checkbox" checked={deleteSelected.has(t.id)} onChange={() => {
+                      setDeleteSelected(prev => { const n = new Set(prev); n.has(t.id) ? n.delete(t.id) : n.add(t.id); return n })
+                    }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>{t.title}</div>
+                      {t.due_date && <div style={{ fontSize: 12, color: '#94a3b8' }}>截止: {t.due_date}</div>}
+                    </div>
+                    <Badge color={(taskStatusMap[t.status] || taskStatusMap.todo).color}>{(taskStatusMap[t.status] || taskStatusMap.todo).label}</Badge>
+                  </label>
+                ))}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+                <span style={{ fontSize: 13, color: '#64748b' }}>已选 {deleteSelected.size} 项</span>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <Button variant="secondary" onClick={() => setShowDeleteTask(false)}>取消</Button>
+                  <Button variant="danger" disabled={deleteSelected.size === 0 || submitting} onClick={async () => {
+                    setSubmitting(true)
+                    for (const tid of deleteSelected) await taskApi.remove(String(tid))
+                    toast(`已删除 ${deleteSelected.size} 个任务`, 'success')
+                    setShowDeleteTask(false)
+                    setDeleteSelected(new Set())
+                    loadTasks()
+                    setSubmitting(false)
+                  }}>{submitting ? '删除中...' : `删除 (${deleteSelected.size})`}</Button>
+                </div>
+              </div>
+            </>)}
+          </div>
+        </Modal>
+      </>)}
       {tab === 'files' && <div style={section}><FileList projectId={id!} /></div>}
       {tab === 'messages' && <div style={section}><MessagePanel projectId={id!} /></div>}
 
