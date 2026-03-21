@@ -1,19 +1,21 @@
 const db = require('../../../config/db');
 const generateInviteCode = require('../../utils/generateInviteCode');
 
+const VALID_ROLES = ['admin', 'sales_manager', 'business', 'marketing', 'tech', 'support', 'member', 'viewer', 'client'];
+
 module.exports = async (req, res) => {
   try {
-    const { username, password, nickname, role, client_id } = req.body;
+    const { username, password, nickname, role, client_id, manager_id } = req.body;
     if (!username || !password) return res.status(400).json({ success: false, message: '用户名和密码必填' });
-    if (!['admin', 'tech', 'business', 'member'].includes(role)) return res.status(400).json({ success: false, message: '角色无效' });
+    if (!VALID_ROLES.includes(role)) return res.status(400).json({ success: false, message: '角色无效' });
 
     const [existing] = await db.query('SELECT id FROM voice_users WHERE username = ? AND is_deleted = 0', [username]);
     if (existing.length > 0) return res.status(400).json({ success: false, message: '用户名已存在' });
 
     const personalCode = await generateInviteCode();
     const [result] = await db.query(
-      'INSERT INTO voice_users (username, password, nickname, role, client_id, personal_invite_code) VALUES (?, ?, ?, ?, ?, ?)',
-      [username, password, nickname || username, role, null, personalCode]
+      'INSERT INTO voice_users (username, password, nickname, role, client_id, manager_id, personal_invite_code) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [username, password, nickname || username, role, client_id || null, manager_id || null, personalCode]
     );
     res.json({ success: true, data: { id: result.insertId } });
   } catch (e) {

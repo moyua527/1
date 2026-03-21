@@ -178,3 +178,7 @@ CREATE TABLE IF NOT EXISTS duijie_messages (
   INDEX idx_sender_id (sender_id),
   INDEX idx_is_deleted (is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='对接-消息表';
+
+-- v1.0.40: 团队层级支持
+ALTER TABLE voice_users ADD COLUMN IF NOT EXISTS manager_id INT DEFAULT NULL COMMENT '上级经理ID' AFTER client_id;
+ALTER TABLE voice_users ADD INDEX IF NOT EXISTS idx_manager_id (manager_id);

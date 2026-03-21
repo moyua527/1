@@ -1,10 +1,15 @@
 const db = require('../../../config/db');
+const getSubordinateIds = require('../../utils/getSubordinateIds');
 
 module.exports = async (req, res) => {
   try {
     let filter = '';
     const params = [];
-    if (req.userRole === 'business') {
+    if (req.userRole === 'sales_manager') {
+      const teamIds = await getSubordinateIds(req.userId);
+      filter = `AND (o.assigned_to IN (${teamIds.map(() => '?').join(',')}) OR o.created_by IN (${teamIds.map(() => '?').join(',')}))`;
+      params.push(...teamIds, ...teamIds);
+    } else if (req.userRole === 'business') {
       filter = 'AND (o.assigned_to = ? OR o.created_by = ?)';
       params.push(req.userId, req.userId);
     }

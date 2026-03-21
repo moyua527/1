@@ -187,8 +187,9 @@ export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null)
   const nav = useNavigate()
   const { user } = useOutletContext<{ user: any }>()
-  const canClients = user?.role === 'admin' || user?.role === 'business'
-  const canTasks = ['admin', 'tech', 'business', 'member'].includes(user?.role)
+  const canClients = ['admin', 'sales_manager', 'business', 'marketing', 'support', 'viewer'].includes(user?.role)
+  const canTasks = ['admin', 'sales_manager', 'tech', 'business', 'member'].includes(user?.role)
+  const canAmount = !['marketing', 'viewer'].includes(user?.role)
 
   useEffect(() => {
     fetchApi('/api/dashboard/stats').then(r => { if (r.success) setStats(r.data) }).catch(() => {
@@ -202,8 +203,10 @@ export default function Dashboard() {
     { label: '已完成', value: stats.completedProjects, icon: CheckCircle, bg: '#dcfce7', color: '#16a34a', path: '/projects' },
     ...(canClients ? [
       { label: '客户总数', value: stats.totalClients, icon: Users, bg: '#f3e8ff', color: '#7c3aed', path: '/clients' },
-      { label: '合同总数', value: stats.contracts?.total || 0, icon: FileSignature, bg: '#dcfce7', color: '#16a34a', path: '/report' },
-      { label: '生效合同额', value: '¥' + ((stats.contracts?.activeAmount || 0) / 10000).toFixed(1) + '万', icon: DollarSign, bg: '#fef3c7', color: '#d97706', path: '/report', isText: true },
+      ...(canAmount ? [
+        { label: '合同总数', value: stats.contracts?.total || 0, icon: FileSignature, bg: '#dcfce7', color: '#16a34a', path: '/report' },
+        { label: '生效合同额', value: '¥' + ((stats.contracts?.activeAmount || 0) / 10000).toFixed(1) + '万', icon: DollarSign, bg: '#fef3c7', color: '#d97706', path: '/report', isText: true },
+      ] : []),
     ] : []),
     ...(canTasks ? [
       { label: '总任务', value: stats.totalTasks, icon: ListTodo, bg: '#e0f2fe', color: '#0284c7', path: '/tasks' },

@@ -1,4 +1,4 @@
-import paramiko, os, stat
+import paramiko, os, stat, getpass
 
 SERVER = '160.202.253.143'
 USER = 'root'
@@ -8,7 +8,7 @@ LOCAL_BASE = os.path.dirname(os.path.abspath(__file__))
 def ssh_connect():
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(SERVER, username=USER)
+    ssh.connect(SERVER, username=USER, password=os.environ.get('SSH_PASS') or getpass.getpass(f'SSH password for {USER}@{SERVER}: '))
     return ssh
 
 def run_cmd(ssh, cmd, desc=''):

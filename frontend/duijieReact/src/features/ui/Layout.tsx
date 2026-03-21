@@ -10,18 +10,22 @@ import { toast } from './Toast'
 import useIsMobile from './useIsMobile'
 
 const ALL_NAV_ITEMS = [
-  { path: '/', label: '仪表盘', icon: LayoutDashboard, roles: ['admin', 'tech', 'business', 'member', 'client'] },
-  { path: '/projects', label: '项目管理', icon: FolderKanban, roles: ['admin', 'tech', 'business', 'member', 'client'] },
-  { path: '/clients', label: '客户管理', icon: Users, roles: ['admin', 'business'] },
-  { path: '/opportunities', label: '商机管理', icon: TrendingUp, roles: ['admin', 'business'] },
-  { path: '/tasks', label: '任务看板', icon: ListTodo, roles: ['admin', 'tech', 'business', 'member'] },
-  { path: '/messaging', label: '站内消息', icon: MessageSquare, roles: ['admin', 'tech', 'business', 'member', 'client'] },
-  { path: '/tickets', label: '工单', icon: Ticket, roles: ['admin', 'tech', 'business', 'member', 'client'] },
-  { path: '/report', label: '数据报表', icon: BarChart3, roles: ['admin', 'business'] },
+  { path: '/', label: '仪表盘', icon: LayoutDashboard, roles: ['admin', 'sales_manager', 'business', 'marketing', 'tech', 'support', 'member', 'viewer', 'client'] },
+  { path: '/projects', label: '项目管理', icon: FolderKanban, roles: ['admin', 'sales_manager', 'business', 'tech', 'support', 'member', 'client'] },
+  { path: '/clients', label: '客户管理', icon: Users, roles: ['admin', 'sales_manager', 'business', 'marketing', 'support', 'viewer'] },
+  { path: '/opportunities', label: '商机管理', icon: TrendingUp, roles: ['admin', 'sales_manager', 'business', 'viewer'] },
+  { path: '/tasks', label: '任务看板', icon: ListTodo, roles: ['admin', 'sales_manager', 'tech', 'business', 'member'] },
+  { path: '/messaging', label: '站内消息', icon: MessageSquare, roles: ['admin', 'sales_manager', 'business', 'marketing', 'tech', 'support', 'member', 'client'] },
+  { path: '/tickets', label: '工单', icon: Ticket, roles: ['admin', 'sales_manager', 'business', 'marketing', 'tech', 'support', 'member', 'client'] },
+  { path: '/report', label: '数据报表', icon: BarChart3, roles: ['admin', 'sales_manager', 'business', 'marketing'] },
   { path: '/users', label: '用户管理', icon: Shield, roles: ['admin'] },
 ]
 
-const roleLabel: Record<string, string> = { admin: '管理人员', tech: '技术人员', business: '业务人员', member: '普通成员', client: '客户' }
+const roleLabel: Record<string, string> = {
+  admin: '管理员', sales_manager: '销售经理', business: '业务员',
+  marketing: '市场', tech: '技术', support: '客服',
+  member: '成员', viewer: '只读', client: '客户',
+}
 
 const s = {
   wrapper: { display: 'flex', height: '100vh', background: '#f1f5f9', fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" } as React.CSSProperties,

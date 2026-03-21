@@ -29,9 +29,12 @@ export default function App() {
   if (checking) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#94a3b8' }}>加载中...</div>
   if (!user) return <LoginPage onLogin={setUser} />
 
-  const canClients = user.role === 'admin' || user.role === 'business'
-  const canTasks = ['admin', 'tech', 'business', 'member'].includes(user.role)
-  const canReport = user.role === 'admin' || user.role === 'business'
+  const r = user.role
+  const canClients = ['admin', 'sales_manager', 'business', 'marketing', 'support', 'viewer'].includes(r)
+  const canOpportunities = ['admin', 'sales_manager', 'business', 'viewer'].includes(r)
+  const canTasks = ['admin', 'sales_manager', 'tech', 'business', 'member'].includes(r)
+  const canReport = ['admin', 'sales_manager', 'business', 'marketing'].includes(r)
+  const canProjects = r !== 'viewer' && r !== 'marketing'
 
   return (
     <>
@@ -39,16 +42,16 @@ export default function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/projects" element={<ProjectList />} />
-          <Route path="/projects/:id" element={<ProjectDetail />} />
+          {canProjects && <Route path="/projects" element={<ProjectList />} />}
+          {canProjects && <Route path="/projects/:id" element={<ProjectDetail />} />}
           {canClients && <Route path="/clients" element={<ClientList />} />}
           {canClients && <Route path="/clients/:id" element={<ClientDetail />} />}
-          {canClients && <Route path="/opportunities" element={<OpportunityList />} />}
+          {canOpportunities && <Route path="/opportunities" element={<OpportunityList />} />}
           {canTasks && <Route path="/tasks" element={<TaskBoard />} />}
           <Route path="/messaging" element={<Messaging />} />
           <Route path="/tickets" element={<TicketPage />} />
           {canReport && <Route path="/report" element={<Report />} />}
-          {user.role === 'admin' && <Route path="/users" element={<UserManagement />} />}
+          {r === 'admin' && <Route path="/users" element={<UserManagement />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

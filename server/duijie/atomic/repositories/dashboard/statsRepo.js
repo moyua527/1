@@ -1,7 +1,16 @@
 const db = require('../../../config/db');
 
+const getSubordinateIds = require('../../utils/getSubordinateIds');
+
 function buildProjectFilter(auth) {
-  if (auth.role !== 'admin' && auth.userId) {
+  if (['admin', 'viewer'].includes(auth.role)) {
+    return { where: '', params: [] };
+  }
+  if (auth.role === 'sales_manager' && auth._teamIds) {
+    const ids = auth._teamIds;
+    return { where: `AND (p.created_by IN (${ids.map(() => '?').join(',')}) OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id IN (${ids.map(() => '?').join(',')})))`, params: [...ids, ...ids] };
+  }
+  if (auth.userId) {
     return { where: 'AND (p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?))', params: [auth.userId, auth.userId] };
   }
   return { where: '', params: [] };
@@ -45,8 +54,13 @@ module.exports = async (auth = {}) => {
     };
   }
 
+  // Pre-compute team IDs for sales_manager
+  if (auth.role === 'sales_manager' && auth.userId) {
+    auth._teamIds = await getSubordinateIds(auth.userId);
+  }
+
   const pf = buildProjectFilter(auth);
-  const showClientData = ['admin', 'business'].includes(auth.role);
+  const showClientData = ['admin', 'sales_manager', 'business', 'marketing', 'support', 'viewer'].includes(auth.role);
 
   const [[projects]] = await db.query(
     `SELECT COUNT(*) as total, SUM(status = 'in_progress') as active, SUM(status = 'completed') as completed
@@ -58,9 +72,17 @@ module.exports = async (auth = {}) => {
 
   if (showClientData) {
     let cf = '', cfParams = [];
-    if (auth.role !== 'admin' && auth.userId) {
-      cf = `AND c.id IN (SELECT DISTINCT p.client_id FROM duijie_projects p WHERE p.is_deleted = 0 AND (p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?)))`;
+    if (auth.role === 'sales_manager' && auth._teamIds) {
+      const ids = auth._teamIds;
+      cf = `AND (c.assigned_to IN (${ids.map(() => '?').join(',')}) OR c.created_by IN (${ids.map(() => '?').join(',')}))`;
+      cfParams = [...ids, ...ids];
+    } else if (auth.role === 'business' && auth.userId) {
+      cf = `AND (c.assigned_to = ? OR c.created_by = ?)`;
       cfParams = [auth.userId, auth.userId];
+    } else if (auth.role === 'marketing') {
+      cf = `AND c.stage IN ('potential', 'intent')`;
+    } else if (auth.role === 'support') {
+      cf = `AND c.stage IN ('signed', 'active')`;
     }
 
     const [[clients]] = await db.query(`SELECT COUNT(*) as total FROM duijie_clients c WHERE c.is_deleted = 0 ${cf}`, cfParams);
