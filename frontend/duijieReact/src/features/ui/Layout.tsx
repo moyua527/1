@@ -40,7 +40,7 @@ export default function Layout() {
   const [collapsed, setCollapsed] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [profileOpen, setProfileOpen] = useState(false)
-  const [profileForm, setProfileForm] = useState({ nickname: '', password: '', confirmPassword: '' })
+  const [profileForm, setProfileForm] = useState({ nickname: '', email: '', phone: '', password: '', confirmPassword: '' })
   const [profileSaving, setProfileSaving] = useState(false)
   const location = useLocation()
   const role = user?.role || 'member'
@@ -50,13 +50,15 @@ export default function Layout() {
   useEffect(() => { fetchApi('/api/auth/me').then(r => { if (r.success) setUser(r.data) }) }, [])
 
   const openProfile = () => {
-    if (user) setProfileForm({ nickname: user.nickname || '', password: '', confirmPassword: '' })
+    if (user) setProfileForm({ nickname: user.nickname || '', email: user.email || '', phone: user.phone || '', password: '', confirmPassword: '' })
     setProfileOpen(true)
   }
 
   const handleProfileSave = async () => {
     const body: any = {}
-    if (profileForm.nickname.trim() && profileForm.nickname.trim() !== user?.nickname) body.nickname = profileForm.nickname.trim()
+    if (profileForm.nickname.trim() && profileForm.nickname.trim() !== (user?.nickname || '')) body.nickname = profileForm.nickname.trim()
+    if (profileForm.email.trim() !== (user?.email || '')) body.email = profileForm.email.trim()
+    if (profileForm.phone.trim() !== (user?.phone || '')) body.phone = profileForm.phone.trim()
     if (profileForm.password) {
       if (profileForm.password.length < 6) { toast('密码至少6位', 'error'); return }
       if (profileForm.password !== profileForm.confirmPassword) { toast('两次密码不一致', 'error'); return }
@@ -126,19 +128,48 @@ export default function Layout() {
 
       <Modal open={profileOpen} onClose={() => setProfileOpen(false)} title="个人信息设置">
         {user && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, paddingBottom: 12, borderBottom: '1px solid #e2e8f0' }}>
-              <Avatar name={user.nickname || user.username} size={56} />
-              <div style={{ fontSize: 12, color: '#94a3b8' }}>@{user.username} · {roleLabel[user.role] || user.role}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16, background: '#f8fafc', borderRadius: 12 }}>
+              <Avatar name={user.nickname || user.username} size={64} />
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 600, color: '#0f172a' }}>{user.nickname || user.username}</div>
+                <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>@{user.username}</div>
+                <div style={{ display: 'inline-block', fontSize: 11, padding: '2px 8px', borderRadius: 10, background: '#eff6ff', color: '#2563eb', fontWeight: 500, marginTop: 4 }}>{roleLabel[user.role] || user.role}</div>
+              </div>
             </div>
-            <Input label="昵称" placeholder="输入新昵称" value={profileForm.nickname} onChange={e => setProfileForm({ ...profileForm, nickname: e.target.value })} />
-            <Input label="新密码（不修改请留空）" placeholder="至少6位" type="password" value={profileForm.password} onChange={e => setProfileForm({ ...profileForm, password: e.target.value })} />
-            {profileForm.password && (
-              <Input label="确认密码" placeholder="再次输入新密码" type="password" value={profileForm.confirmPassword} onChange={e => setProfileForm({ ...profileForm, confirmPassword: e.target.value })} />
-            )}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid #e2e8f0' }}>基本信息</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <Input label="昵称" placeholder="输入昵称" value={profileForm.nickname} onChange={e => setProfileForm({ ...profileForm, nickname: e.target.value })} />
+                <Input label="邮箱" placeholder="your@email.com" value={profileForm.email} onChange={e => setProfileForm({ ...profileForm, email: e.target.value })} />
+                <Input label="手机号" placeholder="输入手机号" value={profileForm.phone} onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })} />
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid #e2e8f0' }}>账号信息</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px', fontSize: 13 }}>
+                <div><span style={{ color: '#94a3b8' }}>用户名</span><div style={{ color: '#0f172a', fontWeight: 500, marginTop: 2 }}>{user.username}</div></div>
+                <div><span style={{ color: '#94a3b8' }}>角色</span><div style={{ color: '#0f172a', fontWeight: 500, marginTop: 2 }}>{roleLabel[user.role] || user.role}</div></div>
+                <div><span style={{ color: '#94a3b8' }}>注册时间</span><div style={{ color: '#0f172a', fontWeight: 500, marginTop: 2 }}>{user.created_at ? new Date(user.created_at).toLocaleDateString('zh-CN') : '-'}</div></div>
+                <div><span style={{ color: '#94a3b8' }}>用户ID</span><div style={{ color: '#0f172a', fontWeight: 500, marginTop: 2 }}>#{user.id}</div></div>
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid #e2e8f0' }}>安全设置</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <Input label="新密码（不修改请留空）" placeholder="至少6位" type="password" value={profileForm.password} onChange={e => setProfileForm({ ...profileForm, password: e.target.value })} />
+                {profileForm.password && (
+                  <Input label="确认密码" placeholder="再次输入新密码" type="password" value={profileForm.confirmPassword} onChange={e => setProfileForm({ ...profileForm, confirmPassword: e.target.value })} />
+                )}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 8, borderTop: '1px solid #e2e8f0' }}>
               <Button variant="secondary" onClick={() => setProfileOpen(false)}>取消</Button>
-              <Button onClick={handleProfileSave} disabled={profileSaving}>{profileSaving ? '保存中...' : '保存'}</Button>
+              <Button onClick={handleProfileSave} disabled={profileSaving}>{profileSaving ? '保存中...' : '保存修改'}</Button>
             </div>
           </div>
         )}
