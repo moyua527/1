@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Edit2, Users2, Shield, UserCheck, Loader2, KeyRound, Copy, Eye, EyeOff } from 'lucide-react'
+import { Plus, Trash2, Edit2, Shield, UserCheck, Loader2, KeyRound, Copy, Eye, EyeOff, Code2, Briefcase, User } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { clientApi } from '../client/services/api'
 import Button from '../ui/Button'
@@ -10,9 +10,10 @@ import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
 
 const roleMap: Record<string, { label: string; color: string; bg: string; icon: any }> = {
-  admin: { label: '管理员', color: '#dc2626', bg: '#fef2f2', icon: Shield },
-  member: { label: '成员', color: '#2563eb', bg: '#eff6ff', icon: UserCheck },
-  client: { label: '客户', color: '#16a34a', bg: '#f0fdf4', icon: Users2 },
+  admin: { label: '管理人员', color: '#dc2626', bg: '#fef2f2', icon: Shield },
+  tech: { label: '技术人员', color: '#7c3aed', bg: '#f5f3ff', icon: Code2 },
+  business: { label: '业务人员', color: '#0891b2', bg: '#ecfeff', icon: Briefcase },
+  member: { label: '普通成员', color: '#2563eb', bg: '#eff6ff', icon: User },
 }
 
 const cardStyle: React.CSSProperties = {
@@ -63,7 +64,6 @@ export default function UserManagement() {
   const handleCreate = async () => {
     if (!form.username.trim()) { toast('请输入用户名', 'error'); return }
     if (!form.password.trim()) { toast('请输入密码', 'error'); return }
-    if (form.role === 'client' && !form.client_id) { toast('客户角色必须关联客户', 'error'); return }
     setSubmitting(true)
     const r = await fetchApi('/api/users', { method: 'POST', body: JSON.stringify(form) })
     setSubmitting(false)
@@ -80,7 +80,7 @@ export default function UserManagement() {
   const handleUpdate = async () => {
     if (!editUser) return
     setSubmitting(true)
-    const body: any = { nickname: form.nickname, role: form.role, client_id: form.role === 'client' ? Number(form.client_id) || null : null }
+    const body: any = { nickname: form.nickname, role: form.role }
     if (form.password.trim()) body.password = form.password
     const r = await fetchApi(`/api/users/${editUser.id}`, { method: 'PUT', body: JSON.stringify(body) })
     setSubmitting(false)
@@ -156,9 +156,6 @@ export default function UserManagement() {
                     </span>
                   </div>
                   <div style={{ fontSize: 13, color: '#64748b' }}>@{u.username}</div>
-                  {u.role === 'client' && u.client_id && (
-                    <div style={{ fontSize: 12, color: '#16a34a' }}>关联客户: {getClientName(u.client_id)}</div>
-                  )}
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => openEdit(u)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', color: '#334155', display: 'flex', alignItems: 'center', gap: 4, fontSize: 13 }}>
@@ -184,21 +181,12 @@ export default function UserManagement() {
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>角色 <span style={{ color: '#dc2626' }}>*</span></label>
             <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
-              <option value="admin">管理员</option>
-              <option value="member">成员</option>
-              <option value="client">客户</option>
+              <option value="admin">管理人员</option>
+              <option value="tech">技术人员</option>
+              <option value="business">业务人员</option>
+              <option value="member">普通成员</option>
             </select>
           </div>
-          {form.role === 'client' && (
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>关联客户 <span style={{ color: '#dc2626' }}>*</span></label>
-              <select value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value })}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
-                <option value="">请选择客户</option>
-                {clients.map((c: any) => <option key={c.id} value={c.id}>#{c.id} {c.name}{c.company ? ` (${c.company})` : ''}</option>)}
-              </select>
-            </div>
-          )}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
             <Button variant="secondary" onClick={() => setShowCreate(false)}>取消</Button>
             <Button onClick={handleCreate} disabled={submitting}>{submitting ? '创建中...' : '创建'}</Button>
@@ -216,21 +204,12 @@ export default function UserManagement() {
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>角色</label>
             <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
-              <option value="admin">管理员</option>
-              <option value="member">成员</option>
-              <option value="client">客户</option>
+              <option value="admin">管理人员</option>
+              <option value="tech">技术人员</option>
+              <option value="business">业务人员</option>
+              <option value="member">普通成员</option>
             </select>
           </div>
-          {form.role === 'client' && (
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>关联客户</label>
-              <select value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value })}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
-                <option value="">请选择客户</option>
-                {clients.map((c: any) => <option key={c.id} value={c.id}>#{c.id} {c.name}{c.company ? ` (${c.company})` : ''}</option>)}
-              </select>
-            </div>
-          )}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
             <Button variant="secondary" onClick={() => { setShowEdit(false); setEditUser(null) }}>取消</Button>
             <Button onClick={handleUpdate} disabled={submitting}>{submitting ? '保存中...' : '保存'}</Button>

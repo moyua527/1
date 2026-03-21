@@ -26,7 +26,9 @@ export default function App() {
   if (checking) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#94a3b8' }}>加载中...</div>
   if (!user) return <LoginPage onLogin={setUser} />
 
-  const isStaff = user.role === 'admin' || user.role === 'member'
+  const canClients = user.role === 'admin' || user.role === 'business'
+  const canTasks = ['admin', 'tech', 'business'].includes(user.role)
+  const canReport = user.role === 'admin' || user.role === 'business'
 
   return (
     <>
@@ -36,10 +38,10 @@ export default function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/projects" element={<ProjectList />} />
           <Route path="/projects/:id" element={<ProjectDetail />} />
-          {isStaff && <Route path="/clients" element={<ClientList />} />}
-          {isStaff && <Route path="/clients/:id" element={<ClientDetail />} />}
-          {isStaff && <Route path="/tasks" element={<TaskBoard />} />}
-          {isStaff && <Route path="/report" element={<Report />} />}
+          {canClients && <Route path="/clients" element={<ClientList />} />}
+          {canClients && <Route path="/clients/:id" element={<ClientDetail />} />}
+          {canTasks && <Route path="/tasks" element={<TaskBoard />} />}
+          {canReport && <Route path="/report" element={<Report />} />}
           {user.role === 'admin' && <Route path="/users" element={<UserManagement />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

@@ -1,10 +1,7 @@
 const db = require('../../../config/db');
 
 function buildProjectFilter(auth) {
-  if (auth.role === 'client' && auth.clientId) {
-    return { where: 'AND p.client_id = ?', params: [auth.clientId] };
-  }
-  if (auth.role === 'member' && auth.userId) {
+  if (auth.role !== 'admin' && auth.userId) {
     return { where: 'AND (p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?))', params: [auth.userId, auth.userId] };
   }
   return { where: '', params: [] };
@@ -12,7 +9,7 @@ function buildProjectFilter(auth) {
 
 module.exports = async (auth = {}) => {
   const pf = buildProjectFilter(auth);
-  const isClient = auth.role === 'client';
+  const showClientData = ['admin', 'business'].includes(auth.role);
 
   const [[projects]] = await db.query(
     `SELECT COUNT(*) as total, SUM(status = 'in_progress') as active, SUM(status = 'completed') as completed
@@ -22,9 +19,9 @@ module.exports = async (auth = {}) => {
   let clientsTotal = 0, stageMap = {}, contractStats = { total: 0, totalAmount: 0, activeCount: 0, activeAmount: 0 };
   let overdueCount = 0, upcomingCount = 0, recentFollowUps = [], recentContracts = [];
 
-  if (!isClient) {
+  if (showClientData) {
     let cf = '', cfParams = [];
-    if (auth.role === 'member' && auth.userId) {
+    if (auth.role !== 'admin' && auth.userId) {
       cf = `AND c.id IN (SELECT DISTINCT p.client_id FROM duijie_projects p WHERE p.is_deleted = 0 AND (p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?)))`;
       cfParams = [auth.userId, auth.userId];
     }

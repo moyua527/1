@@ -10,15 +10,15 @@ import { toast } from './Toast'
 import useIsMobile from './useIsMobile'
 
 const ALL_NAV_ITEMS = [
-  { path: '/', label: '仪表盘', icon: LayoutDashboard, roles: ['admin', 'member', 'client'] },
-  { path: '/projects', label: '项目管理', icon: FolderKanban, roles: ['admin', 'member', 'client'] },
-  { path: '/clients', label: '客户管理', icon: Users, roles: ['admin', 'member'] },
-  { path: '/tasks', label: '任务看板', icon: ListTodo, roles: ['admin', 'member'] },
-  { path: '/report', label: '数据报表', icon: BarChart3, roles: ['admin', 'member'] },
+  { path: '/', label: '仪表盘', icon: LayoutDashboard, roles: ['admin', 'tech', 'business', 'member'] },
+  { path: '/projects', label: '项目管理', icon: FolderKanban, roles: ['admin', 'tech', 'business', 'member'] },
+  { path: '/clients', label: '客户管理', icon: Users, roles: ['admin', 'business'] },
+  { path: '/tasks', label: '任务看板', icon: ListTodo, roles: ['admin', 'tech', 'business'] },
+  { path: '/report', label: '数据报表', icon: BarChart3, roles: ['admin', 'business'] },
   { path: '/users', label: '用户管理', icon: Shield, roles: ['admin'] },
 ]
 
-const roleLabel: Record<string, string> = { admin: '管理员', member: '成员', client: '客户' }
+const roleLabel: Record<string, string> = { admin: '管理人员', tech: '技术人员', business: '业务人员', member: '普通成员' }
 
 const s = {
   wrapper: { display: 'flex', height: '100vh', background: '#f1f5f9', fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" } as React.CSSProperties,

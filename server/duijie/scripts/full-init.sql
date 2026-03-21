@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS voice_users (
   email VARCHAR(200),
   phone VARCHAR(50),
   avatar VARCHAR(500),
-  role ENUM('admin','member','client') DEFAULT 'member',
+  role ENUM('admin','tech','business','member') DEFAULT 'member',
   client_id INT DEFAULT NULL COMMENT '关联客户ID(仅client角色)',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -249,13 +249,9 @@ INSERT INTO duijie_clients (name, company, email, phone, channel, stage, created
 ('淘宝', '浙江淘宝网络有限公司', '', '', '线上', 'potential', 1),
 ('拼多多', '上海寻梦信息技术有限公司', '', '', '线上', 'potential', 1);
 
--- 先创建客户用户需要的客户记录
-INSERT INTO duijie_clients (name, company, email, phone, channel, stage, created_by) VALUES
-('TestClient', 'TestCorp', '', '', '推荐', 'potential', 1);
-
--- 客户角色用户(关联到TestClient, id=7)
+-- 普通成员用户
 INSERT INTO voice_users (username, password, nickname, role, client_id) VALUES
-('yonghu', 'yonghu123', '用户', 'client', 7);
+('yonghu', 'yonghu123', '用户', 'member', NULL);
 
 -- 示例项目
 INSERT INTO duijie_projects (name, description, client_id, status, created_by) VALUES

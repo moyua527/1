@@ -4,7 +4,7 @@ module.exports = async (req, res) => {
   try {
     const { id } = req.params;
     const { nickname, role, client_id, password } = req.body;
-    if (role && !['admin', 'member', 'client'].includes(role)) {
+    if (role && !['admin', 'tech', 'business', 'member'].includes(role)) {
       return res.status(400).json({ success: false, message: '角色无效' });
     }
 

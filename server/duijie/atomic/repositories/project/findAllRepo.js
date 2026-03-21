@@ -6,12 +6,7 @@ module.exports = async ({ status, client_id, page = 1, limit = 20 }, auth = {}) 
   const params = [];
   const countParams = [];
 
-  if (auth.role === 'client' && auth.clientId) {
-    sql += ' AND p.client_id = ?';
-    countSql += ' AND p.client_id = ?';
-    params.push(auth.clientId);
-    countParams.push(auth.clientId);
-  } else if (auth.role === 'member' && auth.userId) {
+  if (auth.role !== 'admin' && auth.userId) {
     sql += ' AND (p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?))';
     countSql += ' AND (p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?))';
     params.push(auth.userId, auth.userId);
