@@ -5,6 +5,7 @@ const getJwtSecret = require('../../repositories/auth/getJwtSecretRepo');
 module.exports = async (username, password) => {
   const user = await findByUsername(username);
   if (!user || user.password !== password) return null;
+  if (user.is_active === 0) return { disabled: true };
   const secret = await getJwtSecret();
   if (!secret) throw new Error('JWT_SECRET not configured');
   const token = jwt.sign({ userId: user.id, role: user.role, clientId: user.client_id || null }, secret, { expiresIn: '7d' });

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Edit2, Shield, Loader2, Code2, Briefcase, User, MoreHorizontal, UserCheck, Megaphone, HeadphonesIcon, Eye, Users2 } from 'lucide-react'
+import { Plus, Trash2, Edit2, Shield, Loader2, Code2, Briefcase, User, MoreHorizontal, UserCheck, Megaphone, HeadphonesIcon, Eye, Users2, Search, Power } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { clientApi } from '../client/services/api'
 import Button from '../ui/Button'
@@ -36,6 +36,8 @@ export default function UserManagement() {
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({ username: '', password: '', nickname: '', role: 'member', client_id: '', manager_id: '' })
   const [menuOpen, setMenuOpen] = useState<number | null>(null)
+  const [search, setSearch] = useState('')
+  const [roleFilter, setRoleFilter] = useState('all')
 
   const load = () => {
     setLoading(true)
@@ -103,16 +105,34 @@ export default function UserManagement() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>用户管理</h1>
-          <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>管理系统账号和角色权限</p>
+          <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>管理系统账号和角色权限 · 共 {users.length} 人</p>
         </div>
         <Button onClick={() => { resetForm(); setShowCreate(true) }}><Plus size={16} /> 创建账号</Button>
+      </div>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: '1 1 200px', maxWidth: 320 }}>
+          <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索用户名/昵称..." style={{ width: '100%', padding: '8px 12px 8px 36px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none', background: '#fff' }} />
+        </div>
+        <div style={{ display: 'flex', gap: 4, overflowX: 'auto', flexShrink: 0 }}>
+          {[{ key: 'all', label: '全部' }, ...Object.entries(roleMap).map(([k, v]) => ({ key: k, label: v.label }))].map(t => (
+            <button key={t.key} onClick={() => setRoleFilter(t.key)} style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid ' + (roleFilter === t.key ? '#2563eb' : '#e2e8f0'), background: roleFilter === t.key ? '#eff6ff' : '#fff', color: roleFilter === t.key ? '#2563eb' : '#64748b', fontSize: 12, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }}>{t.label}</button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: 80, color: '#94a3b8' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {users.map((u: any) => {
+          {users.filter((u: any) => {
+            if (roleFilter !== 'all' && u.role !== roleFilter) return false
+            if (search.trim()) {
+              const q = search.trim().toLowerCase()
+              return (u.username || '').toLowerCase().includes(q) || (u.nickname || '').toLowerCase().includes(q)
+            }
+            return true
+          }).map((u: any) => {
             const r = roleMap[u.role] || roleMap.member
             const RIcon = r.icon
             return (
@@ -124,6 +144,7 @@ export default function UserManagement() {
                     <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 10, background: r.bg, color: r.color, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}>
                       <RIcon size={12} /> {r.label}
                     </span>
+                    {u.is_active === 0 && <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: '#fee2e2', color: '#dc2626', fontWeight: 600 }}>已禁用</span>}
                   </div>
                   <div style={{ fontSize: 13, color: '#64748b' }}>@{u.username}</div>
                   {u.manager_name && <div style={{ fontSize: 11, color: '#94a3b8' }}>上级: {u.manager_name}</div>}
@@ -137,6 +158,9 @@ export default function UserManagement() {
                     <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: '#fff', borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0', zIndex: 50, minWidth: 120, overflow: 'hidden' }}>
                       <button onClick={() => { setMenuOpen(null); openEdit(u) }} style={{ width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#334155' }} onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
                         <Edit2 size={14} /> 编辑
+                      </button>
+                      <button onClick={async () => { setMenuOpen(null); const active = u.is_active !== 0; const r2 = await fetchApi(`/api/users/${u.id}`, { method: 'PUT', body: JSON.stringify({ is_active: !active }) }); if (r2.success) { toast(active ? '已禁用' : '已启用', 'success'); load() } else toast(r2.message || '操作失败', 'error') }} style={{ width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: u.is_active !== 0 ? '#d97706' : '#16a34a' }} onMouseEnter={e => (e.currentTarget.style.background = '#fffbeb')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                        <Power size={14} /> {u.is_active !== 0 ? '禁用' : '启用'}
                       </button>
                       <button onClick={() => { setMenuOpen(null); handleDelete(u) }} style={{ width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#dc2626' }} onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
                         <Trash2 size={14} /> 删除
