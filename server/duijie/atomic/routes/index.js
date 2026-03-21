@@ -18,6 +18,7 @@ const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 } });
 // Auth (no auth middleware)
 router.post('/auth/login', require('../controllers/auth/loginController'));
 router.post('/auth/register', require('../controllers/auth/registerController'));
+router.get('/auth/register-config', require('../controllers/auth/registerConfigController'));
 router.post('/auth/logout', require('../controllers/auth/logoutController'));
 router.get('/auth/me', auth, require('../controllers/auth/meController'));
 router.put('/auth/profile', auth, require('../controllers/auth/profileController'));
