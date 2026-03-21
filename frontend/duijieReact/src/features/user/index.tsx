@@ -124,7 +124,7 @@ export default function UserManagement() {
                   {u.display_id && <div style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace', letterSpacing: 0.5 }}>ID: {u.display_id}</div>}
                 </div>
                 <div style={{ position: 'relative' }}>
-                  <button onClick={() => setMenuOpen(menuOpen === u.id ? null : u.id)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '8px 10px', cursor: 'pointer', color: '#64748b', display: 'flex' }}>
+                  <button onClick={e => { e.stopPropagation(); setMenuOpen(menuOpen === u.id ? null : u.id) }} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '8px 10px', cursor: 'pointer', color: '#64748b', display: 'flex' }}>
                     <MoreHorizontal size={18} />
                   </button>
                   {menuOpen === u.id && (
