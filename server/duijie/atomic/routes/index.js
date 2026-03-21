@@ -35,7 +35,7 @@ router.get('/dashboard/report', auth, require('../controllers/dashboard/reportCo
 
 // Projects
 const projectManagers = roleGuard('admin', 'sales_manager');
-const projectStaff = roleGuard('admin', 'sales_manager', 'business', 'tech', 'marketing', 'support', 'viewer', 'client');
+const projectStaff = roleGuard('admin', 'sales_manager', 'business', 'tech', 'marketing', 'support', 'member', 'viewer', 'client');
 const projectEditors = roleGuard('admin', 'sales_manager', 'business', 'tech');
 router.post('/projects', auth, projectManagers, require('../controllers/project/createController'));
 router.get('/projects', auth, projectStaff, require('../controllers/project/listController'));
