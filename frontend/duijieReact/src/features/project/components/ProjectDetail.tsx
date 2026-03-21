@@ -30,6 +30,7 @@ const taskStatusMap: Record<string, { label: string; color: string }> = {
 }
 
 const section: React.CSSProperties = { background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16 }
+const sysRoleLabel: Record<string, string> = { admin: '管理员', sales_manager: '销售经理', business: '业务员', marketing: '市场', tech: '技术', support: '客服', member: '成员', viewer: '只读', client: '客户' }
 
 export default function ProjectDetail() {
   const { id } = useParams()
@@ -188,7 +189,7 @@ export default function ProjectDetail() {
               <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 8 }}>添加新成员</label>
               <Input placeholder="输入用户名或昵称筛选" value={memberSearch} onChange={e => setMemberSearch(e.target.value)} />
               <div style={{ maxHeight: 180, overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: 8, marginTop: 8 }}>
-                {availableUsers.filter(u => !memberSearch || (u.nickname || u.username || '').toLowerCase().includes(memberSearch.toLowerCase())).map((u: any) => (
+                {availableUsers.filter(u => { if (!memberSearch) return true; const s = memberSearch.toLowerCase(); return (u.nickname || '').toLowerCase().includes(s) || (u.username || '').toLowerCase().includes(s) || (sysRoleLabel[u.role] || '').includes(s) }).map((u: any) => (
                   <div key={u.id} onClick={() => setMemberForm({ ...memberForm, user_id: String(u.id) })}
                     style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', cursor: 'pointer',
                       background: memberForm.user_id === String(u.id) ? '#eff6ff' : 'transparent',
@@ -198,12 +199,12 @@ export default function ProjectDetail() {
                     <Avatar name={u.nickname || u.username || '?'} size={28} />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>{u.nickname || u.username}</div>
-                      <div style={{ fontSize: 11, color: '#94a3b8' }}>@{u.username}</div>
+                      <div style={{ fontSize: 11, color: '#94a3b8' }}>@{u.username} · {sysRoleLabel[u.role] || u.role}</div>
                     </div>
                     {memberForm.user_id === String(u.id) && <CheckCircle size={16} color="#2563eb" />}
                   </div>
                 ))}
-                {availableUsers.filter(u => !memberSearch || (u.nickname || u.username || '').toLowerCase().includes(memberSearch.toLowerCase())).length === 0 && (
+                {availableUsers.filter(u => { if (!memberSearch) return true; const s = memberSearch.toLowerCase(); return (u.nickname || '').toLowerCase().includes(s) || (u.username || '').toLowerCase().includes(s) || (sysRoleLabel[u.role] || '').includes(s) }).length === 0 && (
                   <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>无可添加的用户</div>
                 )}
               </div>
