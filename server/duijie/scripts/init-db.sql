@@ -14,13 +14,48 @@ CREATE TABLE IF NOT EXISTS duijie_clients (
   job_function VARCHAR(100) COMMENT '工作职能',
   avatar VARCHAR(500) COMMENT '头像URL',
   notes TEXT COMMENT '备注',
+  assigned_to INT COMMENT '对接人(负责业务员)',
   created_by INT NOT NULL COMMENT '创建者',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   is_deleted TINYINT(1) DEFAULT 0,
   INDEX idx_created_by (created_by),
+  INDEX idx_assigned_to (assigned_to),
   INDEX idx_is_deleted (is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='对接-客户表';
+
+CREATE TABLE IF NOT EXISTS duijie_opportunities (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(200) NOT NULL COMMENT '商机标题',
+  client_id INT COMMENT '关联客户',
+  amount DECIMAL(12,2) DEFAULT 0 COMMENT '预计金额',
+  probability TINYINT DEFAULT 50 COMMENT '成交概率%',
+  stage VARCHAR(20) DEFAULT 'lead' COMMENT '商机阶段: lead/qualify/proposal/negotiate/won/lost',
+  expected_close DATE COMMENT '预计成交日期',
+  assigned_to INT COMMENT '负责人',
+  notes TEXT COMMENT '备注',
+  created_by INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  is_deleted TINYINT(1) DEFAULT 0,
+  INDEX idx_client_id (client_id),
+  INDEX idx_assigned_to (assigned_to),
+  INDEX idx_stage (stage),
+  INDEX idx_is_deleted (is_deleted)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='对接-商机表';
+
+CREATE TABLE IF NOT EXISTS duijie_direct_messages (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  sender_id INT NOT NULL COMMENT '发送者',
+  receiver_id INT NOT NULL COMMENT '接收者',
+  content TEXT NOT NULL COMMENT '消息内容',
+  read_at TIMESTAMP NULL COMMENT '已读时间',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  is_deleted TINYINT(1) DEFAULT 0,
+  INDEX idx_sender (sender_id),
+  INDEX idx_receiver (receiver_id),
+  INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='对接-站内消息表';
 
 CREATE TABLE IF NOT EXISTS duijie_projects (
   id INT AUTO_INCREMENT PRIMARY KEY,

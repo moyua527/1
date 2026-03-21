@@ -79,6 +79,12 @@ router.delete('/contracts/:id', auth, clientStaff, require('../controllers/contr
 router.post('/follow-ups', auth, clientStaff, require('../controllers/followUp/createController'));
 router.get('/clients/:clientId/follow-ups', auth, clientStaff, require('../controllers/followUp/listController'));
 
+// Opportunities (admin/business)
+router.post('/opportunities', auth, clientStaff, require('../controllers/opportunity/createController'));
+router.get('/opportunities', auth, clientStaff, require('../controllers/opportunity/listController'));
+router.put('/opportunities/:id', auth, clientStaff, require('../controllers/opportunity/updateController'));
+router.delete('/opportunities/:id', auth, clientStaff, require('../controllers/opportunity/deleteController'));
+
 // Tasks (all authenticated users)
 router.post('/tasks', auth, require('../controllers/task/createController'));
 router.get('/tasks', auth, require('../controllers/task/listController'));
@@ -100,6 +106,12 @@ router.get('/files/:id/download', auth, require('../controllers/file/downloadCon
 // Messages
 router.post('/messages', auth, require('../controllers/message/sendController'));
 router.get('/messages', auth, require('../controllers/message/listController'));
+
+// Direct Messages
+router.get('/dm/conversations', auth, require('../controllers/dm/conversationsController'));
+router.get('/dm/users', auth, require('../controllers/dm/usersController'));
+router.get('/dm/:userId/history', auth, require('../controllers/dm/historyController'));
+router.post('/dm/send', auth, require('../controllers/dm/sendController'));
 
 // Users (admin only)
 const adminOnly = roleGuard('admin');

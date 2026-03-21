@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield, Settings, Copy } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield, Settings, Copy, TrendingUp, MessageSquare } from 'lucide-react'
 import { fetchApi, clearToken } from '../../bootstrap'
 import Avatar from './Avatar'
 import Modal from './Modal'
@@ -13,7 +13,9 @@ const ALL_NAV_ITEMS = [
   { path: '/', label: '仪表盘', icon: LayoutDashboard, roles: ['admin', 'tech', 'business', 'member'] },
   { path: '/projects', label: '项目管理', icon: FolderKanban, roles: ['admin', 'tech', 'business', 'member'] },
   { path: '/clients', label: '客户管理', icon: Users, roles: ['admin', 'business'] },
+  { path: '/opportunities', label: '商机管理', icon: TrendingUp, roles: ['admin', 'business'] },
   { path: '/tasks', label: '任务看板', icon: ListTodo, roles: ['admin', 'tech', 'business', 'member'] },
+  { path: '/messaging', label: '站内消息', icon: MessageSquare, roles: ['admin', 'tech', 'business', 'member'] },
   { path: '/report', label: '数据报表', icon: BarChart3, roles: ['admin', 'business'] },
   { path: '/users', label: '用户管理', icon: Shield, roles: ['admin'] },
 ]

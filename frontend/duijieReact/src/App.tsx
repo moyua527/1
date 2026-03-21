@@ -12,6 +12,8 @@ import ClientDetail from './features/client/components/ClientDetail'
 import TaskBoard from './features/task/index'
 import Report from './features/dashboard/Report'
 import UserManagement from './features/user/index'
+import OpportunityList from './features/opportunity/index'
+import Messaging from './features/messaging/index'
 import ToastContainer from './features/ui/Toast'
 
 export default function App() {
@@ -40,7 +42,9 @@ export default function App() {
           <Route path="/projects/:id" element={<ProjectDetail />} />
           {canClients && <Route path="/clients" element={<ClientList />} />}
           {canClients && <Route path="/clients/:id" element={<ClientDetail />} />}
+          {canClients && <Route path="/opportunities" element={<OpportunityList />} />}
           {canTasks && <Route path="/tasks" element={<TaskBoard />} />}
+          <Route path="/messaging" element={<Messaging />} />
           {canReport && <Route path="/report" element={<Report />} />}
           {user.role === 'admin' && <Route path="/users" element={<UserManagement />} />}
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -40,7 +40,7 @@ export default function ClientDetail() {
   const [editOpen, setEditOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [logs, setLogs] = useState<any[]>([])
-  const [form, setForm] = useState({ name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', notes: '', position_level: '', department: '', job_function: '' })
+  const [form, setForm] = useState({ name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', notes: '', position_level: '', department: '', job_function: '', assigned_to: '' })
   const [saving, setSaving] = useState(false)
   const [editErrors, setEditErrors] = useState<Record<string, string>>({})
   const menuRef = useRef<HTMLDivElement>(null)
@@ -63,6 +63,7 @@ export default function ClientDetail() {
   const [newTagName, setNewTagName] = useState('')
   const [newTagColor, setNewTagColor] = useState('#6b7280')
   const [contracts, setContracts] = useState<any[]>([])
+  const [staffMembers, setStaffMembers] = useState<any[]>([])
   const [contractModalOpen, setContractModalOpen] = useState(false)
   const [editingContract, setEditingContract] = useState<any>(null)
   const [contractForm, setContractForm] = useState({ title: '', amount: '', status: 'draft', signed_date: '', expire_date: '', notes: '' })
@@ -86,7 +87,8 @@ export default function ClientDetail() {
   }, [])
 
   const openEdit = () => {
-    setForm({ name: client.name || '', company: client.company || '', email: client.email || '', phone: client.phone || '', channel: client.channel || '', stage: client.stage || 'potential', notes: client.notes || '', position_level: client.position_level || '', department: client.department || '', job_function: client.job_function || '' })
+    setForm({ name: client.name || '', company: client.company || '', email: client.email || '', phone: client.phone || '', channel: client.channel || '', stage: client.stage || 'potential', notes: client.notes || '', position_level: client.position_level || '', department: client.department || '', job_function: client.job_function || '', assigned_to: client.assigned_to ? String(client.assigned_to) : '' })
+    clientApi.availableMembers().then(r => { if (r.success) setStaffMembers((r.data || []).filter((u: any) => ['admin', 'business', 'tech'].includes(u.role))) })
     setEditOpen(true); setMenuOpen(false)
   }
 
@@ -289,6 +291,7 @@ export default function ClientDetail() {
           {client.position_level && <div style={infoRow}><Users size={16} color="#7c3aed" /> <span style={{ color: '#7c3aed', fontWeight: 500 }}>职位: {client.position_level}</span></div>}
           {client.department && <div style={infoRow}><Building size={16} color="#0284c7" /> <span style={{ color: '#0284c7' }}>部门: {client.department}</span></div>}
           {client.job_function && <div style={infoRow}><Settings size={16} color="#d97706" /> <span style={{ color: '#d97706' }}>职能: {client.job_function}</span></div>}
+          {client.assigned_name && <div style={infoRow}><UserPlus size={16} color="#7c3aed" /> <span style={{ color: '#7c3aed', fontWeight: 500 }}>对接人: {client.assigned_name}</span></div>}
           {client.notes && <div style={infoRow}><FileText size={16} color="#64748b" /> {client.notes}</div>}
         </div>
         <div style={{ borderTop: '1px solid #e2e8f0', marginTop: 8, paddingTop: 12 }}>
@@ -572,6 +575,14 @@ export default function ClientDetail() {
               {jobFunctions.map(j => <option key={j} value={j}>{j}</option>)}
             </select>
             {ee.job_function && <div style={es}>{ee.job_function}</div>}
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>对接人</label>
+            <select value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
+              <option value="">暂不分配</option>
+              {staffMembers.map((u: any) => <option key={u.id} value={u.id}>{u.nickname || u.username} ({u.role === 'admin' ? '管理' : u.role === 'business' ? '业务' : '技术'})</option>)}
+            </select>
           </div>
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>备注</label>

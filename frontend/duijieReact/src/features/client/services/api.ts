@@ -32,4 +32,9 @@ export const clientApi = {
   createContract: (data: any) => fetchApi('/api/contracts', { method: 'POST', body: JSON.stringify(data) }),
   updateContract: (id: number, data: any) => fetchApi(`/api/contracts/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteContract: (id: number) => fetchApi(`/api/contracts/${id}`, { method: 'DELETE' }),
+  // Opportunities
+  opportunities: () => fetchApi('/api/opportunities'),
+  createOpportunity: (data: any) => fetchApi('/api/opportunities', { method: 'POST', body: JSON.stringify(data) }),
+  updateOpportunity: (id: number, data: any) => fetchApi(`/api/opportunities/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteOpportunity: (id: number) => fetchApi(`/api/opportunities/${id}`, { method: 'DELETE' }),
 }

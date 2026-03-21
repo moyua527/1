@@ -28,7 +28,7 @@ export default function ClientList() {
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [form, setForm] = useState({ user_id: '', name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', position_level: '', department: '', job_function: '' })
+  const [form, setForm] = useState({ user_id: '', name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', position_level: '', department: '', job_function: '', assigned_to: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [availableMembers, setAvailableMembers] = useState<any[]>([])
   const [searchParams, setSearchParams] = useSearchParams()
@@ -82,7 +82,7 @@ export default function ClientList() {
     setSubmitting(true)
     const r = await clientApi.create({ ...form, user_id: Number(form.user_id) })
     setSubmitting(false)
-    if (r.success) { toast('客户添加成功', 'success'); setShowCreate(false); setForm({ user_id: '', name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', position_level: '', department: '', job_function: '' }); setErrors({}); load() }
+    if (r.success) { toast('客户添加成功', 'success'); setShowCreate(false); setForm({ user_id: '', name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', position_level: '', department: '', job_function: '', assigned_to: '' }); setErrors({}); load() }
     else toast(r.message || '添加失败', 'error')
   }
 
@@ -167,6 +167,7 @@ export default function ClientList() {
                   </div>
                   {c.company && <div style={{ fontSize: 13, color: '#64748b' }}>{c.company}</div>}
                   {c.channel && <div style={{ fontSize: 12, color: '#2563eb' }}>渠道: {c.channel}</div>}
+                  {c.assigned_name && <div style={{ fontSize: 12, color: '#7c3aed' }}>对接人: {c.assigned_name}</div>}
                   {c.tags && c.tags.length > 0 && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
                       {c.tags.slice(0, 4).map((t: any, i: number) => (
@@ -274,6 +275,14 @@ export default function ClientList() {
             <select value={form.stage} onChange={e => setForm({ ...form, stage: e.target.value })}
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
               {Object.entries(stageMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>对接人（选填）</label>
+            <select value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
+              <option value="">暂不分配</option>
+              {availableMembers.filter(u => ['admin', 'business', 'tech'].includes(u.role)).map((u: any) => <option key={u.id} value={u.id}>{u.nickname || u.username} ({u.role === 'admin' ? '管理' : u.role === 'business' ? '业务' : '技术'})</option>)}
             </select>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
