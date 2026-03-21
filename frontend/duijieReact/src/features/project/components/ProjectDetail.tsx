@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
 import { ArrowLeft, Trash2, User, Mail, Shield, ChevronDown, Plus, X, Upload, FileText, Image, CheckCircle, Circle } from 'lucide-react'
 import Modal from '../../ui/Modal'
 import Avatar from '../../ui/Avatar'
@@ -34,6 +34,10 @@ const section: React.CSSProperties = { background: '#fff', borderRadius: 12, pad
 export default function ProjectDetail() {
   const { id } = useParams()
   const nav = useNavigate()
+  const { user } = useOutletContext<{ user: any }>()
+  const role = user?.role
+  const canEdit = ['admin', 'sales_manager', 'business', 'tech'].includes(role)
+  const canDelete = role === 'admin'
   const [project, setProject] = useState<any>(null)
   const [tasks, setTasks] = useState<any[]>([])
   const [milestones, setMilestones] = useState<any[]>([])
@@ -97,7 +101,7 @@ export default function ProjectDetail() {
             {project.client_name && <span style={{ fontSize: 13, color: '#64748b' }}>客户: {project.client_name}</span>}
           </div>
         </div>
-        <Button variant="danger" onClick={handleDelete}><Trash2 size={14} /> 删除</Button>
+        {canDelete && <Button variant="danger" onClick={handleDelete}><Trash2 size={14} /> 删除</Button>}
       </div>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
@@ -150,7 +154,7 @@ export default function ProjectDetail() {
         <div style={section}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>任务列表</h3>
-            <div ref={dropdownRef} style={{ position: 'relative' }}>
+            {canEdit && <div ref={dropdownRef} style={{ position: 'relative' }}>
               <button onClick={() => setDropdownOpen(!dropdownOpen)} style={{
                 display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8,
                 background: '#2563eb', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500,
@@ -167,7 +171,7 @@ export default function ProjectDetail() {
                   </button>
                 </div>
               )}
-            </div>
+            </div>}
           </div>
           {tasks.length === 0 ? <div style={{ color: '#94a3b8', fontSize: 14 }}>暂无任务</div> : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -180,10 +184,10 @@ export default function ProjectDetail() {
                       {t.description && <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>{t.description}</div>}
                       {t.due_date && <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>截止: {t.due_date}</div>}
                     </div>
-                    <select value={t.status} onChange={async (e) => {
+                    <select value={t.status} disabled={!canEdit} onChange={async (e) => {
                       await taskApi.move(String(t.id), e.target.value)
                       loadTasks()
-                    }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 13, color: '#334155', cursor: 'pointer' }}>
+                    }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 13, color: '#334155', cursor: canEdit ? 'pointer' : 'default', opacity: canEdit ? 1 : 0.6 }}>
                       <option value="todo">待办</option>
                       <option value="in_progress">进行中</option>
                       <option value="pending_review">待验收</option>
@@ -303,8 +307,8 @@ export default function ProjectDetail() {
           {milestones.length === 0 ? <div style={{ color: '#94a3b8', fontSize: 14 }}>暂无里程碑</div> : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {milestones.map((m: any) => (
-                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: '#f8fafc', borderRadius: 8, cursor: 'pointer' }}
-                  onClick={async () => { await milestoneApi.toggle(String(m.id)); loadTasks() }}>
+                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: '#f8fafc', borderRadius: 8, cursor: canEdit ? 'pointer' : 'default' }}
+                  onClick={canEdit ? async () => { await milestoneApi.toggle(String(m.id)); loadTasks() } : undefined}>
                   {m.is_completed ? <CheckCircle size={20} color="#16a34a" /> : <Circle size={20} color="#94a3b8" />}
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 500, color: m.is_completed ? '#94a3b8' : '#0f172a', textDecoration: m.is_completed ? 'line-through' : 'none' }}>{m.title}</div>

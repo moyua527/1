@@ -34,7 +34,7 @@ export default function App() {
   const canOpportunities = ['admin', 'sales_manager', 'business', 'viewer'].includes(r)
   const canTasks = ['admin', 'sales_manager', 'tech', 'business', 'member'].includes(r)
   const canReport = ['admin', 'sales_manager', 'business', 'marketing'].includes(r)
-  const canProjects = r !== 'viewer' && r !== 'marketing'
+  const canProjects = true
 
   return (
     <>

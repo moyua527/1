@@ -34,11 +34,14 @@ router.get('/dashboard/stats', auth, require('../controllers/dashboard/statsCont
 router.get('/dashboard/report', auth, require('../controllers/dashboard/reportController'));
 
 // Projects
-router.post('/projects', auth, require('../controllers/project/createController'));
-router.get('/projects', auth, require('../controllers/project/listController'));
-router.get('/projects/:id', auth, require('../controllers/project/detailController'));
-router.put('/projects/:id', auth, require('../controllers/project/updateController'));
-router.delete('/projects/:id', auth, require('../controllers/project/deleteController'));
+const projectManagers = roleGuard('admin', 'sales_manager');
+const projectStaff = roleGuard('admin', 'sales_manager', 'business', 'tech', 'marketing', 'support', 'viewer', 'client');
+const projectEditors = roleGuard('admin', 'sales_manager', 'business', 'tech');
+router.post('/projects', auth, projectManagers, require('../controllers/project/createController'));
+router.get('/projects', auth, projectStaff, require('../controllers/project/listController'));
+router.get('/projects/:id', auth, projectStaff, require('../controllers/project/detailController'));
+router.put('/projects/:id', auth, projectEditors, require('../controllers/project/updateController'));
+router.delete('/projects/:id', auth, roleGuard('admin'), require('../controllers/project/deleteController'));
 
 // Clients
 router.get('/clients/available-members', auth, salesTeam, require('../controllers/client/availableMembersController'));

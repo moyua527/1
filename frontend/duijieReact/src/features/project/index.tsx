@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 import { Plus, FolderKanban, Loader2 } from 'lucide-react'
 import { projectApi } from './services/api'
 import { clientApi } from '../client/services/api'
@@ -31,6 +31,9 @@ export default function ProjectList() {
   const [form, setForm] = useState({ name: '', description: '', client_id: '' })
   const [allClients, setAllClients] = useState<any[]>([])
   const nav = useNavigate()
+  const { user } = useOutletContext<{ user: any }>()
+  const role = user?.role
+  const canCreate = ['admin', 'sales_manager'].includes(role)
 
   const load = () => { setLoading(true); projectApi.list().then(r => { if (r.success) setProjects(r.data?.rows || []) }).finally(() => setLoading(false)) }
   useEffect(() => { load(); clientApi.list().then(r => { if (r.success) setAllClients(r.data || []) }) }, [])
@@ -38,7 +41,8 @@ export default function ProjectList() {
   const handleCreate = async () => {
     if (!form.name.trim()) { toast('请输入项目名称', 'error'); return }
     setSubmitting(true)
-    const r = await projectApi.create({ ...form, client_id: form.client_id ? Number(form.client_id) : null })
+    if (!form.client_id) { toast('请关联客户', 'error'); return }
+    const r = await projectApi.create({ ...form, client_id: Number(form.client_id) })
     setSubmitting(false)
     if (r.success) { toast('项目创建成功', 'success'); setShowCreate(false); setForm({ name: '', description: '', client_id: '' }); load() }
     else toast(r.message || '创建失败', 'error')
@@ -51,7 +55,7 @@ export default function ProjectList() {
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>项目管理</h1>
           <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>管理所有客户项目</p>
         </div>
-        <Button onClick={() => setShowCreate(true)}><Plus size={16} /> 新建项目</Button>
+        {canCreate && <Button onClick={() => setShowCreate(true)}><Plus size={16} /> 新建项目</Button>}
       </div>
 
       {loading ? (
@@ -88,7 +92,7 @@ export default function ProjectList() {
           <Input label="项目名称" placeholder="输入项目名称" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
           <Input label="项目描述" placeholder="简要描述" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>关联客户（选填）</label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>关联客户 <span style={{ color: '#dc2626' }}>*</span></label>
             <select value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value })}
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
               <option value="">请选择客户</option>
