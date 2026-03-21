@@ -17,17 +17,22 @@ import Messaging from './features/messaging/index'
 import TicketPage from './features/ticket/index'
 import ToastContainer from './features/ui/Toast'
 
+function cacheUser(u: any) { try { localStorage.setItem('cached_user', JSON.stringify(u)) } catch {} }
+function getCachedUser() { try { const s = localStorage.getItem('cached_user'); return s ? JSON.parse(s) : null } catch { return null } }
+
 export default function App() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<any>(getCachedUser)
   const [checking, setChecking] = useState(true)
 
+  const handleSetUser = (u: any) => { setUser(u); if (u) cacheUser(u); else localStorage.removeItem('cached_user') }
+
   useEffect(() => {
-    if (!getToken()) { setChecking(false); return }
-    authApi.me().then(r => { if (r.success) setUser(r.data) }).finally(() => setChecking(false))
+    if (!getToken()) { setChecking(false); handleSetUser(null); return }
+    authApi.me().then(r => { if (r.success) handleSetUser(r.data) }).finally(() => setChecking(false))
   }, [])
 
   if (checking) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#94a3b8' }}>加载中...</div>
-  if (!user) return <LoginPage onLogin={setUser} />
+  if (!user) return <LoginPage onLogin={handleSetUser} />
 
   const r = user.role
   const canClients = ['admin', 'sales_manager', 'business', 'marketing', 'support', 'viewer'].includes(r)

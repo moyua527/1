@@ -47,7 +47,7 @@ const s = {
 export default function Layout() {
   const isMobile = useIsMobile()
   const [collapsed, setCollapsed] = useState(true)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<any>(() => { try { const s = localStorage.getItem('cached_user'); return s ? JSON.parse(s) : null } catch { return null } })
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileForm, setProfileForm] = useState({ nickname: '', email: '', phone: '', password: '', confirmPassword: '' })
   const [profileSaving, setProfileSaving] = useState(false)
@@ -58,7 +58,7 @@ export default function Layout() {
 
   useEffect(() => { setCollapsed(isMobile) }, [isMobile])
   useEffect(() => { if (isMobile) setCollapsed(true) }, [location.pathname, isMobile])
-  useEffect(() => { fetchApi('/api/auth/me').then(r => { if (r.success) setUser(r.data) }) }, [])
+  useEffect(() => { fetchApi('/api/auth/me').then(r => { if (r.success) { setUser(r.data); try { localStorage.setItem('cached_user', JSON.stringify(r.data)) } catch {} } }) }, [])
 
   const openProfile = () => {
     if (user) setProfileForm({ nickname: user.nickname || '', email: user.email || '', phone: user.phone || '', password: '', confirmPassword: '' })
@@ -86,6 +86,7 @@ export default function Layout() {
   const handleLogout = async () => {
     await fetchApi('/api/auth/logout', { method: 'POST' })
     clearToken()
+    localStorage.removeItem('cached_user')
     window.location.reload()
   }
 
