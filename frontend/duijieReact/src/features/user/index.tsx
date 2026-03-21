@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Edit2, Shield, UserCheck, Loader2, KeyRound, Copy, Eye, EyeOff, Code2, Briefcase, User } from 'lucide-react'
+import { Plus, Trash2, Edit2, Shield, Loader2, Code2, Briefcase, User, MoreHorizontal } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { clientApi } from '../client/services/api'
 import Button from '../ui/Button'
@@ -30,21 +30,7 @@ export default function UserManagement() {
   const [editUser, setEditUser] = useState<any>(null)
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({ username: '', password: '', nickname: '', role: 'member', client_id: '' })
-  const [inviteCode, setInviteCode] = useState('')
-  const [inviteEditing, setInviteEditing] = useState(false)
-  const [inviteInput, setInviteInput] = useState('')
-  const [inviteSaving, setInviteSaving] = useState(false)
-  const [inviteVisible, setInviteVisible] = useState(false)
-
-  const loadInviteCode = () => { fetchApi('/api/system/invite-code').then(r => { if (r.success) setInviteCode(r.data?.inviteCode || '') }) }
-
-  const saveInviteCode = async () => {
-    setInviteSaving(true)
-    const r = await fetchApi('/api/system/invite-code', { method: 'PUT', body: JSON.stringify({ inviteCode: inviteInput }) })
-    setInviteSaving(false)
-    if (r.success) { toast(inviteInput ? '邀请码已更新' : '邀请码已关闭，任何人可注册', 'success'); setInviteCode(inviteInput); setInviteEditing(false) }
-    else toast(r.message || '保存失败', 'error')
-  }
+  const [menuOpen, setMenuOpen] = useState<number | null>(null)
 
   const load = () => {
     setLoading(true)
@@ -57,7 +43,7 @@ export default function UserManagement() {
     }).finally(() => setLoading(false))
   }
 
-  useEffect(() => { load(); loadInviteCode() }, [])
+  useEffect(() => { load() }, [])
 
   const resetForm = () => setForm({ username: '', password: '', nickname: '', role: 'member', client_id: '' })
 
@@ -100,6 +86,13 @@ export default function UserManagement() {
     return c ? `${c.name}${c.company ? ` (${c.company})` : ''}` : `#${cid}`
   }
 
+  useEffect(() => {
+    if (!menuOpen) return
+    const close = () => setMenuOpen(null)
+    document.addEventListener('click', close)
+    return () => document.removeEventListener('click', close)
+  }, [menuOpen])
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
@@ -108,34 +101,6 @@ export default function UserManagement() {
           <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>管理系统账号和角色权限</p>
         </div>
         <Button onClick={() => { resetForm(); setShowCreate(true) }}><Plus size={16} /> 创建账号</Button>
-      </div>
-
-      <div style={{ background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-        <div style={{ width: 40, height: 40, borderRadius: 10, background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <KeyRound size={20} color="#d97706" />
-        </div>
-        <div style={{ flex: 1, minWidth: 200 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>注册邀请码</div>
-          <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{inviteCode ? '已开启 — 新用户注册需输入邀请码' : '已关闭 — 任何人可直接注册'}</div>
-        </div>
-        {inviteEditing ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <input value={inviteInput} onChange={e => setInviteInput(e.target.value)} placeholder="留空则关闭邀请码" style={{ padding: '6px 12px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 13, width: 180, outline: 'none' }} />
-            <button onClick={saveInviteCode} disabled={inviteSaving} style={{ padding: '6px 14px', borderRadius: 6, border: 'none', background: '#2563eb', color: '#fff', fontSize: 13, cursor: 'pointer' }}>{inviteSaving ? '...' : '保存'}</button>
-            <button onClick={() => setInviteEditing(false)} style={{ padding: '6px 14px', borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', fontSize: 13, cursor: 'pointer' }}>取消</button>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {inviteCode && (
-              <>
-                <code style={{ padding: '4px 10px', borderRadius: 6, background: '#f1f5f9', fontSize: 13, color: '#334155', letterSpacing: 1 }}>{inviteVisible ? inviteCode : '••••••••'}</code>
-                <button onClick={() => setInviteVisible(!inviteVisible)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', padding: 4 }} title={inviteVisible ? '隐藏' : '显示'}>{inviteVisible ? <EyeOff size={16} /> : <Eye size={16} />}</button>
-                <button onClick={() => { navigator.clipboard.writeText(inviteCode); toast('已复制到剪贴板', 'success') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', padding: 4 }} title="复制"><Copy size={16} /></button>
-              </>
-            )}
-            <button onClick={() => { setInviteInput(inviteCode); setInviteEditing(true) }} style={{ padding: '6px 14px', borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', fontSize: 13, cursor: 'pointer', color: '#334155' }}><Edit2 size={12} style={{ marginRight: 4 }} />修改</button>
-          </div>
-        )}
       </div>
 
       {loading ? (
@@ -158,13 +123,20 @@ export default function UserManagement() {
                   <div style={{ fontSize: 13, color: '#64748b' }}>@{u.username}</div>
                   {u.display_id && <div style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace', letterSpacing: 0.5 }}>ID: {u.display_id}</div>}
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => openEdit(u)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', color: '#334155', display: 'flex', alignItems: 'center', gap: 4, fontSize: 13 }}>
-                    <Edit2 size={14} /> 编辑
+                <div style={{ position: 'relative' }}>
+                  <button onClick={() => setMenuOpen(menuOpen === u.id ? null : u.id)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '8px 10px', cursor: 'pointer', color: '#64748b', display: 'flex' }}>
+                    <MoreHorizontal size={18} />
                   </button>
-                  <button onClick={() => handleDelete(u)} style={{ background: '#fef2f2', border: 'none', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', color: '#dc2626', display: 'flex', alignItems: 'center', gap: 4, fontSize: 13 }}>
-                    <Trash2 size={14} /> 删除
-                  </button>
+                  {menuOpen === u.id && (
+                    <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: '#fff', borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0', zIndex: 50, minWidth: 120, overflow: 'hidden' }}>
+                      <button onClick={() => { setMenuOpen(null); openEdit(u) }} style={{ width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#334155' }} onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                        <Edit2 size={14} /> 编辑
+                      </button>
+                      <button onClick={() => { setMenuOpen(null); handleDelete(u) }} style={{ width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#dc2626' }} onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                        <Trash2 size={14} /> 删除
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )
