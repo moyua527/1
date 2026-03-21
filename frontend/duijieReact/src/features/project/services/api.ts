@@ -9,4 +9,7 @@ export const projectApi = {
   create: (data: any) => fetchApi('/api/projects', { method: 'POST', body: JSON.stringify(data) }),
   update: (id: string, data: any) => fetchApi(`/api/projects/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   remove: (id: string) => fetchApi(`/api/projects/${id}`, { method: 'DELETE' }),
+  availableUsers: (id: string) => fetchApi(`/api/projects/${id}/available-users`),
+  addMember: (id: string, data: { user_id: number; role: string }) => fetchApi(`/api/projects/${id}/members`, { method: 'POST', body: JSON.stringify(data) }),
+  removeMember: (id: string, userId: string) => fetchApi(`/api/projects/${id}/members/${userId}`, { method: 'DELETE' }),
 }

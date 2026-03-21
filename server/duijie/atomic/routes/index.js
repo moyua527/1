@@ -42,6 +42,9 @@ router.get('/projects', auth, projectStaff, require('../controllers/project/list
 router.get('/projects/:id', auth, projectStaff, require('../controllers/project/detailController'));
 router.put('/projects/:id', auth, projectEditors, require('../controllers/project/updateController'));
 router.delete('/projects/:id', auth, roleGuard('admin'), require('../controllers/project/deleteController'));
+router.get('/projects/:id/available-users', auth, projectEditors, require('../controllers/project/availableUsersController'));
+router.post('/projects/:id/members', auth, projectEditors, require('../controllers/project/addMemberController'));
+router.delete('/projects/:id/members/:userId', auth, projectEditors, require('../controllers/project/removeMemberController'));
 
 // Clients
 router.get('/clients/available-members', auth, salesTeam, require('../controllers/client/availableMembersController'));

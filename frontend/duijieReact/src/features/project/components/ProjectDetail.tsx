@@ -52,12 +52,21 @@ export default function ProjectDetail() {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [showCreateTask, setShowCreateTask] = useState(false)
   const [showDeleteTask, setShowDeleteTask] = useState(false)
+  const [showAddMember, setShowAddMember] = useState(false)
+  const [availableUsers, setAvailableUsers] = useState<any[]>([])
+  const [memberForm, setMemberForm] = useState({ user_id: '', role: 'editor' })
+  const [memberSearch, setMemberSearch] = useState('')
   const [taskForm, setTaskForm] = useState({ title: '', description: '', due_date: '', priority: 'medium' })
   const [taskFiles, setTaskFiles] = useState<File[]>([])
   const [deleteSelected, setDeleteSelected] = useState<Set<number>>(new Set())
   const [submitting, setSubmitting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  const loadProject = () => {
+    if (!id) return
+    projectApi.detail(id).then(r => { if (r.success) setProject(r.data) })
+  }
 
   const loadTasks = () => {
     if (!id) return
@@ -130,12 +139,16 @@ export default function ProjectDetail() {
             <div><div style={{ fontSize: 13, color: '#64748b' }}>任务数</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{tasks.length}</div></div>
           </div>
         </div>
-        {project.members && project.members.length > 0 && (
-          <div style={section}>
-            <h3 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 600, color: '#0f172a' }}>项目成员</h3>
+        <div style={section}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#0f172a' }}>项目成员</h3>
+            {canEdit && <Button onClick={() => { setShowAddMember(true); setMemberForm({ user_id: '', role: 'editor' }); setMemberSearch(''); projectApi.availableUsers(id!).then(r => { if (r.success) setAvailableUsers(r.data || []) }) }}><Plus size={14} /> 添加成员</Button>}
+          </div>
+          {project.members && project.members.length > 0 ? (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
               {project.members.map((m: any) => (
-                <div key={m.id} onClick={() => setSelectedMember(m)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0', cursor: 'pointer', transition: 'all 0.15s' }}
+                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0', cursor: 'pointer', transition: 'all 0.15s', position: 'relative' }}
+                  onClick={() => setSelectedMember(m)}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.background = '#eff6ff' }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#f8fafc' }}>
                   <Avatar name={m.nickname || m.username || '?'} size={32} />
@@ -143,11 +156,63 @@ export default function ProjectDetail() {
                     <div style={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>{m.nickname || m.username}</div>
                     <div style={{ fontSize: 11, color: '#94a3b8' }}>{m.member_role === 'owner' ? '负责人' : m.member_role === 'editor' ? '编辑者' : '查看者'}</div>
                   </div>
+                  {canEdit && m.member_role !== 'owner' && (
+                    <button onClick={async (e) => { e.stopPropagation(); const r = await projectApi.removeMember(id!, String(m.id)); if (r.success) { toast('已移除', 'success'); loadProject() } else toast(r.message || '移除失败', 'error') }}
+                      style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.8 }}
+                      title="移除成员"><X size={12} /></button>
+                  )}
                 </div>
               ))}
             </div>
+          ) : <div style={{ color: '#94a3b8', fontSize: 14 }}>暂无成员</div>}
+        </div>
+
+        <Modal open={showAddMember} onClose={() => setShowAddMember(false)} title="添加项目成员">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <Input label="搜索用户" placeholder="输入用户名或昵称筛选" value={memberSearch} onChange={e => setMemberSearch(e.target.value)} />
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>选择用户 <span style={{ color: '#dc2626' }}>*</span></label>
+              <div style={{ maxHeight: 200, overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: 8 }}>
+                {availableUsers.filter(u => !memberSearch || (u.nickname || u.username || '').toLowerCase().includes(memberSearch.toLowerCase())).map((u: any) => (
+                  <div key={u.id} onClick={() => setMemberForm({ ...memberForm, user_id: String(u.id) })}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', cursor: 'pointer',
+                      background: memberForm.user_id === String(u.id) ? '#eff6ff' : 'transparent',
+                      borderBottom: '1px solid #f1f5f9' }}
+                    onMouseEnter={e => { if (memberForm.user_id !== String(u.id)) e.currentTarget.style.background = '#f8fafc' }}
+                    onMouseLeave={e => { if (memberForm.user_id !== String(u.id)) e.currentTarget.style.background = 'transparent' }}>
+                    <Avatar name={u.nickname || u.username || '?'} size={28} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>{u.nickname || u.username}</div>
+                      <div style={{ fontSize: 11, color: '#94a3b8' }}>@{u.username}</div>
+                    </div>
+                    {memberForm.user_id === String(u.id) && <CheckCircle size={16} color="#2563eb" />}
+                  </div>
+                ))}
+                {availableUsers.filter(u => !memberSearch || (u.nickname || u.username || '').toLowerCase().includes(memberSearch.toLowerCase())).length === 0 && (
+                  <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>无可添加的用户</div>
+                )}
+              </div>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>项目角色</label>
+              <select value={memberForm.role} onChange={e => setMemberForm({ ...memberForm, role: e.target.value })}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
+                <option value="editor">编辑者</option>
+                <option value="viewer">查看者</option>
+              </select>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+              <Button variant="secondary" onClick={() => setShowAddMember(false)}>取消</Button>
+              <Button disabled={!memberForm.user_id || submitting} onClick={async () => {
+                setSubmitting(true)
+                const r = await projectApi.addMember(id!, { user_id: Number(memberForm.user_id), role: memberForm.role })
+                setSubmitting(false)
+                if (r.success) { toast('成员添加成功', 'success'); setShowAddMember(false); loadProject() }
+                else toast(r.message || '添加失败', 'error')
+              }}>{submitting ? '添加中...' : '添加'}</Button>
+            </div>
           </div>
-        )}
+        </Modal>
       </>)}
 
       {tab === 'tasks' && (<>
