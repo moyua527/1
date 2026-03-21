@@ -33,8 +33,8 @@ export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null)
   const nav = useNavigate()
   const { user } = useOutletContext<{ user: any }>()
-  const isStaff = user?.role === 'admin' || user?.role === 'member'
-  const isAdmin = user?.role === 'admin'
+  const canClients = user?.role === 'admin' || user?.role === 'business'
+  const canTasks = ['admin', 'tech', 'business'].includes(user?.role)
 
   useEffect(() => {
     fetchApi('/api/dashboard/stats').then(r => { if (r.success) setStats(r.data) }).catch(() => {
@@ -46,12 +46,14 @@ export default function Dashboard() {
     { label: '总项目', value: stats.totalProjects, icon: FolderKanban, bg: '#dbeafe', color: '#2563eb', path: '/projects' },
     { label: '进行中', value: stats.activeProjects, icon: TrendingUp, bg: '#fef3c7', color: '#d97706', path: '/projects' },
     { label: '已完成', value: stats.completedProjects, icon: CheckCircle, bg: '#dcfce7', color: '#16a34a', path: '/projects' },
-    ...(isStaff ? [
+    ...(canClients ? [
       { label: '客户总数', value: stats.totalClients, icon: Users, bg: '#f3e8ff', color: '#7c3aed', path: '/clients' },
-      { label: '总任务', value: stats.totalTasks, icon: ListTodo, bg: '#e0f2fe', color: '#0284c7', path: '/tasks' },
-      { label: '待办任务', value: stats.pendingTasks, icon: Clock, bg: '#fee2e2', color: '#dc2626', path: '/tasks' },
       { label: '合同总数', value: stats.contracts?.total || 0, icon: FileSignature, bg: '#dcfce7', color: '#16a34a', path: '/report' },
       { label: '生效合同额', value: '¥' + ((stats.contracts?.activeAmount || 0) / 10000).toFixed(1) + '万', icon: DollarSign, bg: '#fef3c7', color: '#d97706', path: '/report', isText: true },
+    ] : []),
+    ...(canTasks ? [
+      { label: '总任务', value: stats.totalTasks, icon: ListTodo, bg: '#e0f2fe', color: '#0284c7', path: '/tasks' },
+      { label: '待办任务', value: stats.pendingTasks, icon: Clock, bg: '#fee2e2', color: '#dc2626', path: '/tasks' },
     ] : []),
   ] : []
 
@@ -74,7 +76,7 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
-      {isAdmin && stats?.clientStages && (() => {
+      {canClients && stats?.clientStages && (() => {
         const stages = stats.clientStages!
         const total = Object.values(stages).reduce((a, b) => a + b, 0)
         const maxCount = Math.max(...Object.values(stages), 1)
@@ -107,7 +109,7 @@ export default function Dashboard() {
           </div>
         )
       })()}
-      {isAdmin && stats?.followUpAlerts && (stats.followUpAlerts.overdue > 0 || stats.followUpAlerts.upcoming > 0) && (
+      {canClients && stats?.followUpAlerts && (stats.followUpAlerts.overdue > 0 || stats.followUpAlerts.upcoming > 0) && (
         <div style={{ background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginTop: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 8 }}>
             <Bell size={20} color="#d97706" />
@@ -129,7 +131,7 @@ export default function Dashboard() {
           )}
         </div>
       )}
-      {isAdmin && stats && ((stats.recentFollowUps?.length || 0) > 0 || (stats.recentContracts?.length || 0) > 0) && (
+      {canClients && stats && ((stats.recentFollowUps?.length || 0) > 0 || (stats.recentContracts?.length || 0) > 0) && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 16, marginTop: 24 }}>
           {(stats.recentFollowUps?.length || 0) > 0 && (
             <div style={{ background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
