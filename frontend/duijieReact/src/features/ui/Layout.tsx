@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield, Settings } from 'lucide-react'
 import { fetchApi, clearToken } from '../../bootstrap'
 import Avatar from './Avatar'
+import Modal from './Modal'
+import Input from './Input'
+import Button from './Button'
+import { toast } from './Toast'
 
 const ALL_NAV_ITEMS = [
   { path: '/', label: '仪表盘', icon: LayoutDashboard, roles: ['admin', 'member', 'client'] },
@@ -35,12 +39,36 @@ const s = {
 export default function Layout() {
   const [collapsed, setCollapsed] = useState(false)
   const [user, setUser] = useState<any>(null)
+  const [profileOpen, setProfileOpen] = useState(false)
+  const [profileForm, setProfileForm] = useState({ nickname: '', password: '', confirmPassword: '' })
+  const [profileSaving, setProfileSaving] = useState(false)
   const location = useLocation()
   const role = user?.role || 'member'
   const NAV_ITEMS = ALL_NAV_ITEMS.filter(n => n.roles.includes(role))
   const currentNav = NAV_ITEMS.find(n => n.path === '/' ? location.pathname === '/' : location.pathname.startsWith(n.path))
 
   useEffect(() => { fetchApi('/api/auth/me').then(r => { if (r.success) setUser(r.data) }) }, [])
+
+  const openProfile = () => {
+    if (user) setProfileForm({ nickname: user.nickname || '', password: '', confirmPassword: '' })
+    setProfileOpen(true)
+  }
+
+  const handleProfileSave = async () => {
+    const body: any = {}
+    if (profileForm.nickname.trim() && profileForm.nickname.trim() !== user?.nickname) body.nickname = profileForm.nickname.trim()
+    if (profileForm.password) {
+      if (profileForm.password.length < 6) { toast('密码至少6位', 'error'); return }
+      if (profileForm.password !== profileForm.confirmPassword) { toast('两次密码不一致', 'error'); return }
+      body.password = profileForm.password
+    }
+    if (Object.keys(body).length === 0) { toast('没有需要更新的内容', 'error'); return }
+    setProfileSaving(true)
+    const r = await fetchApi('/api/auth/profile', { method: 'PUT', body: JSON.stringify(body) })
+    setProfileSaving(false)
+    if (r.success) { toast('个人信息已更新', 'success'); setUser(r.data); setProfileOpen(false) }
+    else toast(r.message || '更新失败', 'error')
+  }
 
   const handleLogout = async () => {
     await fetchApi('/api/auth/logout', { method: 'POST' })
@@ -67,10 +95,13 @@ export default function Layout() {
         </nav>
         {user && (
           <div style={s.userArea}>
-            <Avatar name={user.nickname || user.username} size={32} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.nickname || user.username}</div>
-              <div style={{ fontSize: 11, color: '#94a3b8' }}>{roleLabel[user.role] || user.role}</div>
+            <div onClick={openProfile} style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0, cursor: 'pointer' }}
+              title="点击编辑个人信息">
+              <Avatar name={user.nickname || user.username} size={32} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.nickname || user.username}</div>
+                <div style={{ fontSize: 11, color: '#94a3b8' }}>{roleLabel[user.role] || user.role}</div>
+              </div>
             </div>
             <button style={s.logoutBtn} onClick={handleLogout} title="登出"><LogOut size={16} /></button>
           </div>
@@ -92,6 +123,26 @@ export default function Layout() {
           <Outlet context={{ user }} />
         </main>
       </div>
+
+      <Modal open={profileOpen} onClose={() => setProfileOpen(false)} title="个人信息设置">
+        {user && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, paddingBottom: 12, borderBottom: '1px solid #e2e8f0' }}>
+              <Avatar name={user.nickname || user.username} size={56} />
+              <div style={{ fontSize: 12, color: '#94a3b8' }}>@{user.username} · {roleLabel[user.role] || user.role}</div>
+            </div>
+            <Input label="昵称" placeholder="输入新昵称" value={profileForm.nickname} onChange={e => setProfileForm({ ...profileForm, nickname: e.target.value })} />
+            <Input label="新密码（不修改请留空）" placeholder="至少6位" type="password" value={profileForm.password} onChange={e => setProfileForm({ ...profileForm, password: e.target.value })} />
+            {profileForm.password && (
+              <Input label="确认密码" placeholder="再次输入新密码" type="password" value={profileForm.confirmPassword} onChange={e => setProfileForm({ ...profileForm, confirmPassword: e.target.value })} />
+            )}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+              <Button variant="secondary" onClick={() => setProfileOpen(false)}>取消</Button>
+              <Button onClick={handleProfileSave} disabled={profileSaving}>{profileSaving ? '保存中...' : '保存'}</Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }
