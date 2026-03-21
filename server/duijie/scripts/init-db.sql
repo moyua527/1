@@ -179,6 +179,24 @@ CREATE TABLE IF NOT EXISTS duijie_messages (
   INDEX idx_is_deleted (is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='对接-消息表';
 
+-- v1.0.42: role列从ENUM扩展为VARCHAR(30)以支持9种角色
+ALTER TABLE voice_users MODIFY COLUMN role VARCHAR(30) DEFAULT 'member';
+
+-- v1.0.42: 邀请链接表
+CREATE TABLE IF NOT EXISTS duijie_invite_links (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  token VARCHAR(64) NOT NULL UNIQUE,
+  preset_role VARCHAR(30) DEFAULT 'member',
+  created_by INT NOT NULL,
+  expires_at TIMESTAMP NULL,
+  used_by INT NULL,
+  used_at TIMESTAMP NULL,
+  note VARCHAR(200),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_token (token),
+  INDEX idx_created_by (created_by)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='邀请链接表';
+
 -- v1.0.40: 团队层级支持（MySQL 8.0 不支持 IF NOT EXISTS，用存储过程兼容）
 SET @col_exists = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'voice_users' AND COLUMN_NAME = 'manager_id');
 SET @sql = IF(@col_exists = 0, 'ALTER TABLE voice_users ADD COLUMN manager_id INT DEFAULT NULL COMMENT ''上级经理ID'' AFTER client_id', 'SELECT 1');
