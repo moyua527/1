@@ -37,6 +37,7 @@ export default function ProjectDetail() {
   const { user } = useOutletContext<{ user: any }>()
   const role = user?.role
   const canEdit = ['admin', 'sales_manager', 'business', 'tech'].includes(role)
+  const canTask = canEdit || role === 'client'
   const canDelete = role === 'admin'
   const [project, setProject] = useState<any>(null)
   const [tasks, setTasks] = useState<any[]>([])
@@ -219,7 +220,7 @@ export default function ProjectDetail() {
         <div style={section}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
             <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>任务列表</h3>
-            {canEdit && <div ref={dropdownRef} style={{ position: 'relative' }}>
+            {canTask && <div ref={dropdownRef} style={{ position: 'relative' }}>
               <button onClick={() => setDropdownOpen(!dropdownOpen)} style={{
                 display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8,
                 background: '#2563eb', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500,
@@ -249,10 +250,10 @@ export default function ProjectDetail() {
                       {t.description && <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>{t.description}</div>}
                       {t.due_date && <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>截止: {t.due_date}</div>}
                     </div>
-                    <select value={t.status} disabled={!canEdit} onChange={async (e) => {
+                    <select value={t.status} disabled={!canTask} onChange={async (e) => {
                       await taskApi.move(String(t.id), e.target.value)
                       loadTasks()
-                    }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 13, color: '#334155', cursor: canEdit ? 'pointer' : 'default', opacity: canEdit ? 1 : 0.6 }}>
+                    }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 13, color: '#334155', cursor: canTask ? 'pointer' : 'default', opacity: canTask ? 1 : 0.6 }}>
                       <option value="todo">待办</option>
                       <option value="in_progress">进行中</option>
                       <option value="pending_review">待验收</option>
