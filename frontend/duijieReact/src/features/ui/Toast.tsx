@@ -30,7 +30,7 @@ export default function ToastContainer() {
   if (toasts.length === 0) return null
 
   return (
-    <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
       {toasts.map(t => {
         const c = colors[t.type]
         return (
