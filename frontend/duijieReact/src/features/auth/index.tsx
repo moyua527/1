@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { authApi } from './services/api'
 import { setToken } from '../../bootstrap'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
 import { Lock, User, Mail, Phone, KeyRound } from 'lucide-react'
+import { areaData } from '../../data/areaCode'
 
 interface Props { onLogin: (user: any) => void }
 
@@ -29,6 +30,10 @@ export default function LoginPage({ onLogin }: Props) {
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [inviteCode, setInviteCode] = useState('')
+  const [gender, setGender] = useState('')
+  const [province, setProvince] = useState('')
+  const [city, setCity] = useState('')
+  const [district, setDistrict] = useState('')
   const [needInvite, setNeedInvite] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -36,7 +41,11 @@ export default function LoginPage({ onLogin }: Props) {
 
   useEffect(() => { authApi.registerConfig().then(r => { if (r.success) setNeedInvite(r.data?.needInviteCode || false) }) }, [])
 
-  const resetForm = () => { setUsername(''); setPassword(''); setConfirmPwd(''); setNickname(''); setEmail(''); setPhone(''); setInviteCode(''); setError(''); setSuccess('') }
+  const resetForm = () => { setUsername(''); setPassword(''); setConfirmPwd(''); setNickname(''); setEmail(''); setPhone(''); setInviteCode(''); setGender(''); setProvince(''); setCity(''); setDistrict(''); setError(''); setSuccess('') }
+
+  const cities = useMemo(() => province && areaData[province]?.children ? areaData[province].children : {}, [province])
+  const districts = useMemo(() => province && city && cities[city]?.children ? cities[city].children : {}, [province, city, cities])
+  const areaCode = province && city && district ? province + city + district : ''
   const switchMode = (m: 'login' | 'register') => { setMode(m); resetForm() }
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -59,12 +68,15 @@ export default function LoginPage({ onLogin }: Props) {
     if (password !== confirmPwd) { setError('两次密码不一致'); return }
     if (!email.trim() && !phone.trim()) { setError('邮箱和手机号至少填写一项'); return }
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('邮箱格式无效'); return }
+    if (!gender) { setError('请选择性别'); return }
+    if (!areaCode || areaCode.length !== 6) { setError('请选择完整的省/市/区'); return }
     if (needInvite && !inviteCode.trim()) { setError('请输入邀请码'); return }
     setLoading(true)
     try {
       const res = await authApi.register({
         username: username.trim(), password, nickname: nickname.trim() || undefined,
         email: email.trim() || undefined, phone: phone.trim() || undefined,
+        gender: Number(gender), area_code: areaCode,
         invite_code: inviteCode.trim() || undefined,
       })
       if (res.success) { setSuccess('注册成功！即将跳转登录...'); setTimeout(() => switchMode('login'), 1500) }
@@ -103,6 +115,34 @@ export default function LoginPage({ onLogin }: Props) {
               <div style={{ fontSize: 12, color: '#64748b', margin: '-4px 0 2px' }}>邮箱和手机号至少填写一项</div>
               <Input label="邮箱" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} />
               <Input label="手机号" placeholder="输入手机号" value={phone} onChange={e => setPhone(e.target.value)} />
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>性别 *</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {[{ v: '1', l: '男' }, { v: '2', l: '女' }].map(g => (
+                    <button key={g.v} type="button" onClick={() => setGender(g.v)}
+                      style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: `1px solid ${gender === g.v ? '#2563eb' : '#cbd5e1'}`, background: gender === g.v ? '#eff6ff' : '#fff', color: gender === g.v ? '#2563eb' : '#64748b', fontWeight: 500, fontSize: 14, cursor: 'pointer', transition: 'all 0.15s' }}>
+                      {g.l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>所在地区 *</label>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <select value={province} onChange={e => { setProvince(e.target.value); setCity(''); setDistrict('') }} style={{ flex: 1, padding: '8px 6px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none', background: '#fff' }}>
+                    <option value="">省份</option>
+                    {Object.entries(areaData).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
+                  </select>
+                  <select value={city} onChange={e => { setCity(e.target.value); setDistrict('') }} style={{ flex: 1, padding: '8px 6px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none', background: '#fff' }} disabled={!province}>
+                    <option value="">城市</option>
+                    {Object.entries(cities).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
+                  </select>
+                  <select value={district} onChange={e => setDistrict(e.target.value)} style={{ flex: 1, padding: '8px 6px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none', background: '#fff' }} disabled={!city}>
+                    <option value="">区县</option>
+                    {Object.entries(districts).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
+                  </select>
+                </div>
+              </div>
             </>
           )}
 

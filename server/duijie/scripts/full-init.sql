@@ -15,6 +15,9 @@ CREATE TABLE IF NOT EXISTS voice_users (
   avatar VARCHAR(500),
   role ENUM('admin','tech','business','member') DEFAULT 'member',
   client_id INT DEFAULT NULL COMMENT '关联客户ID(仅client角色)',
+  display_id VARCHAR(30) DEFAULT NULL COMMENT '展示用唯一ID(86+地区码+日期+序号+校验位)',
+  gender TINYINT DEFAULT NULL COMMENT '1=男 2=女',
+  area_code VARCHAR(6) DEFAULT NULL COMMENT '6位行政区划代码',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   is_deleted TINYINT(1) DEFAULT 0

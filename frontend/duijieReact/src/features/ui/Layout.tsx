@@ -155,6 +155,7 @@ export default function Layout() {
               <div>
                 <div style={{ fontSize: 18, fontWeight: 600, color: '#0f172a' }}>{user.nickname || user.username}</div>
                 <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>@{user.username}</div>
+                {user.display_id && <div style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace', letterSpacing: 0.5, marginTop: 2 }}>ID: {user.display_id}</div>}
                 <div style={{ display: 'inline-block', fontSize: 11, padding: '2px 8px', borderRadius: 10, background: '#eff6ff', color: '#2563eb', fontWeight: 500, marginTop: 4 }}>{roleLabel[user.role] || user.role}</div>
               </div>
             </div>
