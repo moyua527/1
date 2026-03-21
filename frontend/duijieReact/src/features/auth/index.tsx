@@ -23,12 +23,14 @@ const getPwdStrength = (pwd: string) => {
 
 export default function LoginPage({ onLogin }: Props) {
   const [mode, setMode] = useState<'login' | 'register'>('login')
+  const [loginMethod, setLoginMethod] = useState<'password' | 'phone' | 'email'>('password')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPwd, setConfirmPwd] = useState('')
   const [nickname, setNickname] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
+  const [verifyCode, setVerifyCode] = useState('')
   const [inviteCode, setInviteCode] = useState('')
   const [gender, setGender] = useState('')
   const [province, setProvince] = useState('')
@@ -41,6 +43,7 @@ export default function LoginPage({ onLogin }: Props) {
   const [inviteToken, setInviteToken] = useState('')
   const [inviteLinkRole, setInviteLinkRole] = useState('')
   const [needApproval, setNeedApproval] = useState(false)
+  const [countdown, setCountdown] = useState(0)
 
   useEffect(() => {
     authApi.registerConfig().then(r => { if (r.success) setNeedInvite(r.data?.needInviteCode || false) })
@@ -56,20 +59,47 @@ export default function LoginPage({ onLogin }: Props) {
     }
   }, [])
 
-  const resetForm = () => { setUsername(''); setPassword(''); setConfirmPwd(''); setNickname(''); setEmail(''); setPhone(''); setInviteCode(''); setGender(''); setProvince(''); setCity(''); setDistrict(''); setError(''); setSuccess('') }
+  useEffect(() => {
+    if (countdown <= 0) return
+    const t = setTimeout(() => setCountdown(c => c - 1), 1000)
+    return () => clearTimeout(t)
+  }, [countdown])
+
+  const resetForm = () => { setUsername(''); setPassword(''); setConfirmPwd(''); setNickname(''); setEmail(''); setPhone(''); setVerifyCode(''); setInviteCode(''); setGender(''); setProvince(''); setCity(''); setDistrict(''); setError(''); setSuccess('') }
 
   const cities = useMemo(() => province && areaData[province]?.children ? areaData[province].children : {}, [province])
   const districts = useMemo(() => province && city && cities[city]?.children ? cities[city].children : {}, [province, city, cities])
   const areaCode = province && city && district ? province + city + district : ''
-  const switchMode = (m: 'login' | 'register') => { setMode(m); resetForm() }
+  const switchMode = (m: 'login' | 'register') => { setMode(m); resetForm(); setLoginMethod('password') }
+
+  const handleSendCode = async () => {
+    setError('')
+    const type = loginMethod === 'phone' ? 'phone' as const : 'email' as const
+    const target = loginMethod === 'phone' ? phone : email
+    if (loginMethod === 'phone' && !/^\d{11}$/.test(target)) { setError('请输入正确的11位手机号'); return }
+    if (loginMethod === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)) { setError('请输入正确的邮箱'); return }
+    const res = await authApi.sendCode(type, target)
+    if (res.success) { setCountdown(60); setSuccess('验证码已发送'); setTimeout(() => setSuccess(''), 3000) }
+    else setError(res.message || '发送失败')
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(''); setLoading(true)
     try {
-      const res = await authApi.login(username, password)
-      if (res.success) { if (res.token) setToken(res.token); onLogin(res.data) }
-      else setError(res.message || '登录失败')
+      if (loginMethod === 'password') {
+        const res = await authApi.login(username, password)
+        if (res.success) { if (res.token) setToken(res.token); onLogin(res.data) }
+        else setError(res.message || '登录失败')
+      } else {
+        const type = loginMethod === 'phone' ? 'phone' as const : 'email' as const
+        const target = loginMethod === 'phone' ? phone : email
+        if (!target) { setError(loginMethod === 'phone' ? '请输入手机号' : '请输入邮箱'); setLoading(false); return }
+        if (!verifyCode) { setError('请输入验证码'); setLoading(false); return }
+        const res = await authApi.loginByCode(type, target, verifyCode)
+        if (res.success) { if (res.token) setToken(res.token); onLogin(res.data) }
+        else setError(res.message || '登录失败')
+      }
     } catch { setError('网络错误') }
     setLoading(false)
   }
@@ -110,6 +140,12 @@ export default function LoginPage({ onLogin }: Props) {
 
   const pwdStrength = getPwdStrength(password)
 
+  const loginMethods = [
+    { key: 'password' as const, label: '账号密码', icon: <Lock size={14} /> },
+    { key: 'phone' as const, label: '手机验证码', icon: <Phone size={14} /> },
+    { key: 'email' as const, label: '邮箱验证码', icon: <Mail size={14} /> },
+  ]
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #eff6ff 0%, #f1f5f9 50%, #faf5ff 100%)', padding: 16, fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" }}>
       <form onSubmit={mode === 'login' ? handleLogin : handleRegister} style={{ background: '#fff', borderRadius: 16, padding: '36px 32px', width: 420, maxWidth: '100%', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
@@ -129,11 +165,66 @@ export default function LoginPage({ onLogin }: Props) {
           ))}
         </div>
 
+        {mode === 'login' && (
+          <div style={{ display: 'flex', gap: 0, marginBottom: 16, borderBottom: '1px solid #e2e8f0' }}>
+            {loginMethods.map(m => (
+              <button key={m.key} type="button" onClick={() => { setLoginMethod(m.key); setError(''); setVerifyCode('') }}
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '8px 0', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500,
+                  color: loginMethod === m.key ? '#2563eb' : '#94a3b8', background: 'transparent',
+                  borderBottom: loginMethod === m.key ? '2px solid #2563eb' : '2px solid transparent', transition: 'all 0.15s' }}>
+                {m.icon} {m.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <Input label="用户名" placeholder={mode === 'register' ? '字母、数字、下划线，至少3位' : '输入用户名'} value={username} onChange={e => setUsername(e.target.value)} />
+          {mode === 'login' && loginMethod === 'password' && (
+            <>
+              <Input label="用户名" placeholder="输入用户名" value={username} onChange={e => setUsername(e.target.value)} />
+              <Input label="密码" type="password" placeholder="输入密码" value={password} onChange={e => setPassword(e.target.value)} />
+            </>
+          )}
+
+          {mode === 'login' && loginMethod === 'phone' && (
+            <>
+              <Input label="手机号" placeholder="输入手机号" value={phone} onChange={e => setPhone(e.target.value)} />
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#475569', marginBottom: 4 }}>验证码</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input placeholder="输入6位验证码" value={verifyCode} onChange={e => setVerifyCode(e.target.value)} maxLength={6}
+                    style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                    onFocus={e => (e.currentTarget.style.borderColor = '#2563eb')} onBlur={e => (e.currentTarget.style.borderColor = '#cbd5e1')} />
+                  <button type="button" disabled={countdown > 0} onClick={handleSendCode}
+                    style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: countdown > 0 ? '#e2e8f0' : '#2563eb', color: countdown > 0 ? '#94a3b8' : '#fff', fontSize: 13, fontWeight: 500, cursor: countdown > 0 ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
+                    {countdown > 0 ? `${countdown}s` : '获取验证码'}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {mode === 'login' && loginMethod === 'email' && (
+            <>
+              <Input label="邮箱" placeholder="输入邮箱地址" value={email} onChange={e => setEmail(e.target.value)} />
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#475569', marginBottom: 4 }}>验证码</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input placeholder="输入6位验证码" value={verifyCode} onChange={e => setVerifyCode(e.target.value)} maxLength={6}
+                    style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                    onFocus={e => (e.currentTarget.style.borderColor = '#2563eb')} onBlur={e => (e.currentTarget.style.borderColor = '#cbd5e1')} />
+                  <button type="button" disabled={countdown > 0} onClick={handleSendCode}
+                    style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: countdown > 0 ? '#e2e8f0' : '#2563eb', color: countdown > 0 ? '#94a3b8' : '#fff', fontSize: 13, fontWeight: 500, cursor: countdown > 0 ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
+                    {countdown > 0 ? `${countdown}s` : '获取验证码'}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
 
           {mode === 'register' && (
             <>
+              <Input label="用户名" placeholder="字母、数字、下划线，至少3位" value={username} onChange={e => setUsername(e.target.value)} />
               <Input label="昵称（选填）" placeholder="不填则使用用户名" value={nickname} onChange={e => setNickname(e.target.value)} />
               <div style={{ fontSize: 12, color: '#64748b', margin: '-4px 0 2px' }}>邮箱和手机号至少填写一项</div>
               <Input label="邮箱" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} />
@@ -166,34 +257,28 @@ export default function LoginPage({ onLogin }: Props) {
                   </select>
                 </div>
               </div>
+              <Input label="密码" type="password" placeholder="至少6个字符" value={password} onChange={e => setPassword(e.target.value)} />
+              {password && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ flex: 1, display: 'flex', gap: 4 }}>
+                    {[1, 2, 3].map(i => (
+                      <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= pwdStrength.level ? pwdStrength.color : '#e2e8f0', transition: 'background 0.2s' }} />
+                    ))}
+                  </div>
+                  <span style={{ fontSize: 12, color: pwdStrength.color, fontWeight: 500 }}>{pwdStrength.label}</span>
+                </div>
+              )}
+              <Input label="确认密码" type="password" placeholder="再次输入密码" value={confirmPwd} onChange={e => setConfirmPwd(e.target.value)} />
+              {inviteToken && inviteLinkRole && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 8, background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                  <Link2 size={16} style={{ color: '#16a34a' }} />
+                  <span style={{ fontSize: 13, color: '#15803d' }}>通过邀请链接注册，预设角色：<strong>{inviteLinkRole}</strong>，注册后直接激活</span>
+                </div>
+              )}
+              {!inviteToken && (
+                <Input label="邀请码 *" placeholder="输入系统邀请码或他人专属邀请码" value={inviteCode} onChange={e => setInviteCode(e.target.value.toUpperCase())} />
+              )}
             </>
-          )}
-
-          <Input label="密码" type="password" placeholder={mode === 'register' ? '至少6个字符' : '输入密码'} value={password} onChange={e => setPassword(e.target.value)} />
-
-          {mode === 'register' && password && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ flex: 1, display: 'flex', gap: 4 }}>
-                {[1, 2, 3].map(i => (
-                  <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= pwdStrength.level ? pwdStrength.color : '#e2e8f0', transition: 'background 0.2s' }} />
-                ))}
-              </div>
-              <span style={{ fontSize: 12, color: pwdStrength.color, fontWeight: 500 }}>{pwdStrength.label}</span>
-            </div>
-          )}
-
-          {mode === 'register' && (
-            <Input label="确认密码" type="password" placeholder="再次输入密码" value={confirmPwd} onChange={e => setConfirmPwd(e.target.value)} />
-          )}
-
-          {mode === 'register' && inviteToken && inviteLinkRole && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 8, background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
-              <Link2 size={16} style={{ color: '#16a34a' }} />
-              <span style={{ fontSize: 13, color: '#15803d' }}>通过邀请链接注册，预设角色：<strong>{inviteLinkRole}</strong>，注册后直接激活</span>
-            </div>
-          )}
-          {mode === 'register' && !inviteToken && (
-            <Input label="邀请码 *" placeholder="输入系统邀请码或他人专属邀请码" value={inviteCode} onChange={e => setInviteCode(e.target.value.toUpperCase())} />
           )}
 
           {error && <div style={{ color: '#dc2626', fontSize: 13, textAlign: 'center', padding: '6px 0' }}>{error}</div>}
