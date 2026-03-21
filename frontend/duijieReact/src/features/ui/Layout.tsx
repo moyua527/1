@@ -184,7 +184,7 @@ export default function Layout() {
               <div style={{ fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid #e2e8f0' }}>我的专属邀请码</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: 'linear-gradient(135deg, #eff6ff, #f5f3ff)', borderRadius: 10, border: '1px solid #e0e7ff' }}>
                 <code style={{ fontSize: 20, fontWeight: 700, letterSpacing: 3, color: '#1e40af', flex: 1 }}>{user.personal_invite_code}</code>
-                <button onClick={() => { navigator.clipboard.writeText(user.personal_invite_code); toast('邀请码已复制', 'success') }}
+                <button onClick={() => { try { const t = document.createElement('textarea'); t.value = user.personal_invite_code; t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t); } catch {} toast('邀请码已复制', 'success') }}
                   style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 8, border: '1px solid #c7d2fe', background: '#fff', color: '#4f46e5', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
                   <Copy size={14} /> 复制
                 </button>

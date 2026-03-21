@@ -37,7 +37,7 @@ export default function ToastContainer() {
   const c = colors[current.type]
 
   return (
-    <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 9999, pointerEvents: 'none' }}>
+    <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 99999, pointerEvents: 'none' }}>
       <div style={{
         padding: '12px 24px', borderRadius: 10, background: c.bg, border: `1px solid ${c.border}`,
         color: c.text, fontSize: 14, fontWeight: 500, boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
