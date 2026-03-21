@@ -133,9 +133,11 @@ export default function LoginPage({ onLogin }: Props) {
           </Button>
         </div>
 
-        <div style={{ marginTop: 16, textAlign: 'center', fontSize: 12, color: '#94a3b8' }}>
-          {mode === 'login' ? '测试账号: admin / admin123' : '注册后默认为成员角色，管理员可调整权限'}
-        </div>
+        {mode === 'register' && (
+          <div style={{ marginTop: 16, textAlign: 'center', fontSize: 12, color: '#94a3b8' }}>
+            注册后默认为成员角色，管理员可调整权限
+          </div>
+        )}
       </form>
     </div>
   )
