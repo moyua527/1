@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 type ToastType = 'success' | 'error' | 'info'
-interface ToastItem { id: number; message: string; type: ToastType }
 
 const colors: Record<ToastType, { bg: string; border: string; text: string }> = {
   success: { bg: '#f0fdf4', border: '#86efac', text: '#166534' },
@@ -16,33 +15,36 @@ export function toast(message: string, type: ToastType = 'info') {
 }
 
 export default function ToastContainer() {
-  const [toasts, setToasts] = useState<ToastItem[]>([])
-  let counter = 0
+  const [current, setCurrent] = useState<{ message: string; type: ToastType } | null>(null)
+  const [fading, setFading] = useState(false)
+  const timerRef = useRef<any>(null)
+  const fadeRef = useRef<any>(null)
 
   const addToast = useCallback((message: string, type: ToastType = 'info') => {
-    const id = ++counter
-    setToasts(prev => [...prev, { id, message, type }])
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000)
+    if (timerRef.current) clearTimeout(timerRef.current)
+    if (fadeRef.current) clearTimeout(fadeRef.current)
+    setFading(false)
+    setCurrent({ message, type })
+    timerRef.current = setTimeout(() => {
+      setFading(true)
+      fadeRef.current = setTimeout(() => { setCurrent(null); setFading(false) }, 400)
+    }, 1500)
   }, [])
 
   useEffect(() => { addToastGlobal = addToast; return () => { addToastGlobal = null } }, [addToast])
 
-  if (toasts.length === 0) return null
+  if (!current) return null
+  const c = colors[current.type]
 
   return (
-    <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
-      {toasts.map(t => {
-        const c = colors[t.type]
-        return (
-          <div key={t.id} style={{
-            padding: '10px 16px', borderRadius: 8, background: c.bg, border: `1px solid ${c.border}`,
-            color: c.text, fontSize: 14, fontWeight: 500, boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-            animation: 'fadeIn 0.2s ease', minWidth: 200, maxWidth: 360,
-          }}>
-            {t.message}
-          </div>
-        )
-      })}
+    <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 9999, pointerEvents: 'none' }}>
+      <div style={{
+        padding: '12px 24px', borderRadius: 10, background: c.bg, border: `1px solid ${c.border}`,
+        color: c.text, fontSize: 14, fontWeight: 500, boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+        opacity: fading ? 0 : 1, transition: 'opacity 0.4s ease', whiteSpace: 'nowrap',
+      }}>
+        {current.message}
+      </div>
     </div>
   )
 }
