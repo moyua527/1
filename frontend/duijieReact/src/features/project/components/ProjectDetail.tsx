@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Edit2, Trash2 } from 'lucide-react'
 import { projectApi } from '../services/api'
 import { taskApi } from '../../task/services/api'
@@ -33,7 +33,12 @@ export default function ProjectDetail() {
   const nav = useNavigate()
   const [project, setProject] = useState<any>(null)
   const [tasks, setTasks] = useState<any[]>([])
-  const [tab, setTab] = useState<'overview' | 'tasks' | 'files' | 'milestones' | 'messages'>('overview')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const validTabs = ['overview', 'tasks', 'milestones', 'files', 'messages'] as const
+  type Tab = typeof validTabs[number]
+  const urlTab = searchParams.get('tab') as Tab
+  const tab: Tab = validTabs.includes(urlTab as any) ? urlTab! : 'overview'
+  const setTab = (t: Tab) => setSearchParams({ tab: t }, { replace: true })
 
   useEffect(() => {
     if (!id) return
