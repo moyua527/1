@@ -231,6 +231,7 @@ CREATE TABLE IF NOT EXISTS duijie_client_logs (
 
 -- JWT密钥
 INSERT INTO system_config (config_key, config_value) VALUES ('JWT_SECRET', 'duijie_jwt_secret_2024');
+INSERT INTO system_config (config_key, config_value) VALUES ('INVITE_CODE', 'duijie2024');
 
 -- 用户 (admin/admin123, test/test123, yonghu/yonghu123)
 INSERT INTO voice_users (username, password, nickname, role, client_id) VALUES
