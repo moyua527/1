@@ -23,6 +23,11 @@ router.post('/auth/logout', require('../controllers/auth/logoutController'));
 router.get('/auth/me', auth, require('../controllers/auth/meController'));
 router.put('/auth/profile', auth, require('../controllers/auth/profileController'));
 
+// System config (admin)
+const configCtrl = require('../controllers/system/configController');
+router.get('/system/invite-code', auth, configCtrl.get);
+router.put('/system/invite-code', auth, configCtrl.update);
+
 // Dashboard
 router.get('/dashboard/stats', auth, require('../controllers/dashboard/statsController'));
 router.get('/dashboard/report', auth, require('../controllers/dashboard/reportController'));

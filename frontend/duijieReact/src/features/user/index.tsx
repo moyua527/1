@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Edit2, Users2, Shield, UserCheck, Loader2 } from 'lucide-react'
+import { Plus, Trash2, Edit2, Users2, Shield, UserCheck, Loader2, KeyRound, Copy, Eye, EyeOff } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { clientApi } from '../client/services/api'
 import Button from '../ui/Button'
@@ -29,6 +29,21 @@ export default function UserManagement() {
   const [editUser, setEditUser] = useState<any>(null)
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({ username: '', password: '', nickname: '', role: 'member', client_id: '' })
+  const [inviteCode, setInviteCode] = useState('')
+  const [inviteEditing, setInviteEditing] = useState(false)
+  const [inviteInput, setInviteInput] = useState('')
+  const [inviteSaving, setInviteSaving] = useState(false)
+  const [inviteVisible, setInviteVisible] = useState(false)
+
+  const loadInviteCode = () => { fetchApi('/api/system/invite-code').then(r => { if (r.success) setInviteCode(r.data?.inviteCode || '') }) }
+
+  const saveInviteCode = async () => {
+    setInviteSaving(true)
+    const r = await fetchApi('/api/system/invite-code', { method: 'PUT', body: JSON.stringify({ inviteCode: inviteInput }) })
+    setInviteSaving(false)
+    if (r.success) { toast(inviteInput ? '邀请码已更新' : '邀请码已关闭，任何人可注册', 'success'); setInviteCode(inviteInput); setInviteEditing(false) }
+    else toast(r.message || '保存失败', 'error')
+  }
 
   const load = () => {
     setLoading(true)
@@ -41,7 +56,7 @@ export default function UserManagement() {
     }).finally(() => setLoading(false))
   }
 
-  useEffect(load, [])
+  useEffect(() => { load(); loadInviteCode() }, [])
 
   const resetForm = () => setForm({ username: '', password: '', nickname: '', role: 'member', client_id: '' })
 
@@ -87,12 +102,40 @@ export default function UserManagement() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>用户管理</h1>
           <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>管理系统账号和角色权限</p>
         </div>
         <Button onClick={() => { resetForm(); setShowCreate(true) }}><Plus size={16} /> 创建账号</Button>
+      </div>
+
+      <div style={{ background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ width: 40, height: 40, borderRadius: 10, background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <KeyRound size={20} color="#d97706" />
+        </div>
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>注册邀请码</div>
+          <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>{inviteCode ? '已开启 — 新用户注册需输入邀请码' : '已关闭 — 任何人可直接注册'}</div>
+        </div>
+        {inviteEditing ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <input value={inviteInput} onChange={e => setInviteInput(e.target.value)} placeholder="留空则关闭邀请码" style={{ padding: '6px 12px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 13, width: 180, outline: 'none' }} />
+            <button onClick={saveInviteCode} disabled={inviteSaving} style={{ padding: '6px 14px', borderRadius: 6, border: 'none', background: '#2563eb', color: '#fff', fontSize: 13, cursor: 'pointer' }}>{inviteSaving ? '...' : '保存'}</button>
+            <button onClick={() => setInviteEditing(false)} style={{ padding: '6px 14px', borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', fontSize: 13, cursor: 'pointer' }}>取消</button>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {inviteCode && (
+              <>
+                <code style={{ padding: '4px 10px', borderRadius: 6, background: '#f1f5f9', fontSize: 13, color: '#334155', letterSpacing: 1 }}>{inviteVisible ? inviteCode : '••••••••'}</code>
+                <button onClick={() => setInviteVisible(!inviteVisible)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', padding: 4 }} title={inviteVisible ? '隐藏' : '显示'}>{inviteVisible ? <EyeOff size={16} /> : <Eye size={16} />}</button>
+                <button onClick={() => { navigator.clipboard.writeText(inviteCode); toast('已复制到剪贴板', 'success') }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', padding: 4 }} title="复制"><Copy size={16} /></button>
+              </>
+            )}
+            <button onClick={() => { setInviteInput(inviteCode); setInviteEditing(true) }} style={{ padding: '6px 14px', borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', fontSize: 13, cursor: 'pointer', color: '#334155' }}><Edit2 size={12} style={{ marginRight: 4 }} />修改</button>
+          </div>
+        )}
       </div>
 
       {loading ? (

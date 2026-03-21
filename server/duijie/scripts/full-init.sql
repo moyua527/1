@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS voice_users (
   username VARCHAR(50) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
   nickname VARCHAR(100),
+  email VARCHAR(200),
+  phone VARCHAR(50),
   avatar VARCHAR(500),
   role ENUM('admin','member','client') DEFAULT 'member',
   client_id INT DEFAULT NULL COMMENT '关联客户ID(仅client角色)',
