@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Ticket, Plus, Send, Star, ChevronLeft, Clock, AlertTriangle, CheckCircle, XCircle, Loader2, User } from 'lucide-react'
-import { fetchApi } from '../../bootstrap'
+import { Ticket, Plus, Send, Star, ChevronLeft, Clock, AlertTriangle, CheckCircle, XCircle, Loader2, User, Paperclip, Download, X } from 'lucide-react'
+import { fetchApi, uploadFile } from '../../bootstrap'
 import Avatar from '../ui/Avatar'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
@@ -26,11 +26,11 @@ const statusMap: Record<string, { label: string; color: string; icon: any }> = {
 const ticketApi = {
   list: () => fetchApi('/api/tickets'),
   detail: (id: number) => fetchApi(`/api/tickets/${id}`),
-  create: (d: any) => fetchApi('/api/tickets', { method: 'POST', body: JSON.stringify(d) }),
   update: (id: number, d: any) => fetchApi(`/api/tickets/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
-  reply: (id: number, content: string) => fetchApi(`/api/tickets/${id}/reply`, { method: 'POST', body: JSON.stringify({ content }) }),
   rate: (id: number, rating: number, rating_comment: string) => fetchApi(`/api/tickets/${id}/rate`, { method: 'POST', body: JSON.stringify({ rating, rating_comment }) }),
 }
+const fmtSize = (b: number) => b < 1024 ? b + 'B' : b < 1048576 ? (b / 1024).toFixed(1) + 'KB' : (b / 1048576).toFixed(1) + 'MB'
+const BACKEND_URL = (window as any).__ENV__?.BACKEND_URL || ''
 
 export default function TicketPage() {
   const { user, isMobile } = useOutletContext<{ user: any; isMobile: boolean }>()
@@ -50,6 +50,10 @@ export default function TicketPage() {
   const [filter, setFilter] = useState('all')
   const [rateOpen, setRateOpen] = useState(false)
   const [rateForm, setRateForm] = useState({ rating: 5, comment: '' })
+  const [createFiles, setCreateFiles] = useState<File[]>([])
+  const [replyFiles, setReplyFiles] = useState<File[]>([])
+  const createFileRef = useRef<HTMLInputElement>(null)
+  const replyFileRef = useRef<HTMLInputElement>(null)
   const repliesEndRef = useRef<HTMLDivElement>(null)
 
   const load = () => {
@@ -69,23 +73,35 @@ export default function TicketPage() {
 
   const openCreate = () => {
     setForm({ title: '', content: '', type: 'question', priority: 'medium', project_id: '' })
+    setCreateFiles([])
     fetchApi('/api/projects').then(r => { if (r.success) setProjects(r.data?.rows || r.data || []) })
     setCreateOpen(true)
   }
 
   const handleCreate = async () => {
     if (!form.title.trim()) { toast('标题必填', 'error'); return }
-    const r = await ticketApi.create({ ...form, project_id: form.project_id ? Number(form.project_id) : null })
-    if (r.success) { toast('工单已提交', 'success'); setCreateOpen(false); load() }
+    const fd = new FormData()
+    fd.append('title', form.title)
+    fd.append('content', form.content)
+    fd.append('type', form.type)
+    fd.append('priority', form.priority)
+    if (form.project_id) fd.append('project_id', form.project_id)
+    createFiles.forEach(f => fd.append('files', f))
+    const r = await uploadFile('/api/tickets', fd)
+    if (r.success) { toast('工单已提交', 'success'); setCreateOpen(false); setCreateFiles([]); load() }
     else toast(r.message || '提交失败', 'error')
   }
 
   const handleReply = async () => {
-    if (!replyText.trim() || !selected) return
+    if (!replyText.trim() && replyFiles.length === 0) return
+    if (!selected) return
     setSending(true)
-    const r = await ticketApi.reply(selected.id, replyText.trim())
+    const fd = new FormData()
+    fd.append('content', replyText.trim())
+    replyFiles.forEach(f => fd.append('files', f))
+    const r = await uploadFile(`/api/tickets/${selected.id}/reply`, fd)
     setSending(false)
-    if (r.success) { setReplyText(''); openDetail(selected); load() }
+    if (r.success) { setReplyText(''); setReplyFiles([]); openDetail(selected); load() }
     else toast(r.message || '回复失败', 'error')
   }
 
@@ -167,6 +183,16 @@ export default function TicketPage() {
             </div>
           )}
           <div style={{ padding: 16, background: '#f8fafc', borderRadius: 8, fontSize: 14, color: '#334155', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: 16 }}>{selected.content || '(无描述)'}</div>
+          {selected.attachments?.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+              {selected.attachments.map((a: any) => (
+                <a key={a.id} href={`${BACKEND_URL}/uploads/${a.filename}`} target="_blank" rel="noreferrer"
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, background: '#f1f5f9', border: '1px solid #e2e8f0', fontSize: 12, color: '#334155', textDecoration: 'none' }}>
+                  <Paperclip size={14} color="#64748b" /> {a.original_name} <span style={{ color: '#94a3b8' }}>({fmtSize(a.file_size)})</span> <Download size={12} color="#2563eb" />
+                </a>
+              ))}
+            </div>
+          )}
 
           {/* Rating display */}
           {selected.rating && (
@@ -193,6 +219,16 @@ export default function TicketPage() {
                       <span style={{ fontSize: 11, color: '#94a3b8' }}>{new Date(r.created_at).toLocaleString('zh-CN')}</span>
                     </div>
                     <div style={{ fontSize: 13, color: '#334155', marginTop: 4, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{r.content}</div>
+                    {r.attachments?.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                        {r.attachments.map((a: any) => (
+                          <a key={a.id} href={`${BACKEND_URL}/uploads/${a.filename}`} target="_blank" rel="noreferrer"
+                            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6, background: '#f1f5f9', border: '1px solid #e2e8f0', fontSize: 11, color: '#334155', textDecoration: 'none' }}>
+                            <Paperclip size={12} color="#64748b" /> {a.original_name} <span style={{ color: '#94a3b8' }}>({fmtSize(a.file_size)})</span> <Download size={10} color="#2563eb" />
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               )
@@ -202,14 +238,31 @@ export default function TicketPage() {
 
           {/* Reply input */}
           {selected.status !== 'closed' && (
-            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <input value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="输入回复..."
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReply() } }}
-                style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none', background: '#f8fafc' }} />
-              <button onClick={handleReply} disabled={sending || !replyText.trim()}
-                style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, opacity: !replyText.trim() ? 0.5 : 1 }}>
-                <Send size={16} /> 回复
-              </button>
+            <div style={{ marginTop: 12 }}>
+              {replyFiles.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                  {replyFiles.map((f, i) => (
+                    <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6, background: '#eff6ff', border: '1px solid #bfdbfe', fontSize: 12, color: '#1e40af' }}>
+                      <Paperclip size={12} /> {f.name} ({fmtSize(f.size)})
+                      <button onClick={() => setReplyFiles(replyFiles.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}><X size={12} color="#94a3b8" /></button>
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="输入回复..."
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReply() } }}
+                  style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none', background: '#f8fafc' }} />
+                <input ref={replyFileRef} type="file" multiple hidden onChange={e => { if (e.target.files) setReplyFiles([...replyFiles, ...Array.from(e.target.files)]); e.target.value = '' }} />
+                <button onClick={() => replyFileRef.current?.click()} title="添加附件"
+                  style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                  <Paperclip size={16} color="#64748b" />
+                </button>
+                <button onClick={handleReply} disabled={sending || (!replyText.trim() && replyFiles.length === 0)}
+                  style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, opacity: (!replyText.trim() && replyFiles.length === 0) ? 0.5 : 1 }}>
+                  <Send size={16} /> 回复
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -356,6 +409,24 @@ export default function TicketPage() {
               </select>
             </div>
           )}
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 6 }}>附件（选填）</div>
+            <input ref={createFileRef} type="file" multiple hidden onChange={e => { if (e.target.files) setCreateFiles([...createFiles, ...Array.from(e.target.files)]); e.target.value = '' }} />
+            <button type="button" onClick={() => createFileRef.current?.click()}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px dashed #cbd5e1', background: '#f8fafc', cursor: 'pointer', fontSize: 13, color: '#64748b', width: '100%', justifyContent: 'center' }}>
+              <Paperclip size={14} /> 点击选择文件
+            </button>
+            {createFiles.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                {createFiles.map((f, i) => (
+                  <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6, background: '#eff6ff', border: '1px solid #bfdbfe', fontSize: 12, color: '#1e40af' }}>
+                    <Paperclip size={12} /> {f.name} ({fmtSize(f.size)})
+                    <button onClick={() => setCreateFiles(createFiles.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}><X size={12} color="#94a3b8" /></button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 8, borderTop: '1px solid #e2e8f0' }}>
             <Button variant="secondary" onClick={() => setCreateOpen(false)}>取消</Button>
             <Button onClick={handleCreate}>提交工单</Button>

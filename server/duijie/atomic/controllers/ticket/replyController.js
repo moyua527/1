@@ -3,7 +3,8 @@ const db = require('../../../config/db');
 module.exports = async (req, res) => {
   try {
     const { content } = req.body;
-    if (!content) return res.status(400).json({ success: false, message: '内容必填' });
+    const hasFiles = req.files && req.files.length > 0;
+    if (!content && !hasFiles) return res.status(400).json({ success: false, message: '内容或附件不能为空' });
     const [[ticket]] = await db.query('SELECT id, created_by FROM duijie_tickets WHERE id = ? AND is_deleted = 0', [req.params.id]);
     if (!ticket) return res.status(404).json({ success: false, message: '工单不存在' });
     if (req.userRole === 'client' && ticket.created_by !== req.userId) {
@@ -15,9 +16,18 @@ module.exports = async (req, res) => {
     }
     const [r] = await db.query(
       'INSERT INTO duijie_ticket_replies (ticket_id, content, created_by) VALUES (?,?,?)',
-      [req.params.id, content, req.userId]
+      [req.params.id, content || '', req.userId]
     );
-    res.json({ success: true, data: { id: r.insertId } });
+    const replyId = r.insertId;
+    if (hasFiles) {
+      for (const f of req.files) {
+        await db.query(
+          'INSERT INTO duijie_ticket_attachments (ticket_id, reply_id, filename, original_name, file_size, mime_type, created_by) VALUES (?,?,?,?,?,?,?)',
+          [req.params.id, replyId, f.filename, Buffer.from(f.originalname, 'latin1').toString('utf8'), f.size, f.mimetype, req.userId]
+        );
+      }
+    }
+    res.json({ success: true, data: { id: replyId } });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });
   }

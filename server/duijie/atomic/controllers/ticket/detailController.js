@@ -21,7 +21,15 @@ module.exports = async (req, res) => {
        FROM duijie_ticket_replies r LEFT JOIN voice_users u ON r.created_by = u.id
        WHERE r.ticket_id = ? AND r.is_deleted = 0 ORDER BY r.created_at ASC`, [req.params.id]
     );
-    res.json({ success: true, data: { ...ticket, replies } });
+    const [attachments] = await db.query(
+      'SELECT id, ticket_id, reply_id, filename, original_name, file_size, mime_type, created_by, created_at FROM duijie_ticket_attachments WHERE ticket_id = ?',
+      [req.params.id]
+    );
+    const ticketAttachments = attachments.filter(a => !a.reply_id);
+    for (const r of replies) {
+      r.attachments = attachments.filter(a => a.reply_id === r.id);
+    }
+    res.json({ success: true, data: { ...ticket, replies, attachments: ticketAttachments } });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });
   }

@@ -122,11 +122,11 @@ router.get('/dm/:userId/history', auth, require('../controllers/dm/historyContro
 router.post('/dm/send', auth, require('../controllers/dm/sendController'));
 
 // Tickets (all authenticated)
-router.post('/tickets', auth, require('../controllers/ticket/createController'));
+router.post('/tickets', auth, upload.array('files', 10), require('../controllers/ticket/createController'));
 router.get('/tickets', auth, require('../controllers/ticket/listController'));
 router.get('/tickets/:id', auth, require('../controllers/ticket/detailController'));
 router.put('/tickets/:id', auth, require('../controllers/ticket/updateController'));
-router.post('/tickets/:id/reply', auth, require('../controllers/ticket/replyController'));
+router.post('/tickets/:id/reply', auth, upload.array('files', 10), require('../controllers/ticket/replyController'));
 router.post('/tickets/:id/rate', auth, require('../controllers/ticket/rateController'));
 
 // Admin guard
