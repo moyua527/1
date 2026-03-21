@@ -13,7 +13,7 @@ const ALL_NAV_ITEMS = [
   { path: '/', label: '仪表盘', icon: LayoutDashboard, roles: ['admin', 'tech', 'business', 'member'] },
   { path: '/projects', label: '项目管理', icon: FolderKanban, roles: ['admin', 'tech', 'business', 'member'] },
   { path: '/clients', label: '客户管理', icon: Users, roles: ['admin', 'business'] },
-  { path: '/tasks', label: '任务看板', icon: ListTodo, roles: ['admin', 'tech', 'business'] },
+  { path: '/tasks', label: '任务看板', icon: ListTodo, roles: ['admin', 'tech', 'business', 'member'] },
   { path: '/report', label: '数据报表', icon: BarChart3, roles: ['admin', 'business'] },
   { path: '/users', label: '用户管理', icon: Shield, roles: ['admin'] },
 ]

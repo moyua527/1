@@ -34,7 +34,7 @@ export default function Dashboard() {
   const nav = useNavigate()
   const { user } = useOutletContext<{ user: any }>()
   const canClients = user?.role === 'admin' || user?.role === 'business'
-  const canTasks = ['admin', 'tech', 'business'].includes(user?.role)
+  const canTasks = ['admin', 'tech', 'business', 'member'].includes(user?.role)
 
   useEffect(() => {
     fetchApi('/api/dashboard/stats').then(r => { if (r.success) setStats(r.data) }).catch(() => {

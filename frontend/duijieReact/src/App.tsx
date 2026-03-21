@@ -27,7 +27,7 @@ export default function App() {
   if (!user) return <LoginPage onLogin={setUser} />
 
   const canClients = user.role === 'admin' || user.role === 'business'
-  const canTasks = ['admin', 'tech', 'business'].includes(user.role)
+  const canTasks = ['admin', 'tech', 'business', 'member'].includes(user.role)
   const canReport = user.role === 'admin' || user.role === 'business'
 
   return (

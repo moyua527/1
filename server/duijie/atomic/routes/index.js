@@ -78,12 +78,12 @@ router.delete('/contracts/:id', auth, clientStaff, require('../controllers/contr
 router.post('/follow-ups', auth, clientStaff, require('../controllers/followUp/createController'));
 router.get('/clients/:clientId/follow-ups', auth, clientStaff, require('../controllers/followUp/listController'));
 
-// Tasks (admin/member only)
-router.post('/tasks', auth, allStaff, require('../controllers/task/createController'));
-router.get('/tasks', auth, allStaff, require('../controllers/task/listController'));
-router.put('/tasks/:id', auth, allStaff, require('../controllers/task/updateController'));
-router.patch('/tasks/:id/move', auth, allStaff, require('../controllers/task/moveController'));
-router.delete('/tasks/:id', auth, allStaff, require('../controllers/task/deleteController'));
+// Tasks (all authenticated users)
+router.post('/tasks', auth, require('../controllers/task/createController'));
+router.get('/tasks', auth, require('../controllers/task/listController'));
+router.put('/tasks/:id', auth, require('../controllers/task/updateController'));
+router.patch('/tasks/:id/move', auth, require('../controllers/task/moveController'));
+router.delete('/tasks/:id', auth, require('../controllers/task/deleteController'));
 
 // Milestones
 router.post('/milestones', auth, require('../controllers/milestone/createController'));
