@@ -25,7 +25,8 @@ const statusMap: Record<string, { label: string; color: string }> = {
 const taskStatusMap: Record<string, { label: string; color: string }> = {
   todo: { label: '待办', color: 'gray' },
   in_progress: { label: '进行中', color: 'yellow' },
-  done: { label: '已完成', color: 'green' },
+  pending_review: { label: '待验收', color: 'blue' },
+  accepted: { label: '验收通过', color: 'green' },
 }
 
 const section: React.CSSProperties = { background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16 }
@@ -185,7 +186,8 @@ export default function ProjectDetail() {
                     }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 13, color: '#334155', cursor: 'pointer' }}>
                       <option value="todo">待办</option>
                       <option value="in_progress">进行中</option>
-                      <option value="done">已完成</option>
+                      <option value="pending_review">待验收</option>
+                      <option value="accepted">验收通过</option>
                     </select>
                     <Badge color={ts.color}>{ts.label}</Badge>
                   </div>

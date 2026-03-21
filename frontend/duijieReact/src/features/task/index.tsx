@@ -10,7 +10,8 @@ interface Task { id: number; title: string; description?: string; status: string
 const columns = [
   { key: 'todo', label: '待办', color: '#64748b', bg: '#f1f5f9' },
   { key: 'in_progress', label: '进行中', color: '#d97706', bg: '#fffbeb' },
-  { key: 'done', label: '已完成', color: '#16a34a', bg: '#f0fdf4' },
+  { key: 'pending_review', label: '待验收', color: '#2563eb', bg: '#eff6ff' },
+  { key: 'accepted', label: '验收通过', color: '#16a34a', bg: '#f0fdf4' },
 ]
 
 const priorityMap: Record<string, { label: string; color: string }> = {

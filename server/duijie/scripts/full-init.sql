@@ -77,7 +77,7 @@ CREATE TABLE IF NOT EXISTS duijie_tasks (
   project_id INT NOT NULL,
   title VARCHAR(200) NOT NULL,
   description TEXT,
-  status ENUM('todo','in_progress','done') DEFAULT 'todo',
+  status ENUM('todo','in_progress','pending_review','accepted') DEFAULT 'todo',
   priority ENUM('low','medium','high','urgent') DEFAULT 'medium',
   assignee_id INT,
   due_date DATE,
