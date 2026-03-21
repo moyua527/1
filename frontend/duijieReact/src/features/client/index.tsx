@@ -30,8 +30,9 @@ export default function ClientList() {
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({ name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', position_level: '', department: '', job_function: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [searchParams] = useSearchParams()
-  const [stageFilter, setStageFilter] = useState(searchParams.get('stage') || 'all')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const stageFilter = searchParams.get('stage') || 'all'
+  const setStageFilter = (s: string) => { if (s === 'all') { searchParams.delete('stage'); setSearchParams(searchParams, { replace: true }) } else { setSearchParams({ stage: s }, { replace: true }) } }
   const [search, setSearch] = useState('')
   const [scores, setScores] = useState<Record<string, any>>({})
   const [showImport, setShowImport] = useState(false)
