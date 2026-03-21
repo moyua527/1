@@ -57,6 +57,40 @@ CREATE TABLE IF NOT EXISTS duijie_direct_messages (
   INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='对接-站内消息表';
 
+CREATE TABLE IF NOT EXISTS duijie_tickets (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(200) NOT NULL COMMENT '工单标题',
+  content TEXT COMMENT '工单内容',
+  type ENUM('requirement','bug','question','other') DEFAULT 'question' COMMENT '类型',
+  priority ENUM('low','medium','high','urgent') DEFAULT 'medium' COMMENT '优先级',
+  status ENUM('open','processing','resolved','closed') DEFAULT 'open' COMMENT '状态',
+  project_id INT COMMENT '关联项目',
+  created_by INT NOT NULL COMMENT '提交者',
+  assigned_to INT COMMENT '处理人',
+  resolved_at TIMESTAMP NULL COMMENT '解决时间',
+  rating TINYINT NULL COMMENT '满意度评分1-5',
+  rating_comment TEXT COMMENT '评价内容',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  is_deleted TINYINT(1) DEFAULT 0,
+  INDEX idx_created_by (created_by),
+  INDEX idx_assigned_to (assigned_to),
+  INDEX idx_status (status),
+  INDEX idx_project_id (project_id),
+  INDEX idx_is_deleted (is_deleted)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='对接-工单表';
+
+CREATE TABLE IF NOT EXISTS duijie_ticket_replies (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ticket_id INT NOT NULL COMMENT '关联工单',
+  content TEXT NOT NULL COMMENT '回复内容',
+  created_by INT NOT NULL COMMENT '回复者',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  is_deleted TINYINT(1) DEFAULT 0,
+  INDEX idx_ticket_id (ticket_id),
+  INDEX idx_is_deleted (is_deleted)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='对接-工单回复表';
+
 CREATE TABLE IF NOT EXISTS duijie_projects (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(200) NOT NULL COMMENT '项目名称',

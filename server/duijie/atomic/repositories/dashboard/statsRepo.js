@@ -8,6 +8,43 @@ function buildProjectFilter(auth) {
 }
 
 module.exports = async (auth = {}) => {
+  // Client portal: return dedicated stats
+  if (auth.role === 'client' && auth.clientId) {
+    const [projects] = await db.query(
+      `SELECT p.id, p.name, p.status, p.progress, p.start_date, p.end_date
+       FROM duijie_projects p WHERE p.is_deleted = 0 AND p.client_id = ? ORDER BY p.updated_at DESC`, [auth.clientId]
+    );
+    const [milestones] = await db.query(
+      `SELECT m.id, m.title, m.due_date, m.is_completed, m.project_id, p.name as project_name
+       FROM duijie_milestones m INNER JOIN duijie_projects p ON m.project_id = p.id
+       WHERE m.is_deleted = 0 AND p.is_deleted = 0 AND p.client_id = ? ORDER BY m.is_completed ASC, m.due_date ASC`, [auth.clientId]
+    );
+    const [files] = await db.query(
+      `SELECT f.id, f.original_name, f.size, f.created_at, p.name as project_name
+       FROM duijie_files f INNER JOIN duijie_projects p ON f.project_id = p.id
+       WHERE f.is_deleted = 0 AND p.is_deleted = 0 AND p.client_id = ? ORDER BY f.created_at DESC LIMIT 10`, [auth.clientId]
+    );
+    const [[dm]] = await db.query(
+      `SELECT COUNT(*) as unread FROM duijie_direct_messages WHERE receiver_id = ? AND read_at IS NULL AND is_deleted = 0`, [auth.userId]
+    );
+    const [contracts] = await db.query(
+      `SELECT co.id, co.title, co.amount, co.status, co.start_date, co.end_date, co.created_at
+       FROM duijie_contracts co WHERE co.client_id = ? ORDER BY co.created_at DESC`, [auth.clientId]
+    );
+    return {
+      isClient: true,
+      projects,
+      milestones,
+      files,
+      contracts,
+      unreadMessages: dm.unread || 0,
+      totalProjects: projects.length,
+      activeProjects: projects.filter(p => p.status === 'in_progress').length,
+      completedProjects: projects.filter(p => p.status === 'completed').length,
+      pendingMilestones: milestones.filter(m => !m.is_completed).length,
+    };
+  }
+
   const pf = buildProjectFilter(auth);
   const showClientData = ['admin', 'business'].includes(auth.role);
 
