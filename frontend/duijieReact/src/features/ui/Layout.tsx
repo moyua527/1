@@ -7,6 +7,7 @@ import Modal from './Modal'
 import Input from './Input'
 import Button from './Button'
 import { toast } from './Toast'
+import useIsMobile from './useIsMobile'
 
 const ALL_NAV_ITEMS = [
   { path: '/', label: '仪表盘', icon: LayoutDashboard, roles: ['admin', 'member', 'client'] },
@@ -37,7 +38,8 @@ const s = {
 }
 
 export default function Layout() {
-  const [collapsed, setCollapsed] = useState(false)
+  const isMobile = useIsMobile()
+  const [collapsed, setCollapsed] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileForm, setProfileForm] = useState({ nickname: '', email: '', phone: '', password: '', confirmPassword: '' })
@@ -47,6 +49,8 @@ export default function Layout() {
   const NAV_ITEMS = ALL_NAV_ITEMS.filter(n => n.roles.includes(role))
   const currentNav = NAV_ITEMS.find(n => n.path === '/' ? location.pathname === '/' : location.pathname.startsWith(n.path))
 
+  useEffect(() => { setCollapsed(isMobile) }, [isMobile])
+  useEffect(() => { if (isMobile) setCollapsed(true) }, [location.pathname, isMobile])
   useEffect(() => { fetchApi('/api/auth/me').then(r => { if (r.success) setUser(r.data) }) }, [])
 
   const openProfile = () => {
@@ -78,51 +82,68 @@ export default function Layout() {
     window.location.reload()
   }
 
+  const sidebarOpen = !collapsed
+
+  const sidebarContent = (
+    <>
+      <div style={s.logo}>DuiJie</div>
+      <nav style={s.nav}>
+        {NAV_ITEMS.map(item => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            style={({ isActive }) => ({ ...s.navItem, ...(isActive ? s.navItemActive : {}) })}
+            end={item.path === '/'}
+          >
+            <item.icon size={18} />
+            {item.label}
+          </NavLink>
+        ))}
+      </nav>
+      {user && (
+        <div style={s.userArea}>
+          <div onClick={openProfile} style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0, cursor: 'pointer' }}
+            title="点击编辑个人信息">
+            <Avatar name={user.nickname || user.username} size={32} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.nickname || user.username}</div>
+              <div style={{ fontSize: 11, color: '#94a3b8' }}>{roleLabel[user.role] || user.role}</div>
+            </div>
+          </div>
+          <button style={s.logoutBtn} onClick={handleLogout} title="登出"><LogOut size={16} /></button>
+        </div>
+      )}
+    </>
+  )
+
   return (
     <div style={s.wrapper}>
-      <aside style={collapsed ? { ...s.sidebar, ...s.sidebarCollapsed } : s.sidebar}>
-        <div style={s.logo}>DuiJie</div>
-        <nav style={s.nav}>
-          {NAV_ITEMS.map(item => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              style={({ isActive }) => ({ ...s.navItem, ...(isActive ? s.navItemActive : {}) })}
-              end={item.path === '/'}
-            >
-              <item.icon size={18} />
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-        {user && (
-          <div style={s.userArea}>
-            <div onClick={openProfile} style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0, cursor: 'pointer' }}
-              title="点击编辑个人信息">
-              <Avatar name={user.nickname || user.username} size={32} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.nickname || user.username}</div>
-                <div style={{ fontSize: 11, color: '#94a3b8' }}>{roleLabel[user.role] || user.role}</div>
-              </div>
-            </div>
-            <button style={s.logoutBtn} onClick={handleLogout} title="登出"><LogOut size={16} /></button>
-          </div>
-        )}
-      </aside>
+      {isMobile ? (
+        <>
+          {sidebarOpen && <div onClick={() => setCollapsed(true)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 40, transition: 'opacity 0.2s' }} />}
+          <aside style={{ ...s.sidebar, position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 50, transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)', transition: 'transform 0.25s ease', boxShadow: sidebarOpen ? '4px 0 16px rgba(0,0,0,0.1)' : 'none', width: 260 }}>
+            {sidebarContent}
+          </aside>
+        </>
+      ) : (
+        <aside style={sidebarOpen ? s.sidebar : { ...s.sidebar, ...s.sidebarCollapsed }}>
+          {sidebarContent}
+        </aside>
+      )}
       <div style={s.main}>
-        <header style={s.header}>
+        <header style={{ ...s.header, padding: isMobile ? '0 12px' : '0 24px' }}>
           <button style={s.menuBtn} onClick={() => setCollapsed(!collapsed)}>
-            {collapsed ? <Menu size={20} /> : <X size={20} />}
+            {sidebarOpen && !isMobile ? <X size={20} /> : <Menu size={20} />}
           </button>
           <span style={s.headerTitle}>{currentNav?.label || 'DuiJie'}</span>
-          {user && (
+          {user && !isMobile && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 13, color: '#64748b' }}>{user.nickname}</span>
             </div>
           )}
         </header>
-        <main style={s.content}>
-          <Outlet context={{ user }} />
+        <main style={{ ...s.content, padding: isMobile ? 12 : 24 }}>
+          <Outlet context={{ user, isMobile }} />
         </main>
       </div>
 

@@ -89,7 +89,7 @@ export default function TaskBoard() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>任务看板</h1>
           <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>拖拽管理任务状态</p>

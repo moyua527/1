@@ -47,7 +47,7 @@ export default function ProjectList() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>项目管理</h1>
           <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>管理所有客户项目</p>
@@ -63,7 +63,7 @@ export default function ProjectList() {
           <div>暂无项目，点击右上角新建</div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))', gap: 16 }}>
           {projects.map((p: any) => {
             const st = statusMap[p.status] || statusMap.planning
             return (

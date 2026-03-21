@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
 import { Plus, Users, Loader2, Search, Download, Zap, Upload } from 'lucide-react'
 import { clientApi } from './services/api'
 import Button from '../ui/Button'
@@ -39,6 +39,7 @@ export default function ClientList() {
   const [importData, setImportData] = useState<any[]>([])
   const [importing, setImporting] = useState(false)
   const nav = useNavigate()
+  const { isMobile } = useOutletContext<{ isMobile: boolean }>()
 
   const load = () => {
     setLoading(true)
@@ -72,7 +73,7 @@ export default function ClientList() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>客户管理</h1>
           <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>管理所有客户信息</p>
@@ -104,7 +105,7 @@ export default function ClientList() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: '#f1f5f9', borderRadius: 8, padding: 3 }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: '#f1f5f9', borderRadius: 8, padding: 3, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         {stageKeys.map(k => {
           const count = k === 'all' ? clients.length : clients.filter(c => (c.stage || 'potential') === k).length
           return (
@@ -126,7 +127,7 @@ export default function ClientList() {
           <div>暂无客户，点击右上角新增</div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '280px' : '340px'}, 1fr))`, gap: isMobile ? 10 : 16 }}>
           {clients.filter(c => {
             if (stageFilter !== 'all' && (c.stage || 'potential') !== stageFilter) return false
             if (search.trim()) {
