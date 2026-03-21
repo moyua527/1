@@ -94,7 +94,7 @@ export default function ProjectDetail() {
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0f172a', margin: 0 }}>{project.name}</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
             <Badge color={st.color}>{st.label}</Badge>
-            {project.client_name && <span style={{ fontSize: 13, color: '#64748b' }}>客户: {project.client_name}</span>}
+            {project.client_name && <span style={{ fontSize: 13, color: '#64748b' }}>好友: {project.client_name}</span>}
           </div>
         </div>
         <Button variant="danger" onClick={handleDelete}><Trash2 size={14} /> 删除</Button>
@@ -121,7 +121,7 @@ export default function ProjectDetail() {
             <div><div style={{ fontSize: 13, color: '#64748b' }}>开始日期</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.start_date || '未设置'}</div></div>
             <div><div style={{ fontSize: 13, color: '#64748b' }}>结束日期</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.end_date || '未设置'}</div></div>
             <div><div style={{ fontSize: 13, color: '#64748b' }}>预算</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.budget > 0 ? `¥${Number(project.budget).toLocaleString()}` : '未设置'}</div></div>
-            <div><div style={{ fontSize: 13, color: '#64748b' }}>客户</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.client_name || '-'}</div></div>
+            <div><div style={{ fontSize: 13, color: '#64748b' }}>好友</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.client_name || '-'}</div></div>
             <div><div style={{ fontSize: 13, color: '#64748b' }}>创建时间</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.created_at ? new Date(project.created_at).toLocaleDateString('zh-CN') : '-'}</div></div>
             <div><div style={{ fontSize: 13, color: '#64748b' }}>任务数</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{tasks.length}</div></div>
           </div>

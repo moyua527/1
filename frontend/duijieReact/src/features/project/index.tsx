@@ -49,7 +49,7 @@ export default function ProjectList() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>项目管理</h1>
-          <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>管理所有客户项目</p>
+          <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>管理所有好友项目</p>
         </div>
         <Button onClick={() => setShowCreate(true)}><Plus size={16} /> 新建项目</Button>
       </div>
@@ -73,7 +73,7 @@ export default function ProjectList() {
                   <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#0f172a' }}>{p.name}</h3>
                   <Badge color={st.color}>{st.label}</Badge>
                 </div>
-                {p.client_name && <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>客户: {p.client_name}</div>}
+                {p.client_name && <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>好友: {p.client_name}</div>}
                 {p.description && <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description}</div>}
                 <ProgressBar value={p.progress || 0} />
                 <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>进度 {p.progress || 0}%</div>
@@ -88,10 +88,10 @@ export default function ProjectList() {
           <Input label="项目名称" placeholder="输入项目名称" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
           <Input label="项目描述" placeholder="简要描述" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>关联客户（选填）</label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>关联好友（选填）</label>
             <select value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value })}
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
-              <option value="">请选择客户</option>
+              <option value="">请选择好友</option>
               {allClients.map((c: any) => <option key={c.id} value={c.id}>#{c.id} {c.name}{c.company ? ` (${c.company})` : ''}</option>)}
             </select>
           </div>

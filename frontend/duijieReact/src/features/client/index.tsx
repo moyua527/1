@@ -76,13 +76,13 @@ export default function ClientList() {
     const e: Record<string, string> = {}
     if (!form.user_id) e.user_id = '请选择成员用户'
     if (!form.channel) e.channel = '请选择渠道'
-    if (!form.name.trim()) e.name = '请输入客户名称'
+    if (!form.name.trim()) e.name = '请输入好友名称'
     setErrors(e)
     if (Object.keys(e).length > 0) return
     setSubmitting(true)
     const r = await clientApi.create({ ...form, user_id: Number(form.user_id) })
     setSubmitting(false)
-    if (r.success) { toast('客户添加成功', 'success'); setShowCreate(false); setForm({ user_id: '', name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', position_level: '', department: '', job_function: '' }); setErrors({}); load() }
+    if (r.success) { toast('好友添加成功', 'success'); setShowCreate(false); setForm({ user_id: '', name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', position_level: '', department: '', job_function: '' }); setErrors({}); load() }
     else toast(r.message || '添加失败', 'error')
   }
 
@@ -92,12 +92,12 @@ export default function ClientList() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>客户管理</h1>
-          <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>管理所有客户信息</p>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>好友管理</h1>
+          <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>管理所有好友信息</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <Button variant="secondary" onClick={() => {
-            const headers = ['客户名称', '公司', '渠道', '阶段', '邮箱', '电话', '职位级别', '部门', '工作职能', '标签', '创建时间']
+            const headers = ['好友名称', '公司', '渠道', '阶段', '邮箱', '电话', '职位级别', '部门', '工作职能', '标签', '创建时间']
             const stageLabel: Record<string, string> = { potential: '潜在', intent: '意向', signed: '签约', active: '合作中', lost: '流失' }
             const rows = clients.map(c => [
               c.name, c.company || '', c.channel || '', stageLabel[c.stage || 'potential'] || c.stage || '',
@@ -107,17 +107,17 @@ export default function ClientList() {
             ])
             const csv = '\uFEFF' + [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `客户数据_${new Date().toISOString().slice(0,10)}.csv`; a.click()
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `好友数据_${new Date().toISOString().slice(0,10)}.csv`; a.click()
           }}><Download size={16} /> 导出</Button>
           <Button variant="secondary" onClick={() => { setShowImport(true); setImportData([]) }}><Upload size={16} /> 导入</Button>
-          <Button onClick={() => { setShowCreate(true); loadMembers() }}><Plus size={16} /> 新增客户</Button>
+          <Button onClick={() => { setShowCreate(true); loadMembers() }}><Plus size={16} /> 新增好友</Button>
         </div>
       </div>
 
       <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
         <div style={{ position: 'relative', flex: '1 1 240px', maxWidth: 360 }}>
           <Search size={16} color="#94a3b8" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索客户名称、公司、电话..."
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索好友名称、公司、电话..."
             style={{ width: '100%', padding: '8px 12px 8px 36px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none', background: '#fff' }} />
         </div>
       </div>
@@ -141,7 +141,7 @@ export default function ClientList() {
       ) : clients.length === 0 ? (
         <div style={{ textAlign: 'center', padding: 80, color: '#94a3b8' }}>
           <Users size={48} style={{ marginBottom: 12, opacity: 0.5 }} />
-          <div>暂无客户，点击右上角新增</div>
+          <div>暂无好友，点击右上角新增</div>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '280px' : '340px'}, 1fr))`, gap: isMobile ? 10 : 16 }}>
@@ -194,7 +194,7 @@ export default function ClientList() {
         </div>
       )}
 
-      <Modal open={showCreate} onClose={() => setShowCreate(false)} title="新增客户">
+      <Modal open={showCreate} onClose={() => setShowCreate(false)} title="新增好友">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>选择成员用户 <span style={{ color: '#dc2626' }}>*</span></label>
@@ -245,7 +245,7 @@ export default function ClientList() {
             {availableMembers.length === 0 && <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>暂无可关联的成员用户，请先注册成员账号</div>}
           </div>
           <div>
-            <Input label="客户名称 *" placeholder="自动填充" value={form.name} onChange={e => { setForm({ ...form, name: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.name; return n }) }} />
+            <Input label="好友名称 *" placeholder="自动填充" value={form.name} onChange={e => { setForm({ ...form, name: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.name; return n }) }} />
             {errors.name && <div style={errStyle}>{errors.name}</div>}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -270,7 +270,7 @@ export default function ClientList() {
             {errors.channel && <div style={errStyle}>{errors.channel}</div>}
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>客户阶段</label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>好友阶段</label>
             <select value={form.stage} onChange={e => setForm({ ...form, stage: e.target.value })}
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
               {Object.entries(stageMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
@@ -283,12 +283,12 @@ export default function ClientList() {
         </div>
       </Modal>
 
-      <Modal open={showImport} onClose={() => setShowImport(false)} title="批量导入客户">
+      <Modal open={showImport} onClose={() => setShowImport(false)} title="批量导入好友">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: 10, padding: 20, textAlign: 'center' }}>
             <Upload size={32} color="#94a3b8" style={{ marginBottom: 8 }} />
             <div style={{ fontSize: 14, color: '#64748b', marginBottom: 8 }}>选择 CSV 文件上传</div>
-            <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 12 }}>表头: 客户名称, 公司, 渠道, 阶段, 邮箱, 电话, 职位级别, 部门, 工作职能, 备注</div>
+            <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 12 }}>表头: 好友名称, 公司, 渠道, 阶段, 邮箱, 电话, 职位级别, 部门, 工作职能, 备注</div>
             <input type="file" accept=".csv" onChange={e => {
               const file = e.target.files?.[0]
               if (!file) return
@@ -297,7 +297,7 @@ export default function ClientList() {
                 const text = ev.target?.result as string
                 const lines = text.split(/\r?\n/).filter(l => l.trim())
                 if (lines.length < 2) { toast('CSV文件至少需要表头和一行数据', 'error'); return }
-                const headerMap: Record<string, string> = { '客户名称': 'name', '公司': 'company', '渠道': 'channel', '阶段': 'stage', '邮箱': 'email', '电话': 'phone', '职位级别': 'position_level', '部门': 'department', '工作职能': 'job_function', '备注': 'notes' }
+                const headerMap: Record<string, string> = { '好友名称': 'name', '公司': 'company', '渠道': 'channel', '阶段': 'stage', '邮箱': 'email', '电话': 'phone', '职位级别': 'position_level', '部门': 'department', '工作职能': 'job_function', '备注': 'notes' }
                 const stageRev: Record<string, string> = { '潜在': 'potential', '意向': 'intent', '签约': 'signed', '合作中': 'active', '流失': 'lost' }
                 const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim())
                 const keys = headers.map(h => headerMap[h] || h)
