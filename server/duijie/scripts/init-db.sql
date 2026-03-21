@@ -179,6 +179,9 @@ CREATE TABLE IF NOT EXISTS duijie_messages (
   INDEX idx_is_deleted (is_deleted)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='对接-消息表';
 
--- v1.0.40: 团队层级支持
-ALTER TABLE voice_users ADD COLUMN IF NOT EXISTS manager_id INT DEFAULT NULL COMMENT '上级经理ID' AFTER client_id;
-ALTER TABLE voice_users ADD INDEX IF NOT EXISTS idx_manager_id (manager_id);
+-- v1.0.40: 团队层级支持（MySQL 8.0 不支持 IF NOT EXISTS，用存储过程兼容）
+SET @col_exists = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'voice_users' AND COLUMN_NAME = 'manager_id');
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE voice_users ADD COLUMN manager_id INT DEFAULT NULL COMMENT ''上级经理ID'' AFTER client_id', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;

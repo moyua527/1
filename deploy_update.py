@@ -39,39 +39,11 @@ def main():
     # 1. DB Migration
     print('\n[1/4] DB Migration...')
     migration_sql = """
-CREATE TABLE IF NOT EXISTS duijie_tickets (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  title VARCHAR(200) NOT NULL,
-  content TEXT,
-  type ENUM('requirement','bug','question','other') DEFAULT 'question',
-  priority ENUM('low','medium','high','urgent') DEFAULT 'medium',
-  status ENUM('open','processing','resolved','closed') DEFAULT 'open',
-  project_id INT,
-  created_by INT NOT NULL,
-  assigned_to INT,
-  resolved_at TIMESTAMP NULL,
-  rating TINYINT NULL,
-  rating_comment TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  is_deleted TINYINT(1) DEFAULT 0,
-  INDEX idx_created_by (created_by),
-  INDEX idx_assigned_to (assigned_to),
-  INDEX idx_status (status),
-  INDEX idx_project_id (project_id),
-  INDEX idx_is_deleted (is_deleted)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE IF NOT EXISTS duijie_ticket_replies (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  ticket_id INT NOT NULL,
-  content TEXT NOT NULL,
-  created_by INT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  is_deleted TINYINT(1) DEFAULT 0,
-  INDEX idx_ticket_id (ticket_id),
-  INDEX idx_is_deleted (is_deleted)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+SET @col_exists = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'voice_users' AND COLUMN_NAME = 'manager_id');
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE voice_users ADD COLUMN manager_id INT DEFAULT NULL AFTER client_id', 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 """
     # Read DB creds from server .env
     env_out = run_cmd(ssh, f'cat {REMOTE_BASE}/server/duijie/.env', 'Reading .env')
@@ -95,13 +67,12 @@ CREATE TABLE IF NOT EXISTS duijie_ticket_replies (
     backend_files = [
         'atomic/routes/index.js',
         'atomic/repositories/dashboard/statsRepo.js',
-        'atomic/controllers/dm/usersController.js',
-        'atomic/controllers/ticket/createController.js',
-        'atomic/controllers/ticket/listController.js',
-        'atomic/controllers/ticket/detailController.js',
-        'atomic/controllers/ticket/updateController.js',
-        'atomic/controllers/ticket/replyController.js',
-        'atomic/controllers/ticket/rateController.js',
+        'atomic/repositories/client/findAllRepo.js',
+        'atomic/controllers/opportunity/listController.js',
+        'atomic/controllers/user/listController.js',
+        'atomic/controllers/user/createController.js',
+        'atomic/controllers/user/updateController.js',
+        'atomic/utils/getSubordinateIds.js',
     ]
     remote_server = f'{REMOTE_BASE}/server/duijie'
     for f in backend_files:
