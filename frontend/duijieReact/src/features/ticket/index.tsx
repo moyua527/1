@@ -69,7 +69,7 @@ export default function TicketPage() {
 
   const openCreate = () => {
     setForm({ title: '', content: '', type: 'question', priority: 'medium', project_id: '' })
-    fetchApi('/api/projects').then(r => { if (r.success) setProjects(r.data || []) })
+    fetchApi('/api/projects').then(r => { if (r.success) setProjects(r.data?.rows || r.data || []) })
     setCreateOpen(true)
   }
 
