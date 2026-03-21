@@ -41,6 +41,7 @@ router.put('/projects/:id', auth, require('../controllers/project/updateControll
 router.delete('/projects/:id', auth, require('../controllers/project/deleteController'));
 
 // Clients (admin/member only)
+router.get('/clients/available-members', auth, clientStaff, require('../controllers/client/availableMembersController'));
 router.post('/clients', auth, clientStaff, require('../controllers/client/createController'));
 router.get('/clients', auth, clientStaff, require('../controllers/client/listController'));
 router.get('/clients/:id', auth, clientStaff, require('../controllers/client/detailController'));

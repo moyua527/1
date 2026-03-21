@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS system_config (
 -- 客户表
 CREATE TABLE IF NOT EXISTS duijie_clients (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT DEFAULT NULL,
   name VARCHAR(100) NOT NULL,
   company VARCHAR(200),
   email VARCHAR(200),

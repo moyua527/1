@@ -1,6 +1,7 @@
 import { fetchApi } from '../../../bootstrap'
 
 export const clientApi = {
+  availableMembers: () => fetchApi('/api/clients/available-members'),
   list: () => fetchApi('/api/clients'),
   detail: (id: string) => fetchApi(`/api/clients/${id}`),
   create: (data: any) => fetchApi('/api/clients', { method: 'POST', body: JSON.stringify(data) }),

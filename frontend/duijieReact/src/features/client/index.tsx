@@ -28,8 +28,9 @@ export default function ClientList() {
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [form, setForm] = useState({ name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', position_level: '', department: '', job_function: '' })
+  const [form, setForm] = useState({ user_id: '', name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', position_level: '', department: '', job_function: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [availableMembers, setAvailableMembers] = useState<any[]>([])
   const [searchParams, setSearchParams] = useSearchParams()
   const stageFilter = searchParams.get('stage') || 'all'
   const setStageFilter = (s: string) => { if (s === 'all') { searchParams.delete('stage'); setSearchParams(searchParams, { replace: true }) } else { setSearchParams({ stage: s }, { replace: true }) } }
@@ -48,25 +49,29 @@ export default function ClientList() {
   }
   useEffect(load, [])
 
+  const loadMembers = () => { clientApi.availableMembers().then(r => { if (r.success) setAvailableMembers(r.data || []) }) }
+
+  const handleSelectMember = (userId: string) => {
+    const m = availableMembers.find((u: any) => String(u.id) === userId)
+    if (m) {
+      setForm(prev => ({ ...prev, user_id: userId, name: m.nickname || m.username, email: m.email || '', phone: m.phone || '' }))
+    } else {
+      setForm(prev => ({ ...prev, user_id: '', name: '', email: '', phone: '' }))
+    }
+  }
+
   const handleCreate = async () => {
     const e: Record<string, string> = {}
+    if (!form.user_id) e.user_id = '请选择成员用户'
     if (!form.channel) e.channel = '请选择渠道'
     if (!form.name.trim()) e.name = '请输入客户名称'
-    if (!form.company.trim()) e.company = '请输入公司名称'
-    if (!form.email.trim()) e.email = '请输入邮箱'
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) e.email = '邮箱格式不正确'
-    if (!form.phone.trim()) e.phone = '请输入电话'
-    else if (!/^1[3-9]\d{9}$/.test(form.phone.trim()) && !/^\d{7,15}$/.test(form.phone.trim().replace(/[-\s]/g, ''))) e.phone = '电话格式不正确'
-    if (!form.position_level) e.position_level = '请选择职位级别'
-    if (!form.department) e.department = '请选择部门'
-    if (!form.job_function) e.job_function = '请选择工作职能'
     setErrors(e)
     if (Object.keys(e).length > 0) return
     setSubmitting(true)
-    const r = await clientApi.create(form)
+    const r = await clientApi.create({ ...form, user_id: Number(form.user_id) })
     setSubmitting(false)
-    if (r.success) { toast('客户创建成功', 'success'); setShowCreate(false); setForm({ name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', position_level: '', department: '', job_function: '' }); setErrors({}); load() }
-    else toast(r.message || '创建失败', 'error')
+    if (r.success) { toast('客户添加成功', 'success'); setShowCreate(false); setForm({ user_id: '', name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', position_level: '', department: '', job_function: '' }); setErrors({}); load() }
+    else toast(r.message || '添加失败', 'error')
   }
 
   const errStyle: React.CSSProperties = { fontSize: 12, color: '#dc2626', marginTop: 4 }
@@ -93,7 +98,7 @@ export default function ClientList() {
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `客户数据_${new Date().toISOString().slice(0,10)}.csv`; a.click()
           }}><Download size={16} /> 导出</Button>
           <Button variant="secondary" onClick={() => { setShowImport(true); setImportData([]) }}><Upload size={16} /> 导入</Button>
-          <Button onClick={() => setShowCreate(true)}><Plus size={16} /> 新增客户</Button>
+          <Button onClick={() => { setShowCreate(true); loadMembers() }}><Plus size={16} /> 新增客户</Button>
         </div>
       </div>
 
@@ -180,6 +185,25 @@ export default function ClientList() {
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title="新增客户">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>选择成员用户 <span style={{ color: '#dc2626' }}>*</span></label>
+            <select value={form.user_id} onChange={e => { handleSelectMember(e.target.value); setErrors(prev => { const n = { ...prev }; delete n.user_id; return n }) }}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${errors.user_id ? '#dc2626' : '#cbd5e1'}`, fontSize: 14, outline: 'none', background: '#fff' }}>
+              <option value="">请选择已注册的成员</option>
+              {availableMembers.map((u: any) => <option key={u.id} value={u.id}>{u.nickname || u.username}{u.email ? ` (${u.email})` : ''}</option>)}
+            </select>
+            {errors.user_id && <div style={errStyle}>{errors.user_id}</div>}
+            {availableMembers.length === 0 && <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>暂无可关联的成员用户，请先注册成员账号</div>}
+          </div>
+          <div>
+            <Input label="客户名称 *" placeholder="自动填充" value={form.name} onChange={e => { setForm({ ...form, name: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.name; return n }) }} />
+            {errors.name && <div style={errStyle}>{errors.name}</div>}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <Input label="邮箱" placeholder="自动填充" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+            <Input label="电话" placeholder="自动填充" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+          </div>
+          <Input label="公司" placeholder="公司名称（选填）" value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} />
+          <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>渠道 <span style={{ color: '#dc2626' }}>*</span></label>
             <select value={form.channel} onChange={e => { setForm({ ...form, channel: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.channel; return n }) }}
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${errors.channel ? '#dc2626' : '#cbd5e1'}`, fontSize: 14, outline: 'none', background: '#fff' }}>
@@ -202,52 +226,9 @@ export default function ClientList() {
               {Object.entries(stageMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
             </select>
           </div>
-          <div>
-            <Input label="客户名称 *" placeholder="输入名称" value={form.name} onChange={e => { setForm({ ...form, name: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.name; return n }) }} />
-            {errors.name && <div style={errStyle}>{errors.name}</div>}
-          </div>
-          <div>
-            <Input label="公司 *" placeholder="公司名称" value={form.company} onChange={e => { setForm({ ...form, company: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.company; return n }) }} />
-            {errors.company && <div style={errStyle}>{errors.company}</div>}
-          </div>
-          <div>
-            <Input label="邮箱 *" placeholder="email@example.com" value={form.email} onChange={e => { setForm({ ...form, email: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.email; return n }) }} />
-            {errors.email && <div style={errStyle}>{errors.email}</div>}
-          </div>
-          <div>
-            <Input label="电话 *" placeholder="手机号" value={form.phone} onChange={e => { setForm({ ...form, phone: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.phone; return n }) }} />
-            {errors.phone && <div style={errStyle}>{errors.phone}</div>}
-          </div>
-          <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>职位级别 <span style={{ color: '#dc2626' }}>*</span></label>
-            <select value={form.position_level} onChange={e => { setForm({ ...form, position_level: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.position_level; return n }) }}
-              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${errors.position_level ? '#dc2626' : '#cbd5e1'}`, fontSize: 14, outline: 'none', background: '#fff' }}>
-              <option value="">请选择职位级别</option>
-              {['C级高管','副总裁/VP','总监','经理','主管','专员','其他'].map(p => <option key={p} value={p}>{p}</option>)}
-            </select>
-            {errors.position_level && <div style={errStyle}>{errors.position_level}</div>}
-          </div>
-          <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>部门 <span style={{ color: '#dc2626' }}>*</span></label>
-            <select value={form.department} onChange={e => { setForm({ ...form, department: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.department; return n }) }}
-              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${errors.department ? '#dc2626' : '#cbd5e1'}`, fontSize: 14, outline: 'none', background: '#fff' }}>
-              <option value="">请选择部门</option>
-              {['总经办','销售部','市场部','技术部','产品部','运营部','人力资源','财务部','采购部','客服部','其他'].map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
-            {errors.department && <div style={errStyle}>{errors.department}</div>}
-          </div>
-          <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>工作职能 <span style={{ color: '#dc2626' }}>*</span></label>
-            <select value={form.job_function} onChange={e => { setForm({ ...form, job_function: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.job_function; return n }) }}
-              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${errors.job_function ? '#dc2626' : '#cbd5e1'}`, fontSize: 14, outline: 'none', background: '#fff' }}>
-              <option value="">请选择工作职能</option>
-              {['决策者','影响者','使用者','采购者','技术评估','项目管理','其他'].map(j => <option key={j} value={j}>{j}</option>)}
-            </select>
-            {errors.job_function && <div style={errStyle}>{errors.job_function}</div>}
-          </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
             <Button variant="secondary" onClick={() => setShowCreate(false)}>取消</Button>
-            <Button onClick={handleCreate} disabled={submitting}>{submitting ? '创建中...' : '创建'}</Button>
+            <Button onClick={handleCreate} disabled={submitting}>{submitting ? '添加中...' : '添加'}</Button>
           </div>
         </div>
       </Modal>
