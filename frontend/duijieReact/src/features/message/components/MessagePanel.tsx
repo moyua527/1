@@ -47,9 +47,9 @@ export default function MessagePanel({ projectId }: Props) {
         {messages.length === 0 && <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, padding: 20 }}>暂无消息</div>}
         {messages.map((m: any) => (
           <div key={m.id} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-            <Avatar name={m.sender_nickname || 'U'} size={28} />
+            <Avatar name={m.sender_name || 'U'} size={28} />
             <div>
-              <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 2 }}>{m.sender_nickname || '用户'} · {new Date(m.created_at).toLocaleString('zh-CN')}</div>
+              <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 2 }}>{m.sender_name || '用户'} · {new Date(m.created_at).toLocaleString('zh-CN')}</div>
               <div style={bubble}>{m.content}</div>
             </div>
           </div>

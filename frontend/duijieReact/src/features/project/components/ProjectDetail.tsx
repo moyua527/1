@@ -114,7 +114,23 @@ export default function ProjectDetail() {
 
       {tab === 'tasks' && (
         <div style={section}>
-          <h3 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 600 }}>任务列表</h3>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>任务列表</h3>
+          </div>
+          <form onSubmit={async (e) => {
+            e.preventDefault()
+            const form = e.target as HTMLFormElement
+            const title = (form.elements.namedItem('taskTitle') as HTMLInputElement).value.trim()
+            if (!title) return
+            const r = await taskApi.create({ project_id: Number(id), title, created_by: 1 })
+            if (r.success) {
+              taskApi.list(id!).then(r2 => { if (r2.success) setTasks(r2.data || []) })
+              form.reset()
+            }
+          }} style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <input name="taskTitle" placeholder="输入任务标题，回车添加" style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none' }} />
+            <Button type="submit" style={{ padding: '8px 16px' }}>添加</Button>
+          </form>
           {tasks.length === 0 ? <div style={{ color: '#94a3b8', fontSize: 14 }}>暂无任务</div> : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {tasks.map((t: any) => {
@@ -125,6 +141,14 @@ export default function ProjectDetail() {
                       <div style={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>{t.title}</div>
                       {t.due_date && <div style={{ fontSize: 12, color: '#94a3b8' }}>截止: {t.due_date}</div>}
                     </div>
+                    <select value={t.status} onChange={async (e) => {
+                      await taskApi.move(String(t.id), e.target.value)
+                      taskApi.list(id!).then(r2 => { if (r2.success) setTasks(r2.data || []) })
+                    }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 13, color: '#334155', cursor: 'pointer' }}>
+                      <option value="todo">待办</option>
+                      <option value="in_progress">进行中</option>
+                      <option value="done">已完成</option>
+                    </select>
                     <Badge color={ts.color}>{ts.label}</Badge>
                   </div>
                 )
