@@ -28,7 +28,7 @@ export default function ToastContainer() {
     timerRef.current = setTimeout(() => {
       setFading(true)
       fadeRef.current = setTimeout(() => { setCurrent(null); setFading(false) }, 400)
-    }, 1500)
+    }, 1000)
   }, [])
 
   useEffect(() => { addToastGlobal = addToast; return () => { addToastGlobal = null } }, [addToast])
