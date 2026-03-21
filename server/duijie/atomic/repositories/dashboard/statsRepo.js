@@ -3,15 +3,26 @@ const db = require('../../../config/db');
 const getSubordinateIds = require('../../utils/getSubordinateIds');
 
 function buildProjectFilter(auth) {
+  const isMember = '(p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?))';
   if (['admin', 'viewer'].includes(auth.role)) {
     return { where: '', params: [] };
   }
   if (auth.role === 'sales_manager' && auth._teamIds) {
     const ids = auth._teamIds;
-    return { where: `AND (p.created_by IN (${ids.map(() => '?').join(',')}) OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id IN (${ids.map(() => '?').join(',')})))`, params: [...ids, ...ids] };
+    const ph = ids.map(() => '?').join(',');
+    return { where: `AND (p.client_id IN (SELECT id FROM duijie_clients WHERE (assigned_to IN (${ph}) OR created_by IN (${ph})) AND is_deleted = 0) OR ${isMember})`, params: [...ids, ...ids, auth.userId, auth.userId] };
+  }
+  if (auth.role === 'business' && auth.userId) {
+    return { where: `AND (p.client_id IN (SELECT id FROM duijie_clients WHERE (assigned_to = ? OR created_by = ?) AND is_deleted = 0) OR ${isMember})`, params: [auth.userId, auth.userId, auth.userId, auth.userId] };
+  }
+  if (auth.role === 'marketing') {
+    return { where: `AND (p.client_id IN (SELECT id FROM duijie_clients WHERE stage IN ('potential','intent') AND is_deleted = 0) OR ${isMember})`, params: [auth.userId, auth.userId] };
+  }
+  if (auth.role === 'support') {
+    return { where: `AND (p.client_id IN (SELECT id FROM duijie_clients WHERE stage IN ('signed','active') AND is_deleted = 0) OR ${isMember})`, params: [auth.userId, auth.userId] };
   }
   if (auth.userId) {
-    return { where: 'AND (p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?))', params: [auth.userId, auth.userId] };
+    return { where: `AND ${isMember}`, params: [auth.userId, auth.userId] };
   }
   return { where: '', params: [] };
 }
