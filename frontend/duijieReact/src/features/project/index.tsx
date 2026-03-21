@@ -37,9 +37,8 @@ export default function ProjectList() {
 
   const handleCreate = async () => {
     if (!form.name.trim()) { toast('请输入项目名称', 'error'); return }
-    if (!form.client_id) { toast('请选择关联客户', 'error'); return }
     setSubmitting(true)
-    const r = await projectApi.create({ ...form, client_id: Number(form.client_id) })
+    const r = await projectApi.create({ ...form, client_id: form.client_id ? Number(form.client_id) : null })
     setSubmitting(false)
     if (r.success) { toast('项目创建成功', 'success'); setShowCreate(false); setForm({ name: '', description: '', client_id: '' }); load() }
     else toast(r.message || '创建失败', 'error')
@@ -89,7 +88,7 @@ export default function ProjectList() {
           <Input label="项目名称" placeholder="输入项目名称" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
           <Input label="项目描述" placeholder="简要描述" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>关联客户 <span style={{ color: '#dc2626' }}>*</span></label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>关联客户（选填）</label>
             <select value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value })}
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
               <option value="">请选择客户</option>

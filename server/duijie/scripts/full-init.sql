@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS duijie_projects (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(200) NOT NULL,
   description TEXT,
-  client_id INT NOT NULL,
+  client_id INT DEFAULT NULL,
   status ENUM('planning','in_progress','review','completed','on_hold') DEFAULT 'planning',
   progress TINYINT DEFAULT 0,
   start_date DATE,
