@@ -34,6 +34,7 @@ export default function Dashboard() {
   const nav = useNavigate()
   const { user } = useOutletContext<{ user: any }>()
   const isStaff = user?.role === 'admin' || user?.role === 'member'
+  const isAdmin = user?.role === 'admin'
 
   useEffect(() => {
     fetchApi('/api/dashboard/stats').then(r => { if (r.success) setStats(r.data) }).catch(() => {
@@ -73,7 +74,7 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
-      {isStaff && stats?.clientStages && (() => {
+      {isAdmin && stats?.clientStages && (() => {
         const stages = stats.clientStages!
         const total = Object.values(stages).reduce((a, b) => a + b, 0)
         const maxCount = Math.max(...Object.values(stages), 1)
@@ -106,7 +107,7 @@ export default function Dashboard() {
           </div>
         )
       })()}
-      {isStaff && stats?.followUpAlerts && (stats.followUpAlerts.overdue > 0 || stats.followUpAlerts.upcoming > 0) && (
+      {isAdmin && stats?.followUpAlerts && (stats.followUpAlerts.overdue > 0 || stats.followUpAlerts.upcoming > 0) && (
         <div style={{ background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginTop: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 8 }}>
             <Bell size={20} color="#d97706" />
@@ -128,7 +129,7 @@ export default function Dashboard() {
           )}
         </div>
       )}
-      {isStaff && stats && ((stats.recentFollowUps?.length || 0) > 0 || (stats.recentContracts?.length || 0) > 0) && (
+      {isAdmin && stats && ((stats.recentFollowUps?.length || 0) > 0 || (stats.recentContracts?.length || 0) > 0) && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 16, marginTop: 24 }}>
           {(stats.recentFollowUps?.length || 0) > 0 && (
             <div style={{ background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
