@@ -7,6 +7,7 @@ module.exports = async (req, res) => {
     if (username.length < 3) return res.status(400).json({ success: false, message: '用户名至少3个字符' });
     if (!/^[a-zA-Z0-9_]+$/.test(username)) return res.status(400).json({ success: false, message: '用户名仅支持字母、数字和下划线' });
     if (password.length < 6) return res.status(400).json({ success: false, message: '密码至少6个字符' });
+    if (!email && !phone) return res.status(400).json({ success: false, message: '邮箱和手机号至少填写一项' });
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ success: false, message: '邮箱格式无效' });
     const [codeRows] = await db.query("SELECT config_value FROM system_config WHERE config_key = 'INVITE_CODE'");
     if (codeRows.length > 0 && codeRows[0].config_value) {

@@ -57,6 +57,7 @@ export default function LoginPage({ onLogin }: Props) {
     if (!/^[a-zA-Z0-9_]+$/.test(username.trim())) { setError('用户名仅支持字母、数字和下划线'); return }
     if (!password || password.length < 6) { setError('密码至少6个字符'); return }
     if (password !== confirmPwd) { setError('两次密码不一致'); return }
+    if (!email.trim() && !phone.trim()) { setError('邮箱和手机号至少填写一项'); return }
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('邮箱格式无效'); return }
     if (needInvite && !inviteCode.trim()) { setError('请输入邀请码'); return }
     setLoading(true)
@@ -99,8 +100,9 @@ export default function LoginPage({ onLogin }: Props) {
           {mode === 'register' && (
             <>
               <Input label="昵称（选填）" placeholder="不填则使用用户名" value={nickname} onChange={e => setNickname(e.target.value)} />
-              <Input label="邮箱（选填）" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} />
-              <Input label="手机号（选填）" placeholder="输入手机号" value={phone} onChange={e => setPhone(e.target.value)} />
+              <div style={{ fontSize: 12, color: '#64748b', margin: '-4px 0 2px' }}>邮箱和手机号至少填写一项</div>
+              <Input label="邮箱" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} />
+              <Input label="手机号" placeholder="输入手机号" value={phone} onChange={e => setPhone(e.target.value)} />
             </>
           )}
 
