@@ -1,4 +1,5 @@
 const db = require('../../../config/db');
+const generateInviteCode = require('../../utils/generateInviteCode');
 
 module.exports = async (req, res) => {
   try {
@@ -9,9 +10,10 @@ module.exports = async (req, res) => {
     const [existing] = await db.query('SELECT id FROM voice_users WHERE username = ? AND is_deleted = 0', [username]);
     if (existing.length > 0) return res.status(400).json({ success: false, message: '用户名已存在' });
 
+    const personalCode = await generateInviteCode();
     const [result] = await db.query(
-      'INSERT INTO voice_users (username, password, nickname, role, client_id) VALUES (?, ?, ?, ?, ?)',
-      [username, password, nickname || username, role, null]
+      'INSERT INTO voice_users (username, password, nickname, role, client_id, personal_invite_code) VALUES (?, ?, ?, ?, ?, ?)',
+      [username, password, nickname || username, role, null, personalCode]
     );
     res.json({ success: true, data: { id: result.insertId } });
   } catch (e) {

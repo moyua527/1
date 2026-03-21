@@ -70,7 +70,7 @@ export default function LoginPage({ onLogin }: Props) {
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('邮箱格式无效'); return }
     if (!gender) { setError('请选择性别'); return }
     if (!areaCode || areaCode.length !== 6) { setError('请选择完整的省/市/区'); return }
-    if (needInvite && !inviteCode.trim()) { setError('请输入邀请码'); return }
+    if (!inviteCode.trim()) { setError('请输入邀请码'); return }
     setLoading(true)
     try {
       const res = await authApi.register({
@@ -163,8 +163,8 @@ export default function LoginPage({ onLogin }: Props) {
             <Input label="确认密码" type="password" placeholder="再次输入密码" value={confirmPwd} onChange={e => setConfirmPwd(e.target.value)} />
           )}
 
-          {mode === 'register' && needInvite && (
-            <Input label="邀请码" placeholder="请输入邀请码" value={inviteCode} onChange={e => setInviteCode(e.target.value)} />
+          {mode === 'register' && (
+            <Input label="邀请码 *" placeholder="输入系统邀请码或他人专属邀请码" value={inviteCode} onChange={e => setInviteCode(e.target.value.toUpperCase())} />
           )}
 
           {error && <div style={{ color: '#dc2626', fontSize: 13, textAlign: 'center', padding: '6px 0' }}>{error}</div>}

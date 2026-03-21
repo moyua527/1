@@ -3,7 +3,7 @@ const db = require('../../../config/db');
 module.exports = async (req, res) => {
   try {
     const [rows] = await db.query(
-      'SELECT id, username, nickname, avatar, role, client_id, display_id, gender, area_code, created_at FROM voice_users WHERE is_deleted = 0 ORDER BY id'
+      'SELECT id, username, nickname, avatar, role, client_id, display_id, gender, area_code, personal_invite_code, invited_by, created_at FROM voice_users WHERE is_deleted = 0 ORDER BY id'
     );
     res.json({ success: true, data: rows });
   } catch (e) {

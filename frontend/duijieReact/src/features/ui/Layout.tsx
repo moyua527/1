@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield, Settings } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield, Settings, Copy } from 'lucide-react'
 import { fetchApi, clearToken } from '../../bootstrap'
 import Avatar from './Avatar'
 import Modal from './Modal'
@@ -178,6 +178,20 @@ export default function Layout() {
                 <div><span style={{ color: '#94a3b8' }}>用户ID</span><div style={{ color: '#0f172a', fontWeight: 500, marginTop: 2 }}>#{user.id}</div></div>
               </div>
             </div>
+
+            {user.personal_invite_code && (
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid #e2e8f0' }}>我的专属邀请码</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: 'linear-gradient(135deg, #eff6ff, #f5f3ff)', borderRadius: 10, border: '1px solid #e0e7ff' }}>
+                <code style={{ fontSize: 20, fontWeight: 700, letterSpacing: 3, color: '#1e40af', flex: 1 }}>{user.personal_invite_code}</code>
+                <button onClick={() => { navigator.clipboard.writeText(user.personal_invite_code); toast('邀请码已复制', 'success') }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 8, border: '1px solid #c7d2fe', background: '#fff', color: '#4f46e5', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
+                  <Copy size={14} /> 复制
+                </button>
+              </div>
+              <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>分享此邀请码给新用户，对方注册后将自动成为你的客户</div>
+            </div>
+            )}
 
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid #e2e8f0' }}>安全设置</div>
