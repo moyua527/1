@@ -28,6 +28,7 @@ export default function OpportunityList() {
   const [clients, setClients] = useState<any[]>([])
   const [staffMembers, setStaffMembers] = useState<any[]>([])
   const [form, setForm] = useState({ title: '', client_id: '', amount: '', probability: '50', stage: 'lead', expected_close: '', assigned_to: '', notes: '' })
+  const [dragOverStage, setDragOverStage] = useState<string | null>(null)
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
 
   const load = () => {
@@ -164,7 +165,11 @@ export default function OpportunityList() {
             const stageItems = items.filter(i => (i.stage || 'lead') === stageKey)
             const stageTotal = stageItems.reduce((sum, i) => sum + Number(i.amount || 0), 0)
             return (
-              <div key={stageKey} style={{ minWidth: isMobile ? 260 : 280, flex: '1 0 auto', background: '#f8fafc', borderRadius: 12, padding: 12 }}>
+              <div key={stageKey}
+                onDragOver={e => { e.preventDefault(); setDragOverStage(stageKey) }}
+                onDragLeave={() => setDragOverStage(null)}
+                onDrop={e => { e.preventDefault(); setDragOverStage(null); const oid = e.dataTransfer.getData('opportunityId'); if (oid) { const item = items.find(i => String(i.id) === oid); if (item && item.stage !== stageKey) handleStageChange(item, stageKey) } }}
+                style={{ minWidth: isMobile ? 260 : 280, flex: '1 0 auto', background: dragOverStage === stageKey ? '#eff6ff' : '#f8fafc', borderRadius: 12, padding: 12, border: dragOverStage === stageKey ? '2px dashed #2563eb' : '2px solid transparent', transition: 'all 0.15s' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, padding: '0 4px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.color }} />
@@ -175,7 +180,9 @@ export default function OpportunityList() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {stageItems.map(item => (
-                    <div key={item.id} style={{ background: '#fff', borderRadius: 10, padding: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #e2e8f0', cursor: 'pointer', transition: 'box-shadow 0.15s' }}
+                    <div key={item.id} draggable
+                      onDragStart={e => e.dataTransfer.setData('opportunityId', String(item.id))}
+                      style={{ background: '#fff', borderRadius: 10, padding: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #e2e8f0', cursor: 'grab', transition: 'box-shadow 0.15s' }}
                       onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)')}
                       onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)')}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
