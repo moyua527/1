@@ -22,6 +22,7 @@ interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 export default function Button({ variant = 'primary', style, children, ...rest }: Props) {
   return (
     <button
+      type="button"
       style={{ ...base, ...variants[variant], ...style }}
       onMouseEnter={e => (e.currentTarget.style.opacity = '0.85')}
       onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
