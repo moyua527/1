@@ -100,6 +100,7 @@ router.get('/tasks', auth, require('../controllers/task/listController'));
 router.put('/tasks/:id', auth, taskStaff, require('../controllers/task/updateController'));
 router.patch('/tasks/:id/move', auth, taskStaff, require('../controllers/task/moveController'));
 router.delete('/tasks/:id', auth, taskStaff, require('../controllers/task/deleteController'));
+router.get('/tasks/attachments/:attachmentId/download', auth, require('../controllers/task/downloadAttachmentController'));
 
 // Milestones
 router.post('/milestones', auth, require('../controllers/milestone/createController'));

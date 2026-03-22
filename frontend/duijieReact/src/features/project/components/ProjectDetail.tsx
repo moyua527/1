@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
-import { ArrowLeft, Trash2, User, Mail, Shield, ChevronDown, Plus, X, Upload, FileText, Image, CheckCircle, Circle } from 'lucide-react'
+import { ArrowLeft, Trash2, User, Mail, Shield, ChevronDown, Plus, X, Upload, FileText, Image, CheckCircle, Circle, Paperclip, Download } from 'lucide-react'
 import Modal from '../../ui/Modal'
 import Avatar from '../../ui/Avatar'
 import { projectApi } from '../services/api'
@@ -260,6 +260,19 @@ export default function ProjectDetail() {
                       <div style={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>{t.title}</div>
                       {t.description && <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>{t.description}</div>}
                       {t.due_date && <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>截止: {t.due_date}</div>}
+                      {t.attachments && t.attachments.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                          {t.attachments.map((a: any) => (
+                            <a key={a.id} href={`/api/tasks/attachments/${a.id}/download`} target="_blank" rel="noreferrer"
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', background: '#eff6ff', borderRadius: 6, fontSize: 12, color: '#2563eb', textDecoration: 'none', border: '1px solid #dbeafe' }}
+                              onMouseEnter={e => { e.currentTarget.style.background = '#dbeafe' }} onMouseLeave={e => { e.currentTarget.style.background = '#eff6ff' }}>
+                              {a.mime_type?.startsWith('image/') ? <Image size={12} /> : <Paperclip size={12} />}
+                              <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.original_name}</span>
+                              <Download size={10} />
+                            </a>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <select value={t.status} disabled={!canEdit} onChange={async (e) => {
                       await taskApi.move(String(t.id), e.target.value)
@@ -324,7 +337,7 @@ export default function ProjectDetail() {
               <Button disabled={submitting} onClick={async () => {
                 if (!taskForm.title.trim()) { toast('请输入任务标题', 'error'); return }
                 setSubmitting(true)
-                const r = await taskApi.create({ project_id: Number(id), title: taskForm.title, description: taskForm.description, due_date: taskForm.due_date || undefined, priority: taskForm.priority })
+                const r = await taskApi.create({ project_id: Number(id), title: taskForm.title, description: taskForm.description, due_date: taskForm.due_date || undefined, priority: taskForm.priority }, taskFiles.length > 0 ? taskFiles : undefined)
                 if (r.success) {
                   toast('任务创建成功', 'success')
                   setShowCreateTask(false)
