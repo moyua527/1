@@ -1,4 +1,5 @@
 const db = require('../../../config/db');
+const { notify } = require('../../utils/notify');
 
 module.exports = async (req, res) => {
   try {
@@ -17,6 +18,10 @@ module.exports = async (req, res) => {
       'INSERT INTO duijie_project_members (project_id, user_id, role) VALUES (?, ?, ?)',
       [id, user_id, memberRole]
     );
+    const [[project]] = await db.query('SELECT name FROM duijie_projects WHERE id = ?', [id]);
+    if (user_id !== req.userId) {
+      await notify(user_id, 'project_member', '项目邀请', `你被添加为项目「${project?.name || '#' + id}」的成员`, `/projects/${id}`);
+    }
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });

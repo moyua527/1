@@ -39,11 +39,18 @@ def main():
     # 1. DB Migration
     print('\n[1/4] DB Migration...')
     migration_sql = """
-SET @col_exists = (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'voice_users' AND COLUMN_NAME = 'manager_id');
-SET @sql = IF(@col_exists = 0, 'ALTER TABLE voice_users ADD COLUMN manager_id INT DEFAULT NULL AFTER client_id', 'SELECT 1');
-PREPARE stmt FROM @sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
+CREATE TABLE IF NOT EXISTS duijie_notifications (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  type VARCHAR(50) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  content TEXT,
+  link VARCHAR(255),
+  is_read TINYINT(1) DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_user_read (user_id, is_read),
+  INDEX idx_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 """
     # Read DB creds from server .env
     env_out = run_cmd(ssh, f'cat {REMOTE_BASE}/server/duijie/.env', 'Reading .env')
@@ -66,11 +73,17 @@ DEALLOCATE PREPARE stmt;
     print('\n[3/4] Uploading backend files...')
     backend_files = [
         'atomic/routes/index.js',
+        'atomic/utils/notify.js',
+        'atomic/controllers/notification/listController.js',
+        'atomic/controllers/notification/markReadController.js',
+        'atomic/controllers/task/updateController.js',
         'atomic/controllers/task/uploadAttachmentController.js',
         'atomic/controllers/task/deleteAttachmentController.js',
         'atomic/repositories/task/findByProjectRepo.js',
         'atomic/controllers/followUp/updateController.js',
         'atomic/controllers/followUp/deleteController.js',
+        'atomic/controllers/ticket/replyController.js',
+        'atomic/controllers/project/addMemberController.js',
     ]
     remote_server = f'{REMOTE_BASE}/server/duijie'
     for f in backend_files:

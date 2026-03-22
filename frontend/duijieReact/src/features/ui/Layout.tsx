@@ -8,6 +8,7 @@ import Input from './Input'
 import Button from './Button'
 import { toast } from './Toast'
 import useIsMobile from './useIsMobile'
+import NotificationBell from './NotificationBell'
 
 const ALL_NAV_ITEMS = [
   { path: '/', label: '仪表盘', icon: LayoutDashboard, roles: ['admin', 'tech', 'business', 'member'] },
@@ -141,6 +142,7 @@ export default function Layout() {
             {sidebarOpen && !isMobile ? <X size={20} /> : <Menu size={20} />}
           </button>
           <span style={s.headerTitle}>{currentNav?.label || 'DuiJie'}</span>
+          {user && <NotificationBell />}
           {user && !isMobile && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 13, color: '#64748b' }}>{user.nickname}</span>

@@ -156,4 +156,8 @@ router.post('/users', auth, adminOnly, require('../controllers/user/createContro
 router.put('/users/:id', auth, adminOnly, require('../controllers/user/updateController'));
 router.delete('/users/:id', auth, adminOnly, require('../controllers/user/deleteController'));
 
+// Notifications
+router.get('/notifications', auth, require('../controllers/notification/listController'));
+router.patch('/notifications/:id/read', auth, require('../controllers/notification/markReadController'));
+
 module.exports = router;
