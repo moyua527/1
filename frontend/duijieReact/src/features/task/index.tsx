@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { fetchApi } from '../../bootstrap'
+import { fetchApi, uploadFile } from '../../bootstrap'
 import { taskApi } from './services/api'
 import Badge from '../ui/Badge'
 import { toast } from '../ui/Toast'
-import { Plus, GripVertical } from 'lucide-react'
+import { Plus, GripVertical, Paperclip, X, Download } from 'lucide-react'
+
+const BACKEND_URL = (window as any).__ENV__?.BACKEND_URL || ''
+const fmtSize = (b: number) => b < 1024 ? b + 'B' : b < 1048576 ? (b / 1024).toFixed(1) + 'KB' : (b / 1048576).toFixed(1) + 'MB'
 
 interface Task { id: number; title: string; description?: string; status: string; priority: string; project_id: number; due_date?: string; assignee_name?: string }
 
@@ -29,11 +32,19 @@ function AddTaskForm({ projectId, status, onAdded }: { projectId: string; status
   const [show, setShow] = useState(false)
   const [title, setTitle] = useState('')
   const [priority, setPriority] = useState('medium')
+  const [files, setFiles] = useState<File[]>([])
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const handleSubmit = async () => {
     if (!title.trim()) return
-    const r = await taskApi.create({ project_id: Number(projectId), title: title.trim(), status, priority })
-    if (r.success) { toast('任务已创建', 'success'); setTitle(''); setPriority('medium'); setShow(false); onAdded() }
+    const fd = new FormData()
+    fd.append('project_id', projectId)
+    fd.append('title', title.trim())
+    fd.append('status', status)
+    fd.append('priority', priority)
+    files.forEach(f => fd.append('files', f))
+    const r = await uploadFile('/api/tasks', fd)
+    if (r.success) { toast('任务已创建', 'success'); setTitle(''); setPriority('medium'); setFiles([]); setShow(false); onAdded() }
     else toast(r.message || '创建失败', 'error')
   }
 
@@ -46,8 +57,18 @@ function AddTaskForm({ projectId, status, onAdded }: { projectId: string; status
   return (
     <div style={{ background: '#fff', borderRadius: 10, padding: 12, border: '1px solid #2563eb', boxShadow: '0 0 0 2px rgba(37,99,235,0.1)' }}>
       <input value={title} onChange={e => setTitle(e.target.value)} placeholder="任务标题" autoFocus
-        onKeyDown={e => { if (e.key === 'Enter') handleSubmit(); if (e.key === 'Escape') setShow(false) }}
+        onKeyDown={e => { if (e.key === 'Enter' && !files.length) handleSubmit(); if (e.key === 'Escape') { setShow(false); setFiles([]) } }}
         style={{ width: '100%', padding: '6px 8px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 14, outline: 'none', marginBottom: 8, boxSizing: 'border-box' }} />
+      {files.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
+          {files.map((f, i) => (
+            <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '2px 8px', borderRadius: 4, background: '#eff6ff', border: '1px solid #bfdbfe', fontSize: 11, color: '#1e40af' }}>
+              <Paperclip size={10} /> {f.name}
+              <button onClick={() => setFiles(files.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}><X size={10} color="#94a3b8" /></button>
+            </span>
+          ))}
+        </div>
+      )}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <select value={priority} onChange={e => setPriority(e.target.value)} style={{ padding: '4px 6px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 12 }}>
           <option value="low">低优先级</option>
@@ -55,8 +76,12 @@ function AddTaskForm({ projectId, status, onAdded }: { projectId: string; status
           <option value="high">高优先级</option>
           <option value="urgent">紧急</option>
         </select>
+        <input ref={fileRef} type="file" multiple hidden onChange={e => { if (e.target.files) setFiles([...files, ...Array.from(e.target.files)]); e.target.value = '' }} />
+        <button onClick={() => fileRef.current?.click()} title="添加附件" style={{ padding: '4px 6px', borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
+          <Paperclip size={12} color="#64748b" /> 附件
+        </button>
         <div style={{ flex: 1 }} />
-        <button onClick={() => setShow(false)} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', fontSize: 12, cursor: 'pointer' }}>取消</button>
+        <button onClick={() => { setShow(false); setFiles([]) }} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', fontSize: 12, cursor: 'pointer' }}>取消</button>
         <button onClick={handleSubmit} style={{ padding: '4px 10px', borderRadius: 6, border: 'none', background: '#2563eb', color: '#fff', fontSize: 12, cursor: 'pointer' }}>确定</button>
       </div>
     </div>
@@ -135,7 +160,18 @@ export default function TaskBoard() {
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                             <Badge color={pr.color}>{pr.label}</Badge>
                             {task.due_date && <span style={{ fontSize: 11, color: '#94a3b8' }}>截止 {task.due_date}</span>}
+                            {(task as any).attachments?.length > 0 && <span style={{ fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 2 }}><Paperclip size={10} />{(task as any).attachments.length}</span>}
                           </div>
+                          {(task as any).attachments?.length > 0 && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
+                              {(task as any).attachments.map((a: any) => (
+                                <a key={a.id} href={`${BACKEND_URL}/uploads/${a.filename}`} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}
+                                  style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '2px 8px', borderRadius: 4, background: '#f1f5f9', border: '1px solid #e2e8f0', fontSize: 10, color: '#334155', textDecoration: 'none' }}>
+                                  <Paperclip size={9} color="#64748b" /> {a.original_name} <Download size={9} color="#2563eb" />
+                                </a>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

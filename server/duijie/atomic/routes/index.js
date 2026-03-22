@@ -95,7 +95,7 @@ router.delete('/opportunities/:id', auth, roleGuard('admin'), require('../contro
 
 // Tasks (client can create & list only)
 const taskStaff = roleGuard('admin', 'sales_manager', 'tech', 'business', 'member');
-router.post('/tasks', auth, require('../controllers/task/createController'));
+router.post('/tasks', auth, upload.array('files', 10), require('../controllers/task/createController'));
 router.get('/tasks', auth, require('../controllers/task/listController'));
 router.put('/tasks/:id', auth, taskStaff, require('../controllers/task/updateController'));
 router.patch('/tasks/:id/move', auth, taskStaff, require('../controllers/task/moveController'));
