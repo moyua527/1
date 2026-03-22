@@ -30,7 +30,7 @@ export default function App() {
 
   useEffect(() => {
     if (!getToken()) { setChecking(false); handleSetUser(null); return }
-    authApi.me().then(r => { if (r.success) handleSetUser(r.data) }).finally(() => setChecking(false))
+    authApi.me().then(r => { if (r.success) handleSetUser(r.data); else handleSetUser(null) }).catch(() => handleSetUser(null)).finally(() => setChecking(false))
   }, [])
 
   if (checking) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#94a3b8' }}>加载中...</div>
