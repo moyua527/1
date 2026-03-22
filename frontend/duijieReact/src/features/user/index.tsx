@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Edit2, Shield, Loader2, Code2, Briefcase, User, MoreHorizontal, Search, Power, Link2, Copy, Clock, CheckCircle2 } from 'lucide-react'
+import { Plus, Trash2, Edit2, Shield, Loader2, Code2, Briefcase, User, MoreHorizontal, Search, Power, Link2, Copy, Clock, CheckCircle2, Mail, Phone, Calendar, Info, Hash, MapPin, UserCheck } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { clientApi } from '../client/services/api'
 import Button from '../ui/Button'
@@ -36,6 +36,7 @@ export default function UserManagement() {
   const [inviteLinks, setInviteLinks] = useState<any[]>([])
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [inviteForm, setInviteForm] = useState({ preset_role: 'member', expires_hours: '72', note: '' })
+  const [detailUser, setDetailUser] = useState<any>(null)
 
   const load = () => {
     setLoading(true)
@@ -140,7 +141,7 @@ export default function UserManagement() {
             const r = roleMap[u.role] || roleMap.member
             const RIcon = r.icon
             return (
-              <div key={u.id} style={cardStyle}>
+              <div key={u.id} style={{ ...cardStyle, cursor: 'pointer' }} onClick={() => setDetailUser(u)}>
                 <Avatar name={u.nickname || u.username} size={44} />
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -182,6 +183,60 @@ export default function UserManagement() {
           })}
         </div>
       )}
+
+      {/* Detail Modal */}
+      <Modal open={!!detailUser} onClose={() => setDetailUser(null)} title="账号详情">
+        {detailUser && (() => {
+          const r = roleMap[detailUser.role] || roleMap.member
+          const RIcon = r.icon
+          const genderLabel = detailUser.gender === 1 ? '男' : detailUser.gender === 2 ? '女' : '未设置'
+          const statusLabel = detailUser.is_active === 0 ? '待审批' : '正常'
+          const statusColor = detailUser.is_active === 0 ? '#d97706' : '#16a34a'
+          const infoItems = [
+            { icon: Hash, label: 'ID', value: detailUser.display_id || `#${detailUser.id}` },
+            { icon: User, label: '用户名', value: `@${detailUser.username}` },
+            { icon: Info, label: '昵称', value: detailUser.nickname || '未设置' },
+            { icon: RIcon, label: '角色', value: r.label, color: r.color },
+            { icon: UserCheck, label: '状态', value: statusLabel, color: statusColor },
+            { icon: Mail, label: '邮箱', value: detailUser.email || '未绑定' },
+            { icon: Phone, label: '手机', value: detailUser.phone || '未绑定' },
+            { icon: User, label: '性别', value: genderLabel },
+            { icon: MapPin, label: '地区码', value: detailUser.area_code || '未设置' },
+            { icon: Shield, label: '上级', value: detailUser.manager_name || '无' },
+            { icon: Link2, label: '邀请码', value: detailUser.personal_invite_code || '无' },
+            { icon: Calendar, label: '注册时间', value: detailUser.created_at ? new Date(detailUser.created_at).toLocaleString('zh-CN') : '未知' },
+            { icon: Clock, label: '最后更新', value: detailUser.updated_at ? new Date(detailUser.updated_at).toLocaleString('zh-CN') : '未知' },
+          ]
+          return (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20, padding: 16, background: '#f8fafc', borderRadius: 12 }}>
+                <Avatar name={detailUser.nickname || detailUser.username} size={56} />
+                <div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>{detailUser.nickname || detailUser.username}</div>
+                  <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>@{detailUser.username}</div>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                    <span style={{ fontSize: 11, padding: '2px 10px', borderRadius: 10, background: r.bg, color: r.color, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}><RIcon size={12} /> {r.label}</span>
+                    <span style={{ fontSize: 11, padding: '2px 10px', borderRadius: 10, background: detailUser.is_active === 0 ? '#fffbeb' : '#f0fdf4', color: statusColor, fontWeight: 500 }}>{statusLabel}</span>
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
+                {infoItems.map((item, idx) => (
+                  <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderBottom: '1px solid #f1f5f9', background: idx % 4 < 2 ? '#fff' : '#fafbfc' }}>
+                    <item.icon size={14} color="#94a3b8" />
+                    <span style={{ fontSize: 12, color: '#94a3b8', minWidth: 56 }}>{item.label}</span>
+                    <span style={{ fontSize: 13, color: (item as any).color || '#0f172a', fontWeight: 500, wordBreak: 'break-all' }}>{item.value}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
+                <Button variant="secondary" onClick={() => setDetailUser(null)}>关闭</Button>
+                <Button onClick={() => { setDetailUser(null); openEdit(detailUser) }}>编辑</Button>
+              </div>
+            </div>
+          )
+        })()}
+      </Modal>
 
       {/* Create Modal */}
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title="创建账号">
