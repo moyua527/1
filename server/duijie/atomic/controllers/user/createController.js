@@ -1,4 +1,5 @@
 const db = require('../../../config/db');
+const bcrypt = require('bcryptjs');
 const generateInviteCode = require('../../utils/generateInviteCode');
 
 const VALID_ROLES = ['admin', 'tech', 'business', 'member'];
@@ -15,7 +16,7 @@ module.exports = async (req, res) => {
     const personalCode = await generateInviteCode();
     const [result] = await db.query(
       'INSERT INTO voice_users (username, password, nickname, role, client_id, manager_id, personal_invite_code) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [username, password, nickname || username, role, client_id || null, manager_id || null, personalCode]
+      [username, await bcrypt.hash(password, 10), nickname || username, role, client_id || null, manager_id || null, personalCode]
     );
     res.json({ success: true, data: { id: result.insertId } });
   } catch (e) {

@@ -1,4 +1,5 @@
 const db = require('../../../config/db');
+const bcrypt = require('bcryptjs');
 
 const VALID_ROLES = ['admin', 'tech', 'business', 'member'];
 
@@ -17,7 +18,7 @@ module.exports = async (req, res) => {
     if (client_id !== undefined) { fields.push('client_id = ?'); values.push(client_id || null); }
     if (manager_id !== undefined) { fields.push('manager_id = ?'); values.push(manager_id || null); }
     if (is_active !== undefined) { fields.push('is_active = ?'); values.push(is_active ? 1 : 0); }
-    if (password) { fields.push('password = ?'); values.push(password); }
+    if (password) { fields.push('password = ?'); values.push(await bcrypt.hash(password, 10)); }
 
     if (fields.length === 0) return res.status(400).json({ success: false, message: '无更新内容' });
 

@@ -36,25 +36,6 @@ def main():
     ssh = ssh_connect()
     sftp = ssh.open_sftp()
 
-    # 1. DB Migration
-    print('\n[1/4] DB Migration...')
-    migration_sql = """
-CREATE TABLE IF NOT EXISTS duijie_audit_logs (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT,
-  username VARCHAR(100),
-  action VARCHAR(50) NOT NULL,
-  entity_type VARCHAR(50),
-  entity_id INT,
-  detail TEXT,
-  ip VARCHAR(50),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_user (user_id),
-  INDEX idx_action (action),
-  INDEX idx_entity (entity_type, entity_id),
-  INDEX idx_created (created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-"""
     # Read DB creds from server .env
     env_out = run_cmd(ssh, f'cat {REMOTE_BASE}/server/duijie/.env', 'Reading .env')
     db_user = db_pass = db_name = ''
@@ -62,20 +43,18 @@ CREATE TABLE IF NOT EXISTS duijie_audit_logs (
         if line.startswith('DB_USER='): db_user = line.split('=',1)[1].strip()
         if line.startswith('DB_PASSWORD='): db_pass = line.split('=',1)[1].strip()
         if line.startswith('DB_NAME='): db_name = line.split('=',1)[1].strip()
-    
-    run_cmd(ssh, f'echo "{migration_sql}" | mysql -u{db_user} -p\'{db_pass}\' {db_name}', 'Running migration')
 
-    # 2. Upload frontend dist
-    print('\n[2/4] Uploading frontend dist...')
-    local_dist = os.path.join(LOCAL_BASE, 'frontend', 'duijieReact', 'dist')
-    remote_dist = f'{REMOTE_BASE}/frontend/duijieReact/dist'
-    run_cmd(ssh, f'rm -rf {remote_dist}')
-    upload_dir(sftp, local_dist, remote_dist)
-
-    # 3. Upload backend files
-    print('\n[3/4] Uploading backend files...')
+    # 1. Upload backend files
+    print('\n[1/5] Uploading backend files...')
     backend_files = [
-        'atomic/routes/index.js',
+        'standalone.js',
+        'package.json',
+        'atomic/services/auth/loginService.js',
+        'atomic/controllers/auth/registerController.js',
+        'atomic/controllers/auth/profileController.js',
+        'atomic/controllers/user/createController.js',
+        'atomic/controllers/user/updateController.js',
+        'atomic/middleware/xssMiddleware.js',
     ]
     remote_server = f'{REMOTE_BASE}/server/duijie'
     for f in backend_files:
@@ -86,8 +65,27 @@ CREATE TABLE IF NOT EXISTS duijie_audit_logs (
         sftp.put(local_f, remote_f)
         print(f'    ↑ {remote_f}')
 
-    # 4. Restart
-    print('\n[4/4] Restarting backend...')
+    # 2. Install new npm packages
+    print('\n[2/5] Installing npm packages...')
+    run_cmd(ssh, f'cd {remote_server} && npm install --production', 'npm install')
+
+    # 3. Migrate plaintext passwords to bcrypt hashes
+    print('\n[3/5] Migrating plaintext passwords to bcrypt...')
+    local_migrate = os.path.join(LOCAL_BASE, 'server', 'duijie', 'scripts', 'migrate-passwords.js')
+    remote_migrate = f'{remote_server}/scripts/migrate-passwords.js'
+    run_cmd(ssh, f'mkdir -p {remote_server}/scripts')
+    sftp.put(local_migrate, remote_migrate)
+    run_cmd(ssh, f'cd {remote_server} && node scripts/migrate-passwords.js', 'Hashing passwords')
+
+    # 4. Upload frontend dist
+    print('\n[4/5] Uploading frontend dist...')
+    local_dist = os.path.join(LOCAL_BASE, 'frontend', 'duijieReact', 'dist')
+    remote_dist = f'{REMOTE_BASE}/frontend/duijieReact/dist'
+    run_cmd(ssh, f'rm -rf {remote_dist}')
+    upload_dir(sftp, local_dist, remote_dist)
+
+    # 5. Restart
+    print('\n[5/5] Restarting backend...')
     run_cmd(ssh, 'pm2 restart duijie', 'PM2 restart')
     run_cmd(ssh, 'pm2 status', 'PM2 status')
 

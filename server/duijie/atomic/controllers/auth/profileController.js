@@ -1,4 +1,5 @@
 const db = require('../../../config/db');
+const bcrypt = require('bcryptjs');
 
 module.exports = async (req, res) => {
   try {
@@ -9,7 +10,7 @@ module.exports = async (req, res) => {
     if (nickname !== undefined) { fields.push('nickname = ?'); values.push(nickname); }
     if (email !== undefined) { fields.push('email = ?'); values.push(email || null); }
     if (phone !== undefined) { fields.push('phone = ?'); values.push(phone || null); }
-    if (password) { fields.push('password = ?'); values.push(password); }
+    if (password) { fields.push('password = ?'); values.push(await bcrypt.hash(password, 10)); }
     if (fields.length === 0) return res.status(400).json({ success: false, message: '无更新内容' });
     values.push(userId);
     await db.query(`UPDATE voice_users SET ${fields.join(', ')} WHERE id = ?`, values);

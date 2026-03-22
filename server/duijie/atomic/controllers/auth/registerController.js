@@ -1,4 +1,5 @@
 const db = require('../../../config/db');
+const bcrypt = require('bcryptjs');
 const generateDisplayId = require('../../utils/generateDisplayId');
 const generateInviteCode = require('../../utils/generateInviteCode');
 
@@ -66,7 +67,7 @@ module.exports = async (req, res) => {
     const personalCode = await generateInviteCode();
     const [result] = await db.query(
       'INSERT INTO voice_users (username, password, nickname, email, phone, role, gender, area_code, display_id, personal_invite_code, invited_by, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [username.trim(), password, displayName, email || null, phone || null, assignedRole, Number(gender), area_code, displayId, personalCode, inviterId, isActive]
+      [username.trim(), await bcrypt.hash(password, 10), displayName, email || null, phone || null, assignedRole, Number(gender), area_code, displayId, personalCode, inviterId, isActive]
     );
     const newUserId = result.insertId;
 
