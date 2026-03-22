@@ -57,13 +57,22 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | **viewer** | 只读 | 只能查看客户/商机/跟进数据，不能修改任何内容 |
 | **client** | 客户 | 查看关联项目进度、确认里程碑、下载交付物、工单提交 |
 
-### 默认账户
+### 默认账户（full-init.sql 种子数据）
 
 | 用户名 | 密码 | 角色 |
 |--------|------|------|
 | admin | admin123 | admin |
 | test | test123 | member |
-| yonghu | yonghu123 | client |
+| yonghu | yonghu123 | member |
+
+### 线上实际账户
+
+| 用户名 | 昵称 | 角色 |
+|--------|------|------|
+| admin | 管理员 | admin |
+| business | 业务员 | business |
+| tech | 技术员 | tech |
+| member | 成员 | member |
 
 ### 注册邀请码
 
