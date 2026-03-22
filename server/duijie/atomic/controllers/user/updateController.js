@@ -1,6 +1,6 @@
 const db = require('../../../config/db');
 
-const VALID_ROLES = ['admin', 'sales_manager', 'business', 'marketing', 'tech', 'support', 'member', 'viewer', 'client'];
+const VALID_ROLES = ['admin', 'tech', 'business', 'member'];
 
 module.exports = async (req, res) => {
   try {

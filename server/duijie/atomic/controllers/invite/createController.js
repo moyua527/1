@@ -4,7 +4,7 @@ const crypto = require('crypto');
 module.exports = async (req, res) => {
   try {
     const { preset_role, expires_hours, note } = req.body;
-    const validRoles = ['admin', 'sales_manager', 'business', 'marketing', 'tech', 'support', 'member', 'viewer', 'client'];
+    const validRoles = ['admin', 'tech', 'business', 'member'];
     if (preset_role && !validRoles.includes(preset_role)) {
       return res.status(400).json({ success: false, message: '角色无效' });
     }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Edit2, Shield, Loader2, Code2, Briefcase, User, MoreHorizontal, UserCheck, Megaphone, HeadphonesIcon, Eye, Users2, Search, Power, Link2, Copy, Clock, CheckCircle2 } from 'lucide-react'
+import { Plus, Trash2, Edit2, Shield, Loader2, Code2, Briefcase, User, MoreHorizontal, Search, Power, Link2, Copy, Clock, CheckCircle2 } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { clientApi } from '../client/services/api'
 import Button from '../ui/Button'
@@ -11,14 +11,9 @@ import { confirm } from '../ui/ConfirmDialog'
 
 const roleMap: Record<string, { label: string; color: string; bg: string; icon: any }> = {
   admin: { label: '管理员', color: '#dc2626', bg: '#fef2f2', icon: Shield },
-  sales_manager: { label: '销售经理', color: '#ea580c', bg: '#fff7ed', icon: UserCheck },
+  tech: { label: '技术员', color: '#7c3aed', bg: '#f5f3ff', icon: Code2 },
   business: { label: '业务员', color: '#0891b2', bg: '#ecfeff', icon: Briefcase },
-  marketing: { label: '市场', color: '#c026d3', bg: '#fdf4ff', icon: Megaphone },
-  tech: { label: '技术', color: '#7c3aed', bg: '#f5f3ff', icon: Code2 },
-  support: { label: '客服', color: '#0d9488', bg: '#f0fdfa', icon: HeadphonesIcon },
   member: { label: '成员', color: '#2563eb', bg: '#eff6ff', icon: User },
-  viewer: { label: '只读', color: '#6b7280', bg: '#f3f4f6', icon: Eye },
-  client: { label: '客户', color: '#16a34a', bg: '#f0fdf4', icon: Users2 },
 }
 
 const cardStyle: React.CSSProperties = {
@@ -199,14 +194,9 @@ export default function UserManagement() {
             <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
               <option value="admin">管理员</option>
-              <option value="sales_manager">销售经理</option>
+              <option value="tech">技术员</option>
               <option value="business">业务员</option>
-              <option value="marketing">市场</option>
-              <option value="tech">技术</option>
-              <option value="support">客服</option>
               <option value="member">成员</option>
-              <option value="viewer">只读</option>
-              <option value="client">客户</option>
             </select>
           </div>
           <div>
@@ -214,21 +204,11 @@ export default function UserManagement() {
             <select value={form.manager_id} onChange={e => setForm({ ...form, manager_id: e.target.value })}
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
               <option value="">无</option>
-              {users.filter(u => ['admin', 'sales_manager'].includes(u.role)).map(u => (
+              {users.filter(u => u.role === 'admin').map(u => (
                 <option key={u.id} value={u.id}>{u.nickname || u.username} ({roleMap[u.role]?.label})</option>
               ))}
             </select>
           </div>
-          {form.role === 'client' && (
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>关联客户</label>
-              <select value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value })}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
-                <option value="">无</option>
-                {clients.map(c => <option key={c.id} value={c.id}>{c.name}{c.company ? ` (${c.company})` : ''}</option>)}
-              </select>
-            </div>
-          )}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
             <Button variant="secondary" onClick={() => setShowCreate(false)}>取消</Button>
             <Button onClick={handleCreate} disabled={submitting}>{submitting ? '创建中...' : '创建'}</Button>
@@ -247,14 +227,9 @@ export default function UserManagement() {
             <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })}
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
               <option value="admin">管理员</option>
-              <option value="sales_manager">销售经理</option>
+              <option value="tech">技术员</option>
               <option value="business">业务员</option>
-              <option value="marketing">市场</option>
-              <option value="tech">技术</option>
-              <option value="support">客服</option>
               <option value="member">成员</option>
-              <option value="viewer">只读</option>
-              <option value="client">客户</option>
             </select>
           </div>
           <div>
@@ -262,7 +237,7 @@ export default function UserManagement() {
             <select value={form.manager_id} onChange={e => setForm({ ...form, manager_id: e.target.value })}
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
               <option value="">无</option>
-              {users.filter(u => ['admin', 'sales_manager'].includes(u.role) && u.id !== editUser?.id).map(u => (
+              {users.filter(u => u.role === 'admin' && u.id !== editUser?.id).map(u => (
                 <option key={u.id} value={u.id}>{u.nickname || u.username} ({roleMap[u.role]?.label})</option>
               ))}
             </select>

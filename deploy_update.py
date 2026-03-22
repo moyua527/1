@@ -66,13 +66,9 @@ DEALLOCATE PREPARE stmt;
     print('\n[3/4] Uploading backend files...')
     backend_files = [
         'atomic/routes/index.js',
-        'atomic/repositories/dashboard/statsRepo.js',
-        'atomic/repositories/client/findAllRepo.js',
-        'atomic/controllers/opportunity/listController.js',
-        'atomic/controllers/user/listController.js',
         'atomic/controllers/user/createController.js',
         'atomic/controllers/user/updateController.js',
-        'atomic/utils/getSubordinateIds.js',
+        'atomic/controllers/invite/createController.js',
     ]
     remote_server = f'{REMOTE_BASE}/server/duijie'
     for f in backend_files:

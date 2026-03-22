@@ -3,8 +3,8 @@ const multer = require('multer');
 const path = require('path');
 const auth = require('../middleware/auth');
 const roleGuard = require('../middleware/roleGuard');
-const allStaff = roleGuard('admin', 'sales_manager', 'tech', 'business', 'marketing', 'support');
-const salesTeam = roleGuard('admin', 'sales_manager', 'business', 'marketing');
+const allStaff = roleGuard('admin', 'tech', 'business', 'member');
+const salesTeam = roleGuard('admin', 'business');
 const router = express.Router();
 
 const storage = multer.diskStorage({
@@ -36,9 +36,9 @@ router.get('/dashboard/stats', auth, require('../controllers/dashboard/statsCont
 router.get('/dashboard/report', auth, require('../controllers/dashboard/reportController'));
 
 // Projects
-const projectManagers = roleGuard('admin', 'sales_manager');
-const projectStaff = roleGuard('admin', 'sales_manager', 'business', 'tech', 'marketing', 'support', 'member', 'viewer', 'client');
-const projectEditors = roleGuard('admin', 'sales_manager', 'business', 'tech');
+const projectManagers = roleGuard('admin');
+const projectStaff = roleGuard('admin', 'tech', 'business', 'member');
+const projectEditors = roleGuard('admin', 'tech', 'business');
 router.post('/projects', auth, projectManagers, require('../controllers/project/createController'));
 router.get('/projects', auth, projectStaff, require('../controllers/project/listController'));
 router.get('/projects/:id', auth, projectStaff, require('../controllers/project/detailController'));
@@ -51,11 +51,11 @@ router.delete('/projects/:id/members/:userId', auth, projectEditors, require('..
 // Clients
 router.get('/clients/available-members', auth, salesTeam, require('../controllers/client/availableMembersController'));
 router.post('/clients', auth, salesTeam, require('../controllers/client/createController'));
-router.get('/clients', auth, roleGuard('admin', 'sales_manager', 'business', 'marketing', 'support', 'viewer'), require('../controllers/client/listController'));
-router.get('/clients/:id', auth, roleGuard('admin', 'sales_manager', 'business', 'marketing', 'support', 'viewer'), require('../controllers/client/detailController'));
+router.get('/clients', auth, roleGuard('admin', 'business'), require('../controllers/client/listController'));
+router.get('/clients/:id', auth, roleGuard('admin', 'business'), require('../controllers/client/detailController'));
 router.put('/clients/:id', auth, salesTeam, require('../controllers/client/updateController'));
 router.delete('/clients/:id', auth, roleGuard('admin'), require('../controllers/client/deleteController'));
-router.post('/clients/import', auth, roleGuard('admin', 'sales_manager', 'marketing'), require('../controllers/client/importController'));
+router.post('/clients/import', auth, roleGuard('admin'), require('../controllers/client/importController'));
 router.get('/clients/:id/logs', auth, salesTeam, require('../controllers/client/logsController'));
 router.get('/clients/:id/score', auth, salesTeam, require('../controllers/client/scoreController'));
 router.get('/client-scores', auth, salesTeam, require('../controllers/client/scoresController'));
@@ -65,7 +65,7 @@ router.get('/clients/:clientId/ai-suggestion', auth, salesTeam, require('../cont
 
 // Contacts
 router.post('/contacts', auth, salesTeam, require('../controllers/contact/createController'));
-router.get('/clients/:clientId/contacts', auth, roleGuard('admin', 'sales_manager', 'business', 'marketing', 'support', 'viewer'), require('../controllers/contact/listController'));
+router.get('/clients/:clientId/contacts', auth, roleGuard('admin', 'business'), require('../controllers/contact/listController'));
 router.put('/contacts/:id', auth, salesTeam, require('../controllers/contact/updateController'));
 router.delete('/contacts/:id', auth, roleGuard('admin'), require('../controllers/contact/deleteController'));
 
@@ -78,23 +78,23 @@ router.get('/clients/:clientId/tags', auth, salesTeam, clientTagsCtrl.get);
 router.put('/clients/:clientId/tags', auth, salesTeam, clientTagsCtrl.set);
 
 // Contracts
-router.post('/contracts', auth, roleGuard('admin', 'sales_manager', 'business'), require('../controllers/contract/createController'));
-router.get('/clients/:clientId/contracts', auth, roleGuard('admin', 'sales_manager', 'business', 'support'), require('../controllers/contract/listController'));
-router.put('/contracts/:id', auth, roleGuard('admin', 'sales_manager', 'business'), require('../controllers/contract/updateController'));
+router.post('/contracts', auth, roleGuard('admin', 'business'), require('../controllers/contract/createController'));
+router.get('/clients/:clientId/contracts', auth, roleGuard('admin', 'business'), require('../controllers/contract/listController'));
+router.put('/contracts/:id', auth, roleGuard('admin', 'business'), require('../controllers/contract/updateController'));
 router.delete('/contracts/:id', auth, roleGuard('admin'), require('../controllers/contract/deleteController'));
 
 // Follow-ups
 router.post('/follow-ups', auth, salesTeam, require('../controllers/followUp/createController'));
-router.get('/clients/:clientId/follow-ups', auth, roleGuard('admin', 'sales_manager', 'business', 'support', 'viewer'), require('../controllers/followUp/listController'));
+router.get('/clients/:clientId/follow-ups', auth, roleGuard('admin', 'business'), require('../controllers/followUp/listController'));
 
 // Opportunities
-router.post('/opportunities', auth, roleGuard('admin', 'sales_manager', 'business'), require('../controllers/opportunity/createController'));
-router.get('/opportunities', auth, roleGuard('admin', 'sales_manager', 'business', 'viewer'), require('../controllers/opportunity/listController'));
-router.put('/opportunities/:id', auth, roleGuard('admin', 'sales_manager', 'business'), require('../controllers/opportunity/updateController'));
+router.post('/opportunities', auth, roleGuard('admin', 'business'), require('../controllers/opportunity/createController'));
+router.get('/opportunities', auth, roleGuard('admin', 'business'), require('../controllers/opportunity/listController'));
+router.put('/opportunities/:id', auth, roleGuard('admin', 'business'), require('../controllers/opportunity/updateController'));
 router.delete('/opportunities/:id', auth, roleGuard('admin'), require('../controllers/opportunity/deleteController'));
 
 // Tasks (client can create & list only)
-const taskStaff = roleGuard('admin', 'sales_manager', 'tech', 'business', 'member');
+const taskStaff = roleGuard('admin', 'tech', 'business', 'member');
 router.post('/tasks', auth, upload.array('files', 10), require('../controllers/task/createController'));
 router.get('/tasks', auth, require('../controllers/task/listController'));
 router.put('/tasks/:id', auth, taskStaff, require('../controllers/task/updateController'));
