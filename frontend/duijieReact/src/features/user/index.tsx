@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Plus, Trash2, Edit2, Shield, Loader2, Code2, Briefcase, User, Search, Power, Link2, Copy, Clock, CheckCircle2, Mail, Phone, Calendar, Hash, MapPin, UserCheck, Eye, KeyRound, Download, ChevronLeft, ChevronRight, Users, X } from 'lucide-react'
+import { Plus, Trash2, Edit2, Shield, Loader2, Code2, Briefcase, User, Search, Power, Link2, Copy, Clock, CheckCircle2, Mail, Phone, Calendar, Hash, MapPin, UserCheck, Eye, KeyRound, Download, ChevronLeft, ChevronRight, Users, X, MoreVertical } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { clientApi } from '../client/services/api'
 import Button from '../ui/Button'
@@ -49,6 +49,7 @@ export default function UserManagement() {
   const [detailUser, setDetailUser] = useState<any>(null)
   const [page, setPage] = useState(1)
   const [selected, setSelected] = useState<number[]>([])
+  const [menuOpen, setMenuOpen] = useState<number | null>(null)
 
   const selectStyle: React.CSSProperties = { width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }
   const groupTitle = (t: string) => <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', padding: '8px 0 4px', borderBottom: '1px solid #f1f5f9', marginBottom: 4 }}>{t}</div>
@@ -180,6 +181,15 @@ export default function UserManagement() {
 
   const toggleSelect = (id: number) => setSelected(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
   const toggleAll = () => setSelected(prev => prev.length === paged.length ? [] : paged.map(u => u.id))
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const close = () => setMenuOpen(null)
+    document.addEventListener('click', close)
+    return () => document.removeEventListener('click', close)
+  }, [menuOpen])
+
+  const menuItemStyle: React.CSSProperties = { width: '100%', padding: '8px 14px', border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, whiteSpace: 'nowrap' }
 
   const getStatusInfo = (u: any) => {
     if (u.is_active === 0) return statusMap[0]
@@ -328,16 +338,36 @@ export default function UserManagement() {
                       <td style={{ ...tdStyle, fontSize: 12, color: '#64748b', whiteSpace: 'nowrap' }}>{fmtDate(u.created_at)}</td>
                       <td style={{ ...tdStyle, fontSize: 12, color: '#64748b', whiteSpace: 'nowrap' }}>{fmtDate(u.last_login_at)}</td>
                       <td style={{ ...tdStyle, textAlign: 'center' }}>
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: 4 }}>
-                          <button title="查看" onClick={() => setDetailUser(u)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: '5px 7px', cursor: 'pointer', color: '#2563eb', display: 'flex' }}><Eye size={14} /></button>
-                          <button title="编辑" onClick={() => openEdit(u)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: '5px 7px', cursor: 'pointer', color: '#64748b', display: 'flex' }}><Edit2 size={14} /></button>
-                          <button title="重置密码" onClick={() => handleResetPwd(u)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: '5px 7px', cursor: 'pointer', color: '#d97706', display: 'flex' }}><KeyRound size={14} /></button>
-                          {u.is_active === 0 ? (
-                            <button title="审批激活" onClick={() => handleApprove(u)} style={{ background: '#f0fdf4', border: 'none', borderRadius: 6, padding: '5px 7px', cursor: 'pointer', color: '#16a34a', display: 'flex' }}><CheckCircle2 size={14} /></button>
-                          ) : (
-                            <button title={u.is_active === 1 ? '禁用' : '启用'} onClick={() => handleToggleStatus(u)} style={{ background: u.is_active === 1 ? '#fffbeb' : '#f0fdf4', border: 'none', borderRadius: 6, padding: '5px 7px', cursor: 'pointer', color: u.is_active === 1 ? '#d97706' : '#16a34a', display: 'flex' }}><Power size={14} /></button>
+                        <div style={{ position: 'relative', display: 'inline-block' }}>
+                          <button onClick={e => { e.stopPropagation(); setMenuOpen(menuOpen === u.id ? null : u.id) }} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', color: '#64748b', display: 'flex' }}>
+                            <MoreVertical size={16} />
+                          </button>
+                          {menuOpen === u.id && (
+                            <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: '#fff', borderRadius: 10, boxShadow: '0 4px 20px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0', zIndex: 50, minWidth: 140, overflow: 'hidden', padding: '4px 0' }}>
+                              <button onClick={() => { setMenuOpen(null); setDetailUser(u) }} style={{ ...menuItemStyle, color: '#2563eb' }} onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                                <Eye size={14} /> 查看详情
+                              </button>
+                              <button onClick={() => { setMenuOpen(null); openEdit(u) }} style={{ ...menuItemStyle, color: '#334155' }} onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                                <Edit2 size={14} /> 编辑
+                              </button>
+                              <button onClick={() => { setMenuOpen(null); handleResetPwd(u) }} style={{ ...menuItemStyle, color: '#d97706' }} onMouseEnter={e => (e.currentTarget.style.background = '#fffbeb')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                                <KeyRound size={14} /> 重置密码
+                              </button>
+                              <div style={{ height: 1, background: '#f1f5f9', margin: '4px 0' }} />
+                              {u.is_active === 0 ? (
+                                <button onClick={() => { setMenuOpen(null); handleApprove(u) }} style={{ ...menuItemStyle, color: '#16a34a' }} onMouseEnter={e => (e.currentTarget.style.background = '#f0fdf4')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                                  <CheckCircle2 size={14} /> 审批激活
+                                </button>
+                              ) : (
+                                <button onClick={() => { setMenuOpen(null); handleToggleStatus(u) }} style={{ ...menuItemStyle, color: u.is_active === 1 ? '#d97706' : '#16a34a' }} onMouseEnter={e => (e.currentTarget.style.background = u.is_active === 1 ? '#fffbeb' : '#f0fdf4')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                                  <Power size={14} /> {u.is_active === 1 ? '禁用' : '启用'}
+                                </button>
+                              )}
+                              <button onClick={() => { setMenuOpen(null); handleDelete(u) }} style={{ ...menuItemStyle, color: '#dc2626' }} onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                                <Trash2 size={14} /> 删除
+                              </button>
+                            </div>
                           )}
-                          <button title="删除" onClick={() => handleDelete(u)} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: '5px 7px', cursor: 'pointer', color: '#dc2626', display: 'flex' }}><Trash2 size={14} /></button>
                         </div>
                       </td>
                     </tr>
