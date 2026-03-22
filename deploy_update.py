@@ -75,6 +75,7 @@ CREATE TABLE IF NOT EXISTS duijie_audit_logs (
     # 3. Upload backend files
     print('\n[3/4] Uploading backend files...')
     backend_files = [
+        'atomic/routes/index.js',
     ]
     remote_server = f'{REMOTE_BASE}/server/duijie'
     for f in backend_files:

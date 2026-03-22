@@ -5,6 +5,7 @@ const auth = require('../middleware/auth');
 const roleGuard = require('../middleware/roleGuard');
 const allStaff = roleGuard('admin', 'tech', 'business', 'member');
 const salesTeam = roleGuard('admin', 'business');
+const adminOnly = roleGuard('admin');
 const router = express.Router();
 
 const storage = multer.diskStorage({
@@ -140,9 +141,6 @@ router.get('/tickets/:id', auth, require('../controllers/ticket/detailController
 router.put('/tickets/:id', auth, require('../controllers/ticket/updateController'));
 router.post('/tickets/:id/reply', auth, upload.array('files', 10), require('../controllers/ticket/replyController'));
 router.post('/tickets/:id/rate', auth, require('../controllers/ticket/rateController'));
-
-// Admin guard
-const adminOnly = roleGuard('admin');
 
 // Invite Links
 router.post('/invite-links', auth, adminOnly, require('../controllers/invite/createController'));
