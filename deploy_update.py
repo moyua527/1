@@ -39,16 +39,19 @@ def main():
     # 1. DB Migration
     print('\n[1/4] DB Migration...')
     migration_sql = """
-CREATE TABLE IF NOT EXISTS duijie_notifications (
+CREATE TABLE IF NOT EXISTS duijie_audit_logs (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  type VARCHAR(50) NOT NULL,
-  title VARCHAR(255) NOT NULL,
-  content TEXT,
-  link VARCHAR(255),
-  is_read TINYINT(1) DEFAULT 0,
+  user_id INT,
+  username VARCHAR(100),
+  action VARCHAR(50) NOT NULL,
+  entity_type VARCHAR(50),
+  entity_id INT,
+  detail TEXT,
+  ip VARCHAR(50),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_user_read (user_id, is_read),
+  INDEX idx_user (user_id),
+  INDEX idx_action (action),
+  INDEX idx_entity (entity_type, entity_id),
   INDEX idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 """
@@ -73,7 +76,10 @@ CREATE TABLE IF NOT EXISTS duijie_notifications (
     print('\n[3/4] Uploading backend files...')
     backend_files = [
         'atomic/routes/index.js',
-        'atomic/controllers/dashboard/chartController.js',
+        'atomic/utils/auditLog.js',
+        'atomic/middleware/auditMiddleware.js',
+        'atomic/controllers/audit/listController.js',
+        'standalone.js',
     ]
     remote_server = f'{REMOTE_BASE}/server/duijie'
     for f in backend_files:

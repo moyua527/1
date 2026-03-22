@@ -26,6 +26,7 @@ app.use('/api', (req, res, next) => {
   console.log(`[duijie] ${req.method} ${req.originalUrl}`);
   next();
 });
+app.use('/api', require('./atomic/middleware/auditMiddleware'));
 app.use('/api', routes);
 
 server.listen(PORT, () => {
