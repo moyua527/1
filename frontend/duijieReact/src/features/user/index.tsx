@@ -283,8 +283,8 @@ export default function UserManagement() {
           <Button onClick={() => { resetForm(); setShowCreate(true) }}><Plus size={14} /> 去新增</Button>
         </div>
       ) : (
-        <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-          <div style={{ overflowX: 'auto' }}>
+        <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+          <div style={{ overflowX: 'auto', overflowY: 'visible' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
@@ -315,10 +315,10 @@ export default function UserManagement() {
                         <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#64748b' }}>{u.display_id || `#${u.id}`}</span>
                       </td>
                       <td style={tdStyle}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }} onClick={() => setDetailUser(u)}>
                           <Avatar name={u.nickname || u.username} size={32} />
                           <div>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{u.nickname || u.username}</div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: '#2563eb' }}>{u.nickname || u.username}</div>
                             <div style={{ fontSize: 11, color: '#94a3b8' }}>@{u.username}</div>
                           </div>
                         </div>
@@ -343,10 +343,7 @@ export default function UserManagement() {
                             <MoreVertical size={16} />
                           </button>
                           {menuOpen === u.id && (
-                            <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: '#fff', borderRadius: 10, boxShadow: '0 4px 20px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0', zIndex: 50, minWidth: 140, overflow: 'hidden', padding: '4px 0' }}>
-                              <button onClick={() => { setMenuOpen(null); setDetailUser(u) }} style={{ ...menuItemStyle, color: '#2563eb' }} onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-                                <Eye size={14} /> 查看详情
-                              </button>
+                            <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, transform: 'translateX(0)', background: '#fff', borderRadius: 10, boxShadow: '0 4px 20px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0', zIndex: 50, minWidth: 140, overflow: 'hidden', padding: '4px 0' }}>
                               <button onClick={() => { setMenuOpen(null); openEdit(u) }} style={{ ...menuItemStyle, color: '#334155' }} onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
                                 <Edit2 size={14} /> 编辑
                               </button>
