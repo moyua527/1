@@ -1,20 +1,11 @@
 const db = require('../../../config/db');
-const getSubordinateIds = require('../../utils/getSubordinateIds');
 
 module.exports = async (auth = {}) => {
   let filter = '';
   const params = [];
-  if (auth.role === 'sales_manager' && auth.userId) {
-    const teamIds = await getSubordinateIds(auth.userId);
-    filter = `AND (c.assigned_to IN (${teamIds.map(() => '?').join(',')}) OR c.created_by IN (${teamIds.map(() => '?').join(',')}))`;
-    params.push(...teamIds, ...teamIds);
-  } else if (auth.role === 'business' && auth.userId) {
+  if (auth.role === 'business' && auth.userId) {
     filter = `AND (c.assigned_to = ? OR c.created_by = ?)`;
     params.push(auth.userId, auth.userId);
-  } else if (auth.role === 'marketing') {
-    filter = `AND c.stage IN ('potential', 'intent')`;
-  } else if (auth.role === 'support') {
-    filter = `AND c.stage IN ('signed', 'active')`;
   } else if (auth.role === 'member' && auth.userId) {
     filter = `AND c.id IN (
       SELECT DISTINCT p.client_id FROM duijie_projects p

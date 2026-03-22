@@ -34,7 +34,7 @@ const BACKEND_URL = (window as any).__ENV__?.BACKEND_URL || ''
 
 export default function TicketPage() {
   const { user, isMobile } = useOutletContext<{ user: any; isMobile: boolean }>()
-  const isClient = user?.role === 'client'
+  const isClient = false
   const isStaff = ['admin', 'tech', 'business', 'member'].includes(user?.role)
 
   const [tickets, setTickets] = useState<any[]>([])

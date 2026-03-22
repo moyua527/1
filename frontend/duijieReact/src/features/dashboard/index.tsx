@@ -11,12 +11,9 @@ interface Stats {
   followUpAlerts?: { overdue: number; upcoming: number }
   recentFollowUps?: any[]
   recentContracts?: any[]
-  isClient?: boolean
   projects?: any[]
   milestones?: any[]
   files?: any[]
-  unreadMessages?: number
-  pendingMilestones?: number
 }
 
 const stageConfig = [
@@ -67,8 +64,8 @@ function ClientDashboard({ stats, nav }: { stats: Stats; nav: (p: string) => voi
           { label: '我的项目', value: stats.totalProjects, icon: FolderKanban, bg: '#dbeafe', color: '#2563eb', path: '/projects' },
           { label: '进行中', value: stats.activeProjects, icon: TrendingUp, bg: '#fef3c7', color: '#d97706', path: '/projects' },
           { label: '已完成', value: stats.completedProjects, icon: CheckCircle, bg: '#dcfce7', color: '#16a34a', path: '/projects' },
-          { label: '待确认里程碑', value: stats.pendingMilestones || 0, icon: Star, bg: '#fef3c7', color: '#d97706', path: '/projects' },
-          { label: '未读消息', value: stats.unreadMessages || 0, icon: MessageSquare, bg: '#fee2e2', color: '#dc2626', path: '/messaging' },
+          { label: '待确认里程碑', value: (stats as any).pendingMilestones || 0, icon: Star, bg: '#fef3c7', color: '#d97706', path: '/projects' },
+          { label: '未读消息', value: (stats as any).unreadMessages || 0, icon: MessageSquare, bg: '#fee2e2', color: '#dc2626', path: '/messaging' },
         ].map(item => (
           <div key={item.label} style={card} onClick={() => nav(item.path)}
             onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)')}
@@ -187,9 +184,9 @@ export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null)
   const nav = useNavigate()
   const { user } = useOutletContext<{ user: any }>()
-  const canClients = ['admin', 'sales_manager', 'business', 'marketing', 'support', 'viewer'].includes(user?.role)
-  const canTasks = ['admin', 'sales_manager', 'tech', 'business', 'member'].includes(user?.role)
-  const canAmount = !['marketing', 'viewer'].includes(user?.role)
+  const canClients = ['admin', 'business'].includes(user?.role)
+  const canTasks = ['admin', 'tech', 'business', 'member'].includes(user?.role)
+  const canAmount = ['admin', 'tech', 'business', 'member'].includes(user?.role)
 
   useEffect(() => {
     fetchApi('/api/dashboard/stats').then(r => { if (r.success) setStats(r.data) }).catch(() => {
@@ -213,9 +210,6 @@ export default function Dashboard() {
       { label: '待办任务', value: stats.pendingTasks, icon: Clock, bg: '#fee2e2', color: '#dc2626', path: '/tasks' },
     ] : []),
   ] : []
-
-  // Client Portal Dashboard
-  if (stats?.isClient) return <ClientDashboard stats={stats} nav={nav} />
 
   return (
     <div>

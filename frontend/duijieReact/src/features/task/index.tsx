@@ -90,7 +90,7 @@ function AddTaskForm({ projectId, status, onAdded }: { projectId: string; status
 
 export default function TaskBoard() {
   const { user } = useOutletContext<{ user: any }>()
-  const isClient = user?.role === 'client'
+  const isClient = false
   const [tasks, setTasks] = useState<Task[]>([])
   const [projects, setProjects] = useState<any[]>([])
   const [selectedProject, setSelectedProject] = useState<string>('')
@@ -178,7 +178,7 @@ export default function TaskBoard() {
                   )
                 })}
                 {colTasks.length === 0 && <div style={{ textAlign: 'center', padding: 20, color: '#cbd5e1', fontSize: 13 }}>拖拽任务到此列</div>}
-                {(!isClient || col.key === 'todo') && <div style={{ marginTop: 8 }}><AddTaskForm projectId={selectedProject} status={col.key} onAdded={reload} /></div>}
+                <div style={{ marginTop: 8 }}><AddTaskForm projectId={selectedProject} status={col.key} onAdded={reload} /></div>
               </div>
             )
           })}

@@ -30,14 +30,14 @@ const taskStatusMap: Record<string, { label: string; color: string }> = {
 }
 
 const section: React.CSSProperties = { background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16 }
-const sysRoleLabel: Record<string, string> = { admin: '管理员', sales_manager: '销售经理', business: '业务员', marketing: '市场', tech: '技术', support: '客服', member: '成员', viewer: '只读', client: '客户' }
+const sysRoleLabel: Record<string, string> = { admin: '管理员', tech: '技术员', business: '业务员', member: '成员' }
 
 export default function ProjectDetail() {
   const { id } = useParams()
   const nav = useNavigate()
   const { user } = useOutletContext<{ user: any }>()
   const role = user?.role
-  const canEdit = ['admin', 'sales_manager', 'business', 'tech'].includes(role)
+  const canEdit = ['admin', 'tech', 'business'].includes(role)
   const canDelete = role === 'admin'
   const [project, setProject] = useState<any>(null)
   const [tasks, setTasks] = useState<any[]>([])

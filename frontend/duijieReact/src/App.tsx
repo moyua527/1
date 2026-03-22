@@ -34,10 +34,10 @@ export default function App() {
   if (!user) return <LoginPage onLogin={handleSetUser} />
 
   const r = user.role
-  const canClients = ['admin', 'sales_manager', 'business', 'marketing', 'support', 'viewer'].includes(r)
-  const canOpportunities = ['admin', 'sales_manager', 'business', 'viewer'].includes(r)
-  const canTasks = ['admin', 'sales_manager', 'tech', 'business', 'member', 'client'].includes(r)
-  const canReport = ['admin', 'sales_manager', 'business', 'marketing'].includes(r)
+  const canClients = ['admin', 'business'].includes(r)
+  const canOpportunities = ['admin', 'business'].includes(r)
+  const canTasks = ['admin', 'tech', 'business', 'member'].includes(r)
+  const canReport = ['admin', 'business'].includes(r)
   const canProjects = true
 
   return (

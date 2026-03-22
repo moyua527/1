@@ -33,7 +33,7 @@ export default function ProjectList() {
   const nav = useNavigate()
   const { user } = useOutletContext<{ user: any }>()
   const role = user?.role
-  const canCreate = ['admin', 'sales_manager'].includes(role)
+  const canCreate = role === 'admin'
 
   const load = () => { setLoading(true); projectApi.list().then(r => { if (r.success) setProjects(r.data?.rows || []) }).finally(() => setLoading(false)) }
   useEffect(() => { load(); clientApi.list().then(r => { if (r.success) setAllClients(r.data || []) }) }, [])
