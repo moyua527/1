@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield, Settings, Copy, TrendingUp, MessageSquare, Ticket } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield, Settings, Copy, TrendingUp, MessageSquare } from 'lucide-react'
 import { fetchApi, clearToken } from '../../bootstrap'
 import Avatar from './Avatar'
 import Modal from './Modal'
@@ -14,9 +14,8 @@ const ALL_NAV_ITEMS = [
   { path: '/projects', label: '项目管理', icon: FolderKanban, roles: ['admin', 'sales_manager', 'business', 'tech', 'support', 'member', 'client'] },
   { path: '/clients', label: '客户管理', icon: Users, roles: ['admin', 'sales_manager', 'business', 'marketing', 'support', 'viewer'] },
   { path: '/opportunities', label: '商机管理', icon: TrendingUp, roles: ['admin', 'sales_manager', 'business', 'viewer'] },
-  { path: '/tasks', label: '任务看板', icon: ListTodo, roles: ['admin', 'sales_manager', 'tech', 'business', 'member'] },
+  { path: '/tasks', label: '任务看板', icon: ListTodo, roles: ['admin', 'sales_manager', 'tech', 'business', 'member', 'client'] },
   { path: '/messaging', label: '站内消息', icon: MessageSquare, roles: ['admin', 'sales_manager', 'business', 'marketing', 'tech', 'support', 'member', 'client'] },
-  { path: '/tickets', label: '工单', icon: Ticket, roles: ['admin', 'sales_manager', 'business', 'marketing', 'tech', 'support', 'member', 'client'] },
   { path: '/report', label: '数据报表', icon: BarChart3, roles: ['admin', 'sales_manager', 'business', 'marketing'] },
   { path: '/users', label: '用户管理', icon: Shield, roles: ['admin'] },
 ]

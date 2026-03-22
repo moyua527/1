@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import { fetchApi } from '../../bootstrap'
 import { taskApi } from './services/api'
 import Badge from '../ui/Badge'
@@ -63,6 +64,8 @@ function AddTaskForm({ projectId, status, onAdded }: { projectId: string; status
 }
 
 export default function TaskBoard() {
+  const { user } = useOutletContext<{ user: any }>()
+  const isClient = user?.role === 'client'
   const [tasks, setTasks] = useState<Task[]>([])
   const [projects, setProjects] = useState<any[]>([])
   const [selectedProject, setSelectedProject] = useState<string>('')
@@ -121,12 +124,12 @@ export default function TaskBoard() {
                 {colTasks.map(task => {
                   const pr = priorityMap[task.priority] || priorityMap.medium
                   return (
-                    <div key={task.id} style={taskCard} draggable
-                      onDragStart={e => e.dataTransfer.setData('taskId', String(task.id))}
+                    <div key={task.id} style={{ ...taskCard, cursor: isClient ? 'default' : 'grab' }} draggable={!isClient}
+                      onDragStart={e => { if (!isClient) e.dataTransfer.setData('taskId', String(task.id)) }}
                       onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)')}
                       onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)')}>
                       <div style={{ display: 'flex', alignItems: 'start', gap: 6 }}>
-                        <GripVertical size={14} color="#cbd5e1" style={{ marginTop: 2, flexShrink: 0 }} />
+                        {!isClient && <GripVertical size={14} color="#cbd5e1" style={{ marginTop: 2, flexShrink: 0 }} />}
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: 14, fontWeight: 500, color: '#0f172a', marginBottom: 6 }}>{task.title}</div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
@@ -139,7 +142,7 @@ export default function TaskBoard() {
                   )
                 })}
                 {colTasks.length === 0 && <div style={{ textAlign: 'center', padding: 20, color: '#cbd5e1', fontSize: 13 }}>拖拽任务到此列</div>}
-                <div style={{ marginTop: 8 }}><AddTaskForm projectId={selectedProject} status={col.key} onAdded={reload} /></div>
+                {(!isClient || col.key === 'todo') && <div style={{ marginTop: 8 }}><AddTaskForm projectId={selectedProject} status={col.key} onAdded={reload} /></div>}
               </div>
             )
           })}

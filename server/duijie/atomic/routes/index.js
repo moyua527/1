@@ -93,12 +93,13 @@ router.get('/opportunities', auth, roleGuard('admin', 'sales_manager', 'business
 router.put('/opportunities/:id', auth, roleGuard('admin', 'sales_manager', 'business'), require('../controllers/opportunity/updateController'));
 router.delete('/opportunities/:id', auth, roleGuard('admin'), require('../controllers/opportunity/deleteController'));
 
-// Tasks (staff only, not viewer/client)
+// Tasks (client can create & list only)
+const taskStaff = roleGuard('admin', 'sales_manager', 'tech', 'business', 'member');
 router.post('/tasks', auth, require('../controllers/task/createController'));
 router.get('/tasks', auth, require('../controllers/task/listController'));
-router.put('/tasks/:id', auth, require('../controllers/task/updateController'));
-router.patch('/tasks/:id/move', auth, require('../controllers/task/moveController'));
-router.delete('/tasks/:id', auth, require('../controllers/task/deleteController'));
+router.put('/tasks/:id', auth, taskStaff, require('../controllers/task/updateController'));
+router.patch('/tasks/:id/move', auth, taskStaff, require('../controllers/task/moveController'));
+router.delete('/tasks/:id', auth, taskStaff, require('../controllers/task/deleteController'));
 
 // Milestones
 router.post('/milestones', auth, require('../controllers/milestone/createController'));

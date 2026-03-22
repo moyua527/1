@@ -14,7 +14,6 @@ import Report from './features/dashboard/Report'
 import UserManagement from './features/user/index'
 import OpportunityList from './features/opportunity/index'
 import Messaging from './features/messaging/index'
-import TicketPage from './features/ticket/index'
 import ToastContainer from './features/ui/Toast'
 
 function cacheUser(u: any) { try { localStorage.setItem('cached_user', JSON.stringify(u)) } catch {} }
@@ -37,7 +36,7 @@ export default function App() {
   const r = user.role
   const canClients = ['admin', 'sales_manager', 'business', 'marketing', 'support', 'viewer'].includes(r)
   const canOpportunities = ['admin', 'sales_manager', 'business', 'viewer'].includes(r)
-  const canTasks = ['admin', 'sales_manager', 'tech', 'business', 'member'].includes(r)
+  const canTasks = ['admin', 'sales_manager', 'tech', 'business', 'member', 'client'].includes(r)
   const canReport = ['admin', 'sales_manager', 'business', 'marketing'].includes(r)
   const canProjects = true
 
@@ -54,7 +53,6 @@ export default function App() {
           {canOpportunities && <Route path="/opportunities" element={<OpportunityList />} />}
           {canTasks && <Route path="/tasks" element={<TaskBoard />} />}
           <Route path="/messaging" element={<Messaging />} />
-          <Route path="/tickets" element={<TicketPage />} />
           {canReport && <Route path="/report" element={<Report />} />}
           {r === 'admin' && <Route path="/users" element={<UserManagement />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
