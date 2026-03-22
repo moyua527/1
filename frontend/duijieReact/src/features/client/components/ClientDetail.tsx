@@ -203,8 +203,8 @@ export default function ClientDetail() {
   const contractStatusMap: Record<string, { label: string; color: string; bg: string }> = {
     draft: { label: '草稿', color: '#6b7280', bg: '#f3f4f6' },
     active: { label: '生效中', color: '#16a34a', bg: '#f0fdf4' },
-    completed: { label: '已完成', color: '#2563eb', bg: '#eff6ff' },
-    cancelled: { label: '已取消', color: '#dc2626', bg: '#fef2f2' },
+    expired: { label: '已到期', color: '#d97706', bg: '#fef3c7' },
+    terminated: { label: '已终止', color: '#dc2626', bg: '#fef2f2' },
   }
   const openAddContract = () => {
     setEditingContract(null)
@@ -683,8 +683,8 @@ export default function ClientDetail() {
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
               <option value="draft">草稿</option>
               <option value="active">生效中</option>
-              <option value="completed">已完成</option>
-              <option value="cancelled">已取消</option>
+              <option value="expired">已到期</option>
+              <option value="terminated">已终止</option>
             </select>
           </div>
           <div style={{ display: 'flex', gap: 12 }}>

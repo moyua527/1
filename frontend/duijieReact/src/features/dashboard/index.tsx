@@ -44,7 +44,7 @@ const statusMap: Record<string, { label: string; color: string; bg: string }> = 
 }
 const contractStatusMap: Record<string, { label: string; color: string }> = {
   draft: { label: '草稿', color: '#6b7280' }, active: { label: '生效', color: '#16a34a' },
-  completed: { label: '完成', color: '#2563eb' }, cancelled: { label: '取消', color: '#dc2626' },
+  expired: { label: '已到期', color: '#d97706' }, terminated: { label: '已终止', color: '#dc2626' },
 }
 
 function ClientDashboard({ stats, nav }: { stats: Stats; nav: (p: string) => void }) {
@@ -150,8 +150,8 @@ function ClientDashboard({ stats, nav }: { stats: Stats; nav: (p: string) => voi
                   </div>
                   <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
                     ¥{Number(c.amount || 0).toLocaleString()}
-                    {c.start_date && ` · ${new Date(c.start_date).toLocaleDateString('zh-CN')}`}
-                    {c.end_date && ` ~ ${new Date(c.end_date).toLocaleDateString('zh-CN')}`}
+                    {c.signed_date && ` · ${new Date(c.signed_date).toLocaleDateString('zh-CN')}`}
+                    {c.expire_date && ` ~ ${new Date(c.expire_date).toLocaleDateString('zh-CN')}`}
                   </div>
                 </div>
               )
@@ -320,7 +320,7 @@ export default function Dashboard() {
                 <span style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>最近合同</span>
               </div>
               {stats.recentContracts!.map((c: any) => {
-                const stMap: Record<string, { label: string; color: string }> = { draft: { label: '草稿', color: '#6b7280' }, active: { label: '生效', color: '#16a34a' }, completed: { label: '完成', color: '#2563eb' }, cancelled: { label: '取消', color: '#dc2626' } }
+                const stMap: Record<string, { label: string; color: string }> = { draft: { label: '草稿', color: '#6b7280' }, active: { label: '生效', color: '#16a34a' }, expired: { label: '已到期', color: '#d97706' }, terminated: { label: '已终止', color: '#dc2626' } }
                 const st = stMap[c.status] || stMap.draft
                 return (
                   <div key={c.id} onClick={() => nav(`/clients/${c.client_id}`)} style={{ display: 'flex', gap: 10, padding: '10px 0', borderTop: '1px solid #f1f5f9', cursor: 'pointer' }}>

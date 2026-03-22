@@ -48,7 +48,7 @@ module.exports = async (auth = {}) => {
       `SELECT COUNT(*) as unread FROM duijie_direct_messages WHERE receiver_id = ? AND read_at IS NULL AND is_deleted = 0`, [auth.userId]
     );
     const [contracts] = await db.query(
-      `SELECT co.id, co.title, co.amount, co.status, co.start_date, co.end_date, co.created_at
+      `SELECT co.id, co.title, co.amount, co.status, co.signed_date, co.expire_date, co.created_at
        FROM duijie_contracts co WHERE co.client_id = ? ORDER BY co.created_at DESC`, [auth.clientId]
     );
     return {
