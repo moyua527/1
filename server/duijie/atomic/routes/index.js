@@ -34,6 +34,7 @@ router.put('/system/invite-code', auth, configCtrl.update);
 // Dashboard
 router.get('/dashboard/stats', auth, require('../controllers/dashboard/statsController'));
 router.get('/dashboard/report', auth, require('../controllers/dashboard/reportController'));
+router.get('/dashboard/chart', auth, require('../controllers/dashboard/chartController'));
 
 // Projects
 const projectManagers = roleGuard('admin');

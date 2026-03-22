@@ -72,6 +72,8 @@ CREATE TABLE IF NOT EXISTS duijie_notifications (
     # 3. Upload backend files
     print('\n[3/4] Uploading backend files...')
     backend_files = [
+        'atomic/routes/index.js',
+        'atomic/controllers/dashboard/chartController.js',
     ]
     remote_server = f'{REMOTE_BASE}/server/duijie'
     for f in backend_files:
