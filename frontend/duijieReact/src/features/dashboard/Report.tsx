@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BarChart3, TrendingUp, PieChart, Loader2, FileSignature, Users } from 'lucide-react'
+import { BarChart3, TrendingUp, PieChart, Loader2, FileSignature, Users, Calendar, Activity, Target, DollarSign } from 'lucide-react'
 
 const fetchApi = async (url: string) => {
   const res = await fetch(url, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
@@ -11,35 +11,92 @@ const stageLabel: Record<string, string> = { potential: '潜在', intent: '意�
 const stageColors: Record<string, string> = { potential: '#94a3b8', intent: '#3b82f6', signed: '#7c3aed', active: '#16a34a', lost: '#dc2626' }
 const channelColors = ['#3b82f6', '#f59e0b', '#10b981', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#84cc16']
 
+const rangeTabs = [
+  { days: 7, contractMonths: 1, label: '近7天' },
+  { days: 30, contractMonths: 6, label: '近30天' },
+  { days: 90, contractMonths: 6, label: '近90天' },
+  { days: 180, contractMonths: 12, label: '近半年' },
+  { days: 365, contractMonths: 24, label: '近一年' },
+]
+
 export default function Report() {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [rangeIdx, setRangeIdx] = useState(1)
 
-  useEffect(() => {
-    fetchApi('/api/dashboard/report').then(r => { if (r.success) setData(r.data) }).finally(() => setLoading(false))
-  }, [])
+  const loadData = (idx: number) => {
+    setLoading(true)
+    const r = rangeTabs[idx]
+    fetchApi(`/api/dashboard/report?days=${r.days}&contract_months=${r.contractMonths}`).then(res => { if (res.success) setData(res.data) }).finally(() => setLoading(false))
+  }
+
+  useEffect(() => { loadData(rangeIdx) }, [])
+
+  const switchRange = (idx: number) => { setRangeIdx(idx); loadData(idx) }
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}><Loader2 size={28} color="#3b82f6" style={{ animation: 'spin 1s linear infinite' }} /></div>
   if (!data) return <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}>暂无数据</div>
 
   const funnelStages = ['potential', 'intent', 'signed', 'active', 'lost'] as const
   const funnelMax = Math.max(...funnelStages.map(s => data.funnel[s] || 0), 1)
+  const totalClients = funnelStages.reduce((s, k) => s + (data.funnel[k] || 0), 0)
 
   const followDates = data.followTrend || []
   const followMax = Math.max(...followDates.map((d: any) => d.count), 1)
+  const followTotal = followDates.reduce((s: number, d: any) => s + d.count, 0)
 
   const clientDates = data.clientTrend || []
   const clientMax = Math.max(...clientDates.map((d: any) => d.count), 1)
+  const newClientsTotal = clientDates.reduce((s: number, d: any) => s + d.count, 0)
 
   const channelTotal = (data.channelDist || []).reduce((s: number, c: any) => s + c.count, 0) || 1
 
   const contractMonths = data.contractTrend || []
   const contractMax = Math.max(...contractMonths.map((m: any) => Number(m.total)), 1)
+  const contractTotalAmount = contractMonths.reduce((s: number, m: any) => s + Number(m.total || 0), 0)
+  const contractTotalCount = contractMonths.reduce((s: number, m: any) => s + Number(m.count || 0), 0)
+
+  const conversionRate = data.funnel.potential > 0 ? ((data.funnel.active / data.funnel.potential) * 100).toFixed(1) : '0'
+
+  const summaryCards = [
+    { label: '客户总数', value: totalClients, icon: Users, color: '#2563eb', bg: '#dbeafe' },
+    { label: `新增客户`, value: newClientsTotal, icon: Target, color: '#7c3aed', bg: '#ede9fe' },
+    { label: `跟进次数`, value: followTotal, icon: Activity, color: '#16a34a', bg: '#dcfce7' },
+    { label: '合同金额', value: `¥${(contractTotalAmount / 10000).toFixed(1)}万`, icon: DollarSign, color: '#d97706', bg: '#fef3c7' },
+  ]
 
   return (
     <div>
-      <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: '0 0 6px' }}>数据报表</h1>
-      <p style={{ color: '#64748b', margin: '0 0 20px', fontSize: 14 }}>销售漏斗、跟进趋势、渠道分布、合同统计</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>数据报表</h1>
+          <p style={{ color: '#64748b', margin: 0, fontSize: 14 }}>销售漏斗 · 跟进趋势 · 渠道分布 · 合同统计</p>
+        </div>
+        <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3 }}>
+          {rangeTabs.map((t, i) => (
+            <button key={t.days} onClick={() => switchRange(i)}
+              style={{ padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 13, fontWeight: rangeIdx === i ? 600 : 400,
+                background: rangeIdx === i ? '#fff' : 'transparent', color: rangeIdx === i ? '#0f172a' : '#64748b',
+                cursor: 'pointer', transition: 'all 0.15s', boxShadow: rangeIdx === i ? '0 1px 3px rgba(0,0,0,0.08)' : 'none' }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12, marginBottom: 20 }}>
+        {summaryCards.map(c => (
+          <div key={c.label} style={{ background: '#fff', borderRadius: 12, padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 10, background: c.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <c.icon size={20} color={c.color} />
+            </div>
+            <div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: '#0f172a' }}>{c.value}</div>
+              <div style={{ fontSize: 12, color: '#64748b' }}>{c.label}</div>
+            </div>
+          </div>
+        ))}
+      </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         {/* 漏斗转化 */}
@@ -101,7 +158,7 @@ export default function Report() {
         <div style={section}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
             <TrendingUp size={18} color="#16a34a" />
-            <span style={{ fontSize: 16, fontWeight: 600, color: '#334155' }}>跟进趋势 (近30天)</span>
+            <span style={{ fontSize: 16, fontWeight: 600, color: '#334155' }}>跟进趋势 ({rangeTabs[rangeIdx].label})</span>
           </div>
           {followDates.length === 0 ? (
             <div style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', padding: 30 }}>暂无跟进记录</div>
@@ -127,7 +184,7 @@ export default function Report() {
         <div style={section}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
             <Users size={18} color="#7c3aed" />
-            <span style={{ fontSize: 16, fontWeight: 600, color: '#334155' }}>新增客户 (近30天)</span>
+            <span style={{ fontSize: 16, fontWeight: 600, color: '#334155' }}>新增客户 ({rangeTabs[rangeIdx].label})</span>
           </div>
           {clientDates.length === 0 ? (
             <div style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', padding: 30 }}>暂无数据</div>
@@ -153,7 +210,7 @@ export default function Report() {
         <div style={{ ...section, gridColumn: '1 / -1' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
             <FileSignature size={18} color="#d97706" />
-            <span style={{ fontSize: 16, fontWeight: 600, color: '#334155' }}>合同金额趋势 (近6月)</span>
+            <span style={{ fontSize: 16, fontWeight: 600, color: '#334155' }}>合同金额趋势 (近{rangeTabs[rangeIdx].contractMonths}月)</span>
           </div>
           {contractMonths.length === 0 ? (
             <div style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', padding: 30 }}>暂无合同数据</div>

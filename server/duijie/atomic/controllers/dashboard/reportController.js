@@ -5,6 +5,9 @@ module.exports = async (req, res) => {
     const role = req.userRole;
     const userId = req.userId;
 
+    const days = Math.min(Math.max(parseInt(req.query.days) || 30, 7), 365);
+    const contractMonths = Math.min(Math.max(parseInt(req.query.contract_months) || 6, 1), 24);
+
     // 成员角色: 仅看参与项目关联的客户数据
     let clientFilter = '';
     let clientFilterParams = [];
@@ -29,9 +32,9 @@ module.exports = async (req, res) => {
       `SELECT DATE(f.created_at) as date, COUNT(*) as count
        FROM duijie_follow_ups f
        ${role === 'member' ? 'INNER JOIN duijie_clients c ON f.client_id = c.id AND c.is_deleted = 0 ' + clientFilter : ''}
-       WHERE f.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+       WHERE f.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
        GROUP BY DATE(f.created_at) ORDER BY date`,
-      role === 'member' ? clientFilterParams : []
+      role === 'member' ? [...clientFilterParams, days] : [days]
     );
 
     // 3. 渠道分布
@@ -46,18 +49,18 @@ module.exports = async (req, res) => {
       `SELECT DATE_FORMAT(co.signed_date, '%Y-%m') as month, SUM(co.amount) as total, COUNT(*) as count
        FROM duijie_contracts co
        ${role === 'member' ? 'INNER JOIN duijie_clients c ON co.client_id = c.id AND c.is_deleted = 0 ' + clientFilter : ''}
-       WHERE co.signed_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+       WHERE co.signed_date >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
        GROUP BY month ORDER BY month`,
-      role === 'member' ? clientFilterParams : []
+      role === 'member' ? [...clientFilterParams, contractMonths] : [contractMonths]
     );
 
-    // 5. 新增客户趋势: 最近30天每天新增
+    // 5. 新增客户趋势
     const [clientTrend] = await db.query(
       `SELECT DATE(c.created_at) as date, COUNT(*) as count
        FROM duijie_clients c
-       WHERE c.is_deleted = 0 AND c.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) ${clientFilter}
+       WHERE c.is_deleted = 0 AND c.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) ${clientFilter}
        GROUP BY DATE(c.created_at) ORDER BY date`,
-      clientFilterParams
+      [...clientFilterParams, days]
     );
 
     res.json({
