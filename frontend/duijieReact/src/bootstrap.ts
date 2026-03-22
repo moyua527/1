@@ -1,4 +1,4 @@
-const BACKEND_URL = (window as any).__ENV__?.BACKEND_URL || ''
+export const BACKEND_URL = (window as any).__ENV__?.BACKEND_URL || ''
 
 function authHeaders(): Record<string, string> {
   const token = sessionStorage.getItem('token')

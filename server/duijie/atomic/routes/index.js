@@ -116,6 +116,7 @@ router.patch('/milestones/:id/toggle', auth, require('../controllers/milestone/t
 
 // Files
 router.post('/files/upload', auth, upload.single('file'), require('../controllers/file/uploadController'));
+router.get('/files/all', auth, require('../controllers/file/listAllController'));
 router.get('/files', auth, require('../controllers/file/listController'));
 router.delete('/files/:id', auth, require('../controllers/file/deleteController'));
 router.get('/files/:id/download', auth, require('../controllers/file/downloadController'));

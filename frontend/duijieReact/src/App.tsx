@@ -15,6 +15,7 @@ import UserManagement from './features/user/index'
 import OpportunityList from './features/opportunity/index'
 import Messaging from './features/messaging/index'
 import AuditLog from './features/audit/index'
+import FileManager from './features/file/index'
 import ToastContainer from './features/ui/Toast'
 
 function cacheUser(u: any) { try { localStorage.setItem('cached_user', JSON.stringify(u)) } catch {} }
@@ -56,6 +57,7 @@ export default function App() {
           <Route path="/messaging" element={<Messaging />} />
           {canReport && <Route path="/report" element={<Report />} />}
           {r === 'admin' && <Route path="/users" element={<UserManagement />} />}
+          <Route path="/files" element={<FileManager />} />
           {r === 'admin' && <Route path="/audit" element={<AuditLog />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

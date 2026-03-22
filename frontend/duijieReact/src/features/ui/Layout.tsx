@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield, Settings, Copy, TrendingUp, MessageSquare, ScrollText } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield, Settings, Copy, TrendingUp, MessageSquare, ScrollText, FileText } from 'lucide-react'
 import { fetchApi, clearToken } from '../../bootstrap'
 import Avatar from './Avatar'
 import Modal from './Modal'
@@ -18,6 +18,7 @@ const ALL_NAV_ITEMS = [
   { path: '/tasks', label: '任务看板', icon: ListTodo, roles: ['admin', 'tech', 'business', 'member'] },
   { path: '/messaging', label: '站内消息', icon: MessageSquare, roles: ['admin', 'tech', 'business', 'member'] },
   { path: '/report', label: '数据报表', icon: BarChart3, roles: ['admin', 'business'] },
+  { path: '/files', label: '文件管理', icon: FileText, roles: ['admin', 'tech', 'business', 'member'] },
   { path: '/users', label: '用户管理', icon: Shield, roles: ['admin'] },
   { path: '/audit', label: '审计日志', icon: ScrollText, roles: ['admin'] },
 ]
