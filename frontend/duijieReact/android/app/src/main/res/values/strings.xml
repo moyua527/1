@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">DuiJie</string>
+    <string name="title_activity_main">DuiJie</string>
+    <string name="package_name">com.duijie.app</string>
+    <string name="custom_url_scheme">com.duijie.app</string>
+</resources>
