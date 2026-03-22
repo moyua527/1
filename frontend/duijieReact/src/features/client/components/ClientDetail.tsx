@@ -48,6 +48,7 @@ export default function ClientDetail() {
   const [showFollowForm, setShowFollowForm] = useState(false)
   const [followForm, setFollowForm] = useState({ content: '', follow_type: 'phone', next_follow_date: '' })
   const [followSubmitting, setFollowSubmitting] = useState(false)
+  const [editingFollowUp, setEditingFollowUp] = useState<any>(null)
   const [contacts, setContacts] = useState<any[]>([])
   const [contactModalOpen, setContactModalOpen] = useState(false)
   const [editingContact, setEditingContact] = useState<any>(null)
@@ -135,6 +136,27 @@ export default function ClientDetail() {
     setFollowSubmitting(false)
     if (r.success) { toast('跟进记录已添加', 'success'); setShowFollowForm(false); setFollowForm({ content: '', follow_type: 'phone', next_follow_date: '' }); load() }
     else toast(r.message || '添加失败', 'error')
+  }
+
+  const startEditFollowUp = (f: any) => {
+    setEditingFollowUp(f)
+    setFollowForm({ content: f.content || '', follow_type: f.follow_type || 'phone', next_follow_date: f.next_follow_date ? f.next_follow_date.slice(0, 10) : '' })
+    setShowFollowForm(true)
+  }
+
+  const handleUpdateFollowUp = async () => {
+    if (!followForm.content.trim()) { toast('请输入跟进内容', 'error'); return }
+    setFollowSubmitting(true)
+    const r = await clientApi.updateFollowUp(editingFollowUp.id, followForm)
+    setFollowSubmitting(false)
+    if (r.success) { toast('跟进记录已更新', 'success'); setShowFollowForm(false); setEditingFollowUp(null); setFollowForm({ content: '', follow_type: 'phone', next_follow_date: '' }); load() }
+    else toast(r.message || '更新失败', 'error')
+  }
+
+  const handleDeleteFollowUp = async (fId: number) => {
+    const r = await clientApi.deleteFollowUp(fId)
+    if (r.success) { toast('跟进记录已删除', 'success'); load() }
+    else toast(r.message || '删除失败', 'error')
   }
 
   const getFollowIcon = (type: string) => {
@@ -458,7 +480,7 @@ export default function ClientDetail() {
             <span style={{ fontSize: 16, fontWeight: 600, color: '#334155' }}>跟进记录</span>
             <span style={{ fontSize: 12, color: '#94a3b8' }}>({followUps.length})</span>
           </div>
-          <Button onClick={() => setShowFollowForm(!showFollowForm)}><Plus size={14} /> 新增跟进</Button>
+          <Button onClick={() => { setEditingFollowUp(null); setFollowForm({ content: '', follow_type: 'phone', next_follow_date: '' }); setShowFollowForm(!showFollowForm) }}><Plus size={14} /> 新增跟进</Button>
         </div>
 
         {showFollowForm && (
@@ -481,8 +503,8 @@ export default function ClientDetail() {
               placeholder="输入跟进内容..." rows={3}
               style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit', marginBottom: 12 }} />
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <Button variant="secondary" onClick={() => setShowFollowForm(false)}>取消</Button>
-              <Button onClick={handleCreateFollow} disabled={followSubmitting}><Send size={14} /> {followSubmitting ? '提交中...' : '提交'}</Button>
+              <Button variant="secondary" onClick={() => { setShowFollowForm(false); setEditingFollowUp(null) }}>取消</Button>
+              <Button onClick={editingFollowUp ? handleUpdateFollowUp : handleCreateFollow} disabled={followSubmitting}><Send size={14} /> {followSubmitting ? '提交中...' : editingFollowUp ? '保存修改' : '提交'}</Button>
             </div>
           </div>
         )}
@@ -504,9 +526,14 @@ export default function ClientDetail() {
                     <span style={{ fontSize: 12, color: '#64748b' }}>{f.created_by_name || '用户'}</span>
                   </div>
                   <div style={{ fontSize: 14, color: '#334155', lineHeight: 1.6 }}>{f.content}</div>
-                  {f.next_follow_date && (
-                    <div style={{ fontSize: 12, color: '#f59e0b', marginTop: 4 }}>⏰ 下次跟进: {new Date(f.next_follow_date).toLocaleDateString('zh-CN')}</div>
-                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+                    {f.next_follow_date && (
+                      <span style={{ fontSize: 12, color: '#f59e0b' }}>⏰ 下次跟进: {new Date(f.next_follow_date).toLocaleDateString('zh-CN')}</span>
+                    )}
+                    <span style={{ marginLeft: 'auto' }} />
+                    <button onClick={() => startEditFollowUp(f)} style={{ fontSize: 11, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>编辑</button>
+                    <button onClick={() => handleDeleteFollowUp(f.id)} style={{ fontSize: 11, color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>删除</button>
+                  </div>
                 </div>
               </div>
             ))}

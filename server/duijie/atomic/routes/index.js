@@ -86,6 +86,8 @@ router.delete('/contracts/:id', auth, roleGuard('admin'), require('../controller
 // Follow-ups
 router.post('/follow-ups', auth, salesTeam, require('../controllers/followUp/createController'));
 router.get('/clients/:clientId/follow-ups', auth, roleGuard('admin', 'business'), require('../controllers/followUp/listController'));
+router.put('/follow-ups/:id', auth, roleGuard('admin', 'business'), require('../controllers/followUp/updateController'));
+router.delete('/follow-ups/:id', auth, roleGuard('admin', 'business'), require('../controllers/followUp/deleteController'));
 
 // Opportunities
 router.post('/opportunities', auth, roleGuard('admin', 'business'), require('../controllers/opportunity/createController'));
@@ -100,6 +102,8 @@ router.get('/tasks', auth, require('../controllers/task/listController'));
 router.put('/tasks/:id', auth, taskStaff, require('../controllers/task/updateController'));
 router.patch('/tasks/:id/move', auth, taskStaff, require('../controllers/task/moveController'));
 router.delete('/tasks/:id', auth, taskStaff, require('../controllers/task/deleteController'));
+router.post('/tasks/:id/attachments', auth, taskStaff, upload.array('files', 10), require('../controllers/task/uploadAttachmentController'));
+router.delete('/tasks/attachments/:attachmentId', auth, taskStaff, require('../controllers/task/deleteAttachmentController'));
 router.get('/tasks/attachments/:attachmentId/download', auth, require('../controllers/task/downloadAttachmentController'));
 
 // Milestones

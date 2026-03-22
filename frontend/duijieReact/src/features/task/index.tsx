@@ -5,6 +5,7 @@ import { taskApi } from './services/api'
 import Badge from '../ui/Badge'
 import { toast } from '../ui/Toast'
 import { Plus, GripVertical, Paperclip, X, Download } from 'lucide-react'
+import TaskDetailModal from './components/TaskDetailModal'
 
 const BACKEND_URL = (window as any).__ENV__?.BACKEND_URL || ''
 const fmtSize = (b: number) => b < 1024 ? b + 'B' : b < 1048576 ? (b / 1024).toFixed(1) + 'KB' : (b / 1048576).toFixed(1) + 'MB'
@@ -95,6 +96,7 @@ export default function TaskBoard() {
   const [projects, setProjects] = useState<any[]>([])
   const [selectedProject, setSelectedProject] = useState<string>('')
   const [dragOverCol, setDragOverCol] = useState<string | null>(null)
+  const [selectedTask, setSelectedTask] = useState<any>(null)
 
   useEffect(() => {
     fetchApi('/api/projects?limit=100').then(r => {
@@ -149,17 +151,19 @@ export default function TaskBoard() {
                 {colTasks.map(task => {
                   const pr = priorityMap[task.priority] || priorityMap.medium
                   return (
-                    <div key={task.id} style={{ ...taskCard, cursor: isClient ? 'default' : 'grab' }} draggable={!isClient}
-                      onDragStart={e => { if (!isClient) e.dataTransfer.setData('taskId', String(task.id)) }}
+                    <div key={task.id} style={{ ...taskCard, cursor: 'grab' }} draggable
+                      onClick={() => setSelectedTask(task)}
+                      onDragStart={e => e.dataTransfer.setData('taskId', String(task.id))}
                       onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)')}
                       onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)')}>
                       <div style={{ display: 'flex', alignItems: 'start', gap: 6 }}>
-                        {!isClient && <GripVertical size={14} color="#cbd5e1" style={{ marginTop: 2, flexShrink: 0 }} />}
+                        <GripVertical size={14} color="#cbd5e1" style={{ marginTop: 2, flexShrink: 0 }} />
                         <div style={{ flex: 1 }}>
                           <div style={{ fontSize: 14, fontWeight: 500, color: '#0f172a', marginBottom: 6 }}>{task.title}</div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                             <Badge color={pr.color}>{pr.label}</Badge>
-                            {task.due_date && <span style={{ fontSize: 11, color: '#94a3b8' }}>截止 {task.due_date}</span>}
+                            {task.due_date && <span style={{ fontSize: 11, color: '#94a3b8' }}>截止 {task.due_date.slice(0, 10)}</span>}
+                            {task.assignee_name && <span style={{ fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 2 }}><span style={{ width: 4, height: 4, borderRadius: '50%', background: '#2563eb', display: 'inline-block' }} />{task.assignee_name}</span>}
                             {(task as any).attachments?.length > 0 && <span style={{ fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 2 }}><Paperclip size={10} />{(task as any).attachments.length}</span>}
                           </div>
                           {(task as any).attachments?.length > 0 && (
@@ -184,6 +188,13 @@ export default function TaskBoard() {
           })}
         </div>
       )}
+      <TaskDetailModal
+        task={selectedTask}
+        projectId={selectedProject}
+        open={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+        onUpdated={reload}
+      />
     </div>
   )
 }

@@ -1,9 +1,14 @@
 const db = require('../../../config/db');
 
 module.exports = async (project_id, auth = {}) => {
+  const base = `SELECT t.*, u.nickname as assignee_name, u.username as assignee_username,
+    cr.nickname as creator_name, cr.username as creator_username
+    FROM duijie_tasks t
+    LEFT JOIN voice_users u ON u.id = t.assignee_id
+    LEFT JOIN voice_users cr ON cr.id = t.created_by`;
   if (project_id) {
     const [rows] = await db.query(
-      'SELECT * FROM duijie_tasks WHERE project_id = ? AND is_deleted = 0 ORDER BY sort_order ASC, created_at DESC',
+      `${base} WHERE t.project_id = ? AND t.is_deleted = 0 ORDER BY t.sort_order ASC, t.created_at DESC`,
       [project_id]
     );
     return rows;
@@ -15,7 +20,7 @@ module.exports = async (project_id, auth = {}) => {
     params.push(auth.userId, auth.userId);
   }
   const [rows] = await db.query(
-    `SELECT t.* FROM duijie_tasks t WHERE t.is_deleted = 0 ${filter} ORDER BY t.sort_order ASC, t.created_at DESC`,
+    `${base} WHERE t.is_deleted = 0 ${filter} ORDER BY t.sort_order ASC, t.created_at DESC`,
     params
   );
   return rows;
