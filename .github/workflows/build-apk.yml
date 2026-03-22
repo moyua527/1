@@ -58,10 +58,13 @@ jobs:
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace 2>&1 | tail -80
+          ./gradlew assembleDebug
+
+      - name: Find APK
+        run: find frontend/duijieReact/android -name "*.apk" -type f
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: DuiJie-debug
-          path: frontend/duijieReact/android/app/build/outputs/apk/debug/app-debug.apk
+          path: frontend/duijieReact/android/**/outputs/**/*.apk
