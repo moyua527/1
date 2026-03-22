@@ -21,6 +21,7 @@ const ALL_NAV_ITEMS = [
   { path: '/files', label: '文件管理', icon: FileText, roles: ['admin', 'tech', 'business', 'member'] },
   { path: '/users', label: '用户管理', icon: Shield, roles: ['admin'] },
   { path: '/audit', label: '审计日志', icon: ScrollText, roles: ['admin'] },
+  { path: '/settings', label: '系统配置', icon: Settings, roles: ['admin'] },
 ]
 
 const roleLabel: Record<string, string> = {

@@ -30,6 +30,8 @@ router.put('/auth/profile', auth, require('../controllers/auth/profileController
 const configCtrl = require('../controllers/system/configController');
 router.get('/system/invite-code', auth, configCtrl.get);
 router.put('/system/invite-code', auth, configCtrl.update);
+router.get('/system/config', auth, adminOnly, configCtrl.getAll);
+router.put('/system/config', auth, adminOnly, configCtrl.updateAll);
 
 // Dashboard
 router.get('/dashboard/stats', auth, require('../controllers/dashboard/statsController'));
