@@ -45,6 +45,9 @@ app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, max: 300, standardHeaders:
 app.use('/api/auth/login', rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: { success: false, message: '登录尝试过多，请 15 分钟后再试' } }));
 app.use('/api/auth/register', rateLimit({ windowMs: 60 * 60 * 1000, max: 5, message: { success: false, message: '注册尝试过多，请 1 小时后再试' } }));
 
+// Bot/爬虫检测
+app.use('/api', require('./atomic/middleware/antiBot'));
+
 // XSS 输入过滤
 app.use('/api', require('./atomic/middleware/xssMiddleware'));
 
@@ -55,6 +58,12 @@ app.use('/api', (req, res, next) => {
 });
 app.use('/api', require('./atomic/middleware/auditMiddleware'));
 app.use('/api', routes);
+
+// 全局错误处理（生产环境不暴露内部错误信息）
+app.use((err, req, res, next) => {
+  console.error('[server error]', err);
+  res.status(500).json({ success: false, message: '服务器内部错误' });
+});
 
 server.listen(PORT, () => {
   console.log(`[duijie] 后端服务启动: http://localhost:${PORT}`);
