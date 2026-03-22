@@ -73,17 +73,8 @@ CREATE TABLE IF NOT EXISTS duijie_notifications (
     print('\n[3/4] Uploading backend files...')
     backend_files = [
         'atomic/routes/index.js',
-        'atomic/utils/notify.js',
-        'atomic/controllers/notification/listController.js',
-        'atomic/controllers/notification/markReadController.js',
-        'atomic/controllers/task/updateController.js',
-        'atomic/controllers/task/uploadAttachmentController.js',
-        'atomic/controllers/task/deleteAttachmentController.js',
-        'atomic/repositories/task/findByProjectRepo.js',
-        'atomic/controllers/followUp/updateController.js',
-        'atomic/controllers/followUp/deleteController.js',
-        'atomic/controllers/ticket/replyController.js',
-        'atomic/controllers/project/addMemberController.js',
+        'atomic/controllers/milestone/updateController.js',
+        'atomic/controllers/milestone/deleteController.js',
     ]
     remote_server = f'{REMOTE_BASE}/server/duijie'
     for f in backend_files:

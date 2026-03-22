@@ -109,6 +109,8 @@ router.get('/tasks/attachments/:attachmentId/download', auth, require('../contro
 // Milestones
 router.post('/milestones', auth, require('../controllers/milestone/createController'));
 router.get('/milestones', auth, require('../controllers/milestone/listController'));
+router.put('/milestones/:id', auth, require('../controllers/milestone/updateController'));
+router.delete('/milestones/:id', auth, require('../controllers/milestone/deleteController'));
 router.patch('/milestones/:id/toggle', auth, require('../controllers/milestone/toggleController'));
 
 // Files
