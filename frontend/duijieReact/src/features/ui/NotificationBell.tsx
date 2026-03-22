@@ -11,6 +11,7 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false)
   const [notifications, setNotifications] = useState<any[]>([])
   const [unread, setUnread] = useState(0)
+  const [selected, setSelected] = useState<any>(null)
   const ref = useRef<HTMLDivElement>(null)
   const nav = useNavigate()
 
@@ -44,7 +45,7 @@ export default function NotificationBell() {
 
   const handleClick = (n: any) => {
     if (!n.is_read) markRead(n.id)
-    if (n.link) { nav(n.link); setOpen(false) }
+    setSelected(n)
   }
 
   return (
@@ -62,16 +63,40 @@ export default function NotificationBell() {
       {open && (
         <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 8, width: 360, maxHeight: 480, background: '#fff', borderRadius: 12, boxShadow: '0 10px 40px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0', zIndex: 100, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #f1f5f9' }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>通知 {unread > 0 && <span style={{ fontSize: 12, color: '#dc2626' }}>({unread})</span>}</span>
-            {unread > 0 && (
-              <button onClick={() => markRead('all')}
-                style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>
-                <CheckCheck size={14} /> 全部已读
-              </button>
+            {selected ? (
+              <>
+                <button onClick={() => setSelected(null)} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>← 返回</button>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>通知详情</span>
+              </>
+            ) : (
+              <>
+                <span style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>通知 {unread > 0 && <span style={{ fontSize: 12, color: '#dc2626' }}>({unread})</span>}</span>
+                {unread > 0 && (
+                  <button onClick={() => markRead('all')}
+                    style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>
+                    <CheckCheck size={14} /> 全部已读
+                  </button>
+                )}
+              </>
             )}
           </div>
           <div style={{ flex: 1, overflowY: 'auto' }}>
-            {notifications.length === 0 ? (
+            {selected ? (
+              <div style={{ padding: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <span style={{ fontSize: 24 }}>{typeIcon[selected.type] || '🔔'}</span>
+                  <div style={{ fontSize: 16, fontWeight: 600, color: '#0f172a' }}>{selected.title}</div>
+                </div>
+                <div style={{ fontSize: 14, color: '#334155', lineHeight: 1.8, marginBottom: 16, whiteSpace: 'pre-wrap' }}>{selected.content}</div>
+                <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 16 }}>{new Date(selected.created_at).toLocaleString('zh-CN')}</div>
+                {selected.link && (
+                  <button onClick={() => { nav(selected.link); setOpen(false); setSelected(null) }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, background: '#2563eb', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>
+                    <ExternalLink size={14} /> 查看相关项目
+                  </button>
+                )}
+              </div>
+            ) : notifications.length === 0 ? (
               <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>暂无通知</div>
             ) : notifications.map(n => (
               <div key={n.id} onClick={() => handleClick(n)}
