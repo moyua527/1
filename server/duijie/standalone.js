@@ -14,6 +14,7 @@ require('./listeners/messageListener');
 
 const PORT = process.env.PORT || 1800;
 const app = express();
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 initSocket(server);
 
