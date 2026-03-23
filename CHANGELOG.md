@@ -50,3 +50,4 @@
 | v1.0.68 | 2026-03-23 | 修复：express-rate-limit v7 X-Forwarded-For ValidationError导致Nginx代理API返回500，禁用xForwardedForHeader验证 |
 | v1.0.69 | 2026-03-23 | 修复：项目/任务路由roleGuard缺少client/viewer角色导致403，补全projectStaff+taskStaff权限+添加后端调试日志 |
 | v1.0.70 | 2026-03-23 | 项目详情客户名可点击跳转客户详情页，member/client/viewer/tech角色开放GET /clients/:id权限 |
+| v1.0.71 | 2026-03-23 | 项目详情客户名改为弹窗内显示客户信息(名称/公司/联系方式/成员)，不再跳转页面 |

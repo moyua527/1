@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
-import { ArrowLeft, Trash2, User, Mail, Shield, ChevronDown, Plus, X, Upload, FileText, Image, CheckCircle, Circle, Paperclip, Download, AppWindow, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Trash2, User, Mail, Shield, ChevronDown, Plus, X, Upload, FileText, Image, CheckCircle, Circle, Paperclip, Download, AppWindow, ExternalLink, Building2, Phone, MapPin, Clock } from 'lucide-react'
 import Modal from '../../ui/Modal'
 import Avatar from '../../ui/Avatar'
+import { fetchApi } from '../../../bootstrap'
 import { projectApi } from '../services/api'
 import { taskApi } from '../../task/services/api'
 import { milestoneApi } from '../../milestone/services/api'
@@ -65,8 +66,16 @@ export default function ProjectDetail() {
   const [taskFiles, setTaskFiles] = useState<File[]>([])
   const [deleteSelected, setDeleteSelected] = useState<Set<number>>(new Set())
   const [submitting, setSubmitting] = useState(false)
+  const [clientModal, setClientModal] = useState(false)
+  const [clientData, setClientData] = useState<any>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  const openClientModal = (clientId: number) => {
+    setClientModal(true)
+    setClientData(null)
+    fetchApi(`/api/clients/${clientId}`).then(r => { if (r.success) setClientData(r.data) })
+  }
 
   const loadProject = () => {
     if (!id) return
@@ -112,7 +121,7 @@ export default function ProjectDetail() {
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0f172a', margin: 0 }}>{project.name}</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
             <Badge color={st.color}>{st.label}</Badge>
-            {project.client_name && <span style={{ fontSize: 13, color: '#64748b' }}>客户: <span onClick={() => project.client_id && nav(`/clients/${project.client_id}`)} style={{ color: '#2563eb', cursor: 'pointer' }}>{project.client_name}</span></span>}
+            {project.client_name && <span style={{ fontSize: 13, color: '#64748b' }}>客户: <span onClick={() => project.client_id && openClientModal(project.client_id)} style={{ color: '#2563eb', cursor: 'pointer' }}>{project.client_name}</span></span>}
           </div>
         </div>
         {canDelete && <Button variant="danger" onClick={handleDelete}><Trash2 size={14} /> 删除</Button>}
@@ -139,7 +148,7 @@ export default function ProjectDetail() {
             <div><div style={{ fontSize: 13, color: '#64748b' }}>开始日期</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.start_date || '未设置'}</div></div>
             <div><div style={{ fontSize: 13, color: '#64748b' }}>结束日期</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.end_date || '未设置'}</div></div>
             <div><div style={{ fontSize: 13, color: '#64748b' }}>预算</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.budget > 0 ? `¥${Number(project.budget).toLocaleString()}` : '未设置'}</div></div>
-            <div><div style={{ fontSize: 13, color: '#64748b' }}>客户</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.client_id ? <span onClick={() => nav(`/clients/${project.client_id}`)} style={{ color: '#2563eb', cursor: 'pointer' }}>{project.client_name}</span> : (project.client_name || '-')}</div></div>
+            <div><div style={{ fontSize: 13, color: '#64748b' }}>客户</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.client_id ? <span onClick={() => openClientModal(project.client_id)} style={{ color: '#2563eb', cursor: 'pointer' }}>{project.client_name}</span> : (project.client_name || '-')}</div></div>
             <div><div style={{ fontSize: 13, color: '#64748b' }}>创建时间</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.created_at ? new Date(project.created_at).toLocaleDateString('zh-CN') : '-'}</div></div>
             <div><div style={{ fontSize: 13, color: '#64748b' }}>任务数</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{tasks.length}</div></div>
           </div>
@@ -532,6 +541,45 @@ export default function ProjectDetail() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+      </Modal>
+
+      <Modal open={clientModal} onClose={() => setClientModal(false)} title="客户信息">
+        {!clientData ? (
+          <div style={{ textAlign: 'center', padding: 30, color: '#94a3b8' }}>加载中...</div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Building2 size={24} color="#2563eb" />
+              </div>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>{clientData.name}</div>
+                {clientData.company && <div style={{ fontSize: 13, color: '#64748b' }}>{clientData.company}</div>}
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              {clientData.email && <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Mail size={15} color="#64748b" /><span style={{ fontSize: 14, color: '#334155' }}>{clientData.email}</span></div>}
+              {clientData.phone && <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Phone size={15} color="#64748b" /><span style={{ fontSize: 14, color: '#334155' }}>{clientData.phone}</span></div>}
+              {clientData.address && <div style={{ display: 'flex', alignItems: 'center', gap: 8, gridColumn: 'span 2' }}><MapPin size={15} color="#64748b" /><span style={{ fontSize: 14, color: '#334155' }}>{clientData.address}</span></div>}
+            </div>
+            {clientData.notes && <div style={{ background: '#f8fafc', borderRadius: 8, padding: 12 }}><div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 4 }}>备注</div><div style={{ fontSize: 14, color: '#334155' }}>{clientData.notes}</div></div>}
+            {clientData.members && clientData.members.length > 0 && (
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 8 }}>企业成员</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {clientData.members.map((m: any) => (
+                    <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 10px', background: '#f8fafc', borderRadius: 8 }}>
+                      <Avatar name={m.name} size={28} />
+                      <span style={{ fontSize: 14, fontWeight: 500 }}>{m.name}</span>
+                      {m.position && <span style={{ fontSize: 12, color: '#64748b' }}>{m.position}</span>}
+                      {m.phone && <span style={{ fontSize: 12, color: '#94a3b8', marginLeft: 'auto' }}>{m.phone}</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </Modal>
