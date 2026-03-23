@@ -44,6 +44,7 @@ const projectManagers = roleGuard('admin');
 const projectStaff = roleGuard('admin', 'tech', 'business', 'member');
 const projectEditors = roleGuard('admin', 'tech', 'business');
 router.post('/projects', auth, projectManagers, require('../controllers/project/createController'));
+router.get('/projects/team-users', auth, projectManagers, require('../controllers/project/teamUsersController'));
 router.get('/projects', auth, projectStaff, require('../controllers/project/listController'));
 router.get('/projects/:id', auth, projectStaff, require('../controllers/project/detailController'));
 router.put('/projects/:id', auth, projectEditors, require('../controllers/project/updateController'));

@@ -114,6 +114,7 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 - 新建项目：名称、描述、**客户关联（必填）**、日期、预算
 - **创建权限**：仅 admin / sales_manager 可创建项目
 - **数据隔离**：继承客户隔离逻辑（admin/viewer 全部 / sales_manager 团队 / business 自己客户 / marketing 线索客户 / support 签约客户 / client 关联项目 / 其他角色仅成员项目）
+- **创建时添加成员**：新建项目弹窗支持多选团队成员（下拉选择 + Tag 展示 + 点击移除），创建后自动添加为 editor 角色
 - **编辑权限**：admin / sales_manager / business / tech 可编辑（后端校验归属）
 - **删除权限**：仅 admin
 - 项目详情（Tab 页签，**URL 持久化**）：

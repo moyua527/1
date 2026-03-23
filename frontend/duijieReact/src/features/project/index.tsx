@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { Plus, FolderKanban, Loader2, Search } from 'lucide-react'
+import { Plus, FolderKanban, Loader2, Search, X } from 'lucide-react'
 import { projectApi } from './services/api'
 import { clientApi } from '../client/services/api'
 import Button from '../ui/Button'
@@ -38,6 +38,8 @@ export default function ProjectList() {
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({ name: '', description: '', client_id: '' })
   const [allClients, setAllClients] = useState<any[]>([])
+  const [teamUsers, setTeamUsers] = useState<any[]>([])
+  const [selectedMembers, setSelectedMembers] = useState<number[]>([])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const nav = useNavigate()
@@ -46,7 +48,11 @@ export default function ProjectList() {
   const canCreate = role === 'admin'
 
   const load = () => { setLoading(true); projectApi.list().then(r => { if (r.success) setProjects(r.data?.rows || []) }).finally(() => setLoading(false)) }
-  useEffect(() => { load(); clientApi.list().then(r => { if (r.success) setAllClients(r.data || []) }) }, [])
+  useEffect(() => {
+    load()
+    clientApi.list().then(r => { if (r.success) setAllClients(r.data || []) })
+    projectApi.teamUsers().then(r => { if (r.success) setTeamUsers(r.data || []) })
+  }, [])
 
   const filtered = projects.filter(p => {
     if (statusFilter && p.status !== statusFilter) return false
@@ -61,9 +67,9 @@ export default function ProjectList() {
     if (!form.name.trim()) { toast('请输入项目名称', 'error'); return }
     setSubmitting(true)
     if (!form.client_id) { toast('请关联客户', 'error'); setSubmitting(false); return }
-    const r = await projectApi.create({ ...form, client_id: Number(form.client_id) })
+    const r = await projectApi.create({ ...form, client_id: Number(form.client_id), member_ids: selectedMembers })
     setSubmitting(false)
-    if (r.success) { toast('项目创建成功', 'success'); setShowCreate(false); setForm({ name: '', description: '', client_id: '' }); load() }
+    if (r.success) { toast('项目创建成功', 'success'); setShowCreate(false); setForm({ name: '', description: '', client_id: '' }); setSelectedMembers([]); load() }
     else toast(r.message || '创建失败', 'error')
   }
 
@@ -134,6 +140,29 @@ export default function ProjectList() {
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
               <option value="">请选择客户</option>
               {allClients.map((c: any) => <option key={c.id} value={c.id}>#{c.id} {c.name}{c.company ? ` (${c.company})` : ''}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>项目成员</label>
+            {selectedMembers.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
+                {selectedMembers.map(uid => {
+                  const u = teamUsers.find(t => t.id === uid)
+                  return u ? (
+                    <span key={uid} style={{ display: 'inline-flex', alignItems: 'center', gap: 2, padding: '2px 8px', borderRadius: 12, background: '#eff6ff', color: '#2563eb', fontSize: 12, fontWeight: 500 }}>
+                      {u.nickname || u.username}
+                      <X size={12} style={{ cursor: 'pointer', opacity: 0.6 }} onClick={() => setSelectedMembers(prev => prev.filter(id => id !== uid))} />
+                    </span>
+                  ) : null
+                })}
+              </div>
+            )}
+            <select value="" onChange={e => { const id = Number(e.target.value); if (id && !selectedMembers.includes(id)) setSelectedMembers(prev => [...prev, id]) }}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
+              <option value="">选择成员添加...</option>
+              {teamUsers.filter(u => !selectedMembers.includes(u.id)).map((u: any) => (
+                <option key={u.id} value={u.id}>{u.nickname || u.username} ({u.role})</option>
+              ))}
             </select>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
