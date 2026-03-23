@@ -63,6 +63,8 @@ export default function Report() {
     { label: `新增客户`, value: newClientsTotal, icon: Target, color: '#7c3aed', bg: '#ede9fe' },
     { label: `跟进次数`, value: followTotal, icon: Activity, color: '#16a34a', bg: '#dcfce7' },
     { label: '合同金额', value: `¥${(contractTotalAmount / 10000).toFixed(1)}万`, icon: DollarSign, color: '#d97706', bg: '#fef3c7' },
+    { label: '合同笔数', value: contractTotalCount, icon: FileSignature, color: '#0891b2', bg: '#cffafe' },
+    { label: '转化率', value: `${conversionRate}%`, icon: TrendingUp, color: '#dc2626', bg: '#fee2e2' },
   ]
 
   return (

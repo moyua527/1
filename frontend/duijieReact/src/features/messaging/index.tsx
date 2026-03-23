@@ -12,6 +12,7 @@ const dmApi = {
   users: () => fetchApi('/api/dm/users'),
   history: (userId: number) => fetchApi(`/api/dm/${userId}/history`),
   send: (receiver_id: number, content: string) => fetchApi('/api/dm/send', { method: 'POST', body: JSON.stringify({ receiver_id, content }) }),
+  recall: (id: number) => fetchApi(`/api/dm/${id}/recall`, { method: 'PATCH' }),
 }
 
 export default function Messaging() {
@@ -165,18 +166,34 @@ export default function Messaging() {
               {messages.length === 0 && <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, padding: 40 }}>开始你们的对话</div>}
               {messages.map(m => {
                 const isMine = me && m.sender_id === me.id
+                const isRecalled = m.is_recalled
+                const canRecall = isMine && !isRecalled && (Date.now() - new Date(m.created_at).getTime()) < 2 * 60 * 1000
+                const handleRecall = async () => {
+                  if (!canRecall) return
+                  const r = await dmApi.recall(m.id)
+                  if (r.success) { toast('消息已撤回', 'success'); dmApi.history(selectedUser.id).then(r => { if (r.success) setMessages(r.data || []) }) }
+                  else toast(r.message || '撤回失败', 'error')
+                }
                 return (
                   <div key={m.id} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
-                    <div style={{
-                      maxWidth: '70%', padding: '10px 14px', borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                      background: isMine ? '#2563eb' : '#f1f5f9', color: isMine ? '#fff' : '#0f172a', fontSize: 14, lineHeight: 1.5, wordBreak: 'break-word'
-                    }}>
-                      {m.content}
-                      <div style={{ fontSize: 10, marginTop: 4, opacity: 0.6, textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
-                        {new Date(m.created_at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
-                        {isMine && (m.read_at ? <CheckCheck size={12} /> : <Check size={12} />)}
+                    {isRecalled ? (
+                      <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic', padding: '4px 0' }}>{isMine ? '你' : (selectedUser.nickname || selectedUser.username)}撤回了一条消息</div>
+                    ) : (
+                      <div style={{ position: 'relative', maxWidth: '70%' }}
+                        onDoubleClick={canRecall ? handleRecall : undefined}>
+                        <div style={{
+                          padding: '10px 14px', borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                          background: isMine ? '#2563eb' : '#f1f5f9', color: isMine ? '#fff' : '#0f172a', fontSize: 14, lineHeight: 1.5, wordBreak: 'break-word',
+                          cursor: canRecall ? 'pointer' : 'default'
+                        }} title={canRecall ? '双击撤回' : undefined}>
+                          {m.content}
+                          <div style={{ fontSize: 10, marginTop: 4, opacity: 0.6, textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
+                            {new Date(m.created_at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+                            {isMine && (m.read_at ? <CheckCheck size={12} /> : <Check size={12} />)}
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )
               })}

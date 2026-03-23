@@ -134,6 +134,7 @@ router.get('/dm/conversations', auth, require('../controllers/dm/conversationsCo
 router.get('/dm/users', auth, require('../controllers/dm/usersController'));
 router.get('/dm/:userId/history', auth, require('../controllers/dm/historyController'));
 router.post('/dm/send', auth, require('../controllers/dm/sendController'));
+router.patch('/dm/:id/recall', auth, require('../controllers/dm/recallController'));
 
 // Tickets (all authenticated)
 router.post('/tickets', auth, upload.array('files', 10), require('../controllers/ticket/createController'));

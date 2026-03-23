@@ -149,6 +149,10 @@ export default function OpportunityList() {
           <TrendingUp size={20} color="#16a34a" />
           <div><div style={{ fontSize: 12, color: '#94a3b8' }}>赢单金额</div><div style={{ fontSize: 18, fontWeight: 700, color: '#16a34a' }}>¥{(wonAmount / 10000).toFixed(1)}万</div></div>
         </div>
+        <div style={{ background: '#fff', borderRadius: 10, padding: '12px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <TrendingUp size={20} color="#d97706" />
+          <div><div style={{ fontSize: 12, color: '#94a3b8' }}>赢单率</div><div style={{ fontSize: 18, fontWeight: 700, color: '#d97706' }}>{items.filter(i => i.stage === 'won' || i.stage === 'lost').length > 0 ? ((items.filter(i => i.stage === 'won').length / items.filter(i => i.stage === 'won' || i.stage === 'lost').length) * 100).toFixed(0) : 0}%</div></div>
+        </div>
       </div>
 
       {loading ? (

@@ -42,7 +42,8 @@ export default function TaskBoard() {
   const [dragOverCol, setDragOverCol] = useState<string | null>(null)
   const [selectedTask, setSelectedTask] = useState<any>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [createForm, setCreateForm] = useState({ project_id: '', title: '', description: '', priority: 'medium', status: 'todo' })
+  const [createForm, setCreateForm] = useState({ project_id: '', title: '', description: '', priority: 'medium', status: 'todo', assignee_id: '', due_date: '' })
+  const [createMembers, setCreateMembers] = useState<any[]>([])
   const [createFiles, setCreateFiles] = useState<File[]>([])
   const [submitting, setSubmitting] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -76,6 +77,12 @@ export default function TaskBoard() {
     else toast(r.message || '移动失败', 'error')
   }
 
+  useEffect(() => {
+    if (createForm.project_id) {
+      fetchApi(`/api/projects/${createForm.project_id}`).then(r => { if (r.success && r.data?.members) setCreateMembers(r.data.members) })
+    } else setCreateMembers([])
+  }, [createForm.project_id])
+
   const handleCreate = async () => {
     if (!createForm.project_id) { toast('请选择项目', 'error'); return }
     if (!createForm.title.trim()) { toast('请输入任务标题', 'error'); return }
@@ -86,13 +93,15 @@ export default function TaskBoard() {
     if (createForm.description) fd.append('description', createForm.description)
     fd.append('priority', createForm.priority)
     fd.append('status', createForm.status)
+    if (createForm.assignee_id) fd.append('assignee_id', createForm.assignee_id)
+    if (createForm.due_date) fd.append('due_date', createForm.due_date)
     createFiles.forEach(f => fd.append('files', f))
     const r = await uploadFile('/api/tasks', fd)
     setSubmitting(false)
     if (r.success) {
       toast('任务已创建', 'success')
       setShowCreateModal(false)
-      setCreateForm({ project_id: '', title: '', description: '', priority: 'medium', status: 'todo' })
+      setCreateForm({ project_id: '', title: '', description: '', priority: 'medium', status: 'todo', assignee_id: '', due_date: '' })
       setCreateFiles([])
       reload()
     } else toast(r.message || '创建失败', 'error')
@@ -127,7 +136,7 @@ export default function TaskBoard() {
             <option value="low">低</option>
           </select>
           {canAddTask && (
-            <button onClick={() => { setShowCreateModal(true); setCreateForm({ project_id: projects[0]?.id ? String(projects[0].id) : '', title: '', description: '', priority: 'medium', status: 'todo' }); setCreateFiles([]) }}
+            <button onClick={() => { setShowCreateModal(true); setCreateForm({ project_id: projects[0]?.id ? String(projects[0].id) : '', title: '', description: '', priority: 'medium', status: 'todo', assignee_id: '', due_date: '' }); setCreateFiles([]) }}
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, background: '#2563eb', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>
               <Plus size={14} /> 新建任务
             </button>
@@ -215,8 +224,8 @@ export default function TaskBoard() {
             <textarea value={createForm.description} onChange={e => setCreateForm({ ...createForm, description: e.target.value })} placeholder="任务描述（可选）"
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', minHeight: 60, fontFamily: 'inherit', boxSizing: 'border-box' }} />
           </div>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <div style={{ flex: 1 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>优先级</label>
               <select value={createForm.priority} onChange={e => setCreateForm({ ...createForm, priority: e.target.value })}
                 style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
@@ -226,12 +235,27 @@ export default function TaskBoard() {
                 <option value="urgent">紧急</option>
               </select>
             </div>
-            <div style={{ flex: 1 }}>
+            <div>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>初始状态</label>
               <select value={createForm.status} onChange={e => setCreateForm({ ...createForm, status: e.target.value })}
                 style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
                 {columns.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
               </select>
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>指派人</label>
+              <select value={createForm.assignee_id} onChange={e => setCreateForm({ ...createForm, assignee_id: e.target.value })}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
+                <option value="">未指派</option>
+                {createMembers.map((m: any) => <option key={m.id} value={m.id}>{m.nickname || m.username}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>截止日期</label>
+              <input type="date" value={createForm.due_date} onChange={e => setCreateForm({ ...createForm, due_date: e.target.value })}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box' }} />
             </div>
           </div>
           <div>

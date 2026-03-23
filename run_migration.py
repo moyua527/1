@@ -1,0 +1,11 @@
+import paramiko
+ssh = paramiko.SSHClient()
+ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+ssh.connect('160.202.253.143', username='root', password='Xiao134679')
+sftp = ssh.open_sftp()
+sftp.put(r'e:\DuiJie\server\duijie\scripts\add_is_recalled.js', '/opt/duijie/server/duijie/scripts/add_is_recalled.js')
+sftp.close()
+stdin, stdout, stderr = ssh.exec_command('cd /opt/duijie/server/duijie && node scripts/add_is_recalled.js')
+print(stdout.read().decode())
+print(stderr.read().decode())
+ssh.close()
