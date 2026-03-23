@@ -76,14 +76,16 @@ module.exports = async (auth = {}) => {
   if (auth.role === 'admin') {
     taskWhere = '';
     taskParams = [];
+  } else if (auth.role === 'member' && auth.userId) {
+    taskWhere = 'AND (t.assignee_id = ? OR t.project_id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?) OR t.project_id IN (SELECT id FROM duijie_projects WHERE created_by = ?))';
+    taskParams = [auth.userId, auth.userId, auth.userId];
   } else if (auth.userId) {
-    taskWhere = 'AND (t.assignee_id = ? OR p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?))';
+    taskWhere = 'AND (t.assignee_id = ? OR t.project_id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?) OR t.project_id IN (SELECT id FROM duijie_projects WHERE created_by = ?))';
     taskParams = [auth.userId, auth.userId, auth.userId];
   }
   const [[tasks]] = await db.query(
     `SELECT COUNT(*) as total, SUM(t.status = 'todo') as pending, SUM(t.status = 'done') as done
-     FROM duijie_tasks t INNER JOIN duijie_projects p ON t.project_id = p.id
-     WHERE t.is_deleted = 0 AND p.is_deleted = 0 ${taskWhere}`, taskParams
+     FROM duijie_tasks t WHERE t.is_deleted = 0 ${taskWhere}`, taskParams
   );
 
   return {
