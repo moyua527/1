@@ -49,6 +49,8 @@ export default function LoginPage({ onLogin }: Props) {
   const [inviteLinkRole, setInviteLinkRole] = useState('')
   const [needApproval, setNeedApproval] = useState(false)
   const [countdown, setCountdown] = useState(0)
+  const [agreed, setAgreed] = useState(false)
+  const [showTerms, setShowTerms] = useState(false)
 
   useEffect(() => {
     authApi.registerConfig().then(r => { if (r.success) setNeedInvite(r.data?.needInviteCode || false) })
@@ -70,7 +72,7 @@ export default function LoginPage({ onLogin }: Props) {
     return () => clearTimeout(t)
   }, [countdown])
 
-  const resetForm = () => { setUsername(''); setPassword(''); setConfirmPwd(''); setNickname(''); setEmail(''); setPhone(''); setVerifyCode(''); setInviteCode(''); setGender(''); setUserType('individual'); setPosition(''); setProvince(''); setCity(''); setError(''); setSuccess('') }
+  const resetForm = () => { setUsername(''); setPassword(''); setConfirmPwd(''); setNickname(''); setEmail(''); setPhone(''); setVerifyCode(''); setInviteCode(''); setGender(''); setUserType('individual'); setPosition(''); setProvince(''); setCity(''); setError(''); setSuccess(''); setAgreed(false) }
 
   const cities = useMemo(() => province && areaData[province]?.children ? areaData[province].children : {}, [province])
   const provinceName = province ? areaData[province]?.name || '' : ''
@@ -329,7 +331,18 @@ export default function LoginPage({ onLogin }: Props) {
           {error && <div style={{ color: '#dc2626', fontSize: 13, textAlign: 'center', padding: '6px 0' }}>{error}</div>}
           {success && <div style={{ color: '#16a34a', fontSize: 13, textAlign: 'center', padding: '6px 0' }}>{success}</div>}
 
-          <Button type="submit" style={{ width: '100%', justifyContent: 'center', padding: '10px 0', marginTop: 4 }} disabled={loading}>
+          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: 'pointer', marginTop: 4 }}>
+            <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}
+              style={{ marginTop: 3, accentColor: '#2563eb', width: 16, height: 16, cursor: 'pointer' }} />
+            <span style={{ fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
+              我已阅读并同意{' '}
+              <span onClick={e => { e.preventDefault(); setShowTerms(true) }} style={{ color: '#2563eb', cursor: 'pointer', textDecoration: 'underline' }}>《用户服务协议》</span>
+              {' '}和{' '}
+              <span onClick={e => { e.preventDefault(); setShowTerms(true) }} style={{ color: '#2563eb', cursor: 'pointer', textDecoration: 'underline' }}>《隐私保护政策》</span>
+            </span>
+          </label>
+
+          <Button type="submit" style={{ width: '100%', justifyContent: 'center', padding: '10px 0', marginTop: 4, opacity: agreed ? 1 : 0.5 }} disabled={loading || !agreed}>
             {loading ? (mode === 'login' ? '登录中...' : '注册中...') : (mode === 'login' ? '登 录' : '注 册')}
           </Button>
         </div>
@@ -347,6 +360,36 @@ export default function LoginPage({ onLogin }: Props) {
           </div>
         )}
       </form>
+
+      {showTerms && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: 16 }}
+          onClick={() => setShowTerms(false)}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: '28px 24px', width: 520, maxWidth: '100%', maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.15)' }}
+            onClick={e => e.stopPropagation()}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', marginBottom: 16, textAlign: 'center' }}>用户服务协议与隐私保护政策</h2>
+            <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.8 }}>
+              <h3 style={{ fontSize: 15, fontWeight: 600, color: '#0f172a', margin: '16px 0 8px' }}>一、服务协议</h3>
+              <p>1. 本平台（DuiJie 对接平台）为用户提供项目管理、客户管理、任务协作、文件交付、即时通讯等服务。</p>
+              <p>2. 用户应如实填写注册信息，对账号安全负责，不得将账号转让或借于他人使用。</p>
+              <p>3. 用户不得利用本平台从事违法违规活动，不得侵犯他人合法权益。</p>
+              <p>4. 本平台有权对违反协议的用户采取限制或禁止使用等措施。</p>
+              <p>5. 本平台保留对服务协议的最终解释权和修改权。</p>
+              <h3 style={{ fontSize: 15, fontWeight: 600, color: '#0f172a', margin: '16px 0 8px' }}>二、隐私保护政策</h3>
+              <p>1. 我们收集的信息仅用于提供和改进服务，不会出售或出租您的个人信息。</p>
+              <p>2. 您的密码经过加密存储，我们采用行业标准的安全措施保护您的数据。</p>
+              <p>3. 您有权查看、修改或删除您的个人信息，可通过个人设置或联系管理员操作。</p>
+              <p>4. 我们可能会使用 Cookie 和类似技术来改善用户体验和安全性。</p>
+              <p>5. 如有任何隐私问题，请联系平台管理员。</p>
+            </div>
+            <div style={{ textAlign: 'center', marginTop: 20 }}>
+              <button onClick={() => { setShowTerms(false); setAgreed(true) }}
+                style={{ padding: '10px 40px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                我已阅读并同意
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
