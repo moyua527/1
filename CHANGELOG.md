@@ -49,3 +49,4 @@
 | v1.0.67 | 2026-03-23 | 企业自管理：注册用户可编辑企业信息+自主添加/编辑/删除企业成员(5个API端点) |
 | v1.0.68 | 2026-03-23 | 修复：express-rate-limit v7 X-Forwarded-For ValidationError导致Nginx代理API返回500，禁用xForwardedForHeader验证 |
 | v1.0.69 | 2026-03-23 | 修复：项目/任务路由roleGuard缺少client/viewer角色导致403，补全projectStaff+taskStaff权限+添加后端调试日志 |
+| v1.0.70 | 2026-03-23 | 项目详情客户名可点击跳转客户详情页，member/client/viewer/tech角色开放GET /clients/:id权限 |

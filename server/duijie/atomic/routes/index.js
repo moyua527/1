@@ -57,7 +57,7 @@ router.delete('/projects/:id/members/:userId', auth, projectEditors, require('..
 router.get('/clients/available-members', auth, salesTeam, require('../controllers/client/availableMembersController'));
 router.post('/clients', auth, salesTeam, require('../controllers/client/createController'));
 router.get('/clients', auth, roleGuard('admin', 'business'), require('../controllers/client/listController'));
-router.get('/clients/:id', auth, roleGuard('admin', 'business'), require('../controllers/client/detailController'));
+router.get('/clients/:id', auth, roleGuard('admin', 'business', 'member', 'client', 'viewer', 'tech'), require('../controllers/client/detailController'));
 router.put('/clients/:id', auth, salesTeam, require('../controllers/client/updateController'));
 router.delete('/clients/:id', auth, roleGuard('admin'), require('../controllers/client/deleteController'));
 router.post('/clients/import', auth, roleGuard('admin'), require('../controllers/client/importController'));

@@ -39,6 +39,7 @@ export default function App() {
 
   const r = user.role
   const canClients = ['admin', 'sales_manager', 'business', 'marketing', 'support'].includes(r)
+  const canViewClient = canClients || ['member', 'client', 'viewer', 'tech'].includes(r)
   const canOpportunities = ['admin', 'sales_manager', 'business'].includes(r)
   const canTasks = ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'viewer'].includes(r)
   const canReport = ['admin', 'sales_manager', 'business'].includes(r)
@@ -53,7 +54,7 @@ export default function App() {
           {canProjects && <Route path="/projects" element={<ProjectList />} />}
           {canProjects && <Route path="/projects/:id" element={<ProjectDetail />} />}
           {canClients && <Route path="/clients" element={<ClientList />} />}
-          {canClients && <Route path="/clients/:id" element={<ClientDetail />} />}
+          {canViewClient && <Route path="/clients/:id" element={<ClientDetail />} />}
           {canOpportunities && <Route path="/opportunities" element={<OpportunityList />} />}
           {canTasks && <Route path="/tasks" element={<TaskBoard />} />}
           <Route path="/enterprise" element={<Enterprise />} />
