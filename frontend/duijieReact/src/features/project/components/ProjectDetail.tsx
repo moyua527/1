@@ -481,11 +481,25 @@ export default function ProjectDetail() {
               <ExternalLink size={14} /> 新窗口打开
             </a>
           </div>
-          <div style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid #e2e8f0', background: '#fff' }}>
-            <iframe src={project.app_url} style={{ width: '100%', height: 'calc(100vh - 260px)', border: 'none', display: 'block' }}
-              sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
-              title={project.app_name || '应用'} />
-          </div>
+          {(() => {
+            try { const u = new URL(project.app_url); if (u.origin === window.location.origin) return (
+              <div style={{ borderRadius: 10, border: '1px solid #e2e8f0', background: '#f8fafc', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 300, gap: 12 }}>
+                <AppWindow size={32} color="#94a3b8" />
+                <div style={{ fontSize: 14, color: '#64748b' }}>同域应用无法在iframe中嵌入，请使用新窗口打开</div>
+                <a href={project.app_url} target="_blank" rel="noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: '#2563eb', color: '#fff', borderRadius: 8, fontSize: 14, textDecoration: 'none', fontWeight: 500 }}>
+                  <ExternalLink size={14} /> 新窗口打开
+                </a>
+              </div>
+            )} catch {}
+            return (
+              <div style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid #e2e8f0', background: '#fff' }}>
+                <iframe src={project.app_url} style={{ width: '100%', height: 'calc(100vh - 260px)', border: 'none', display: 'block' }}
+                  sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+                  title={project.app_name || '应用'} />
+              </div>
+            )
+          })()}
         </div>
       )}
 
