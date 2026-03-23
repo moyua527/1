@@ -40,11 +40,12 @@ app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 
 // 全局 API 速率限制：每 IP 每 15 分钟最多 300 次
-app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, max: 300, standardHeaders: true, legacyHeaders: false, message: { success: false, message: '请求过于频繁，请稍后再试' } }));
+const rlOpts = { validate: { xForwardedForHeader: false } };
+app.use('/api', rateLimit({ ...rlOpts, windowMs: 15 * 60 * 1000, max: 300, standardHeaders: true, legacyHeaders: false, message: { success: false, message: '请求过于频繁，请稍后再试' } }));
 
 // 登录接口严格限速：每 IP 每 15 分钟最多 10 次
-app.use('/api/auth/login', rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: { success: false, message: '登录尝试过多，请 15 分钟后再试' } }));
-app.use('/api/auth/register', rateLimit({ windowMs: 60 * 60 * 1000, max: 5, message: { success: false, message: '注册尝试过多，请 1 小时后再试' } }));
+app.use('/api/auth/login', rateLimit({ ...rlOpts, windowMs: 15 * 60 * 1000, max: 10, message: { success: false, message: '登录尝试过多，请 15 分钟后再试' } }));
+app.use('/api/auth/register', rateLimit({ ...rlOpts, windowMs: 60 * 60 * 1000, max: 5, message: { success: false, message: '注册尝试过多，请 1 小时后再试' } }));
 
 // Bot/爬虫检测
 app.use('/api', require('./atomic/middleware/antiBot'));

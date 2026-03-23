@@ -47,7 +47,12 @@ export default function ProjectList() {
   const role = user?.role
   const canCreate = role === 'admin'
 
-  const load = () => { setLoading(true); projectApi.list().then(r => { if (r.success) setProjects(r.data?.rows || []) }).finally(() => setLoading(false)) }
+  const load = () => {
+    setLoading(true)
+    projectApi.list({ _t: String(Date.now()) }).then(r => {
+      if (r.success) setProjects(r.data?.rows || [])
+    }).catch(() => {}).finally(() => setLoading(false))
+  }
   useEffect(() => {
     load()
     if (canCreate) {

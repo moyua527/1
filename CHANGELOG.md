@@ -47,3 +47,4 @@
 | v1.0.65 | 2026-03-23 | 企业管理模块：member/client角色侧栏新增「企业管理」，显示关联企业信息+组织成员列表(GET /api/my-enterprise) |
 | v1.0.66 | 2026-03-23 | 优化：项目列表页非admin角色不再调用clientApi/teamUsers避免403错误 |
 | v1.0.67 | 2026-03-23 | 企业自管理：注册用户可编辑企业信息+自主添加/编辑/删除企业成员(5个API端点) |
+| v1.0.68 | 2026-03-23 | 修复：express-rate-limit v7 X-Forwarded-For ValidationError导致Nginx代理API返回500，禁用xForwardedForHeader验证 |
