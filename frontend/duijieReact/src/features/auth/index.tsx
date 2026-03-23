@@ -90,7 +90,7 @@ export default function LoginPage({ onLogin }: Props) {
     if (regMethod === 'phone' && !/^\d{11}$/.test(target)) { setError('请输入正确的11位手机号'); return }
     if (regMethod === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)) { setError('请输入正确的邮箱'); return }
     const res = await authApi.sendCode(type, target)
-    if (res.success) { setCountdown(60); setSuccess('验证码已发送'); setTimeout(() => setSuccess(''), 3000) }
+    if (res.success) { setCountdown(60); setSuccess(res._dev_code ? `验证码: ${res._dev_code}（测试模式）` : '验证码已发送'); if (res._dev_code) setVerifyCode(res._dev_code); setTimeout(() => setSuccess(''), 8000) }
     else setError(res.message || '发送失败')
   }
 
@@ -117,7 +117,7 @@ export default function LoginPage({ onLogin }: Props) {
     if (loginMethod === 'phone' && !/^\d{11}$/.test(target)) { setError('请输入正确的11位手机号'); return }
     if (loginMethod === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)) { setError('请输入正确的邮箱'); return }
     const res = await authApi.sendCode(type, target)
-    if (res.success) { setCountdown(60); setSuccess('验证码已发送'); setTimeout(() => setSuccess(''), 3000) }
+    if (res.success) { setCountdown(60); setSuccess(res._dev_code ? `验证码: ${res._dev_code}（测试模式）` : '验证码已发送'); if (res._dev_code) setVerifyCode(res._dev_code); setTimeout(() => setSuccess(''), 8000) }
     else setError(res.message || '发送失败')
   }
 

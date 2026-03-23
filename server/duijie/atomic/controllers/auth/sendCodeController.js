@@ -35,10 +35,10 @@ module.exports = async (req, res) => {
     );
 
     // TODO: integrate actual SMS/email sending service
-    // For now, log to console (visible in PM2 logs)
     console.log(`[验证码] ${type === 'phone' ? '手机' : '邮箱'}: ${target} -> ${code}`);
 
-    res.json({ success: true, message: '验证码已发送' });
+    // 临时测试模式：将验证码返回前端（上线前需删除 _dev_code 字段）
+    res.json({ success: true, message: '验证码已发送', _dev_code: code });
   } catch (e) {
     console.error('[sendCode error]', e);
     res.status(500).json({ success: false, message: e.message });
