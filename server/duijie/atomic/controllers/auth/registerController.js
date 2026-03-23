@@ -5,7 +5,7 @@ const generateInviteCode = require('../../utils/generateInviteCode');
 
 module.exports = async (req, res) => {
   try {
-    const { username, password, nickname, email, phone, invite_code, invite_token, gender, area_code, user_type, province, city, position } = req.body;
+    const { username, password, nickname, email, phone, invite_code, invite_token, gender, area_code, user_type, province, city, position, verify_code, company_name } = req.body;
     if (!username || !password) return res.status(400).json({ success: false, message: '用户名和密码不能为空' });
     if (password.length < 6) return res.status(400).json({ success: false, message: '密码至少6个字符' });
     if (!email && !phone) return res.status(400).json({ success: false, message: '邮箱和手机号至少填写一项' });
@@ -13,6 +13,18 @@ module.exports = async (req, res) => {
     if (!nickname || !nickname.trim()) return res.status(400).json({ success: false, message: '请输入昵称' });
     if (!gender || ![1, 2].includes(Number(gender))) return res.status(400).json({ success: false, message: '请选择性别' });
     if (!province || !city) return res.status(400).json({ success: false, message: '请选择省份和城市' });
+
+    // 验证码校验
+    if (verify_code) {
+      const vcType = phone ? 'phone' : 'email';
+      const vcTarget = phone || email;
+      const [vcRows] = await db.query(
+        'SELECT id FROM verification_codes WHERE type = ? AND target = ? AND code = ? AND expires_at > NOW() AND used = 0 ORDER BY created_at DESC LIMIT 1',
+        [vcType, vcTarget, verify_code]
+      );
+      if (vcRows.length === 0) return res.status(400).json({ success: false, message: '验证码无效或已过期，请重新验证' });
+      await db.query('UPDATE verification_codes SET used = 1 WHERE id = ?', [vcRows[0].id]);
+    }
     const safeAreaCode = area_code && /^\d{6}$/.test(area_code) ? area_code : '000000';
 
     let inviterId = null;
@@ -67,16 +79,16 @@ module.exports = async (req, res) => {
     const displayId = await generateDisplayId(safeAreaCode, Number(gender));
     const personalCode = await generateInviteCode();
     const [result] = await db.query(
-      'INSERT INTO voice_users (username, password, nickname, email, phone, role, gender, area_code, user_type, province, city, position, display_id, personal_invite_code, invited_by, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [username.trim(), await bcrypt.hash(password, 10), displayName, email || null, phone || null, assignedRole, Number(gender), safeAreaCode, user_type || 'individual', province || null, city || null, position || null, displayId, personalCode, inviterId, isActive]
+      'INSERT INTO voice_users (username, password, nickname, email, phone, role, gender, area_code, user_type, province, city, position, company_name, display_id, personal_invite_code, invited_by, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [username.trim(), await bcrypt.hash(password, 10), displayName, email || null, phone || null, assignedRole, Number(gender), safeAreaCode, user_type || 'individual', province || null, city || null, position || null, company_name || null, displayId, personalCode, inviterId, isActive]
     );
     const newUserId = result.insertId;
 
     // 个人邀请码注册 → 自动添加为邀请人的客户
     if (regChannel === '个人邀请码' && inviterId) {
       await db.query(
-        'INSERT INTO duijie_clients (user_id, name, email, phone, channel, stage, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [newUserId, displayName, email || null, phone || null, '邀请注册', 'potential', inviterId]
+        'INSERT INTO duijie_clients (user_id, name, company, email, phone, channel, stage, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [newUserId, displayName, company_name || null, email || null, phone || null, '邀请注册', 'potential', inviterId]
       );
     }
 

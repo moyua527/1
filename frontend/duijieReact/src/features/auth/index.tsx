@@ -3,7 +3,7 @@ import { authApi } from './services/api'
 import { setToken, fetchApi } from '../../bootstrap'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
-import { Lock, Mail, Phone, Link2, Clock } from 'lucide-react'
+import { Lock, Mail, Phone, Link2, Clock, ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react'
 import { areaData } from '../../data/areaCode'
 
 interface Props { onLogin: (user: any) => void }
@@ -51,6 +51,9 @@ export default function LoginPage({ onLogin }: Props) {
   const [countdown, setCountdown] = useState(0)
   const [agreed, setAgreed] = useState(false)
   const [showTerms, setShowTerms] = useState(false)
+  const [regStep, setRegStep] = useState(1)
+  const [companyName, setCompanyName] = useState('')
+  const [verifying, setVerifying] = useState(false)
 
   useEffect(() => {
     authApi.registerConfig().then(r => { if (r.success) setNeedInvite(r.data?.needInviteCode || false) })
@@ -72,13 +75,40 @@ export default function LoginPage({ onLogin }: Props) {
     return () => clearTimeout(t)
   }, [countdown])
 
-  const resetForm = () => { setUsername(''); setPassword(''); setConfirmPwd(''); setNickname(''); setEmail(''); setPhone(''); setVerifyCode(''); setInviteCode(''); setGender(''); setUserType('individual'); setPosition(''); setProvince(''); setCity(''); setError(''); setSuccess(''); setAgreed(false) }
+  const resetForm = () => { setUsername(''); setPassword(''); setConfirmPwd(''); setNickname(''); setEmail(''); setPhone(''); setVerifyCode(''); setInviteCode(''); setGender(''); setUserType('individual'); setPosition(''); setProvince(''); setCity(''); setError(''); setSuccess(''); setAgreed(false); setRegStep(1); setCompanyName(''); setVerifying(false) }
 
   const cities = useMemo(() => province && areaData[province]?.children ? areaData[province].children : {}, [province])
   const provinceName = province ? areaData[province]?.name || '' : ''
   const cityName = city ? cities[city]?.name || '' : ''
   const areaCode = province && city ? province + city + '01' : ''
   const switchMode = (m: 'login' | 'register') => { setMode(m); resetForm(); setLoginMethod('password'); setRegMethod('phone') }
+
+  const handleRegSendCode = async () => {
+    setError('')
+    const type = regMethod
+    const target = regMethod === 'phone' ? phone : email
+    if (regMethod === 'phone' && !/^\d{11}$/.test(target)) { setError('请输入正确的11位手机号'); return }
+    if (regMethod === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)) { setError('请输入正确的邮箱'); return }
+    const res = await authApi.sendCode(type, target)
+    if (res.success) { setCountdown(60); setSuccess('验证码已发送'); setTimeout(() => setSuccess(''), 3000) }
+    else setError(res.message || '发送失败')
+  }
+
+  const handleRegNext = async () => {
+    setError('')
+    const type = regMethod
+    const target = regMethod === 'phone' ? phone : email
+    if (regMethod === 'phone' && !/^\d{11}$/.test(target)) { setError('请输入正确的11位手机号'); return }
+    if (regMethod === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)) { setError('请输入正确的邮箱'); return }
+    if (!verifyCode || verifyCode.length < 4) { setError('请输入验证码'); return }
+    setVerifying(true)
+    try {
+      const res = await authApi.verifyCode(type, target, verifyCode)
+      if (res.success) { setRegStep(2); setError('') }
+      else setError(res.message || '验证码无效')
+    } catch { setError('网络错误') }
+    setVerifying(false)
+  }
 
   const handleSendCode = async () => {
     setError('')
@@ -115,15 +145,9 @@ export default function LoginPage({ onLogin }: Props) {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(''); setSuccess('')
-    if (regMethod === 'phone') {
-      if (!phone.trim() || !/^\d{11}$/.test(phone.trim())) { setError('请输入正确的11位手机号'); return }
-    } else {
-      if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setError('请输入正确的邮箱地址'); return }
-    }
     if (!nickname.trim()) { setError('请输入昵称'); return }
     if (!gender) { setError('请选择性别'); return }
     if (!province || !city) { setError('请选择省份和城市'); return }
-    if (userType === 'company' && !position.trim()) { setError('企业用户请填写职位'); return }
     if (!password || password.length < 6) { setError('密码至少6个字符'); return }
     if (password !== confirmPwd) { setError('两次密码不一致'); return }
     if (!inviteToken && !inviteCode.trim()) { setError('请输入邀请码'); return }
@@ -135,10 +159,13 @@ export default function LoginPage({ onLogin }: Props) {
         email: regMethod === 'email' ? email.trim() : undefined,
         phone: regMethod === 'phone' ? phone.trim() : undefined,
         gender: Number(gender), area_code: areaCode,
-        user_type: userType, province: provinceName, city: cityName,
-        position: userType === 'company' ? position.trim() : undefined,
+        user_type: companyName.trim() ? 'company' : 'individual',
+        province: provinceName, city: cityName,
+        position: position.trim() || undefined,
+        company_name: companyName.trim() || undefined,
         invite_code: inviteToken ? undefined : (inviteCode.trim() || undefined),
         invite_token: inviteToken || undefined,
+        verify_code: verifyCode || undefined,
       })
       if (res.success) {
         if (res.needApproval) {
@@ -199,16 +226,31 @@ export default function LoginPage({ onLogin }: Props) {
           </div>
         )}
 
-        {mode === 'register' && (
+        {mode === 'register' && regStep === 1 && (
           <div style={{ display: 'flex', gap: 0, marginBottom: 16, borderBottom: '1px solid #e2e8f0' }}>
             {([{ key: 'phone' as const, label: '手机号注册', icon: <Phone size={14} /> }, { key: 'email' as const, label: '邮箱注册', icon: <Mail size={14} /> }]).map(m => (
-              <button key={m.key} type="button" onClick={() => { setRegMethod(m.key); setError('') }}
+              <button key={m.key} type="button" onClick={() => { setRegMethod(m.key); setError(''); setVerifyCode('') }}
                 style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '8px 0', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500,
                   color: regMethod === m.key ? '#2563eb' : '#94a3b8', background: 'transparent',
                   borderBottom: regMethod === m.key ? '2px solid #2563eb' : '2px solid transparent', transition: 'all 0.15s' }}>
                 {m.icon} {m.label}
               </button>
             ))}
+          </div>
+        )}
+
+        {mode === 'register' && regStep === 2 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, padding: '8px 0' }}>
+            <button type="button" onClick={() => { setRegStep(1); setError('') }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2563eb', display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 500, padding: 0 }}>
+              <ArrowLeft size={16} /> 返回
+            </button>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
+              <CheckCircle size={16} color="#16a34a" />
+              <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 500 }}>
+                {regMethod === 'phone' ? phone : email} 已验证
+              </span>
+            </div>
           </div>
         )}
 
@@ -256,7 +298,7 @@ export default function LoginPage({ onLogin }: Props) {
             </>
           )}
 
-          {mode === 'register' && (
+          {mode === 'register' && regStep === 1 && (
             <>
               {regMethod === 'phone' && (
                 <Input label="手机号 *" placeholder="输入11位手机号" value={phone} onChange={e => setPhone(e.target.value)} />
@@ -264,33 +306,36 @@ export default function LoginPage({ onLogin }: Props) {
               {regMethod === 'email' && (
                 <Input label="邮箱 *" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} />
               )}
-              <Input label="昵称 *" placeholder="输入你的昵称" value={nickname} onChange={e => setNickname(e.target.value)} />
-              <div style={{ display: 'flex', gap: 12 }}>
-                <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>性别 *</label>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    {[{ v: '1', l: '男' }, { v: '2', l: '女' }].map(g => (
-                      <button key={g.v} type="button" onClick={() => setGender(g.v)} style={pillStyle(gender === g.v)}>
-                        {g.l}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>类型 *</label>
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    <button type="button" onClick={() => { setUserType('individual'); setPosition('') }} style={pillStyle(userType === 'individual')}>
-                      个人
-                    </button>
-                    <button type="button" onClick={() => setUserType('company')} style={pillStyle(userType === 'company')}>
-                      企业
-                    </button>
-                  </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#475569', marginBottom: 4 }}>验证码 *</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input placeholder="输入6位验证码" value={verifyCode} onChange={e => setVerifyCode(e.target.value)} maxLength={6}
+                    style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                    onFocus={e => (e.currentTarget.style.borderColor = '#2563eb')} onBlur={e => (e.currentTarget.style.borderColor = '#cbd5e1')} />
+                  <button type="button" disabled={countdown > 0} onClick={handleRegSendCode}
+                    style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: countdown > 0 ? '#e2e8f0' : '#2563eb', color: countdown > 0 ? '#94a3b8' : '#fff', fontSize: 13, fontWeight: 500, cursor: countdown > 0 ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
+                    {countdown > 0 ? `${countdown}s` : '获取验证码'}
+                  </button>
                 </div>
               </div>
-              {userType === 'company' && (
-                <Input label="职位 *" placeholder="如：产品经理、技术总监" value={position} onChange={e => setPosition(e.target.value)} />
-              )}
+            </>
+          )}
+
+          {mode === 'register' && regStep === 2 && (
+            <>
+              <Input label="昵称 *" placeholder="输入你的昵称" value={nickname} onChange={e => setNickname(e.target.value)} />
+              <div>
+                <label style={labelStyle}>性别 *</label>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {[{ v: '1', l: '男' }, { v: '2', l: '女' }].map(g => (
+                    <button key={g.v} type="button" onClick={() => setGender(g.v)} style={pillStyle(gender === g.v)}>
+                      {g.l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <Input label="企业名称" placeholder="没有可不填" value={companyName} onChange={e => setCompanyName(e.target.value)} />
+              <Input label="企业职位" placeholder="如：产品经理、技术总监" value={position} onChange={e => setPosition(e.target.value)} />
               <div>
                 <label style={labelStyle}>所在地 *</label>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -331,20 +376,30 @@ export default function LoginPage({ onLogin }: Props) {
           {error && <div style={{ color: '#dc2626', fontSize: 13, textAlign: 'center', padding: '6px 0' }}>{error}</div>}
           {success && <div style={{ color: '#16a34a', fontSize: 13, textAlign: 'center', padding: '6px 0' }}>{success}</div>}
 
-          <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: 'pointer', marginTop: 4 }}>
-            <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}
-              style={{ marginTop: 3, accentColor: '#2563eb', width: 16, height: 16, cursor: 'pointer' }} />
-            <span style={{ fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
-              我已阅读并同意{' '}
-              <span onClick={e => { e.preventDefault(); setShowTerms(true) }} style={{ color: '#2563eb', cursor: 'pointer', textDecoration: 'underline' }}>《用户服务协议》</span>
-              {' '}和{' '}
-              <span onClick={e => { e.preventDefault(); setShowTerms(true) }} style={{ color: '#2563eb', cursor: 'pointer', textDecoration: 'underline' }}>《隐私保护政策》</span>
-            </span>
-          </label>
+          {(mode === 'login' || (mode === 'register' && regStep === 2)) && (
+            <>
+              <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: 'pointer', marginTop: 4 }}>
+                <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}
+                  style={{ marginTop: 3, accentColor: '#2563eb', width: 16, height: 16, cursor: 'pointer' }} />
+                <span style={{ fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
+                  我已阅读并同意{' '}
+                  <span onClick={e => { e.preventDefault(); setShowTerms(true) }} style={{ color: '#2563eb', cursor: 'pointer', textDecoration: 'underline' }}>《用户服务协议》</span>
+                  {' '}和{' '}
+                  <span onClick={e => { e.preventDefault(); setShowTerms(true) }} style={{ color: '#2563eb', cursor: 'pointer', textDecoration: 'underline' }}>《隐私保护政策》</span>
+                </span>
+              </label>
 
-          <Button type="submit" style={{ width: '100%', justifyContent: 'center', padding: '10px 0', marginTop: 4, opacity: agreed ? 1 : 0.5 }} disabled={loading || !agreed}>
-            {loading ? (mode === 'login' ? '登录中...' : '注册中...') : (mode === 'login' ? '登 录' : '注 册')}
-          </Button>
+              <Button type="submit" style={{ width: '100%', justifyContent: 'center', padding: '10px 0', marginTop: 4, opacity: agreed ? 1 : 0.5 }} disabled={loading || !agreed}>
+                {loading ? (mode === 'login' ? '登录中...' : '注册中...') : (mode === 'login' ? '登 录' : '注 册')}
+              </Button>
+            </>
+          )}
+
+          {mode === 'register' && regStep === 1 && (
+            <Button type="button" onClick={handleRegNext} style={{ width: '100%', justifyContent: 'center', padding: '10px 0', marginTop: 4 }} disabled={verifying}>
+              {verifying ? '验证中...' : <>下一步 <ArrowRight size={16} /></>}
+            </Button>
+          )}
         </div>
 
         {mode === 'register' && needApproval && (
