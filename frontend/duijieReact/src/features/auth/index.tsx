@@ -335,7 +335,9 @@ export default function LoginPage({ onLogin }: Props) {
                 </div>
               </div>
               <Input label="企业名称" placeholder="没有可不填" value={companyName} onChange={e => setCompanyName(e.target.value)} />
-              <Input label="企业职位" placeholder="如：产品经理、技术总监" value={position} onChange={e => setPosition(e.target.value)} />
+              {companyName.trim() && (
+                <Input label="企业职位" placeholder="如：产品经理、技术总监" value={position} onChange={e => setPosition(e.target.value)} />
+              )}
               <div>
                 <label style={labelStyle}>所在地 *</label>
                 <div style={{ display: 'flex', gap: 8 }}>

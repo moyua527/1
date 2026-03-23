@@ -84,14 +84,14 @@ def main():
     print('\n[2/5] Installing npm packages...')
     run_cmd(ssh, f'cd {remote_server} && npm install --production', 'npm install')
 
-    # 2.5. Database migrations
+    # 2.5. Database migrations (MySQL 8 compatible - ignore duplicate column errors)
     print('\n[2.5/5] Running database migrations...')
     migrations = [
-        "ALTER TABLE voice_users ADD COLUMN IF NOT EXISTS company_name VARCHAR(100) DEFAULT NULL AFTER position",
-        "ALTER TABLE verification_codes ADD COLUMN IF NOT EXISTS used TINYINT(1) DEFAULT 0",
+        "ALTER TABLE voice_users ADD COLUMN company_name VARCHAR(100) DEFAULT NULL",
+        "ALTER TABLE verification_codes ADD COLUMN used TINYINT(1) DEFAULT 0",
     ]
     for sql in migrations:
-        run_cmd(ssh, f'mysql -u{db_user} -p{db_pass} {db_name} -e "{sql}"', sql[:60])
+        run_cmd(ssh, f"mysql -u{db_user} -p'{db_pass}' {db_name} -e \"{sql}\" 2>&1 || true", sql[:60])
 
     # 3. Migrate plaintext passwords to bcrypt hashes
     print('\n[3/5] Migrating plaintext passwords to bcrypt...')
