@@ -45,3 +45,4 @@
 | v1.0.63 | 2026-03-23 | 修复：个人邀请码注册改为member角色+补全9种角色导航/路由权限+iframe移除allow-same-origin防止session共享 |
 | v1.0.64 | 2026-03-23 | 修复iframe应用Tab：同域URL显示提示+新窗口打开按钮，跨域URL恢复allow-same-origin正常嵌入 |
 | v1.0.65 | 2026-03-23 | 企业管理模块：member/client角色侧栏新增「企业管理」，显示关联企业信息+组织成员列表(GET /api/my-enterprise) |
+| v1.0.66 | 2026-03-23 | 优化：项目列表页非admin角色不再调用clientApi/teamUsers避免403错误 |

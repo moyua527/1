@@ -50,8 +50,10 @@ export default function ProjectList() {
   const load = () => { setLoading(true); projectApi.list().then(r => { if (r.success) setProjects(r.data?.rows || []) }).finally(() => setLoading(false)) }
   useEffect(() => {
     load()
-    clientApi.list().then(r => { if (r.success) setAllClients(r.data || []) })
-    projectApi.teamUsers().then(r => { if (r.success) setTeamUsers(r.data || []) })
+    if (canCreate) {
+      clientApi.list().then(r => { if (r.success) setAllClients(r.data || []) })
+      projectApi.teamUsers().then(r => { if (r.success) setTeamUsers(r.data || []) })
+    }
   }, [])
 
   const filtered = projects.filter(p => {
