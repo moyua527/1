@@ -3,6 +3,7 @@
 
 CREATE TABLE IF NOT EXISTS duijie_clients (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  client_type VARCHAR(20) DEFAULT 'company' COMMENT '客户类型: company/individual',
   name VARCHAR(100) NOT NULL COMMENT '客户名称',
   company VARCHAR(200) COMMENT '公司名称',
   email VARCHAR(200) COMMENT '邮箱',

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Tag, Building, Mail, Phone, FileText, Clock, MoreVertical, Settings, History, Trash2, MessageSquare, Plus, PhoneCall, Send, MapPin, AtSign, HelpCircle, UserPlus, Users, Star, Edit3, X, FileSignature, DollarSign, Zap, Sparkles, Loader2 } from 'lucide-react'
+import { ArrowLeft, Tag, Building, Mail, Phone, FileText, Clock, MoreVertical, Settings, History, Trash2, MessageSquare, Plus, PhoneCall, Send, MapPin, AtSign, HelpCircle, UserPlus, Users, Star, Edit3, X, FileSignature, DollarSign, Zap, Sparkles, Loader2, Building2, UserCircle } from 'lucide-react'
 import { clientApi } from '../services/api'
 import Avatar from '../../ui/Avatar'
 import Modal from '../../ui/Modal'
@@ -40,7 +40,7 @@ export default function ClientDetail() {
   const [editOpen, setEditOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [logs, setLogs] = useState<any[]>([])
-  const [form, setForm] = useState({ name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', notes: '', position_level: '', department: '', job_function: '', assigned_to: '' })
+  const [form, setForm] = useState({ client_type: 'company', name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', notes: '', position_level: '', department: '', job_function: '', assigned_to: '' })
   const [saving, setSaving] = useState(false)
   const [editErrors, setEditErrors] = useState<Record<string, string>>({})
   const menuRef = useRef<HTMLDivElement>(null)
@@ -88,7 +88,7 @@ export default function ClientDetail() {
   }, [])
 
   const openEdit = () => {
-    setForm({ name: client.name || '', company: client.company || '', email: client.email || '', phone: client.phone || '', channel: client.channel || '', stage: client.stage || 'potential', notes: client.notes || '', position_level: client.position_level || '', department: client.department || '', job_function: client.job_function || '', assigned_to: client.assigned_to ? String(client.assigned_to) : '' })
+    setForm({ client_type: client.client_type || 'company', name: client.name || '', company: client.company || '', email: client.email || '', phone: client.phone || '', channel: client.channel || '', stage: client.stage || 'potential', notes: client.notes || '', position_level: client.position_level || '', department: client.department || '', job_function: client.job_function || '', assigned_to: client.assigned_to ? String(client.assigned_to) : '' })
     clientApi.availableMembers().then(r => { if (r.success) setStaffMembers((r.data || []).filter((u: any) => ['admin', 'business', 'tech'].includes(u.role))) })
     setEditOpen(true); setMenuOpen(false)
   }
@@ -104,7 +104,7 @@ export default function ClientDetail() {
     const e: Record<string, string> = {}
     if (!form.channel) e.channel = '请选择渠道'
     if (!form.name.trim()) e.name = '请输入客户名称'
-    if (!form.company.trim()) e.company = '请输入公司名称'
+    if (form.client_type === 'company' && !form.company.trim()) e.company = '请输入公司名称'
     if (!form.email.trim()) e.email = '请输入邮箱'
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) e.email = '邮箱格式不正确'
     if (!form.phone.trim()) e.phone = '请输入电话'
@@ -300,6 +300,7 @@ export default function ClientDetail() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 12, color: '#94a3b8', fontFamily: 'monospace', background: '#f1f5f9', padding: '1px 6px', borderRadius: 4 }}>#{client.id}</span>
               <span style={{ fontSize: 20, fontWeight: 700, color: '#0f172a' }}>{client.name}</span>
+              <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: client.client_type === 'individual' ? '#fef3c7' : '#dbeafe', color: client.client_type === 'individual' ? '#92400e' : '#1e40af', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{client.client_type === 'individual' ? <><UserCircle size={12} /> 个人</> : <><Building2 size={12} /> 企业</>}</span>
               {(() => { const s = stageMap[client.stage || 'potential'] || stageMap.potential; return <span style={{ fontSize: 12, padding: '2px 10px', borderRadius: 10, background: s.bg, color: s.color, fontWeight: 500 }}>{s.label}</span> })()}
             </div>
             {client.company && <div style={{ fontSize: 14, color: '#64748b' }}>{client.company}</div>}
@@ -545,6 +546,19 @@ export default function ClientDetail() {
         {(() => { const ee = editErrors; const es: React.CSSProperties = { fontSize: 12, color: '#dc2626', marginTop: 4 }; const clr = (k: string) => setEditErrors(prev => { const n = { ...prev }; delete n[k]; return n }); return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>客户类型</label>
+            <div style={{ display: 'flex', gap: 0, background: '#f1f5f9', borderRadius: 8, padding: 3 }}>
+              {[{ key: 'company', label: '企业客户', icon: Building2 }, { key: 'individual', label: '个人客户', icon: UserCircle }].map(t => (
+                <button key={t.key} type="button" onClick={() => setForm({ ...form, client_type: t.key, company: t.key === 'individual' ? '' : form.company })}
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500,
+                    background: form.client_type === t.key ? '#fff' : 'transparent', color: form.client_type === t.key ? '#0f172a' : '#64748b',
+                    boxShadow: form.client_type === t.key ? '0 1px 3px rgba(0,0,0,0.08)' : 'none', transition: 'all 0.15s' }}>
+                  <t.icon size={14} /> {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>渠道 <span style={{ color: '#dc2626' }}>*</span></label>
             <select value={form.channel} onChange={e => { setForm({ ...form, channel: e.target.value }); clr('channel') }}
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${ee.channel ? '#dc2626' : '#cbd5e1'}`, fontSize: 14, outline: 'none', background: '#fff' }}>
@@ -564,10 +578,10 @@ export default function ClientDetail() {
             <Input label="客户名称 *" value={form.name} onChange={e => { setForm({ ...form, name: e.target.value }); clr('name') }} />
             {ee.name && <div style={es}>{ee.name}</div>}
           </div>
-          <div>
+          {form.client_type === 'company' && <div>
             <Input label="公司 *" value={form.company} onChange={e => { setForm({ ...form, company: e.target.value }); clr('company') }} />
             {ee.company && <div style={es}>{ee.company}</div>}
-          </div>
+          </div>}
           <div>
             <Input label="邮箱 *" placeholder="name@example.com" value={form.email} onChange={e => { setForm({ ...form, email: e.target.value }); clr('email') }} />
             {ee.email && <div style={es}>{ee.email}</div>}

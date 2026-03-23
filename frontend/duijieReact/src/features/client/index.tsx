@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
-import { Plus, Users, Loader2, Search, Download, Zap, Upload } from 'lucide-react'
+import { Plus, Users, Loader2, Search, Download, Zap, Upload, Building2, UserCircle } from 'lucide-react'
 import { clientApi } from './services/api'
 import Button from '../ui/Button'
 import Avatar from '../ui/Avatar'
@@ -28,7 +28,7 @@ export default function ClientList() {
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [form, setForm] = useState({ user_id: '', name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', position_level: '', department: '', job_function: '', assigned_to: '' })
+  const [form, setForm] = useState({ user_id: '', client_type: 'company', name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', position_level: '', department: '', job_function: '', assigned_to: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [availableMembers, setAvailableMembers] = useState<any[]>([])
   const [searchParams, setSearchParams] = useSearchParams()
@@ -82,7 +82,7 @@ export default function ClientList() {
     setSubmitting(true)
     const r = await clientApi.create({ ...form, user_id: Number(form.user_id) })
     setSubmitting(false)
-    if (r.success) { toast('客户添加成功', 'success'); setShowCreate(false); setForm({ user_id: '', name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', position_level: '', department: '', job_function: '', assigned_to: '' }); setErrors({}); load() }
+    if (r.success) { toast('客户添加成功', 'success'); setShowCreate(false); setForm({ user_id: '', client_type: 'company', name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', position_level: '', department: '', job_function: '', assigned_to: '' }); setErrors({}); load() }
     else toast(r.message || '添加失败', 'error')
   }
 
@@ -160,9 +160,10 @@ export default function ClientList() {
                 onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)')}>
                 <Avatar name={c.name} size={44} />
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>#{c.id}</span>
                     <span style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>{c.name}</span>
+                    <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 8, background: c.client_type === 'individual' ? '#fef3c7' : '#dbeafe', color: c.client_type === 'individual' ? '#92400e' : '#1e40af', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 2 }}>{c.client_type === 'individual' ? '个人' : '企业'}</span>
                     <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 10, background: s.bg, color: s.color, fontWeight: 500 }}>{s.label}</span>
                   </div>
                   {c.company && <div style={{ fontSize: 13, color: '#64748b' }}>{c.company}</div>}
@@ -253,7 +254,20 @@ export default function ClientList() {
             <Input label="邮箱" placeholder="自动填充" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
             <Input label="电话" placeholder="自动填充" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
           </div>
-          <Input label="公司" placeholder="公司名称（选填）" value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} />
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>客户类型</label>
+            <div style={{ display: 'flex', gap: 0, background: '#f1f5f9', borderRadius: 8, padding: 3 }}>
+              {[{ key: 'company', label: '企业客户', icon: Building2 }, { key: 'individual', label: '个人客户', icon: UserCircle }].map(t => (
+                <button key={t.key} type="button" onClick={() => setForm({ ...form, client_type: t.key, company: t.key === 'individual' ? '' : form.company })}
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500,
+                    background: form.client_type === t.key ? '#fff' : 'transparent', color: form.client_type === t.key ? '#0f172a' : '#64748b',
+                    boxShadow: form.client_type === t.key ? '0 1px 3px rgba(0,0,0,0.08)' : 'none', transition: 'all 0.15s' }}>
+                  <t.icon size={14} /> {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {form.client_type === 'company' && <Input label="公司名称" placeholder="输入公司名称" value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} />}
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>渠道 <span style={{ color: '#dc2626' }}>*</span></label>
             <select value={form.channel} onChange={e => { setForm({ ...form, channel: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.channel; return n }) }}
