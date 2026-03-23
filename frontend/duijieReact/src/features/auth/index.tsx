@@ -123,6 +123,7 @@ export default function LoginPage({ onLogin }: Props) {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!agreed) { setError('请先勾选同意《用户服务协议》和《隐私保护政策》'); return }
     setError(''); setLoading(true)
     try {
       if (loginMethod === 'password') {
@@ -144,6 +145,7 @@ export default function LoginPage({ onLogin }: Props) {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!agreed) { setError('请先勾选同意《用户服务协议》和《隐私保护政策》'); return }
     setError(''); setSuccess('')
     if (!nickname.trim()) { setError('请输入昵称'); return }
     if (!gender) { setError('请选择性别'); return }
@@ -391,7 +393,7 @@ export default function LoginPage({ onLogin }: Props) {
                 </span>
               </label>
 
-              <Button type="submit" style={{ width: '100%', justifyContent: 'center', padding: '10px 0', marginTop: 4, opacity: agreed ? 1 : 0.5 }} disabled={loading || !agreed}>
+              <Button type="submit" style={{ width: '100%', justifyContent: 'center', padding: '10px 0', marginTop: 4 }} disabled={loading}>
                 {loading ? (mode === 'login' ? '登录中...' : '注册中...') : (mode === 'login' ? '登 录' : '注 册')}
               </Button>
             </>
