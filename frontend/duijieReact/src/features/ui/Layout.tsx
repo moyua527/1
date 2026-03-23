@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield, Settings, Copy, TrendingUp, MessageSquare, ScrollText, FileText } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield, Settings, Copy, TrendingUp, MessageSquare, ScrollText, FileText, Edit2 } from 'lucide-react'
 import { fetchApi, clearToken } from '../../bootstrap'
 import Avatar from './Avatar'
 import Modal from './Modal'
@@ -50,6 +50,7 @@ export default function Layout() {
   const [collapsed, setCollapsed] = useState(true)
   const [user, setUser] = useState<any>(() => { try { const s = localStorage.getItem('cached_user'); return s ? JSON.parse(s) : null } catch { return null } })
   const [profileOpen, setProfileOpen] = useState(false)
+  const [profileEditing, setProfileEditing] = useState(false)
   const [profileForm, setProfileForm] = useState({ nickname: '', email: '', phone: '', password: '', confirmPassword: '' })
   const [profileSaving, setProfileSaving] = useState(false)
   const location = useLocation()
@@ -62,8 +63,13 @@ export default function Layout() {
   useEffect(() => { fetchApi('/api/auth/me').then(r => { if (r.success) { setUser(r.data); try { localStorage.setItem('cached_user', JSON.stringify(r.data)) } catch {} } }) }, [])
 
   const openProfile = () => {
-    if (user) setProfileForm({ nickname: user.nickname || '', email: user.email || '', phone: user.phone || '', password: '', confirmPassword: '' })
+    setProfileEditing(false)
     setProfileOpen(true)
+  }
+
+  const startEditing = () => {
+    if (user) setProfileForm({ nickname: user.nickname || '', email: user.email || '', phone: user.phone || '', password: '', confirmPassword: '' })
+    setProfileEditing(true)
   }
 
   const handleProfileSave = async () => {
@@ -112,7 +118,7 @@ export default function Layout() {
       {user && (
         <div style={s.userArea}>
           <div onClick={openProfile} style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0, cursor: 'pointer' }}
-            title="点击编辑个人信息">
+            title="查看个人信息">
             <Avatar name={user.nickname || user.username} size={32} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.nickname || user.username}</div>
@@ -157,8 +163,8 @@ export default function Layout() {
         </main>
       </div>
 
-      <Modal open={profileOpen} onClose={() => setProfileOpen(false)} title="个人信息设置">
-        {user && (
+      <Modal open={profileOpen} onClose={() => { setProfileOpen(false); setProfileEditing(false) }} title={profileEditing ? '编辑个人信息' : '个人信息'}>
+        {user && !profileEditing && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16, background: '#f8fafc', borderRadius: 12 }}>
               <Avatar name={user.nickname || user.username} size={64} />
@@ -172,10 +178,11 @@ export default function Layout() {
 
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid #e2e8f0' }}>基本信息</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <Input label="昵称" placeholder="输入昵称" value={profileForm.nickname} onChange={e => setProfileForm({ ...profileForm, nickname: e.target.value })} />
-                <Input label="邮箱" placeholder="your@email.com" value={profileForm.email} onChange={e => setProfileForm({ ...profileForm, email: e.target.value })} />
-                <Input label="手机号" placeholder="输入手机号" value={profileForm.phone} onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px', fontSize: 13 }}>
+                <div><span style={{ color: '#94a3b8' }}>昵称</span><div style={{ color: '#0f172a', fontWeight: 500, marginTop: 2 }}>{user.nickname || '-'}</div></div>
+                <div><span style={{ color: '#94a3b8' }}>邮箱</span><div style={{ color: '#0f172a', fontWeight: 500, marginTop: 2 }}>{user.email || '-'}</div></div>
+                <div><span style={{ color: '#94a3b8' }}>手机号</span><div style={{ color: '#0f172a', fontWeight: 500, marginTop: 2 }}>{user.phone || '-'}</div></div>
+                <div><span style={{ color: '#94a3b8' }}>性别</span><div style={{ color: '#0f172a', fontWeight: 500, marginTop: 2 }}>{user.gender === 1 ? '男' : user.gender === 2 ? '女' : '-'}</div></div>
               </div>
             </div>
 
@@ -203,6 +210,31 @@ export default function Layout() {
             </div>
             )}
 
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 8, borderTop: '1px solid #e2e8f0' }}>
+              <Button variant="secondary" onClick={() => setProfileOpen(false)}>关闭</Button>
+              <Button onClick={startEditing}><Edit2 size={14} /> 编辑资料</Button>
+            </div>
+          </div>
+        )}
+        {user && profileEditing && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16, background: '#f8fafc', borderRadius: 12 }}>
+              <Avatar name={user.nickname || user.username} size={64} />
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 600, color: '#0f172a' }}>{user.nickname || user.username}</div>
+                <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>@{user.username}</div>
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid #e2e8f0' }}>基本信息</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <Input label="昵称" placeholder="输入昵称" value={profileForm.nickname} onChange={e => setProfileForm({ ...profileForm, nickname: e.target.value })} />
+                <Input label="邮箱" placeholder="your@email.com" value={profileForm.email} onChange={e => setProfileForm({ ...profileForm, email: e.target.value })} />
+                <Input label="手机号" placeholder="输入手机号" value={profileForm.phone} onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })} />
+              </div>
+            </div>
+
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid #e2e8f0' }}>安全设置</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -214,7 +246,7 @@ export default function Layout() {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 8, borderTop: '1px solid #e2e8f0' }}>
-              <Button variant="secondary" onClick={() => setProfileOpen(false)}>取消</Button>
+              <Button variant="secondary" onClick={() => setProfileEditing(false)}>返回</Button>
               <Button onClick={handleProfileSave} disabled={profileSaving}>{profileSaving ? '保存中...' : '保存修改'}</Button>
             </div>
           </div>
