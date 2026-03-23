@@ -1,24 +1,90 @@
 const db = require('../../../config/db');
 
-// GET /api/my-enterprise — 当前用户关联的企业信息+企业成员
-module.exports = async (req, res) => {
+// 辅助：查找当前用户关联的企业
+async function findMyEnterprise(userId) {
+  const [rows] = await db.query(
+    "SELECT * FROM duijie_clients WHERE user_id = ? AND client_type = 'company' AND is_deleted = 0 LIMIT 1",
+    [userId]
+  );
+  return rows[0] || null;
+}
+
+// GET /api/my-enterprise
+exports.get = async (req, res) => {
   try {
-    const userId = req.userId;
-    // 1. 查找用户关联的客户记录(企业)
-    const [clients] = await db.query(
-      "SELECT * FROM duijie_clients WHERE user_id = ? AND client_type = 'company' AND is_deleted = 0 LIMIT 1",
-      [userId]
-    );
-    if (clients.length === 0) {
-      return res.json({ success: true, data: null });
-    }
-    const enterprise = clients[0];
-    // 2. 查询企业成员
+    const ent = await findMyEnterprise(req.userId);
+    if (!ent) return res.json({ success: true, data: null });
     const [members] = await db.query(
       'SELECT * FROM duijie_client_members WHERE client_id = ? AND is_deleted = 0 ORDER BY created_at ASC',
-      [enterprise.id]
+      [ent.id]
     );
-    res.json({ success: true, data: { enterprise, members } });
+    res.json({ success: true, data: { enterprise: ent, members } });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+};
+
+// PUT /api/my-enterprise — 更新企业信息
+exports.update = async (req, res) => {
+  try {
+    const ent = await findMyEnterprise(req.userId);
+    if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
+    const { name, company, email, phone, notes } = req.body;
+    if (!name || !name.trim()) return res.status(400).json({ success: false, message: '请输入企业名称' });
+    await db.query(
+      'UPDATE duijie_clients SET name=?, company=?, email=?, phone=?, notes=? WHERE id=?',
+      [name.trim(), company || null, email || null, phone || null, notes || null, ent.id]
+    );
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+};
+
+// POST /api/my-enterprise/members — 添加成员
+exports.addMember = async (req, res) => {
+  try {
+    const ent = await findMyEnterprise(req.userId);
+    if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
+    const { name, position, department, phone, email, notes } = req.body;
+    if (!name || !name.trim()) return res.status(400).json({ success: false, message: '请输入成员姓名' });
+    const [result] = await db.query(
+      'INSERT INTO duijie_client_members (client_id, name, position, department, phone, email, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [ent.id, name.trim(), position || null, department || null, phone || null, email || null, notes || null, req.userId]
+    );
+    res.json({ success: true, data: { id: result.insertId } });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+};
+
+// PUT /api/my-enterprise/members/:id — 更新成员
+exports.updateMember = async (req, res) => {
+  try {
+    const ent = await findMyEnterprise(req.userId);
+    if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
+    const { name, position, department, phone, email, notes } = req.body;
+    if (!name || !name.trim()) return res.status(400).json({ success: false, message: '请输入成员姓名' });
+    await db.query(
+      'UPDATE duijie_client_members SET name=?, position=?, department=?, phone=?, email=?, notes=? WHERE id=? AND client_id=? AND is_deleted=0',
+      [name.trim(), position || null, department || null, phone || null, email || null, notes || null, req.params.id, ent.id]
+    );
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+};
+
+// DELETE /api/my-enterprise/members/:id — 删除成员
+exports.removeMember = async (req, res) => {
+  try {
+    const ent = await findMyEnterprise(req.userId);
+    if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
+    await db.query(
+      'UPDATE duijie_client_members SET is_deleted=1 WHERE id=? AND client_id=?',
+      [req.params.id, ent.id]
+    );
+    res.json({ success: true });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });
   }

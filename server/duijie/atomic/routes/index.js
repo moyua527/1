@@ -68,8 +68,13 @@ router.get('/client-scores', auth, salesTeam, require('../controllers/client/sco
 // AI
 router.get('/clients/:clientId/ai-suggestion', auth, salesTeam, require('../controllers/ai/suggestionController'));
 
-// My Enterprise (成员查看自己企业)
-router.get('/my-enterprise', auth, require('../controllers/client/myEnterpriseController'));
+// My Enterprise (成员管理自己企业)
+const myEntCtrl = require('../controllers/client/myEnterpriseController');
+router.get('/my-enterprise', auth, myEntCtrl.get);
+router.put('/my-enterprise', auth, myEntCtrl.update);
+router.post('/my-enterprise/members', auth, myEntCtrl.addMember);
+router.put('/my-enterprise/members/:id', auth, myEntCtrl.updateMember);
+router.delete('/my-enterprise/members/:id', auth, myEntCtrl.removeMember);
 
 // Client Members (企业成员)
 const clientMembersCtrl = require('../controllers/client/clientMembersController');
