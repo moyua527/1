@@ -200,51 +200,33 @@ export default function ClientList() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>选择成员用户 <span style={{ color: '#dc2626' }}>*</span></label>
-            <div data-member-search style={{ position: 'relative' }}>
-              <Search size={14} color="#94a3b8" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-              <input
-                value={memberSearch}
-                onChange={e => { setMemberSearch(e.target.value); setMemberDropOpen(true) }}
-                onFocus={() => setMemberDropOpen(true)}
-                placeholder={form.user_id ? `已选: ${(availableMembers.find(u => String(u.id) === form.user_id)?.nickname || '')}` : '输入ID、用户名或昵称搜索...'}
-                style={{ width: '100%', padding: '8px 12px 8px 32px', borderRadius: 8, border: `1px solid ${errors.user_id ? '#dc2626' : '#cbd5e1'}`, fontSize: 14, outline: 'none', background: '#fff' }}
-              />
-              {form.user_id && !memberSearch && (
-                <div style={{ position: 'absolute', left: 32, top: '50%', transform: 'translateY(-50%)', fontSize: 14, color: '#0f172a', pointerEvents: 'none' }}>
-                  {(() => { const m = availableMembers.find(u => String(u.id) === form.user_id); return m ? `${m.nickname || m.username}${m.display_id ? ` (${m.display_id})` : ''}` : '' })()}
-                </div>
-              )}
-              {memberDropOpen && (
-                <div style={{ position: 'absolute', left: 0, right: 0, top: '100%', marginTop: 4, background: '#fff', borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0', zIndex: 60, maxHeight: 220, overflowY: 'auto' }}>
-                  {availableMembers.filter(u => {
-                    if (!memberSearch.trim()) return true
-                    const q = memberSearch.trim().toLowerCase()
-                    return [u.display_id, u.username, u.nickname, u.email, u.phone, u.personal_invite_code].some(v => v && String(v).toLowerCase().includes(q))
-                  }).length === 0 ? (
-                    <div style={{ padding: '12px 16px', fontSize: 13, color: '#94a3b8', textAlign: 'center' }}>无匹配用户</div>
-                  ) : (
-                    availableMembers.filter(u => {
-                      if (!memberSearch.trim()) return true
-                      const q = memberSearch.trim().toLowerCase()
-                      return [u.display_id, u.username, u.nickname, u.email, u.phone, u.personal_invite_code].some(v => v && String(v).toLowerCase().includes(q))
-                    }).map(u => (
-                      <button key={u.id} type="button" onClick={() => { handleSelectMember(String(u.id)); setMemberSearch(''); setMemberDropOpen(false); setErrors(prev => { const n = { ...prev }; delete n.user_id; return n }) }}
-                        style={{ width: '100%', padding: '10px 14px', border: 'none', background: String(u.id) === form.user_id ? '#eff6ff' : 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 2, textAlign: 'left' }}
-                        onMouseEnter={e => { if (String(u.id) !== form.user_id) e.currentTarget.style.background = '#f8fafc' }}
-                        onMouseLeave={e => { if (String(u.id) !== form.user_id) e.currentTarget.style.background = 'none' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{u.nickname || u.username}</span>
-                          <span style={{ fontSize: 12, color: '#64748b' }}>@{u.username}</span>
-                        </div>
-                        {u.display_id && <div style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>ID: {u.display_id}</div>}
-                      </button>
-                    ))
-                  )}
-                </div>
-              )}
+            <div style={{ border: `1px solid ${errors.user_id ? '#dc2626' : '#e2e8f0'}`, borderRadius: 8, maxHeight: 200, overflowY: 'auto' }}>
+              {availableMembers.map((u: any) => {
+                const selected = String(u.id) === form.user_id
+                const name = u.nickname || u.username
+                const initial = name.charAt(0)
+                const roleColors: Record<string, string> = { admin: '#dc2626', tech: '#16a34a', business: '#2563eb', member: '#6b7280' }
+                const bgColor = roleColors[u.role] || '#6b7280'
+                const roleLabels: Record<string, string> = { admin: '管理员', tech: '技术员', business: '业务员', member: '成员', marketing: '市场', support: '客服' }
+                return (
+                  <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', background: selected ? '#f8fafc' : '#fff', transition: 'background 0.1s' }}
+                    onMouseEnter={e => { if (!selected) e.currentTarget.style.background = '#f8fafc' }}
+                    onMouseLeave={e => { if (!selected) e.currentTarget.style.background = '#fff' }}>
+                    <input type="radio" name="client_member" checked={selected} onChange={() => { handleSelectMember(String(u.id)); setErrors(prev => { const n = { ...prev }; delete n.user_id; return n }) }}
+                      style={{ width: 16, height: 16, accentColor: '#2563eb', cursor: 'pointer', flexShrink: 0 }} />
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: bgColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600, flexShrink: 0 }}>
+                      {initial}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{name}</div>
+                      <div style={{ fontSize: 12, color: '#94a3b8' }}>@{u.username} · {roleLabels[u.role] || u.role}</div>
+                    </div>
+                  </label>
+                )
+              })}
+              {availableMembers.length === 0 && <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>暂无可关联的成员用户</div>}
             </div>
             {errors.user_id && <div style={errStyle}>{errors.user_id}</div>}
-            {availableMembers.length === 0 && <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>暂无可关联的成员用户，请先注册成员账号</div>}
           </div>
           <div>
             <Input label="客户名称 *" placeholder="自动填充" value={form.name} onChange={e => { setForm({ ...form, name: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.name; return n }) }} />
