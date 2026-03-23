@@ -3,7 +3,7 @@ import { authApi } from './services/api'
 import { setToken, fetchApi } from '../../bootstrap'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
-import { Lock, Mail, Phone, Link2, Clock, Building2, UserCircle } from 'lucide-react'
+import { Lock, Mail, Phone, Link2, Clock } from 'lucide-react'
 import { areaData } from '../../data/areaCode'
 
 interface Props { onLogin: (user: any) => void }
@@ -159,10 +159,10 @@ export default function LoginPage({ onLogin }: Props) {
     { key: 'email' as const, label: '邮箱验证码', icon: <Mail size={14} /> },
   ]
 
-  const toggleBtnStyle = (active: boolean): React.CSSProperties => ({
-    flex: 1, padding: '8px 0', borderRadius: 6, border: `1px solid ${active ? '#2563eb' : '#cbd5e1'}`,
-    background: active ? '#eff6ff' : '#fff', color: active ? '#2563eb' : '#64748b',
-    fontWeight: 500, fontSize: 14, cursor: 'pointer', transition: 'all 0.15s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+  const pillStyle = (active: boolean): React.CSSProperties => ({
+    flex: 1, padding: '6px 0', borderRadius: 6, border: `1px solid ${active ? '#2563eb' : '#e2e8f0'}`,
+    background: active ? '#eff6ff' : '#fff', color: active ? '#2563eb' : '#94a3b8',
+    fontWeight: 500, fontSize: 13, cursor: 'pointer', transition: 'all 0.15s', textAlign: 'center',
   })
 
   return (
@@ -263,25 +263,27 @@ export default function LoginPage({ onLogin }: Props) {
                 <Input label="邮箱 *" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} />
               )}
               <Input label="昵称 *" placeholder="输入你的昵称" value={nickname} onChange={e => setNickname(e.target.value)} />
-              <div>
-                <label style={labelStyle}>性别 *</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  {[{ v: '1', l: '男' }, { v: '2', l: '女' }].map(g => (
-                    <button key={g.v} type="button" onClick={() => setGender(g.v)} style={toggleBtnStyle(gender === g.v)}>
-                      {g.l}
-                    </button>
-                  ))}
+              <div style={{ display: 'flex', gap: 12 }}>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>性别 *</label>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    {[{ v: '1', l: '男' }, { v: '2', l: '女' }].map(g => (
+                      <button key={g.v} type="button" onClick={() => setGender(g.v)} style={pillStyle(gender === g.v)}>
+                        {g.l}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div>
-                <label style={labelStyle}>类型 *</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button type="button" onClick={() => { setUserType('individual'); setPosition('') }} style={toggleBtnStyle(userType === 'individual')}>
-                    <UserCircle size={14} /> 个人
-                  </button>
-                  <button type="button" onClick={() => setUserType('company')} style={toggleBtnStyle(userType === 'company')}>
-                    <Building2 size={14} /> 企业
-                  </button>
+                <div style={{ flex: 1 }}>
+                  <label style={labelStyle}>类型 *</label>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <button type="button" onClick={() => { setUserType('individual'); setPosition('') }} style={pillStyle(userType === 'individual')}>
+                      个人
+                    </button>
+                    <button type="button" onClick={() => setUserType('company')} style={pillStyle(userType === 'company')}>
+                      企业
+                    </button>
+                  </div>
                 </div>
               </div>
               {userType === 'company' && (
