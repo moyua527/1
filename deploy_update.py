@@ -60,6 +60,8 @@ def main():
         'atomic/services/project/createProject.js',
         'atomic/routes/index.js',
         'atomic/controllers/dm/recallController.js',
+        'atomic/repositories/dashboard/statsRepo.js',
+        'atomic/controllers/dashboard/chartController.js',
     ]
     remote_server = f'{REMOTE_BASE}/server/duijie'
     for f in backend_files:

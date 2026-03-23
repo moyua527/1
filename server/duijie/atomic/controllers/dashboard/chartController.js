@@ -6,13 +6,20 @@ module.exports = async (req, res) => {
     const role = req.userRole;
     const uid = req.userId;
 
+    // Task filter for non-admin
+    let tf = '', tp = [];
+    if (role !== 'admin' && uid) {
+      tf = 'AND (t.assignee_id = ? OR t.project_id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?) OR t.project_id IN (SELECT id FROM duijie_projects WHERE created_by = ? AND is_deleted = 0))';
+      tp = [uid, uid, uid];
+    }
+
     // Task trend: tasks created per day
     const [taskTrend] = await db.query(
       `SELECT DATE(t.created_at) as date, COUNT(*) as created,
         SUM(CASE WHEN t.status IN ('accepted','done') THEN 1 ELSE 0 END) as completed
        FROM duijie_tasks t
-       WHERE t.is_deleted = 0 AND t.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)
-       GROUP BY DATE(t.created_at) ORDER BY date`, [days]
+       WHERE t.is_deleted = 0 AND t.created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) ${tf}
+       GROUP BY DATE(t.created_at) ORDER BY date`, [days, ...tp]
     );
 
     // Client trend (admin/business only)
@@ -30,7 +37,7 @@ module.exports = async (req, res) => {
 
     // Task status distribution
     const [taskDist] = await db.query(
-      `SELECT status, COUNT(*) as count FROM duijie_tasks WHERE is_deleted = 0 GROUP BY status`
+      `SELECT t.status, COUNT(*) as count FROM duijie_tasks t WHERE t.is_deleted = 0 ${tf} GROUP BY t.status`, tp
     );
 
     // Opportunity stage distribution (admin/business)
