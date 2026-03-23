@@ -5,15 +5,15 @@ const generateInviteCode = require('../../utils/generateInviteCode');
 
 module.exports = async (req, res) => {
   try {
-    const { username, password, nickname, email, phone, invite_code, invite_token, gender, area_code } = req.body;
+    const { username, password, nickname, email, phone, invite_code, invite_token, gender, area_code, user_type, province, city, position } = req.body;
     if (!username || !password) return res.status(400).json({ success: false, message: '用户名和密码不能为空' });
-    if (username.length < 3) return res.status(400).json({ success: false, message: '用户名至少3个字符' });
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) return res.status(400).json({ success: false, message: '用户名仅支持字母、数字和下划线' });
     if (password.length < 6) return res.status(400).json({ success: false, message: '密码至少6个字符' });
     if (!email && !phone) return res.status(400).json({ success: false, message: '邮箱和手机号至少填写一项' });
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ success: false, message: '邮箱格式无效' });
+    if (!nickname || !nickname.trim()) return res.status(400).json({ success: false, message: '请输入昵称' });
     if (!gender || ![1, 2].includes(Number(gender))) return res.status(400).json({ success: false, message: '请选择性别' });
-    if (!area_code || !/^\d{6}$/.test(area_code)) return res.status(400).json({ success: false, message: '请选择所在地区' });
+    if (!province || !city) return res.status(400).json({ success: false, message: '请选择省份和城市' });
+    const safeAreaCode = area_code && /^\d{6}$/.test(area_code) ? area_code : '000000';
 
     let inviterId = null;
     let assignedRole = 'member';
@@ -60,14 +60,15 @@ module.exports = async (req, res) => {
       }
     }
 
-    const [existing] = await db.query('SELECT id FROM voice_users WHERE username = ? AND is_deleted = 0', [username]);
-    if (existing.length > 0) return res.status(400).json({ success: false, message: '用户名已存在' });
-    const displayName = (nickname || username).trim();
-    const displayId = await generateDisplayId(area_code, Number(gender));
+    // Check uniqueness by username, phone, or email
+    const [existing] = await db.query('SELECT id FROM voice_users WHERE (username = ? OR (phone = ? AND phone IS NOT NULL) OR (email = ? AND email IS NOT NULL)) AND is_deleted = 0', [username, phone || null, email || null]);
+    if (existing.length > 0) return res.status(400).json({ success: false, message: phone ? '该手机号已注册' : email ? '该邮箱已注册' : '用户名已存在' });
+    const displayName = nickname.trim();
+    const displayId = await generateDisplayId(safeAreaCode, Number(gender));
     const personalCode = await generateInviteCode();
     const [result] = await db.query(
-      'INSERT INTO voice_users (username, password, nickname, email, phone, role, gender, area_code, display_id, personal_invite_code, invited_by, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [username.trim(), await bcrypt.hash(password, 10), displayName, email || null, phone || null, assignedRole, Number(gender), area_code, displayId, personalCode, inviterId, isActive]
+      'INSERT INTO voice_users (username, password, nickname, email, phone, role, gender, area_code, user_type, province, city, position, display_id, personal_invite_code, invited_by, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [username.trim(), await bcrypt.hash(password, 10), displayName, email || null, phone || null, assignedRole, Number(gender), safeAreaCode, user_type || 'individual', province || null, city || null, position || null, displayId, personalCode, inviterId, isActive]
     );
     const newUserId = result.insertId;
 
