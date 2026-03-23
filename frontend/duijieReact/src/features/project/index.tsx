@@ -49,9 +49,14 @@ export default function ProjectList() {
 
   const load = () => {
     setLoading(true)
+    console.log('[ProjectList] load() called, token exists:', !!sessionStorage.getItem('token'))
     projectApi.list({ _t: String(Date.now()) }).then(r => {
+      console.log('[ProjectList] API response:', JSON.stringify(r).substring(0, 300))
       if (r.success) setProjects(r.data?.rows || [])
-    }).catch(() => {}).finally(() => setLoading(false))
+      else console.warn('[ProjectList] API returned success=false:', r.message)
+    }).catch(err => {
+      console.error('[ProjectList] API error:', err)
+    }).finally(() => setLoading(false))
   }
   useEffect(() => {
     load()

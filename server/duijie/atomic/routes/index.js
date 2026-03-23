@@ -41,7 +41,7 @@ router.get('/dashboard/chart', auth, require('../controllers/dashboard/chartCont
 
 // Projects
 const projectManagers = roleGuard('admin');
-const projectStaff = roleGuard('admin', 'tech', 'business', 'member');
+const projectStaff = roleGuard('admin', 'tech', 'business', 'member', 'client', 'viewer');
 const projectEditors = roleGuard('admin', 'tech', 'business');
 router.post('/projects', auth, projectManagers, require('../controllers/project/createController'));
 router.get('/projects/team-users', auth, projectManagers, require('../controllers/project/teamUsersController'));
@@ -116,7 +116,7 @@ router.put('/opportunities/:id', auth, roleGuard('admin', 'business'), require('
 router.delete('/opportunities/:id', auth, roleGuard('admin'), require('../controllers/opportunity/deleteController'));
 
 // Tasks (client can create & list only)
-const taskStaff = roleGuard('admin', 'tech', 'business', 'member');
+const taskStaff = roleGuard('admin', 'tech', 'business', 'member', 'client', 'viewer');
 router.post('/tasks', auth, upload.array('files', 10), require('../controllers/task/createController'));
 router.get('/tasks', auth, require('../controllers/task/listController'));
 router.put('/tasks/:id', auth, taskStaff, require('../controllers/task/updateController'));

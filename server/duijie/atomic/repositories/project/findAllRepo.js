@@ -25,7 +25,10 @@ module.exports = async ({ status, client_id, page = 1, limit = 20 }, auth = {}) 
   if (client_id) { sql += ' AND p.client_id = ?'; countSql += ' AND p.client_id = ?'; params.push(client_id); countParams.push(client_id); }
   sql += ' ORDER BY p.created_at DESC LIMIT ? OFFSET ?';
   params.push(Number(limit), (Number(page) - 1) * Number(limit));
+  console.log('[findAllRepo] SQL:', sql);
+  console.log('[findAllRepo] params:', JSON.stringify(params));
   const [rows] = await db.query(sql, params);
   const [[{ total }]] = await db.query(countSql, countParams);
+  console.log('[findAllRepo] result: rows=', rows.length, 'total=', total);
   return { rows, total };
 };
