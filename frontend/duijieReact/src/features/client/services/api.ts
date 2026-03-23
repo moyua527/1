@@ -34,6 +34,11 @@ export const clientApi = {
   createContract: (data: any) => fetchApi('/api/contracts', { method: 'POST', body: JSON.stringify(data) }),
   updateContract: (id: number, data: any) => fetchApi(`/api/contracts/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteContract: (id: number) => fetchApi(`/api/contracts/${id}`, { method: 'DELETE' }),
+  // Client Members (企业成员)
+  members: (id: string) => fetchApi(`/api/clients/${id}/members`),
+  createMember: (id: string, data: any) => fetchApi(`/api/clients/${id}/members`, { method: 'POST', body: JSON.stringify(data) }),
+  updateMember: (memberId: number, data: any) => fetchApi(`/api/client-members/${memberId}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteMember: (memberId: number) => fetchApi(`/api/client-members/${memberId}`, { method: 'DELETE' }),
   // Opportunities
   opportunities: () => fetchApi('/api/opportunities'),
   createOpportunity: (data: any) => fetchApi('/api/opportunities', { method: 'POST', body: JSON.stringify(data) }),

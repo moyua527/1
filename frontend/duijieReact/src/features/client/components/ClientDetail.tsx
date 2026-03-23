@@ -69,6 +69,11 @@ export default function ClientDetail() {
   const [editingContract, setEditingContract] = useState<any>(null)
   const [contractForm, setContractForm] = useState({ title: '', amount: '', status: 'draft', signed_date: '', expire_date: '', notes: '' })
   const [contractSaving, setContractSaving] = useState(false)
+  const [orgMembers, setOrgMembers] = useState<any[]>([])
+  const [memberModalOpen, setMemberModalOpen] = useState(false)
+  const [editingMember, setEditingMember] = useState<any>(null)
+  const [memberForm, setMemberForm] = useState({ name: '', position: '', department: '', phone: '', email: '', notes: '' })
+  const [memberSaving, setMemberSaving] = useState(false)
 
   const load = () => {
     if (!id) return
@@ -78,6 +83,7 @@ export default function ClientDetail() {
     clientApi.clientTags(id).then(r => { if (r.success) setClientTags(r.data || []) })
     clientApi.contracts(id).then(r => { if (r.success) setContracts(r.data || []) })
     clientApi.score(id).then(r => { if (r.success) setScore(r.data) })
+    clientApi.members(id).then(r => { if (r.success) setOrgMembers(r.data || []) })
   }
   useEffect(load, [id])
 
@@ -261,6 +267,33 @@ export default function ClientDetail() {
     else toast(r.message || '删除失败', 'error')
   }
 
+  const openAddMember = () => {
+    setEditingMember(null)
+    setMemberForm({ name: '', position: '', department: '', phone: '', email: '', notes: '' })
+    setMemberModalOpen(true)
+  }
+  const openEditMember = (m: any) => {
+    setEditingMember(m)
+    setMemberForm({ name: m.name || '', position: m.position || '', department: m.department || '', phone: m.phone || '', email: m.email || '', notes: m.notes || '' })
+    setMemberModalOpen(true)
+  }
+  const handleSaveMember = async () => {
+    if (!memberForm.name.trim()) { toast('请输入成员姓名', 'error'); return }
+    setMemberSaving(true)
+    const r = editingMember
+      ? await clientApi.updateMember(editingMember.id, memberForm)
+      : await clientApi.createMember(id!, memberForm)
+    setMemberSaving(false)
+    if (r.success) { toast(editingMember ? '成员已更新' : '成员已添加', 'success'); setMemberModalOpen(false); load() }
+    else toast(r.message || '保存失败', 'error')
+  }
+  const handleDeleteMember = async (mid: number) => {
+    if (!(await confirm({ message: '确定删除此成员？', danger: true }))) return
+    const r = await clientApi.deleteMember(mid)
+    if (r.success) { toast('成员已删除', 'success'); load() }
+    else toast(r.message || '删除失败', 'error')
+  }
+
   if (!client) return <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}>加载中...</div>
 
   return (
@@ -410,6 +443,46 @@ export default function ClientDetail() {
           </div>
         )}
       </div>
+
+      {client.client_type === 'company' && (
+        <div style={{ ...section, marginTop: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Building2 size={18} color="#0284c7" />
+              <span style={{ fontSize: 16, fontWeight: 600, color: '#334155' }}>企业成员</span>
+              <span style={{ fontSize: 12, color: '#94a3b8' }}>({orgMembers.length})</span>
+            </div>
+            <Button onClick={openAddMember}><UserPlus size={14} /> 添加成员</Button>
+          </div>
+          {orgMembers.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 24, color: '#94a3b8', fontSize: 14 }}>暂无企业成员，点击"添加成员"开始</div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
+              {orgMembers.map((m: any) => (
+                <div key={m.id} style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                    <Avatar name={m.name} size={36} />
+                    <div>
+                      <div style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>{m.name}</div>
+                      {m.position && <div style={{ fontSize: 12, color: '#64748b' }}>{m.position}</div>}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    {m.department && <div style={{ fontSize: 13, color: '#334155', display: 'flex', alignItems: 'center', gap: 4 }}><Building size={12} color="#94a3b8" />{m.department}</div>}
+                    {m.phone && <div style={{ fontSize: 13, color: '#334155', display: 'flex', alignItems: 'center', gap: 4 }}><Phone size={12} color="#94a3b8" />{m.phone}</div>}
+                    {m.email && <div style={{ fontSize: 13, color: '#334155', display: 'flex', alignItems: 'center', gap: 4 }}><Mail size={12} color="#94a3b8" />{m.email}</div>}
+                  </div>
+                  {m.notes && <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>{m.notes}</div>}
+                  <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                    <button onClick={() => openEditMember(m)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, display: 'flex' }}><Edit3 size={13} /></button>
+                    <button onClick={() => handleDeleteMember(m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: 2, display: 'flex' }}><X size={13} /></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div style={{ ...section, marginTop: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -748,6 +821,25 @@ export default function ClientDetail() {
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
             <Button variant="secondary" onClick={() => setContractModalOpen(false)}>取消</Button>
             <Button onClick={handleSaveContract} disabled={contractSaving}>{contractSaving ? '保存中...' : '保存'}</Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal open={memberModalOpen} onClose={() => setMemberModalOpen(false)} title={editingMember ? '编辑企业成员' : '添加企业成员'}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Input label="姓名 *" value={memberForm.name} onChange={e => setMemberForm({ ...memberForm, name: e.target.value })} />
+          <Input label="职位" placeholder="如：技术总监" value={memberForm.position} onChange={e => setMemberForm({ ...memberForm, position: e.target.value })} />
+          <Input label="部门" placeholder="如：技术部" value={memberForm.department} onChange={e => setMemberForm({ ...memberForm, department: e.target.value })} />
+          <Input label="电话" value={memberForm.phone} onChange={e => setMemberForm({ ...memberForm, phone: e.target.value })} />
+          <Input label="邮箱" value={memberForm.email} onChange={e => setMemberForm({ ...memberForm, email: e.target.value })} />
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>备注</label>
+            <textarea value={memberForm.notes} onChange={e => setMemberForm({ ...memberForm, notes: e.target.value })} rows={2}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <Button variant="secondary" onClick={() => setMemberModalOpen(false)}>取消</Button>
+            <Button onClick={handleSaveMember} disabled={memberSaving}>{memberSaving ? '保存中...' : '保存'}</Button>
           </div>
         </div>
       </Modal>

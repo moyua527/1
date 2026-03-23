@@ -63,6 +63,7 @@ def main():
         'atomic/repositories/dashboard/statsRepo.js',
         'atomic/controllers/dashboard/chartController.js',
         'atomic/repositories/project/createRepo.js',
+        'atomic/controllers/client/clientMembersController.js',
     ]
     remote_server = f'{REMOTE_BASE}/server/duijie'
     for f in backend_files:
