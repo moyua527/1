@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { Plus, FolderKanban, Loader2, Search, X } from 'lucide-react'
+import { Plus, FolderKanban, Loader2, Search, X, AppWindow } from 'lucide-react'
 import { projectApi } from './services/api'
 import { clientApi } from '../client/services/api'
 import Button from '../ui/Button'
@@ -36,7 +36,7 @@ export default function ProjectList() {
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [form, setForm] = useState({ name: '', description: '', client_id: '' })
+  const [form, setForm] = useState({ name: '', description: '', client_id: '', app_name: '', app_url: '' })
   const [allClients, setAllClients] = useState<any[]>([])
   const [teamUsers, setTeamUsers] = useState<any[]>([])
   const [selectedMembers, setSelectedMembers] = useState<number[]>([])
@@ -69,7 +69,7 @@ export default function ProjectList() {
     if (!form.client_id) { toast('请关联客户', 'error'); setSubmitting(false); return }
     const r = await projectApi.create({ ...form, client_id: Number(form.client_id), member_ids: selectedMembers })
     setSubmitting(false)
-    if (r.success) { toast('项目创建成功', 'success'); setShowCreate(false); setForm({ name: '', description: '', client_id: '' }); setSelectedMembers([]); load() }
+    if (r.success) { toast('项目创建成功', 'success'); setShowCreate(false); setForm({ name: '', description: '', client_id: '', app_name: '', app_url: '' }); setSelectedMembers([]); load() }
     else toast(r.message || '创建失败', 'error')
   }
 
@@ -134,6 +134,13 @@ export default function ProjectList() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Input label="项目名称" placeholder="输入项目名称" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
           <Input label="项目描述" placeholder="简要描述" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+          <div style={{ background: '#f8fafc', borderRadius: 10, padding: 14, border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 10 }}><AppWindow size={14} /> 关联应用（可选）</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <Input label="应用名称" placeholder="如：客户门户" value={form.app_name} onChange={e => setForm({ ...form, app_name: e.target.value })} />
+              <Input label="应用链接" placeholder="https://example.com" value={form.app_url} onChange={e => setForm({ ...form, app_url: e.target.value })} />
+            </div>
+          </div>
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>关联客户 <span style={{ color: '#dc2626' }}>*</span></label>
             <select value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value })}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
-import { ArrowLeft, Trash2, User, Mail, Shield, ChevronDown, Plus, X, Upload, FileText, Image, CheckCircle, Circle, Paperclip, Download } from 'lucide-react'
+import { ArrowLeft, Trash2, User, Mail, Shield, ChevronDown, Plus, X, Upload, FileText, Image, CheckCircle, Circle, Paperclip, Download, AppWindow, ExternalLink } from 'lucide-react'
 import Modal from '../../ui/Modal'
 import Avatar from '../../ui/Avatar'
 import { projectApi } from '../services/api'
@@ -47,7 +47,7 @@ export default function ProjectDetail() {
   const [msForm, setMsForm] = useState({ title: '', description: '', due_date: '' })
   const [selectedMember, setSelectedMember] = useState<any>(null)
   const [searchParams, setSearchParams] = useSearchParams()
-  const validTabs = ['overview', 'tasks', 'milestones', 'messages'] as const
+  const validTabs = ['overview', 'tasks', 'milestones', 'messages', 'app'] as const
   type Tab = typeof validTabs[number]
   const urlTab = searchParams.get('tab') as Tab
   const tab: Tab = validTabs.includes(urlTab as any) ? urlTab! : 'overview'
@@ -119,7 +119,7 @@ export default function ProjectDetail() {
       </div>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-        {([['overview','概览'],['tasks','任务'],['milestones','里程碑'],['messages','消息']] as const).map(([k,v]) => (
+        {([['overview','概览'],['tasks','任务'],['milestones','里程碑'],['messages','消息'], ...(project.app_url ? [['app', project.app_name || '应用']] : [])] as [string, string][]).map(([k,v]) => (
           <button key={k} onClick={() => setTab(k as any)} style={{
             padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500,
             background: tab === k ? '#2563eb' : '#f1f5f9', color: tab === k ? '#fff' : '#64748b',
@@ -468,6 +468,26 @@ export default function ProjectDetail() {
         </div>
       )}
       {tab === 'messages' && <div style={section}><MessagePanel projectId={id!} /></div>}
+
+      {tab === 'app' && project.app_url && (
+        <div style={section}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <AppWindow size={20} color="#2563eb" />
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#0f172a' }}>{project.app_name || '应用'}</h3>
+            </div>
+            <a href={project.app_url} target="_blank" rel="noreferrer"
+              style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#2563eb', textDecoration: 'none' }}>
+              <ExternalLink size={14} /> 新窗口打开
+            </a>
+          </div>
+          <div style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid #e2e8f0', background: '#fff' }}>
+            <iframe src={project.app_url} style={{ width: '100%', height: 'calc(100vh - 260px)', border: 'none', display: 'block' }}
+              sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+              title={project.app_name || '应用'} />
+          </div>
+        </div>
+      )}
 
       <Modal open={!!selectedMember} onClose={() => setSelectedMember(null)} title="成员信息">
         {selectedMember && (
