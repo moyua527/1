@@ -43,9 +43,9 @@ module.exports = async (req, res) => {
         'SELECT id FROM voice_users WHERE personal_invite_code = ? AND is_deleted = 0', [invite_code.trim().toUpperCase()]
       );
       if (personalRows.length > 0) {
-        // 方式2: 个人邀请码 → 客户角色，直接激活
+        // 方式2: 个人邀请码 → 成员角色，直接激活
         inviterId = personalRows[0].id;
-        assignedRole = 'client';
+        assignedRole = 'member';
         isActive = 1;
         regChannel = '个人邀请码';
       } else {

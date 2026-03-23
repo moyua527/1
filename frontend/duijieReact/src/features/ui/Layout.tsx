@@ -11,21 +11,22 @@ import useIsMobile from './useIsMobile'
 import NotificationBell from './NotificationBell'
 
 const ALL_NAV_ITEMS = [
-  { path: '/', label: '仪表盘', icon: LayoutDashboard, roles: ['admin', 'tech', 'business', 'member'] },
-  { path: '/projects', label: '项目管理', icon: FolderKanban, roles: ['admin', 'tech', 'business', 'member'] },
-  { path: '/clients', label: '客户管理', icon: Users, roles: ['admin', 'business'] },
-  { path: '/opportunities', label: '商机管理', icon: TrendingUp, roles: ['admin', 'business'] },
-  { path: '/tasks', label: '任务看板', icon: ListTodo, roles: ['admin', 'tech', 'business', 'member'] },
-  { path: '/messaging', label: '站内消息', icon: MessageSquare, roles: ['admin', 'tech', 'business', 'member'] },
-  { path: '/report', label: '数据报表', icon: BarChart3, roles: ['admin', 'business'] },
-  { path: '/files', label: '文件管理', icon: FileText, roles: ['admin', 'tech', 'business', 'member'] },
+  { path: '/', label: '仪表盘', icon: LayoutDashboard, roles: ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer', 'client'] },
+  { path: '/projects', label: '项目管理', icon: FolderKanban, roles: ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'viewer', 'client'] },
+  { path: '/clients', label: '客户管理', icon: Users, roles: ['admin', 'sales_manager', 'business', 'marketing', 'support'] },
+  { path: '/opportunities', label: '商机管理', icon: TrendingUp, roles: ['admin', 'sales_manager', 'business'] },
+  { path: '/tasks', label: '任务看板', icon: ListTodo, roles: ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'viewer'] },
+  { path: '/messaging', label: '站内消息', icon: MessageSquare, roles: ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer', 'client'] },
+  { path: '/report', label: '数据报表', icon: BarChart3, roles: ['admin', 'sales_manager', 'business'] },
+  { path: '/files', label: '文件管理', icon: FileText, roles: ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'viewer'] },
   { path: '/users', label: '用户管理', icon: Shield, roles: ['admin'] },
   { path: '/audit', label: '审计日志', icon: ScrollText, roles: ['admin'] },
   { path: '/settings', label: '系统配置', icon: Settings, roles: ['admin'] },
 ]
 
 const roleLabel: Record<string, string> = {
-  admin: '管理员', tech: '技术员', business: '业务员', member: '成员',
+  admin: '管理员', sales_manager: '销售经理', tech: '技术员', business: '业务员',
+  marketing: '市场', support: '客服', member: '成员', viewer: '观察者', client: '客户',
 }
 
 const s = {

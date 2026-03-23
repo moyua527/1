@@ -483,7 +483,7 @@ export default function ProjectDetail() {
           </div>
           <div style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid #e2e8f0', background: '#fff' }}>
             <iframe src={project.app_url} style={{ width: '100%', height: 'calc(100vh - 260px)', border: 'none', display: 'block' }}
-              sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+              sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
               title={project.app_name || '应用'} />
           </div>
         </div>
