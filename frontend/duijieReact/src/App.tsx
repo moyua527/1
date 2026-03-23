@@ -17,6 +17,7 @@ import Messaging from './features/messaging/index'
 import AuditLog from './features/audit/index'
 import FileManager from './features/file/index'
 import SystemSettings from './features/settings/index'
+import Enterprise from './features/enterprise/index'
 import ToastContainer from './features/ui/Toast'
 
 function cacheUser(u: any) { try { localStorage.setItem('cached_user', JSON.stringify(u)) } catch {} }
@@ -55,6 +56,7 @@ export default function App() {
           {canClients && <Route path="/clients/:id" element={<ClientDetail />} />}
           {canOpportunities && <Route path="/opportunities" element={<OpportunityList />} />}
           {canTasks && <Route path="/tasks" element={<TaskBoard />} />}
+          <Route path="/enterprise" element={<Enterprise />} />
           <Route path="/messaging" element={<Messaging />} />
           {canReport && <Route path="/report" element={<Report />} />}
           {r === 'admin' && <Route path="/users" element={<UserManagement />} />}

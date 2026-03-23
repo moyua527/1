@@ -68,6 +68,9 @@ router.get('/client-scores', auth, salesTeam, require('../controllers/client/sco
 // AI
 router.get('/clients/:clientId/ai-suggestion', auth, salesTeam, require('../controllers/ai/suggestionController'));
 
+// My Enterprise (成员查看自己企业)
+router.get('/my-enterprise', auth, require('../controllers/client/myEnterpriseController'));
+
 // Client Members (企业成员)
 const clientMembersCtrl = require('../controllers/client/clientMembersController');
 router.get('/clients/:id/members', auth, roleGuard('admin', 'business'), clientMembersCtrl.list);
