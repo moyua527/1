@@ -301,7 +301,7 @@ export default function LoginPage({ onLogin }: Props) {
           {mode === 'register' && regStep === 1 && (
             <>
               {regMethod === 'phone' && (
-                <Input label="手机号 *" placeholder="输入11位手机号" value={phone} onChange={e => setPhone(e.target.value)} />
+                <Input label="手机号 *" placeholder="输入11位手机号" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))} maxLength={11} />
               )}
               {regMethod === 'email' && (
                 <Input label="邮箱 *" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} />
