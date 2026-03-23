@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS duijie_milestones (
 -- 文件表
 CREATE TABLE IF NOT EXISTS duijie_files (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  project_id INT NOT NULL,
+  project_id INT NULL,
   name VARCHAR(300) NOT NULL,
   original_name VARCHAR(300),
   size BIGINT DEFAULT 0,
