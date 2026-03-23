@@ -143,27 +143,33 @@ export default function ProjectList() {
             </select>
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>项目成员</label>
-            {selectedMembers.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
-                {selectedMembers.map(uid => {
-                  const u = teamUsers.find(t => t.id === uid)
-                  return u ? (
-                    <span key={uid} style={{ display: 'inline-flex', alignItems: 'center', gap: 2, padding: '2px 8px', borderRadius: 12, background: '#eff6ff', color: '#2563eb', fontSize: 12, fontWeight: 500 }}>
-                      {u.nickname || u.username}
-                      <X size={12} style={{ cursor: 'pointer', opacity: 0.6 }} onClick={() => setSelectedMembers(prev => prev.filter(id => id !== uid))} />
-                    </span>
-                  ) : null
-                })}
-              </div>
-            )}
-            <select value="" onChange={e => { const id = Number(e.target.value); if (id && !selectedMembers.includes(id)) setSelectedMembers(prev => [...prev, id]) }}
-              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
-              <option value="">选择成员添加...</option>
-              {teamUsers.filter(u => !selectedMembers.includes(u.id)).map((u: any) => (
-                <option key={u.id} value={u.id}>{u.nickname || u.username} ({u.role})</option>
-              ))}
-            </select>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>项目成员{selectedMembers.length > 0 && <span style={{ color: '#94a3b8', fontWeight: 400 }}> · 已选 {selectedMembers.length} 人</span>}</label>
+            <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, maxHeight: 200, overflowY: 'auto' }}>
+              {teamUsers.map((u: any) => {
+                const checked = selectedMembers.includes(u.id)
+                const name = u.nickname || u.username
+                const initial = name.charAt(0)
+                const roleColors: Record<string, string> = { admin: '#dc2626', tech: '#16a34a', business: '#2563eb', member: '#6b7280' }
+                const bgColor = roleColors[u.role] || '#6b7280'
+                const roleLabels: Record<string, string> = { admin: '管理员', tech: '技术员', business: '业务员', member: '成员', marketing: '市场', support: '客服' }
+                return (
+                  <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', background: checked ? '#f8fafc' : '#fff', transition: 'background 0.1s' }}
+                    onMouseEnter={e => { if (!checked) e.currentTarget.style.background = '#f8fafc' }}
+                    onMouseLeave={e => { if (!checked) e.currentTarget.style.background = '#fff' }}>
+                    <input type="checkbox" checked={checked} onChange={() => setSelectedMembers(prev => checked ? prev.filter(id => id !== u.id) : [...prev, u.id])}
+                      style={{ width: 16, height: 16, accentColor: '#2563eb', cursor: 'pointer', flexShrink: 0 }} />
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: bgColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600, flexShrink: 0 }}>
+                      {initial}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{name}</div>
+                      <div style={{ fontSize: 12, color: '#94a3b8' }}>@{u.username} · {roleLabels[u.role] || u.role}</div>
+                    </div>
+                  </label>
+                )
+              })}
+              {teamUsers.length === 0 && <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>暂无可选成员</div>}
+            </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
             <Button variant="secondary" onClick={() => setShowCreate(false)}>取消</Button>
