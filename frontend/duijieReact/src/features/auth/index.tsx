@@ -306,7 +306,7 @@ export default function LoginPage({ onLogin }: Props) {
 
           {mode === 'login' && loginMethod === 'phone' && (
             <>
-              <Input label="手机号" placeholder="输入手机号" value={phone} onChange={e => setPhone(e.target.value)} />
+              <Input label="手机号" placeholder="输入11位手机号" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))} maxLength={11} />
               <div>
                 <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#475569', marginBottom: 4 }}>验证码</label>
                 <div style={{ display: 'flex', gap: 8 }}>
