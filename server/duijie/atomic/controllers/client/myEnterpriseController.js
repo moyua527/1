@@ -1,14 +1,18 @@
 const db = require('../../../config/db');
 
-// 辅助：查找当前用户关联的企业（作为创建者或成员）
+// 辅助：查找当前用户关联的企业（作为创建者或成员），返回企业信息+用户角色
 async function findMyEnterprise(userId) {
+  // 先查是否是创建者
   const [owned] = await db.query(
-    "SELECT *, 1 as is_owner FROM duijie_clients WHERE user_id = ? AND client_type = 'company' AND is_deleted = 0 LIMIT 1",
+    "SELECT c.*, 'creator' as member_role, 1 as is_owner FROM duijie_clients c WHERE c.user_id = ? AND c.client_type = 'company' AND c.is_deleted = 0 LIMIT 1",
     [userId]
   );
   if (owned[0]) return owned[0];
+  // 再查是否是成员
   const [membership] = await db.query(
-    `SELECT c.*, 0 as is_owner FROM duijie_client_members m
+    `SELECT c.*, COALESCE(m.role, 'member') as member_role,
+       CASE WHEN m.role = 'creator' THEN 1 ELSE 0 END as is_owner
+     FROM duijie_client_members m
      INNER JOIN duijie_clients c ON c.id = m.client_id
      WHERE m.user_id = ? AND m.is_deleted = 0 AND c.is_deleted = 0 AND c.client_type = 'company' LIMIT 1`,
     [userId]
@@ -16,16 +20,27 @@ async function findMyEnterprise(userId) {
   return membership[0] || null;
 }
 
+// 权限检查：creator > admin > member
+function canManage(ent) { return ent && (ent.member_role === 'creator' || ent.member_role === 'admin'); }
+function isCreator(ent) { return ent && ent.member_role === 'creator'; }
+
 // POST /api/my-enterprise — 创建企业
 exports.create = async (req, res) => {
   try {
     const existing = await findMyEnterprise(req.userId);
     if (existing) return res.status(400).json({ success: false, message: '您已拥有企业' });
-    const { name, company, email, phone, notes, industry, scale, address } = req.body;
+    const { name, company, email, phone, notes, industry, scale, address, credit_code, legal_person, registered_capital, established_date, business_scope, company_type, website } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ success: false, message: '请输入企业名称' });
     const [result] = await db.query(
-      "INSERT INTO duijie_clients (user_id, client_type, name, company, email, phone, notes, industry, scale, address, created_by, stage) VALUES (?, 'company', ?, ?, ?, ?, ?, ?, ?, ?, ?, 'signed')",
-      [req.userId, name.trim(), company || null, email || null, phone || null, notes || null, industry || null, scale || null, address || null, req.userId]
+      `INSERT INTO duijie_clients (user_id, client_type, name, company, email, phone, notes, industry, scale, address, credit_code, legal_person, registered_capital, established_date, business_scope, company_type, website, created_by, stage) VALUES (?, 'company', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'signed')`,
+      [req.userId, name.trim(), company || null, email || null, phone || null, notes || null, industry || null, scale || null, address || null, credit_code || null, legal_person || null, registered_capital || null, established_date || null, business_scope || null, company_type || null, website || null, req.userId]
+    );
+    // 自动将创建者加入成员表，角色为creator
+    const [user] = await db.query('SELECT nickname, username, phone, email FROM voice_users WHERE id = ?', [req.userId]);
+    const u = user[0] || {};
+    await db.query(
+      "INSERT INTO duijie_client_members (client_id, user_id, name, phone, email, role, created_by) VALUES (?, ?, ?, ?, ?, 'creator', ?)",
+      [result.insertId, req.userId, u.nickname || u.username || '', u.phone || null, u.email || null, req.userId]
     );
     res.json({ success: true, data: { id: result.insertId } });
   } catch (e) {
@@ -52,16 +67,17 @@ exports.get = async (req, res) => {
   }
 };
 
-// PUT /api/my-enterprise — 更新企业信息
+// PUT /api/my-enterprise — 更新企业信息（仅创建者可操作）
 exports.update = async (req, res) => {
   try {
     const ent = await findMyEnterprise(req.userId);
     if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
-    const { name, company, email, phone, notes, industry, scale, address } = req.body;
+    if (!isCreator(ent)) return res.status(403).json({ success: false, message: '仅企业创建者可编辑企业信息' });
+    const { name, company, email, phone, notes, industry, scale, address, credit_code, legal_person, registered_capital, established_date, business_scope, company_type, website } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ success: false, message: '请输入企业名称' });
     await db.query(
-      'UPDATE duijie_clients SET name=?, company=?, email=?, phone=?, notes=?, industry=?, scale=?, address=? WHERE id=?',
-      [name.trim(), company || null, email || null, phone || null, notes || null, industry || null, scale || null, address || null, ent.id]
+      'UPDATE duijie_clients SET name=?, company=?, email=?, phone=?, notes=?, industry=?, scale=?, address=?, credit_code=?, legal_person=?, registered_capital=?, established_date=?, business_scope=?, company_type=?, website=? WHERE id=?',
+      [name.trim(), company || null, email || null, phone || null, notes || null, industry || null, scale || null, address || null, credit_code || null, legal_person || null, registered_capital || null, established_date || null, business_scope || null, company_type || null, website || null, ent.id]
     );
     res.json({ success: true });
   } catch (e) {
@@ -69,11 +85,12 @@ exports.update = async (req, res) => {
   }
 };
 
-// DELETE /api/my-enterprise — 删除企业
+// DELETE /api/my-enterprise — 删除企业（仅创建者）
 exports.remove = async (req, res) => {
   try {
     const ent = await findMyEnterprise(req.userId);
     if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
+    if (!isCreator(ent)) return res.status(403).json({ success: false, message: '仅企业创建者可删除企业' });
     await db.query('UPDATE duijie_clients SET is_deleted=1 WHERE id=?', [ent.id]);
     await db.query('UPDATE duijie_client_members SET is_deleted=1 WHERE client_id=?', [ent.id]);
     res.json({ success: true });
@@ -166,11 +183,11 @@ exports.joinEnterprise = async (req, res) => {
   }
 };
 
-// GET /api/my-enterprise/join-requests — 企业主查看待审批申请
+// GET /api/my-enterprise/join-requests — 管理者查看待审批申请
 exports.listJoinRequests = async (req, res) => {
   try {
     const ent = await findMyEnterprise(req.userId);
-    if (!ent || ent.is_owner !== 1) return res.json({ success: true, data: [] });
+    if (!ent || !canManage(ent)) return res.json({ success: true, data: [] });
     const [rows] = await db.query(
       `SELECT r.id, r.user_id, r.status, r.created_at, u.nickname, u.username, u.phone, u.email, u.avatar
        FROM duijie_join_requests r LEFT JOIN voice_users u ON u.id = r.user_id
@@ -187,7 +204,7 @@ exports.listJoinRequests = async (req, res) => {
 exports.approveJoinRequest = async (req, res) => {
   try {
     const ent = await findMyEnterprise(req.userId);
-    if (!ent || ent.is_owner !== 1) return res.status(403).json({ success: false, message: '无权操作' });
+    if (!ent || !canManage(ent)) return res.status(403).json({ success: false, message: '无权操作' });
     const [reqRows] = await db.query("SELECT * FROM duijie_join_requests WHERE id = ? AND client_id = ? AND status = 'pending'", [req.params.id, ent.id]);
     if (!reqRows[0]) return res.status(404).json({ success: false, message: '申请不存在或已处理' });
     const jr = reqRows[0];
@@ -208,7 +225,7 @@ exports.approveJoinRequest = async (req, res) => {
 exports.rejectJoinRequest = async (req, res) => {
   try {
     const ent = await findMyEnterprise(req.userId);
-    if (!ent || ent.is_owner !== 1) return res.status(403).json({ success: false, message: '无权操作' });
+    if (!ent || !canManage(ent)) return res.status(403).json({ success: false, message: '无权操作' });
     await db.query("UPDATE duijie_join_requests SET status = 'rejected', handled_at = NOW(), handled_by = ? WHERE id = ? AND client_id = ? AND status = 'pending'", [req.userId, req.params.id, ent.id]);
     res.json({ success: true, message: '已拒绝' });
   } catch (e) {
@@ -290,6 +307,24 @@ exports.removeDepartment = async (req, res) => {
     if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
     await db.query('UPDATE duijie_departments SET is_deleted=1 WHERE id=? AND client_id=?', [req.params.id, ent.id]);
     await db.query('UPDATE duijie_client_members SET department_id=NULL WHERE department_id=? AND client_id=?', [req.params.id, ent.id]);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+};
+
+// PUT /api/my-enterprise/members/:id/role — 修改成员角色（仅创建者可操作）
+exports.updateMemberRole = async (req, res) => {
+  try {
+    const ent = await findMyEnterprise(req.userId);
+    if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
+    if (!isCreator(ent)) return res.status(403).json({ success: false, message: '仅企业创建者可修改成员角色' });
+    const { role } = req.body;
+    if (!['admin', 'member'].includes(role)) return res.status(400).json({ success: false, message: '角色只能是 admin 或 member' });
+    const [target] = await db.query('SELECT * FROM duijie_client_members WHERE id = ? AND client_id = ? AND is_deleted = 0', [req.params.id, ent.id]);
+    if (!target[0]) return res.status(404).json({ success: false, message: '成员不存在' });
+    if (target[0].role === 'creator') return res.status(400).json({ success: false, message: '无法修改创建者角色' });
+    await db.query('UPDATE duijie_client_members SET role = ? WHERE id = ?', [role, req.params.id]);
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });

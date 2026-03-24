@@ -97,6 +97,14 @@ def main():
     migrations = [
         "ALTER TABLE voice_users ADD COLUMN company_name VARCHAR(100) DEFAULT NULL",
         "ALTER TABLE verification_codes ADD COLUMN used TINYINT(1) DEFAULT 0",
+        "ALTER TABLE duijie_clients ADD COLUMN credit_code VARCHAR(30) DEFAULT NULL COMMENT '统一社会信用代码'",
+        "ALTER TABLE duijie_clients ADD COLUMN legal_person VARCHAR(50) DEFAULT NULL COMMENT '法定代表人'",
+        "ALTER TABLE duijie_clients ADD COLUMN registered_capital VARCHAR(50) DEFAULT NULL COMMENT '注册资本'",
+        "ALTER TABLE duijie_clients ADD COLUMN established_date DATE DEFAULT NULL COMMENT '成立日期'",
+        "ALTER TABLE duijie_clients ADD COLUMN business_scope TEXT COMMENT '经营范围'",
+        "ALTER TABLE duijie_clients ADD COLUMN company_type VARCHAR(50) DEFAULT NULL COMMENT '企业类型'",
+        "ALTER TABLE duijie_clients ADD COLUMN website VARCHAR(200) DEFAULT NULL COMMENT '官网'",
+        "ALTER TABLE duijie_client_members ADD COLUMN role VARCHAR(20) DEFAULT 'member' COMMENT 'creator/admin/member'",
     ]
     for sql in migrations:
         run_cmd(ssh, f"mysql -u{db_user} -p'{db_pass}' {db_name} -e \"{sql}\" 2>&1 || true", sql[:60])

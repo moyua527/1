@@ -89,6 +89,7 @@ router.put('/my-enterprise/departments/:id', auth, myEntCtrl.updateDepartment);
 router.delete('/my-enterprise/departments/:id', auth, myEntCtrl.removeDepartment);
 router.post('/my-enterprise/members', auth, myEntCtrl.addMember);
 router.put('/my-enterprise/members/:id', auth, myEntCtrl.updateMember);
+router.put('/my-enterprise/members/:id/role', auth, myEntCtrl.updateMemberRole);
 router.delete('/my-enterprise/members/:id', auth, myEntCtrl.removeMember);
 
 // Client Members (企业成员)

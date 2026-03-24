@@ -1,6 +1,6 @@
 # DuiJie（对接）— 客户项目对接平台
 
-> 版本：v1.1.2 | 最后更新：2026-03-24
+> 版本：v1.1.9 | 最后更新：2026-03-24
 >
 > 线上地址：http://160.202.253.143:8080
 
@@ -248,12 +248,12 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 
 - 自动记录关键操作（创建/更新/删除/登录/登出）
 - 记录用户、操作类型、对象类型、IP 地址
-- 管理员查看页：操作类型筛选 + 对象类型筛选 + 分页
+- 管理员查看页：操作类型筛选 + 对象类型筛选 + **日期范围筛选** + **关键词搜索**（操作详情/用户名/昵称） + 分页
 - **导出CSV**：按当前筛选条件导出全部日志为 CSV 文件（含 BOM 支持 Excel 中文显示）
 
 ### 3.15 系统配置（Settings，仅 admin）
 
-- **配置分组展示**：基础设置（系统名称/欢迎消息/上传限制/默认语言）、业务设置（任务优先级/跟进提醒/合同到期提醒/客户阶段/商机阶段）、安全设置（邀请码/登录尝试次数/会话超时/密码最小长度）
+- **配置分组展示**：基础设置（系统名称/欢迎消息/上传限制/默认语言）、通知设置（邮件通知/系统通知/消息提醒/任务到期通知）、显示设置（主题色/语言/分页数/日期格式）、业务设置（任务优先级/跟进提醒/合同到期提醒/客户阶段/商机阶段）、安全设置（邀请码/登录尝试次数/会话超时/密码最小长度/IP白名单）
 - 键值对形式存储，分组卡片式统一管理
 
 ### 3.16 PWA 离线支持
@@ -263,7 +263,21 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 - **离线降级**：网络不可用时从缓存加载页面，确保基本可用性
 - **自动更新**：新版本部署后自动清理旧缓存，`skipWaiting` + `clients.claim` 确保即时生效
 
-### 3.17 安全防护系统
+### 3.18 企业管理（Enterprise）
+
+- **创建企业**：用户自行创建企业，创建者自动成为最高管理员（creator角色）
+- **角色权限体系**：三级角色 creator > admin > member
+  - **创建者**：编辑企业信息、删除企业、管理成员角色、审批加入申请、管理部门/成员
+  - **管理员**：审批加入申请、管理部门/成员
+  - **普通成员**：只读查看企业信息
+- **完整工商信息**：统一社会信用代码、18位）、法定代表人、注册资本、成立日期、经营范围、企业类型（11种）、官网、行业、规模、联系方式
+- **成员角色徽章**：成员卡片显示角色标签（紫色创建者/蓝色管理员/灰色成员）+ 左侧色条
+- **角色管理**：创建者可通过下拉菜单切换成员角色（admin/member）
+- **加入企业**：搜索企业名称后提交加入申请，管理者审批后成为普通成员
+- **部门管理**：CRUD + 子部门、组织架构树展示
+- **成员管理**：添加/编辑/删除成员、手机号导入已注册账号、工号/职位/部门/入职日期
+
+### 3.19 安全防护系统
 
 **应用层防护：**
 - **密码 bcrypt 哈希**：所有密码存储和验证均使用 bcrypt（兼容明文旧数据自动升级）
@@ -288,7 +302,7 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 **服务器层防护：**
 - **fail2ban 自动封禁**：SSH 暴力破解（5次/10分钟→封 1小时）、Nginx 限速触发（10次/分钟→封 10分钟）、恶意爬虫（5次/分钟→封 24小时）
 
-### 3.17 移动端适配
+### 3.20 移动端适配
 
 - **响应式布局**：侧边栏 → 抽屉式（overlay + 遮罩 + 自动收起）
 - **自适应网格**：客户/项目卡片根据屏幕宽度自动调整列数
@@ -501,7 +515,7 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 |------|------|
 | `voice_users` | 用户表（id, username, password, nickname, email, phone, avatar, role, client_id, manager_id, last_login_at） |
 | `system_config` | 系统配置（JWT_SECRET, INVITE_CODE） |
-| `duijie_clients` | 客户表（含 assigned_to 对接人字段） |
+| `duijie_clients` | 客户/企业表（assigned_to, credit_code, legal_person, registered_capital, established_date, business_scope, company_type, website） |
 | `duijie_opportunities` | 商机表（title, client_id, amount, probability, stage, assigned_to） |
 | `duijie_direct_messages` | 站内消息表（sender_id, receiver_id, content, read_at, is_recalled） |
 | `duijie_tickets` | 工单表（title, content, type, priority, status, project_id, assigned_to, rating） |
@@ -520,6 +534,9 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | `duijie_client_logs` | 客户变更日志表 |
 | `duijie_notifications` | 通知表（user_id, type, title, content, link, is_read） |
 | `duijie_audit_logs` | 审计日志表（user_id, username, action, entity_type, entity_id, detail, ip） |
+| `duijie_client_members` | 企业成员表（client_id, user_id, name, role[creator/admin/member], position, department_id, phone, email） |
+| `duijie_departments` | 部门表（client_id, name, parent_id, sort_order） |
+| `duijie_join_requests` | 加入企业申请表（client_id, user_id, status[pending/approved/rejected]） |
 
 ---
 
