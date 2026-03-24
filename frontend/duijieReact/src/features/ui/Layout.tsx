@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield, Settings, Copy, TrendingUp, MessageSquare, ScrollText, FileText, Edit2, Building2 } from 'lucide-react'
-import { fetchApi, clearToken } from '../../bootstrap'
+import { fetchApi } from '../../bootstrap'
+import useUserStore from '../../stores/useUserStore'
 import { onSocket } from './smartSocket'
 import Avatar from './Avatar'
 import Modal from './Modal'
@@ -51,7 +52,7 @@ const s = {
 export default function Layout() {
   const isMobile = useIsMobile()
   const [collapsed, setCollapsed] = useState(true)
-  const [user, setUser] = useState<any>(() => { try { const s = localStorage.getItem('cached_user'); return s ? JSON.parse(s) : null } catch { return null } })
+  const { user, updateProfile, logout: storeLogout } = useUserStore()
   const [profileOpen, setProfileOpen] = useState(false)
   const [profileEditing, setProfileEditing] = useState(false)
   const [profileForm, setProfileForm] = useState({ nickname: '', email: '', phone: '', password: '', confirmPassword: '' })
@@ -64,7 +65,6 @@ export default function Layout() {
 
   useEffect(() => { setCollapsed(isMobile) }, [isMobile])
   useEffect(() => { if (isMobile) setCollapsed(true) }, [location.pathname, isMobile])
-  useEffect(() => { fetchApi('/api/auth/me').then(r => { if (r.success) { setUser(r.data); try { localStorage.setItem('cached_user', JSON.stringify(r.data)) } catch {} } }) }, [])
 
   const loadDmUnread = () => {
     fetchApi('/api/dm/conversations').then(r => {
@@ -108,16 +108,11 @@ export default function Layout() {
     setProfileSaving(true)
     const r = await fetchApi('/api/auth/profile', { method: 'PUT', body: JSON.stringify(body) })
     setProfileSaving(false)
-    if (r.success) { toast('个人信息已更新', 'success'); setUser(r.data); setProfileOpen(false) }
+    if (r.success) { toast('个人信息已更新', 'success'); updateProfile(r.data); setProfileOpen(false) }
     else toast(r.message || '更新失败', 'error')
   }
 
-  const handleLogout = async () => {
-    await fetchApi('/api/auth/logout', { method: 'POST' })
-    clearToken()
-    localStorage.removeItem('cached_user')
-    window.location.reload()
-  }
+  const handleLogout = () => { storeLogout() }
 
   const sidebarOpen = !collapsed
 
@@ -226,7 +221,7 @@ export default function Layout() {
               <div style={{ fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid #e2e8f0' }}>我的专属邀请码</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: 'linear-gradient(135deg, #eff6ff, #f5f3ff)', borderRadius: 10, border: '1px solid #e0e7ff' }}>
                 <code style={{ fontSize: 20, fontWeight: 700, letterSpacing: 3, color: '#1e40af', flex: 1 }}>{user.personal_invite_code}</code>
-                <button onClick={() => { try { const t = document.createElement('textarea'); t.value = user.personal_invite_code; t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t); } catch {} toast('邀请码已复制', 'success') }}
+                <button onClick={() => { try { const t = document.createElement('textarea'); t.value = user.personal_invite_code || ''; t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t); } catch {} toast('邀请码已复制', 'success') }}
                   style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 8, border: '1px solid #c7d2fe', background: '#fff', color: '#4f46e5', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
                   <Copy size={14} /> 复制
                 </button>

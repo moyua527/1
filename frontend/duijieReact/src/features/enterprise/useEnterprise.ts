@@ -3,6 +3,7 @@ import { fetchApi } from '../../bootstrap'
 import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
 import { emptyEntForm, emptyMemberForm, emptyDeptForm } from './constants'
+import useUserStore from '../../stores/useUserStore'
 
 export function useEnterprise() {
   const [data, setData] = useState<any>(null)
@@ -37,7 +38,7 @@ export function useEnterprise() {
   const [myRequests, setMyRequests] = useState<any[]>([])
   const [joinRequests, setJoinRequests] = useState<any[]>([])
 
-  const sysRole = (() => { try { const u = JSON.parse(localStorage.getItem('cached_user') || '{}'); return u.role || '' } catch { return '' } })()
+  const sysRole = useUserStore(s => s.user?.role) || ''
   const isSysAdmin = sysRole === 'admin'
 
   const load = () => {

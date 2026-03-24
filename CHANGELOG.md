@@ -89,3 +89,4 @@
 | v1.1.12 | 2026-03-24 | P1核心API自动化测试：Jest+supertest搭建测试基础设施，24个测试用例全部通过(auth认证6+企业CRUD18)，后端app.js抽离为可测试模块，standalone.js精简为启动层 |
 | v1.1.13 | 2026-03-24 | P2统一输入校验层(express-validator集成16个关键路由，含认证/企业/成员/部门/客户/项目/消息)；P2结构化日志系统(winston替换运行时文件中48处console调用，分级error/combined日志文件+自动轮转) |
 | v1.1.14 | 2026-03-24 | P3数据库迁移规范化：版本化迁移系统(schema_migrations表+migrate.js运行器+4个.sql迁移文件)，deploy_update.py改用迁移运行器替代硬编码SQL，新增app.js/logger/validate/validators等文件到部署清单 |
+| v1.1.15 | 2026-03-24 | P3前端全局状态管理：Zustand替代App/Layout中分散的localStorage+useState用户状态管理，统一useUserStore(用户信息/登录初始化/登出/资料更新)，消除重复缓存逻辑 |
