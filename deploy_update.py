@@ -70,6 +70,8 @@ def main():
         'atomic/controllers/project/listController.js',
         'atomic/controllers/auth/verifyCodeController.js',
         'atomic/controllers/auth/sendCodeController.js',
+        'atomic/controllers/auth/forgotPasswordController.js',
+        'atomic/controllers/auth/resetPasswordController.js',
     ]
     remote_server = f'{REMOTE_BASE}/server/duijie'
     for f in backend_files:

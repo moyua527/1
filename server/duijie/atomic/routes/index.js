@@ -22,6 +22,8 @@ router.post('/auth/login', require('../controllers/auth/loginController'));
 router.post('/auth/send-code', require('../controllers/auth/sendCodeController'));
 router.post('/auth/login-by-code', require('../controllers/auth/loginByCodeController'));
 router.post('/auth/verify-code', require('../controllers/auth/verifyCodeController'));
+router.post('/auth/forgot-password', require('../controllers/auth/forgotPasswordController'));
+router.post('/auth/reset-password', require('../controllers/auth/resetPasswordController'));
 router.post('/auth/register', require('../controllers/auth/registerController'));
 router.get('/auth/register-config', require('../controllers/auth/registerConfigController'));
 router.post('/auth/logout', require('../controllers/auth/logoutController'));
