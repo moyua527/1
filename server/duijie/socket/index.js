@@ -15,9 +15,10 @@ function initSocket(httpServer) {
     socket.on('auth', (token) => {
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'duijie_jwt_secret_2024');
-        socket.userId = decoded.id;
-        socket.join(`user:${decoded.id}`);
-        console.log(`[socket] ${socket.id} 认证成功, 加入 user:${decoded.id}`);
+        const uid = decoded.userId || decoded.id;
+        socket.userId = uid;
+        socket.join(`user:${uid}`);
+        console.log(`[socket] ${socket.id} 认证成功, 加入 user:${uid}`);
       } catch (e) {
         console.log(`[socket] ${socket.id} 认证失败`);
       }

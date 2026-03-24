@@ -71,3 +71,4 @@
 | v1.0.89 | 2026-03-24 | 修复：DM实时推送时未读数不清零问题(调整执行顺序：先history标记已读→再刷新对话列表和侧边栏红点) |
 | v1.0.90 | 2026-03-24 | 推拉结合+智能心跳：创建smartSocket单例模块(推送通知→客户端拉取内容，重连自动补拉)，RTT检测动态调整心跳间隔(15s/30s/60s)，后端添加heartbeat_ack |
 | v1.0.91 | 2026-03-24 | 修复SW缓存策略：CACHE_NAME升级v2清除旧缓存，HTML改为network-first(部署后立即生效)，API/WebSocket不缓存，哈希静态资源cache-first |
+| v1.0.92 | 2026-03-24 | 修复Socket.IO认证：JWT字段名decoded.id→decoded.userId，修复所有用户加入user:undefined房间导致WebSocket推送全部失效的问题 |
