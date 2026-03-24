@@ -74,7 +74,9 @@ export default function Layout() {
   useEffect(() => {
     loadDmUnread()
     const t = setInterval(loadDmUnread, 15000)
-    return () => clearInterval(t)
+    const onDmRead = () => loadDmUnread()
+    window.addEventListener('dm-read', onDmRead)
+    return () => { clearInterval(t); window.removeEventListener('dm-read', onDmRead) }
   }, [])
 
   useEffect(() => { loadDmUnread() }, [location.pathname])

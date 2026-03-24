@@ -50,6 +50,7 @@ export default function Messaging() {
       if (r.success) setMessages(r.data || [])
       setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
       loadConversations()
+      window.dispatchEvent(new Event('dm-read'))
     })
     // Poll for new messages
     if (pollRef.current) clearInterval(pollRef.current)
