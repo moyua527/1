@@ -1,5 +1,6 @@
 ﻿const db = require('../../../config/db');
 const bcrypt = require('bcryptjs');
+const logger = require('../../../config/logger');
 
 module.exports = async (req, res) => {
   try {
@@ -23,7 +24,7 @@ module.exports = async (req, res) => {
 
     res.json({ success: true, message: '密码重置成功，请使用新密码登录' });
   } catch (e) {
-    console.error('[resetPassword error]', e);
+    logger.error(`resetPassword: ${e.message}`);
     res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

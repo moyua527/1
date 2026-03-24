@@ -1,4 +1,5 @@
 const db = require('../../config/db');
+const logger = require('../../config/logger');
 
 /**
  * 记录审计日志
@@ -18,7 +19,7 @@ async function auditLog({ userId, username, action, entityType, entityId, detail
       [userId || null, username || '', action, entityType || null, entityId || null, detail || null, ip || null]
     );
   } catch (e) {
-    console.error('[auditLog] Failed:', e.message);
+    logger.error(`auditLog failed: ${e.message}`);
   }
 }
 

@@ -1,5 +1,6 @@
 const db = require('../../config/db');
 const { getIO } = require('../../socket');
+const logger = require('../../config/logger');
 
 /**
  * 发送通知给指定用户
@@ -23,7 +24,7 @@ async function notify(userId, type, title, content, link) {
       });
     }
   } catch (e) {
-    console.error('[notify] Failed:', e.message);
+    logger.error(`notify failed: ${e.message}`);
   }
 }
 

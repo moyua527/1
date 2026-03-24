@@ -87,3 +87,4 @@
 | v1.1.10 | 2026-03-24 | 系统管理员可查看所有企业信息(只读，不可移除人员)：后端新增GET /api/my-enterprise/all接口，前端企业管理页底部展示所有企业卡片列表(可展开查看企业信息和成员，无操作按钮) |
 | v1.1.11 | 2026-03-24 | 代码质量：P0错误信息脱敏(98个控制器123处e.message替换为通用错误信息+全局错误中间件增强日志)；P1前端企业管理组件拆分(1016行→11个文件：constants/useEnterprise/EnterpriseCard/MemberList/DepartmentList/OrgTree/JoinRequests/AdminAllEnterprises/EmptyState/EnterpriseModals+精简index.tsx) |
 | v1.1.12 | 2026-03-24 | P1核心API自动化测试：Jest+supertest搭建测试基础设施，24个测试用例全部通过(auth认证6+企业CRUD18)，后端app.js抽离为可测试模块，standalone.js精简为启动层 |
+| v1.1.13 | 2026-03-24 | P2统一输入校验层(express-validator集成16个关键路由，含认证/企业/成员/部门/客户/项目/消息)；P2结构化日志系统(winston替换运行时文件中48处console调用，分级error/combined日志文件+自动轮转) |

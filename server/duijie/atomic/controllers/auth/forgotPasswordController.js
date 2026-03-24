@@ -1,4 +1,5 @@
 ﻿const db = require('../../../config/db');
+const logger = require('../../../config/logger');
 
 module.exports = async (req, res) => {
   try {
@@ -34,10 +35,10 @@ module.exports = async (req, res) => {
       [type, target, code]
     );
 
-    console.log(`[重置密码验证码] ${type === 'phone' ? '手机' : '邮箱'}: ${target} -> ${code}`);
+    logger.info(`重置密码验证码 ${type}: ${target} -> ${code}`);
     res.json({ success: true, message: '验证码已发送', _dev_code: code });
   } catch (e) {
-    console.error('[forgotPassword error]', e);
+    logger.error(`forgotPassword: ${e.message}`);
     res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

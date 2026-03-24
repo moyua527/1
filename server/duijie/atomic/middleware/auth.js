@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const db = require('../../config/db');
+const logger = require('../../config/logger');
 
 async function getSecret() {
   const [rows] = await db.query(
@@ -18,7 +19,7 @@ module.exports = async (req, res, next) => {
     req.userId = decoded.userId || decoded.id;
     req.userRole = decoded.role || 'member';
     req.clientId = decoded.clientId || null;
-    console.log('[auth] decoded:', JSON.stringify({ userId: req.userId, role: req.userRole, clientId: req.clientId }), 'path:', req.originalUrl);
+    logger.debug(`auth uid=${req.userId} role=${req.userRole} ${req.originalUrl}`);
     next();
   } catch (e) {
     res.status(401).json({ success: false, message: '认证失败' });

@@ -1,5 +1,6 @@
 ﻿const jwt = require('jsonwebtoken');
 const db = require('../../../config/db');
+const logger = require('../../../config/logger');
 
 module.exports = async (req, res) => {
   try {
@@ -45,7 +46,7 @@ module.exports = async (req, res) => {
       token,
     });
   } catch (e) {
-    console.error('[loginByCode error]', e);
+    logger.error(`loginByCode: ${e.message}`);
     res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

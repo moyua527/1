@@ -1,5 +1,6 @@
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
+const logger = require('../config/logger');
 
 let io = null;
 
@@ -10,7 +11,7 @@ function initSocket(httpServer) {
   });
 
   io.on('connection', (socket) => {
-    console.log(`[socket] 客户端连接: ${socket.id}`);
+    logger.debug(`socket connected: ${socket.id}`);
 
     socket.on('auth', (token) => {
       try {
@@ -18,15 +19,15 @@ function initSocket(httpServer) {
         const uid = decoded.userId || decoded.id;
         socket.userId = uid;
         socket.join(`user:${uid}`);
-        console.log(`[socket] ${socket.id} 认证成功, 加入 user:${uid}`);
+        logger.debug(`socket auth ok: ${socket.id} user:${uid}`);
       } catch (e) {
-        console.log(`[socket] ${socket.id} 认证失败`);
+        logger.warn(`socket auth failed: ${socket.id}`);
       }
     });
 
     socket.on('join_project', (projectId) => {
       socket.join(`project:${projectId}`);
-      console.log(`[socket] ${socket.id} 加入房间 project:${projectId}`);
+      logger.debug(`socket join project:${projectId} ${socket.id}`);
     });
 
     socket.on('leave_project', (projectId) => {
@@ -38,7 +39,7 @@ function initSocket(httpServer) {
     });
 
     socket.on('disconnect', () => {
-      console.log(`[socket] 客户端断开: ${socket.id}`);
+      logger.debug(`socket disconnected: ${socket.id}`);
     });
   });
 

@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const logger = require('./config/logger');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -47,7 +48,7 @@ app.use('/api', require('./atomic/middleware/xssMiddleware'));
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api', (req, res, next) => {
-  console.log(`[duijie] ${req.method} ${req.originalUrl}`);
+  logger.info(`${req.method} ${req.originalUrl}`);
   next();
 });
 app.use('/api', require('./atomic/middleware/auditMiddleware'));
@@ -55,7 +56,7 @@ app.use('/api', routes);
 
 // 全局错误处理（生产环境不暴露内部错误信息）
 app.use((err, req, res, next) => {
-  console.error(`[server error] ${req.method} ${req.originalUrl} userId=${req.userId || 'anon'}`, err.message, err.stack?.split('\n')[1]?.trim());
+  logger.error(`${req.method} ${req.originalUrl} userId=${req.userId || 'anon'} ${err.message}`, { stack: err.stack?.split('\n').slice(0, 3).join('\n') });
   res.status(err.status || 500).json({ success: false, message: '服务器内部错误' });
 });
 

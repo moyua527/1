@@ -1,4 +1,5 @@
 const db = require('../../../config/db');
+const logger = require('../../../config/logger');
 
 module.exports = async ({ status, client_id, page = 1, limit = 20 }, auth = {}) => {
   let sql = 'SELECT p.*, c.name as client_name FROM duijie_projects p LEFT JOIN duijie_clients c ON p.client_id = c.id WHERE p.is_deleted = 0';
@@ -25,10 +26,9 @@ module.exports = async ({ status, client_id, page = 1, limit = 20 }, auth = {}) 
   if (client_id) { sql += ' AND p.client_id = ?'; countSql += ' AND p.client_id = ?'; params.push(client_id); countParams.push(client_id); }
   sql += ' ORDER BY p.created_at DESC LIMIT ? OFFSET ?';
   params.push(Number(limit), (Number(page) - 1) * Number(limit));
-  console.log('[findAllRepo] SQL:', sql);
-  console.log('[findAllRepo] params:', JSON.stringify(params));
+  logger.debug(`findAllRepo SQL: ${sql} params=${JSON.stringify(params)}`);
   const [rows] = await db.query(sql, params);
   const [[{ total }]] = await db.query(countSql, countParams);
-  console.log('[findAllRepo] result: rows=', rows.length, 'total=', total);
+  logger.debug(`findAllRepo result: rows=${rows.length} total=${total}`);
   return { rows, total };
 };

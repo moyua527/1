@@ -1,4 +1,5 @@
 ﻿const db = require('../../../config/db');
+const logger = require('../../../config/logger');
 
 module.exports = async (req, res) => {
   try {
@@ -35,12 +36,12 @@ module.exports = async (req, res) => {
     );
 
     // TODO: integrate actual SMS/email sending service
-    console.log(`[验证码] ${type === 'phone' ? '手机' : '邮箱'}: ${target} -> ${code}`);
+    logger.info(`验证码 ${type}: ${target} -> ${code}`);
 
     // 临时测试模式：将验证码返回前端（上线前需删除 _dev_code 字段）
     res.json({ success: true, message: '验证码已发送', _dev_code: code });
   } catch (e) {
-    console.error('[sendCode error]', e);
+    logger.error(`sendCode: ${e.message}`);
     res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

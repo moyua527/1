@@ -3,6 +3,8 @@ const multer = require('multer');
 const path = require('path');
 const auth = require('../middleware/auth');
 const roleGuard = require('../middleware/roleGuard');
+const validate = require('../middleware/validate');
+const V = require('../middleware/validators');
 const allStaff = roleGuard('admin', 'tech', 'business', 'member');
 const salesTeam = roleGuard('admin', 'business');
 const adminOnly = roleGuard('admin');
@@ -18,17 +20,17 @@ const storage = multer.diskStorage({
 const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 } });
 
 // Auth (no auth middleware)
-router.post('/auth/login', require('../controllers/auth/loginController'));
+router.post('/auth/login', V.login, validate, require('../controllers/auth/loginController'));
 router.post('/auth/send-code', require('../controllers/auth/sendCodeController'));
 router.post('/auth/login-by-code', require('../controllers/auth/loginByCodeController'));
 router.post('/auth/verify-code', require('../controllers/auth/verifyCodeController'));
 router.post('/auth/forgot-password', require('../controllers/auth/forgotPasswordController'));
 router.post('/auth/reset-password', require('../controllers/auth/resetPasswordController'));
-router.post('/auth/register', require('../controllers/auth/registerController'));
+router.post('/auth/register', V.register, validate, require('../controllers/auth/registerController'));
 router.get('/auth/register-config', require('../controllers/auth/registerConfigController'));
 router.post('/auth/logout', require('../controllers/auth/logoutController'));
 router.get('/auth/me', auth, require('../controllers/auth/meController'));
-router.put('/auth/profile', auth, require('../controllers/auth/profileController'));
+router.put('/auth/profile', auth, V.profile, validate, require('../controllers/auth/profileController'));
 
 // System config (admin)
 const configCtrl = require('../controllers/system/configController');
@@ -46,7 +48,7 @@ router.get('/dashboard/chart', auth, require('../controllers/dashboard/chartCont
 const projectManagers = roleGuard('admin');
 const projectStaff = roleGuard('admin', 'tech', 'business', 'member', 'client', 'viewer');
 const projectEditors = roleGuard('admin', 'tech', 'business');
-router.post('/projects', auth, projectManagers, require('../controllers/project/createController'));
+router.post('/projects', auth, projectManagers, V.createProject, validate, require('../controllers/project/createController'));
 router.get('/projects/team-users', auth, projectManagers, require('../controllers/project/teamUsersController'));
 router.get('/projects', auth, projectStaff, require('../controllers/project/listController'));
 router.get('/projects/:id', auth, projectStaff, require('../controllers/project/detailController'));
@@ -58,7 +60,7 @@ router.delete('/projects/:id/members/:userId', auth, projectEditors, require('..
 
 // Clients
 router.get('/clients/available-members', auth, salesTeam, require('../controllers/client/availableMembersController'));
-router.post('/clients', auth, salesTeam, require('../controllers/client/createController'));
+router.post('/clients', auth, salesTeam, V.createClient, validate, require('../controllers/client/createController'));
 router.get('/clients', auth, roleGuard('admin', 'business'), require('../controllers/client/listController'));
 router.get('/clients/:id', auth, roleGuard('admin', 'business', 'member', 'client', 'viewer', 'tech'), require('../controllers/client/detailController'));
 router.put('/clients/:id', auth, salesTeam, require('../controllers/client/updateController'));
@@ -74,23 +76,23 @@ router.get('/clients/:clientId/ai-suggestion', auth, salesTeam, require('../cont
 // My Enterprise (成员管理自己企业)
 const myEntCtrl = require('../controllers/client/myEnterpriseController');
 router.get('/my-enterprise', auth, myEntCtrl.get);
-router.post('/my-enterprise', auth, myEntCtrl.create);
-router.put('/my-enterprise', auth, myEntCtrl.update);
+router.post('/my-enterprise', auth, V.createEnterprise, validate, myEntCtrl.create);
+router.put('/my-enterprise', auth, V.updateEnterprise, validate, myEntCtrl.update);
 router.delete('/my-enterprise', auth, myEntCtrl.remove);
 router.get('/my-enterprise/all', auth, myEntCtrl.getAll);
-router.get('/my-enterprise/search', auth, myEntCtrl.searchEnterprise);
-router.post('/my-enterprise/join', auth, myEntCtrl.joinEnterprise);
+router.get('/my-enterprise/search', auth, V.searchEnterprise, validate, myEntCtrl.searchEnterprise);
+router.post('/my-enterprise/join', auth, V.joinEnterprise, validate, myEntCtrl.joinEnterprise);
 router.get('/my-enterprise/join-requests', auth, myEntCtrl.listJoinRequests);
 router.post('/my-enterprise/join-requests/:id/approve', auth, myEntCtrl.approveJoinRequest);
 router.post('/my-enterprise/join-requests/:id/reject', auth, myEntCtrl.rejectJoinRequest);
 router.get('/my-enterprise/my-requests', auth, myEntCtrl.myJoinRequests);
 router.get('/my-enterprise/lookup-user', auth, myEntCtrl.lookupUser);
-router.post('/my-enterprise/departments', auth, myEntCtrl.addDepartment);
-router.put('/my-enterprise/departments/:id', auth, myEntCtrl.updateDepartment);
+router.post('/my-enterprise/departments', auth, V.addDepartment, validate, myEntCtrl.addDepartment);
+router.put('/my-enterprise/departments/:id', auth, V.updateDepartment, validate, myEntCtrl.updateDepartment);
 router.delete('/my-enterprise/departments/:id', auth, myEntCtrl.removeDepartment);
-router.post('/my-enterprise/members', auth, myEntCtrl.addMember);
-router.put('/my-enterprise/members/:id', auth, myEntCtrl.updateMember);
-router.put('/my-enterprise/members/:id/role', auth, myEntCtrl.updateMemberRole);
+router.post('/my-enterprise/members', auth, V.addMember, validate, myEntCtrl.addMember);
+router.put('/my-enterprise/members/:id', auth, V.updateMember, validate, myEntCtrl.updateMember);
+router.put('/my-enterprise/members/:id/role', auth, V.updateMemberRole, validate, myEntCtrl.updateMemberRole);
 router.delete('/my-enterprise/members/:id', auth, myEntCtrl.removeMember);
 
 // Client Members (企业成员)
@@ -159,7 +161,7 @@ router.get('/files/:id/download', auth, require('../controllers/file/downloadCon
 router.get('/files/:id/preview', auth, require('../controllers/file/previewController'));
 
 // Messages
-router.post('/messages', auth, require('../controllers/message/sendController'));
+router.post('/messages', auth, V.sendMessage, validate, require('../controllers/message/sendController'));
 router.get('/messages', auth, require('../controllers/message/listController'));
 
 // Direct Messages

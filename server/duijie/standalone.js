@@ -1,5 +1,6 @@
 const http = require('http');
 const app = require('./app');
+const logger = require('./config/logger');
 const { initSocket } = require('./socket');
 require('./listeners/projectListener');
 require('./listeners/taskListener');
@@ -10,5 +11,5 @@ const server = http.createServer(app);
 initSocket(server);
 
 server.listen(PORT, () => {
-  console.log(`[duijie] 后端服务启动: http://localhost:${PORT}`);
+  logger.info(`后端服务启动: http://localhost:${PORT}`);
 });

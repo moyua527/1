@@ -1,4 +1,5 @@
 ﻿const db = require('../../../config/db');
+const logger = require('../../../config/logger');
 
 module.exports = async (req, res) => {
   try {
@@ -14,7 +15,7 @@ module.exports = async (req, res) => {
 
     res.json({ success: true, message: '验证成功' });
   } catch (e) {
-    console.error('[verifyCode error]', e);
+    logger.error(`verifyCode: ${e.message}`);
     res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

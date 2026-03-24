@@ -1,14 +1,15 @@
 ﻿const listProjects = require('../../services/project/listProjects');
+const logger = require('../../../config/logger');
 
 module.exports = async (req, res) => {
   try {
     const auth = { role: req.userRole, userId: req.userId, clientId: req.clientId };
-    console.log('[project/list] auth:', JSON.stringify(auth), 'query:', JSON.stringify(req.query));
+    logger.debug(`project/list auth=${JSON.stringify(auth)} query=${JSON.stringify(req.query)}`);
     const data = await listProjects(req.query, auth);
-    console.log('[project/list] result: total=', data.total, 'rows=', data.rows?.length);
+    logger.debug(`project/list total=${data.total} rows=${data.rows?.length}`);
     res.json({ success: true, data });
   } catch (e) {
-    console.error('[project/list] ERROR:', e.message, e.stack);
+    logger.error(`project/list: ${e.message}`);
     res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
