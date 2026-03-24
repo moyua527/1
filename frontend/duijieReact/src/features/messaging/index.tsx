@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { Send, MessageSquare, Search, User, Check, CheckCheck, Loader2 } from 'lucide-react'
+import { io, Socket } from 'socket.io-client'
 import { fetchApi } from '../../bootstrap'
 import Avatar from '../ui/Avatar'
 import { toast } from '../ui/Toast'
@@ -26,7 +27,8 @@ export default function Messaging() {
   const [searchUser, setSearchUser] = useState('')
   const [showNewChat, setShowNewChat] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
-  const pollRef = useRef<any>(null)
+  const selectedRef = useRef<any>(null)
+  const socketRef = useRef<Socket | null>(null)
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
   const [me, setMe] = useState<any>(null)
 
@@ -37,14 +39,33 @@ export default function Messaging() {
   const loadConversations = () => {
     dmApi.conversations().then(r => { if (r.success) setConversations(r.data || []) }).finally(() => setLoading(false))
   }
+
   useEffect(() => {
     loadConversations()
-    const t = setInterval(loadConversations, 5000)
-    return () => clearInterval(t)
+    const socket = io(window.location.origin, { path: '/socket.io', withCredentials: true })
+    socketRef.current = socket
+    socket.on('connect', () => {
+      const token = localStorage.getItem('token')
+      if (token) socket.emit('auth', token)
+    })
+    socket.on('new_dm', () => {
+      loadConversations()
+      window.dispatchEvent(new Event('dm-read'))
+      const sel = selectedRef.current
+      if (sel) {
+        dmApi.history(sel.id).then(r => {
+          if (r.success) setMessages(r.data || [])
+          setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+        })
+      }
+    })
+    const t = setInterval(loadConversations, 60000)
+    return () => { clearInterval(t); socket.disconnect() }
   }, [])
 
   const selectUser = (user: any) => {
     setSelectedUser(user)
+    selectedRef.current = user
     setShowNewChat(false)
     dmApi.history(user.id).then(r => {
       if (r.success) setMessages(r.data || [])
@@ -52,14 +73,7 @@ export default function Messaging() {
       loadConversations()
       window.dispatchEvent(new Event('dm-read'))
     })
-    // Poll for new messages
-    if (pollRef.current) clearInterval(pollRef.current)
-    pollRef.current = setInterval(() => {
-      dmApi.history(user.id).then(r => { if (r.success) setMessages(r.data || []) })
-    }, 5000)
   }
-
-  useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current) }, [])
 
   const handleSend = async () => {
     if (!input.trim() || !selectedUser) return

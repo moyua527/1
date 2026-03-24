@@ -75,6 +75,7 @@ def main():
         'socket/index.js',
         'atomic/utils/notify.js',
         'atomic/controllers/file/previewController.js',
+        'atomic/controllers/dm/sendController.js',
     ]
     remote_server = f'{REMOTE_BASE}/server/duijie'
     for f in backend_files:

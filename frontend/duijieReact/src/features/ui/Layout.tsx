@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
 import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield, Settings, Copy, TrendingUp, MessageSquare, ScrollText, FileText, Edit2, Building2 } from 'lucide-react'
+import { io, Socket } from 'socket.io-client'
 import { fetchApi, clearToken } from '../../bootstrap'
 import Avatar from './Avatar'
 import Modal from './Modal'
@@ -71,12 +72,21 @@ export default function Layout() {
     })
   }
 
+  const dmSocketRef = useRef<Socket | null>(null)
+
   useEffect(() => {
     loadDmUnread()
-    const t = setInterval(loadDmUnread, 15000)
+    const socket = io(window.location.origin, { path: '/socket.io', withCredentials: true })
+    dmSocketRef.current = socket
+    socket.on('connect', () => {
+      const token = localStorage.getItem('token')
+      if (token) socket.emit('auth', token)
+    })
+    socket.on('new_dm', () => loadDmUnread())
+    const t = setInterval(loadDmUnread, 60000)
     const onDmRead = () => loadDmUnread()
     window.addEventListener('dm-read', onDmRead)
-    return () => { clearInterval(t); window.removeEventListener('dm-read', onDmRead) }
+    return () => { clearInterval(t); window.removeEventListener('dm-read', onDmRead); socket.disconnect() }
   }, [])
 
   useEffect(() => { loadDmUnread() }, [location.pathname])
