@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
 import { Plus, Users, Loader2, Search, Download, Zap, Upload, Building2, UserCircle } from 'lucide-react'
 import { clientApi } from './services/api'
+import { can } from '../../stores/permissions'
 import Button from '../ui/Button'
 import Avatar from '../ui/Avatar'
 import Modal from '../ui/Modal'
@@ -278,7 +279,7 @@ export default function ClientList() {
             <select value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })}
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
               <option value="">暂不分配</option>
-              {availableMembers.filter(u => ['admin', 'business', 'tech'].includes(u.role)).map((u: any) => <option key={u.id} value={u.id}>{u.nickname || u.username} ({u.role === 'admin' ? '管理' : u.role === 'business' ? '业务' : '技术'})</option>)}
+              {availableMembers.filter(u => can(u.role, 'staff:assignable')).map((u: any) => <option key={u.id} value={u.id}>{u.nickname || u.username} ({u.role === 'admin' ? '管理' : u.role === 'business' ? '业务' : '技术'})</option>)}
             </select>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>

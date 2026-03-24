@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { Shield, ChevronLeft, ChevronRight, Filter, Download, Search, X, Calendar } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
+import { useVirtualizer } from '@tanstack/react-virtual'
 
 const actionLabel: Record<string, { label: string; color: string }> = {
   create: { label: '创建', color: '#16a34a' },
@@ -28,8 +29,15 @@ export default function AuditLog() {
   const [endDate, setEndDate] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
-  const limit = 30
+  const limit = 200
   const searchTimer = useRef<any>(null)
+  const tableRef = useRef<HTMLDivElement>(null)
+  const virtualizer = useVirtualizer({
+    count: logs.length,
+    getScrollElement: () => tableRef.current,
+    estimateSize: () => 42,
+    overscan: 10,
+  })
 
   const buildUrl = (base: string) => {
     let url = base
@@ -155,30 +163,37 @@ export default function AuditLog() {
                 <th style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: '#64748b', whiteSpace: 'nowrap' }}>IP</th>
               </tr>
             </thead>
-            <tbody>
-              {logs.length === 0 ? (
-                <tr><td colSpan={6} style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>暂无日志记录</td></tr>
-              ) : logs.map(log => {
-                const a = actionLabel[log.action] || { label: log.action, color: '#6b7280' }
-                return (
-                  <tr key={log.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                    <td style={{ padding: '10px 16px', whiteSpace: 'nowrap', color: '#64748b' }}>{new Date(log.created_at).toLocaleString('zh-CN')}</td>
-                    <td style={{ padding: '10px 16px', whiteSpace: 'nowrap', color: '#0f172a', fontWeight: 500 }}>{log.nickname || log.username || '-'}</td>
-                    <td style={{ padding: '10px 16px', whiteSpace: 'nowrap' }}>
-                      <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: a.color + '18', color: a.color, fontWeight: 600 }}>{a.label}</span>
-                    </td>
-                    <td style={{ padding: '10px 16px', whiteSpace: 'nowrap', color: '#64748b' }}>
-                      {entityLabel[log.entity_type] || log.entity_type || '-'}
-                      {log.entity_id ? ` #${log.entity_id}` : ''}
-                    </td>
-                    <td style={{ padding: '10px 16px', color: '#334155', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{log.detail || '-'}</td>
-                    <td style={{ padding: '10px 16px', whiteSpace: 'nowrap', color: '#94a3b8', fontFamily: 'monospace', fontSize: 11 }}>{log.ip || '-'}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
           </table>
         </div>
+        {logs.length === 0 ? (
+          <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>暂无日志记录</div>
+        ) : (
+          <div ref={tableRef} style={{ maxHeight: 600, overflowY: 'auto', overflowX: 'auto' }}>
+            <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
+              {virtualizer.getVirtualItems().map(vRow => {
+                const log = logs[vRow.index]
+                const a = actionLabel[log.action] || { label: log.action, color: '#6b7280' }
+                return (
+                  <div key={log.id} data-index={vRow.index}
+                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: vRow.size, transform: `translateY(${vRow.start}px)`,
+                      display: 'flex', alignItems: 'center', borderBottom: '1px solid #f1f5f9', fontSize: 13 }}>
+                    <div style={{ padding: '10px 16px', whiteSpace: 'nowrap', color: '#64748b', width: '18%', flexShrink: 0 }}>{new Date(log.created_at).toLocaleString('zh-CN')}</div>
+                    <div style={{ padding: '10px 16px', whiteSpace: 'nowrap', color: '#0f172a', fontWeight: 500, width: '12%', flexShrink: 0 }}>{log.nickname || log.username || '-'}</div>
+                    <div style={{ padding: '10px 16px', whiteSpace: 'nowrap', width: '10%', flexShrink: 0 }}>
+                      <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: a.color + '18', color: a.color, fontWeight: 600 }}>{a.label}</span>
+                    </div>
+                    <div style={{ padding: '10px 16px', whiteSpace: 'nowrap', color: '#64748b', width: '14%', flexShrink: 0 }}>
+                      {entityLabel[log.entity_type] || log.entity_type || '-'}
+                      {log.entity_id ? ` #${log.entity_id}` : ''}
+                    </div>
+                    <div style={{ padding: '10px 16px', color: '#334155', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{log.detail || '-'}</div>
+                    <div style={{ padding: '10px 16px', whiteSpace: 'nowrap', color: '#94a3b8', fontFamily: 'monospace', fontSize: 11, width: '12%', flexShrink: 0 }}>{log.ip || '-'}</div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
         {totalPages > 1 && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 16, borderTop: '1px solid #f1f5f9' }}>
             <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}

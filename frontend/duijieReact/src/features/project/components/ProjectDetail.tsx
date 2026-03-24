@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
 import { ArrowLeft, Trash2, User, Mail, Shield, ChevronDown, Plus, X, Upload, FileText, Image, CheckCircle, Circle, Paperclip, Download, AppWindow, ExternalLink, Building2, Phone, MapPin, Clock } from 'lucide-react'
+import { can } from '../../../stores/permissions'
 import Modal from '../../ui/Modal'
 import Avatar from '../../ui/Avatar'
 import { fetchApi } from '../../../bootstrap'
@@ -37,9 +38,9 @@ export default function ProjectDetail() {
   const { id } = useParams()
   const nav = useNavigate()
   const { user } = useOutletContext<{ user: any }>()
-  const role = user?.role
-  const canEdit = ['admin', 'tech', 'business'].includes(role)
-  const canDelete = role === 'admin'
+  const role = user?.role || ''
+  const canEdit = can(role, 'project:edit')
+  const canDelete = can(role, 'project:delete')
   const [project, setProject] = useState<any>(null)
   const [tasks, setTasks] = useState<any[]>([])
   const [milestones, setMilestones] = useState<any[]>([])

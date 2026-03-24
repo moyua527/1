@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Tag, Building, Mail, Phone, FileText, Clock, MoreVertical, Settings, History, Trash2, MessageSquare, Plus, PhoneCall, Send, MapPin, AtSign, HelpCircle, UserPlus, Users, Star, Edit3, X, FileSignature, DollarSign, Zap, Sparkles, Loader2, Building2, UserCircle } from 'lucide-react'
 import { clientApi } from '../services/api'
+import { can } from '../../../stores/permissions'
 import Avatar from '../../ui/Avatar'
 import Modal from '../../ui/Modal'
 import Button from '../../ui/Button'
@@ -95,7 +96,7 @@ export default function ClientDetail() {
 
   const openEdit = () => {
     setForm({ client_type: client.client_type || 'company', name: client.name || '', company: client.company || '', email: client.email || '', phone: client.phone || '', channel: client.channel || '', stage: client.stage || 'potential', notes: client.notes || '', position_level: client.position_level || '', department: client.department || '', job_function: client.job_function || '', assigned_to: client.assigned_to ? String(client.assigned_to) : '' })
-    clientApi.availableMembers().then(r => { if (r.success) setStaffMembers((r.data || []).filter((u: any) => ['admin', 'business', 'tech'].includes(u.role))) })
+    clientApi.availableMembers().then(r => { if (r.success) setStaffMembers((r.data || []).filter((u: any) => can(u.role, 'staff:assignable'))) })
     setEditOpen(true); setMenuOpen(false)
   }
 

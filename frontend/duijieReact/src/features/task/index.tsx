@@ -9,6 +9,7 @@ import Button from '../ui/Button'
 import { toast } from '../ui/Toast'
 import { Plus, GripVertical, Paperclip, X, Download, Search, Filter } from 'lucide-react'
 import TaskDetailModal from './components/TaskDetailModal'
+import { can } from '../../stores/permissions'
 
 const BACKEND_URL = (window as any).__ENV__?.BACKEND_URL || ''
 
@@ -33,7 +34,7 @@ const taskCard: React.CSSProperties = { background: '#fff', borderRadius: 10, pa
 
 export default function TaskBoard() {
   const { user } = useOutletContext<{ user: any }>()
-  const canAddTask = ['admin', 'business'].includes(user?.role)
+  const canAddTask = can(user?.role || '', 'task:create')
   const [allTasks, setAllTasks] = useState<Task[]>([])
   const [projects, setProjects] = useState<any[]>([])
   const [filterProject, setFilterProject] = useState<string>('')
@@ -72,9 +73,10 @@ export default function TaskBoard() {
 
   const handleMove = async (taskId: number, newStatus: string) => {
     setDragOverCol(null)
+    const prev = allTasks
+    setAllTasks(tasks => tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t))
     const r = await taskApi.move(String(taskId), newStatus)
-    if (r.success) { setAllTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: newStatus } : t)); toast('任务状态已更新', 'success') }
-    else toast(r.message || '移动失败', 'error')
+    if (!r.success) { setAllTasks(prev); toast(r.message || '移动失败', 'error') }
   }
 
   useEffect(() => {

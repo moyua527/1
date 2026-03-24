@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import { FolderKanban, Users, ListTodo, CheckCircle, TrendingUp, Clock, Loader2, DollarSign, FileSignature, AlertTriangle, Bell, MessageSquare, Activity, Download, Star, FileText } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
+import { can } from '../../stores/permissions'
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 
 interface Stats {
@@ -191,9 +192,10 @@ export default function Dashboard() {
   const [chartDays, setChartDays] = useState(30)
   const nav = useNavigate()
   const { user } = useOutletContext<{ user: any }>()
-  const canClients = ['admin', 'business'].includes(user?.role)
-  const canTasks = ['admin', 'tech', 'business', 'member'].includes(user?.role)
-  const canAmount = ['admin', 'tech', 'business', 'member'].includes(user?.role)
+  const r = user?.role || ''
+  const canClients = can(r, 'dashboard:clients')
+  const canTasks = can(r, 'dashboard:tasks')
+  const canAmount = can(r, 'dashboard:amount')
 
   useEffect(() => {
     fetchApi('/api/dashboard/stats').then(r => { if (r.success) setStats(r.data) }).catch(() => {

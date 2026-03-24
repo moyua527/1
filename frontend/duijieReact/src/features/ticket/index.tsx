@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { Ticket, Plus, Send, Star, ChevronLeft, Clock, AlertTriangle, CheckCircle, XCircle, Loader2, User, Paperclip, Download, X } from 'lucide-react'
 import { fetchApi, uploadFile } from '../../bootstrap'
+import { can } from '../../stores/permissions'
 import Avatar from '../ui/Avatar'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
@@ -35,7 +36,7 @@ const BACKEND_URL = (window as any).__ENV__?.BACKEND_URL || ''
 export default function TicketPage() {
   const { user, isMobile } = useOutletContext<{ user: any; isMobile: boolean }>()
   const isClient = false
-  const isStaff = ['admin', 'tech', 'business', 'member'].includes(user?.role)
+  const isStaff = can(user?.role || '', 'ticket:staff')
 
   const [tickets, setTickets] = useState<any[]>([])
   const [loading, setLoading] = useState(true)

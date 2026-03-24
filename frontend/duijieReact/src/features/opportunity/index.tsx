@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { Plus, Loader2, DollarSign, Calendar, User, Trash2, Edit3, X, TrendingUp } from 'lucide-react'
 import { clientApi } from '../client/services/api'
+import { can } from '../../stores/permissions'
 import Button from '../ui/Button'
 import Modal from '../ui/Modal'
 import Input from '../ui/Input'
@@ -40,7 +41,7 @@ export default function OpportunityList() {
   const openCreate = () => {
     setForm({ title: '', client_id: '', amount: '', probability: '50', stage: 'lead', expected_close: '', assigned_to: '', notes: '' })
     clientApi.list().then(r => { if (r.success) setClients(r.data || []) })
-    clientApi.availableMembers().then(r => { if (r.success) setStaffMembers((r.data || []).filter((u: any) => ['admin', 'business', 'tech'].includes(u.role))) })
+    clientApi.availableMembers().then(r => { if (r.success) setStaffMembers((r.data || []).filter((u: any) => can(u.role, 'staff:assignable'))) })
     setShowCreate(true)
   }
 
@@ -52,7 +53,7 @@ export default function OpportunityList() {
       expected_close: item.expected_close ? item.expected_close.slice(0, 10) : '', assigned_to: item.assigned_to ? String(item.assigned_to) : '', notes: item.notes || ''
     })
     clientApi.list().then(r => { if (r.success) setClients(r.data || []) })
-    clientApi.availableMembers().then(r => { if (r.success) setStaffMembers((r.data || []).filter((u: any) => ['admin', 'business', 'tech'].includes(u.role))) })
+    clientApi.availableMembers().then(r => { if (r.success) setStaffMembers((r.data || []).filter((u: any) => can(u.role, 'staff:assignable'))) })
     setShowEdit(true)
   }
 
@@ -82,8 +83,10 @@ export default function OpportunityList() {
   }
 
   const handleStageChange = async (item: any, newStage: string) => {
-    await clientApi.updateOpportunity(item.id, { stage: newStage })
-    load()
+    const prev = items
+    setItems(list => list.map(i => i.id === item.id ? { ...i, stage: newStage } : i))
+    const r = await clientApi.updateOpportunity(item.id, { stage: newStage })
+    if (!r.success) { setItems(prev); toast(r.message || '移动失败', 'error') }
   }
 
   const totalAmount = items.filter(i => i.stage !== 'lost').reduce((s, i) => s + Number(i.amount || 0), 0)

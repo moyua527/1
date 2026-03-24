@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom'
 import { Plus, FolderKanban, Loader2, Search, X, AppWindow } from 'lucide-react'
 import { projectApi } from './services/api'
 import { clientApi } from '../client/services/api'
+import { can } from '../../stores/permissions'
 import Button from '../ui/Button'
 import Badge from '../ui/Badge'
 import ProgressBar from '../ui/ProgressBar'
@@ -44,8 +45,7 @@ export default function ProjectList() {
   const [statusFilter, setStatusFilter] = useState('')
   const nav = useNavigate()
   const { user } = useOutletContext<{ user: any }>()
-  const role = user?.role
-  const canCreate = role === 'admin'
+  const canCreate = can(user?.role || '', 'project:create')
 
   const load = () => {
     setLoading(true)
