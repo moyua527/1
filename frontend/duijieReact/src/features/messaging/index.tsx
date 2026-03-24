@@ -194,7 +194,7 @@ export default function Messaging() {
                           {m.content}
                           <div style={{ fontSize: 10, marginTop: 4, opacity: 0.6, textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
                             {new Date(m.created_at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
-                            {isMine && m.read_at && <CheckCheck size={12} />}
+                            
                           </div>
                         </div>
                       </div>
