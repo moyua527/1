@@ -41,6 +41,7 @@ export default function Enterprise() {
   const [deptForm, setDeptForm] = useState({ name: '', parent_id: '' })
   const [deptSaving, setDeptSaving] = useState(false)
   const [expandedDepts, setExpandedDepts] = useState<Set<number>>(new Set())
+  const [deptMenuId, setDeptMenuId] = useState<number | null>(null)
   const [entMenuOpen, setEntMenuOpen] = useState(false)
   const [lookupPhone, setLookupPhone] = useState('')
   const [lookupLoading, setLookupLoading] = useState(false)
@@ -486,11 +487,31 @@ export default function Enterprise() {
                       <Building size={18} color="#2563eb" />
                       <span style={{ flex: 1, fontSize: 15, fontWeight: 600, color: '#0f172a' }}>{dept.name}</span>
                       <span style={{ fontSize: 12, color: '#94a3b8' }}>{memberCount}人</span>
-                      {isOwner && <>
-                        <button onClick={() => openAddDept(dept.id)} title="添加子部门" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2563eb', padding: 2, display: 'flex' }}><Plus size={14} /></button>
-                        <button onClick={() => openEditDept(dept)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, display: 'flex' }}><Edit3 size={14} /></button>
-                        <button onClick={() => handleDeleteDept(dept.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: 2, display: 'flex' }}><Trash2 size={14} /></button>
-                      </>}
+                      {isOwner && (
+                        <div style={{ position: 'relative' }}>
+                          <button onClick={() => setDeptMenuId(deptMenuId === dept.id ? null : dept.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 2, display: 'flex' }}><MoreHorizontal size={16} /></button>
+                          {deptMenuId === dept.id && (
+                            <>
+                              <div onClick={() => setDeptMenuId(null)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
+                              <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,.1)', zIndex: 50, minWidth: 130, overflow: 'hidden' }}>
+                                <button onClick={() => { setDeptMenuId(null); openAddDept(dept.id) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: '#334155' }}
+                                  onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                                  <Plus size={13} color="#2563eb" /> 添加子部门
+                                </button>
+                                <button onClick={() => { setDeptMenuId(null); openEditDept(dept) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: '#334155' }}
+                                  onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                                  <Edit3 size={13} color="#64748b" /> 编辑部门
+                                </button>
+                                <div style={{ height: 1, background: '#f1f5f9' }} />
+                                <button onClick={() => { setDeptMenuId(null); handleDeleteDept(dept.id) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: '#dc2626' }}
+                                  onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                                  <Trash2 size={13} /> 删除部门
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
                     </div>
                     {children.length > 0 && (
                       <div style={{ marginLeft: 28, borderLeft: '2px solid #e2e8f0', paddingLeft: 12, marginTop: 4 }}>
@@ -501,10 +522,27 @@ export default function Enterprise() {
                               <Building size={14} color="#64748b" />
                               <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: '#334155' }}>{child.name}</span>
                               <span style={{ fontSize: 12, color: '#94a3b8' }}>{childCount}人</span>
-                              {isOwner && <>
-                                <button onClick={() => openEditDept(child)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, display: 'flex' }}><Edit3 size={13} /></button>
-                                <button onClick={() => handleDeleteDept(child.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: 2, display: 'flex' }}><Trash2 size={13} /></button>
-                              </>}
+                              {isOwner && (
+                                <div style={{ position: 'relative' }}>
+                                  <button onClick={() => setDeptMenuId(deptMenuId === child.id ? null : child.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 2, display: 'flex' }}><MoreHorizontal size={14} /></button>
+                                  {deptMenuId === child.id && (
+                                    <>
+                                      <div onClick={() => setDeptMenuId(null)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
+                                      <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,.1)', zIndex: 50, minWidth: 120, overflow: 'hidden' }}>
+                                        <button onClick={() => { setDeptMenuId(null); openEditDept(child) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: '#334155' }}
+                                          onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                                          <Edit3 size={13} color="#64748b" /> 编辑
+                                        </button>
+                                        <div style={{ height: 1, background: '#f1f5f9' }} />
+                                        <button onClick={() => { setDeptMenuId(null); handleDeleteDept(child.id) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '9px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: '#dc2626' }}
+                                          onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                                          <Trash2 size={13} /> 删除
+                                        </button>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           )
                         })}
