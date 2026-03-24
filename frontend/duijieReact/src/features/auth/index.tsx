@@ -3,6 +3,7 @@ import { authApi } from './services/api'
 import { setToken, fetchApi } from '../../bootstrap'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
+import { confirm } from '../ui/ConfirmDialog'
 import { Lock, Mail, Phone, Link2, Clock, ArrowLeft, ArrowRight, CheckCircle, KeyRound } from 'lucide-react'
 import { areaData } from '../../data/areaCode'
 
@@ -169,7 +170,11 @@ export default function LoginPage({ onLogin }: Props) {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!agreed) { setError('请先勾选同意《用户服务协议》和《隐私保护政策》'); return }
+    if (!agreed) {
+      const ok = await confirm({ title: '服务协议', message: '登录前需同意《用户服务协议》和《隐私保护政策》，是否同意并继续？', confirmText: '同意并登录', cancelText: '取消' })
+      if (!ok) return
+      setAgreed(true)
+    }
     setError(''); setLoading(true)
     try {
       if (loginMethod === 'password') {
@@ -191,7 +196,11 @@ export default function LoginPage({ onLogin }: Props) {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!agreed) { setError('请先勾选同意《用户服务协议》和《隐私保护政策》'); return }
+    if (!agreed) {
+      const ok = await confirm({ title: '服务协议', message: '注册前需同意《用户服务协议》和《隐私保护政策》，是否同意并继续？', confirmText: '同意并注册', cancelText: '取消' })
+      if (!ok) return
+      setAgreed(true)
+    }
     setError(''); setSuccess('')
     if (!nickname.trim()) { setError('请输入昵称'); return }
     if (!gender) { setError('请选择性别'); return }
