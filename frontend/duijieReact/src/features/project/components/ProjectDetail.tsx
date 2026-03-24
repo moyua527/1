@@ -505,7 +505,8 @@ export default function ProjectDetail() {
             return (
               <div style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid #e2e8f0', background: '#fff' }}>
                 <iframe src={project.app_url} style={{ width: '100%', height: 'calc(100vh - 260px)', border: 'none', display: 'block' }}
-                  sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
+                  allow="storage-access *; camera; microphone"
+                  referrerPolicy="no-referrer-when-downgrade"
                   title={project.app_name || '应用'} />
               </div>
             )
