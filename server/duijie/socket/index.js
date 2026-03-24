@@ -32,6 +32,10 @@ function initSocket(httpServer) {
       socket.leave(`project:${projectId}`);
     });
 
+    socket.on('heartbeat', (startTime) => {
+      socket.emit('heartbeat_ack', startTime);
+    });
+
     socket.on('disconnect', () => {
       console.log(`[socket] 客户端断开: ${socket.id}`);
     });

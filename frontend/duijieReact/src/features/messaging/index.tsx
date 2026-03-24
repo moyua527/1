@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { Send, MessageSquare, Search, User, Check, CheckCheck, Loader2 } from 'lucide-react'
-import { io, Socket } from 'socket.io-client'
 import { fetchApi } from '../../bootstrap'
+import { onSocket } from '../ui/smartSocket'
 import Avatar from '../ui/Avatar'
 import { toast } from '../ui/Toast'
 
@@ -28,7 +28,6 @@ export default function Messaging() {
   const [showNewChat, setShowNewChat] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const selectedRef = useRef<any>(null)
-  const socketRef = useRef<Socket | null>(null)
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
   const [me, setMe] = useState<any>(null)
 
@@ -40,30 +39,27 @@ export default function Messaging() {
     dmApi.conversations().then(r => { if (r.success) setConversations(r.data || []) }).finally(() => setLoading(false))
   }
 
-  useEffect(() => {
-    loadConversations()
-    const socket = io(window.location.origin, { path: '/socket.io', withCredentials: true })
-    socketRef.current = socket
-    socket.on('connect', () => {
-      const token = localStorage.getItem('token')
-      if (token) socket.emit('auth', token)
-    })
-    socket.on('new_dm', () => {
-      const sel = selectedRef.current
-      if (sel) {
-        dmApi.history(sel.id).then(r => {
-          if (r.success) setMessages(r.data || [])
-          setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
-          loadConversations()
-          window.dispatchEvent(new Event('dm-read'))
-        })
-      } else {
+  const pullMessages = () => {
+    const sel = selectedRef.current
+    if (sel) {
+      dmApi.history(sel.id).then(r => {
+        if (r.success) setMessages(r.data || [])
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
         loadConversations()
         window.dispatchEvent(new Event('dm-read'))
-      }
-    })
+      })
+    } else {
+      loadConversations()
+      window.dispatchEvent(new Event('dm-read'))
+    }
+  }
+
+  useEffect(() => {
+    loadConversations()
+    const offDm = onSocket('new_dm', pullMessages)
+    const offReconnect = onSocket('reconnect', () => { loadConversations(); pullMessages() })
     const t = setInterval(loadConversations, 60000)
-    return () => { clearInterval(t); socket.disconnect() }
+    return () => { clearInterval(t); offDm(); offReconnect() }
   }, [])
 
   const selectUser = (user: any) => {
