@@ -491,26 +491,20 @@ export default function ProjectDetail() {
               <ExternalLink size={14} /> 新窗口打开
             </a>
           </div>
-          {(() => {
-            try { const u = new URL(project.app_url); if (u.origin === window.location.origin) return (
-              <div style={{ borderRadius: 10, border: '1px solid #e2e8f0', background: '#f8fafc', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 300, gap: 12 }}>
-                <AppWindow size={32} color="#94a3b8" />
-                <div style={{ fontSize: 14, color: '#64748b' }}>同域应用无法在iframe中嵌入，请使用新窗口打开</div>
-                <a href={project.app_url} target="_blank" rel="noreferrer"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 16px', background: '#2563eb', color: '#fff', borderRadius: 8, fontSize: 14, textDecoration: 'none', fontWeight: 500 }}>
-                  <ExternalLink size={14} /> 新窗口打开
-                </a>
-              </div>
-            )} catch {}
-            return (
-              <div style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid #e2e8f0', background: '#fff' }}>
-                <iframe src={project.app_url} style={{ width: '100%', height: 'calc(100vh - 260px)', border: 'none', display: 'block' }}
-                  allow="storage-access *; camera; microphone"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  title={project.app_name || '应用'} />
-              </div>
-            )
-          })()}
+          <div style={{ borderRadius: 12, border: '1px solid #e2e8f0', background: 'linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 24px', gap: 16 }}>
+            <div style={{ width: 64, height: 64, borderRadius: 16, background: '#fff', boxShadow: '0 2px 8px rgba(37,99,235,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <AppWindow size={32} color="#2563eb" />
+            </div>
+            <h4 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#0f172a' }}>{project.app_name || '应用'}</h4>
+            <p style={{ margin: 0, fontSize: 13, color: '#64748b', textAlign: 'center', maxWidth: 360 }}>
+              外部应用需在独立窗口中打开以确保完整功能体验
+            </p>
+            <a href={project.app_url} target="_blank" rel="noreferrer"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 24px', background: '#2563eb', color: '#fff', borderRadius: 10, fontSize: 15, textDecoration: 'none', fontWeight: 600, marginTop: 8, boxShadow: '0 2px 8px rgba(37,99,235,0.25)', transition: 'transform 0.1s' }}>
+              <ExternalLink size={16} /> 打开{project.app_name || '应用'}
+            </a>
+            <span style={{ fontSize: 12, color: '#94a3b8' }}>{project.app_url}</span>
+          </div>
         </div>
       )}
 
