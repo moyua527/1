@@ -4,7 +4,8 @@
   "main": "standalone.js",
   "scripts": {
     "start": "node standalone.js",
-    "test": "jest --runInBand --forceExit"
+    "test": "jest --runInBand --forceExit",
+    "migrate": "node scripts/migrate.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

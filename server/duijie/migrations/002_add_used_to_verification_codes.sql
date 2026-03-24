@@ -1,0 +1,1 @@
+ALTER TABLE verification_codes ADD COLUMN used TINYINT(1) DEFAULT 0;

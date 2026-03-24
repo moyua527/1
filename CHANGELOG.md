@@ -88,3 +88,4 @@
 | v1.1.11 | 2026-03-24 | 代码质量：P0错误信息脱敏(98个控制器123处e.message替换为通用错误信息+全局错误中间件增强日志)；P1前端企业管理组件拆分(1016行→11个文件：constants/useEnterprise/EnterpriseCard/MemberList/DepartmentList/OrgTree/JoinRequests/AdminAllEnterprises/EmptyState/EnterpriseModals+精简index.tsx) |
 | v1.1.12 | 2026-03-24 | P1核心API自动化测试：Jest+supertest搭建测试基础设施，24个测试用例全部通过(auth认证6+企业CRUD18)，后端app.js抽离为可测试模块，standalone.js精简为启动层 |
 | v1.1.13 | 2026-03-24 | P2统一输入校验层(express-validator集成16个关键路由，含认证/企业/成员/部门/客户/项目/消息)；P2结构化日志系统(winston替换运行时文件中48处console调用，分级error/combined日志文件+自动轮转) |
+| v1.1.14 | 2026-03-24 | P3数据库迁移规范化：版本化迁移系统(schema_migrations表+migrate.js运行器+4个.sql迁移文件)，deploy_update.py改用迁移运行器替代硬编码SQL，新增app.js/logger/validate/validators等文件到部署清单 |

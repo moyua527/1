@@ -48,7 +48,11 @@ def main():
     print('\n[1/5] Uploading backend files...')
     backend_files = [
         'standalone.js',
+        'app.js',
         'package.json',
+        'config/logger.js',
+        'atomic/middleware/validate.js',
+        'atomic/middleware/validators.js',
         'atomic/services/auth/loginService.js',
         'atomic/controllers/auth/registerController.js',
         'atomic/controllers/auth/profileController.js',
@@ -78,6 +82,10 @@ def main():
         'atomic/controllers/dm/sendController.js',
         'atomic/repositories/auth/findByUsernameRepo.js',
         'atomic/controllers/audit/listController.js',
+        'atomic/utils/auditLog.js',
+        'listeners/projectListener.js',
+        'listeners/taskListener.js',
+        'listeners/messageListener.js',
     ]
     remote_server = f'{REMOTE_BASE}/server/duijie'
     for f in backend_files:
@@ -92,22 +100,20 @@ def main():
     print('\n[2/5] Installing npm packages...')
     run_cmd(ssh, f'cd {remote_server} && npm install --production', 'npm install')
 
-    # 2.5. Database migrations (MySQL 8 compatible - ignore duplicate column errors)
-    print('\n[2.5/5] Running database migrations...')
-    migrations = [
-        "ALTER TABLE voice_users ADD COLUMN company_name VARCHAR(100) DEFAULT NULL",
-        "ALTER TABLE verification_codes ADD COLUMN used TINYINT(1) DEFAULT 0",
-        "ALTER TABLE duijie_clients ADD COLUMN credit_code VARCHAR(30) DEFAULT NULL COMMENT '统一社会信用代码'",
-        "ALTER TABLE duijie_clients ADD COLUMN legal_person VARCHAR(50) DEFAULT NULL COMMENT '法定代表人'",
-        "ALTER TABLE duijie_clients ADD COLUMN registered_capital VARCHAR(50) DEFAULT NULL COMMENT '注册资本'",
-        "ALTER TABLE duijie_clients ADD COLUMN established_date DATE DEFAULT NULL COMMENT '成立日期'",
-        "ALTER TABLE duijie_clients ADD COLUMN business_scope TEXT COMMENT '经营范围'",
-        "ALTER TABLE duijie_clients ADD COLUMN company_type VARCHAR(50) DEFAULT NULL COMMENT '企业类型'",
-        "ALTER TABLE duijie_clients ADD COLUMN website VARCHAR(200) DEFAULT NULL COMMENT '官网'",
-        "ALTER TABLE duijie_client_members ADD COLUMN role VARCHAR(20) DEFAULT 'member' COMMENT 'creator/admin/member'",
-    ]
-    for sql in migrations:
-        run_cmd(ssh, f"mysql -u{db_user} -p'{db_pass}' {db_name} -e \"{sql}\" 2>&1 || true", sql[:60])
+    # 2.5. Database migrations (versioned)
+    print('\n[2.5/5] Running versioned database migrations...')
+    local_migrations = os.path.join(LOCAL_BASE, 'server', 'duijie', 'migrations')
+    remote_migrations = f'{remote_server}/migrations'
+    run_cmd(ssh, f'mkdir -p {remote_migrations}')
+    if os.path.isdir(local_migrations):
+        for mf in sorted(os.listdir(local_migrations)):
+            if mf.endswith('.sql'):
+                sftp.put(os.path.join(local_migrations, mf), f'{remote_migrations}/{mf}')
+                print(f'    ↑ {remote_migrations}/{mf}')
+    local_migrate_script = os.path.join(LOCAL_BASE, 'server', 'duijie', 'scripts', 'migrate.js')
+    remote_migrate_script = f'{remote_server}/scripts/migrate.js'
+    sftp.put(local_migrate_script, remote_migrate_script)
+    run_cmd(ssh, f'cd {remote_server} && node scripts/migrate.js', 'Running migrations')
 
     # 3. Migrate plaintext passwords to bcrypt hashes
     print('\n[3/5] Migrating plaintext passwords to bcrypt...')

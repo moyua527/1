@@ -1,0 +1,1 @@
+ALTER TABLE voice_users ADD COLUMN company_name VARCHAR(100) DEFAULT NULL;
