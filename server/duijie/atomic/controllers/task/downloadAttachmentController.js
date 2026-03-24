@@ -1,4 +1,4 @@
-const path = require('path');
+﻿const path = require('path');
 const db = require('../../../config/db');
 
 module.exports = async (req, res) => {
@@ -10,6 +10,6 @@ module.exports = async (req, res) => {
     const filePath = path.resolve(__dirname, '../../../uploads', attachment.filename);
     res.download(filePath, attachment.original_name || attachment.filename);
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

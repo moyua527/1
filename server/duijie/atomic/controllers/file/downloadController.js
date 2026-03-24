@@ -1,4 +1,4 @@
-const path = require('path');
+﻿const path = require('path');
 const getFileById = require('../../services/file/getFileById');
 
 module.exports = async (req, res) => {
@@ -8,6 +8,6 @@ module.exports = async (req, res) => {
     const filePath = path.resolve(__dirname, '../../../uploads', file.path || file.name);
     res.download(filePath, file.original_name || file.name);
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

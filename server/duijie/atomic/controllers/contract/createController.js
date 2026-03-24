@@ -1,10 +1,10 @@
-const createContract = require('../../services/contract/createContract');
+﻿const createContract = require('../../services/contract/createContract');
 
 module.exports = async (req, res) => {
   try {
     const id = await createContract({ ...req.body, created_by: req.userId });
     res.json({ success: true, data: { id } });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

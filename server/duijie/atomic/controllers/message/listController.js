@@ -1,10 +1,10 @@
-const listMessages = require('../../services/message/listMessages');
+﻿const listMessages = require('../../services/message/listMessages');
 
 module.exports = async (req, res) => {
   try {
     const data = await listMessages(req.query.project_id, req.query);
     res.json({ success: true, data });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

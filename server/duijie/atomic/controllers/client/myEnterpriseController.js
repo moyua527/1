@@ -1,4 +1,4 @@
-const db = require('../../../config/db');
+﻿const db = require('../../../config/db');
 
 // 辅助：查找当前用户关联的企业（作为创建者或成员），返回企业信息+用户角色
 async function findMyEnterprise(userId) {
@@ -39,7 +39,7 @@ exports.getAll = async (req, res) => {
     }
     res.json({ success: true, data: list });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -63,7 +63,7 @@ exports.create = async (req, res) => {
     );
     res.json({ success: true, data: { id: result.insertId } });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -82,7 +82,7 @@ exports.get = async (req, res) => {
     );
     res.json({ success: true, data: { enterprise: ent, members, departments } });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -100,7 +100,7 @@ exports.update = async (req, res) => {
     );
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -114,7 +114,7 @@ exports.remove = async (req, res) => {
     await db.query('UPDATE duijie_client_members SET is_deleted=1 WHERE client_id=?', [ent.id]);
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -131,7 +131,7 @@ exports.addMember = async (req, res) => {
     );
     res.json({ success: true, data: { id: result.insertId } });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -148,7 +148,7 @@ exports.updateMember = async (req, res) => {
     );
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -163,7 +163,7 @@ exports.removeMember = async (req, res) => {
     );
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -178,7 +178,7 @@ exports.searchEnterprise = async (req, res) => {
     );
     res.json({ success: true, data: rows });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -198,7 +198,7 @@ exports.joinEnterprise = async (req, res) => {
     await db.query('INSERT INTO duijie_join_requests (client_id, user_id) VALUES (?, ?)', [enterprise_id, req.userId]);
     res.json({ success: true, message: `已向「${ent[0].name}」提交加入申请，请等待管理员审批` });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -215,7 +215,7 @@ exports.listJoinRequests = async (req, res) => {
     );
     res.json({ success: true, data: rows });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -236,7 +236,7 @@ exports.approveJoinRequest = async (req, res) => {
     );
     res.json({ success: true, message: '已批准' });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -248,7 +248,7 @@ exports.rejectJoinRequest = async (req, res) => {
     await db.query("UPDATE duijie_join_requests SET status = 'rejected', handled_at = NOW(), handled_by = ? WHERE id = ? AND client_id = ? AND status = 'pending'", [req.userId, req.params.id, ent.id]);
     res.json({ success: true, message: '已拒绝' });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -263,7 +263,7 @@ exports.myJoinRequests = async (req, res) => {
     );
     res.json({ success: true, data: rows });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -279,7 +279,7 @@ exports.lookupUser = async (req, res) => {
     if (!rows[0]) return res.json({ success: true, data: null, message: '未找到该手机号对应的账号' });
     res.json({ success: true, data: rows[0] });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -298,7 +298,7 @@ exports.addDepartment = async (req, res) => {
     );
     res.json({ success: true, data: { id: result.insertId } });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -315,7 +315,7 @@ exports.updateDepartment = async (req, res) => {
     );
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -328,7 +328,7 @@ exports.removeDepartment = async (req, res) => {
     await db.query('UPDATE duijie_client_members SET department_id=NULL WHERE department_id=? AND client_id=?', [req.params.id, ent.id]);
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -346,6 +346,6 @@ exports.updateMemberRole = async (req, res) => {
     await db.query('UPDATE duijie_client_members SET role = ? WHERE id = ?', [role, req.params.id]);
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

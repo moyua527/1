@@ -63,8 +63,8 @@ app.use('/api', routes);
 
 // 全局错误处理（生产环境不暴露内部错误信息）
 app.use((err, req, res, next) => {
-  console.error('[server error]', err);
-  res.status(500).json({ success: false, message: '服务器内部错误' });
+  console.error(`[server error] ${req.method} ${req.originalUrl} userId=${req.userId || 'anon'}`, err.message, err.stack?.split('\n')[1]?.trim());
+  res.status(err.status || 500).json({ success: false, message: '服务器内部错误' });
 });
 
 server.listen(PORT, () => {

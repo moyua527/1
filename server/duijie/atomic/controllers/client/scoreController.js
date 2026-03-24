@@ -1,4 +1,4 @@
-const { scoreOne } = require('../../services/client/scoreClient');
+﻿const { scoreOne } = require('../../services/client/scoreClient');
 
 module.exports = async (req, res) => {
   try {
@@ -6,6 +6,6 @@ module.exports = async (req, res) => {
     if (!score) return res.status(404).json({ success: false, message: '客户不存在' });
     res.json({ success: true, data: score });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

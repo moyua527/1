@@ -1,4 +1,4 @@
-const updateProject = require('../../services/project/updateProject');
+﻿const updateProject = require('../../services/project/updateProject');
 const db = require('../../../config/db');
 
 module.exports = async (req, res) => {
@@ -18,6 +18,6 @@ module.exports = async (req, res) => {
     await updateProject(pid, req.body);
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

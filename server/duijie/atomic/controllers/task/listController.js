@@ -1,4 +1,4 @@
-const listTasks = require('../../services/task/listTasks');
+﻿const listTasks = require('../../services/task/listTasks');
 const db = require('../../../config/db');
 
 module.exports = async (req, res) => {
@@ -15,6 +15,6 @@ module.exports = async (req, res) => {
     }
     res.json({ success: true, data });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

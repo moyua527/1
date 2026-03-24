@@ -1,4 +1,4 @@
-const db = require('../../../config/db');
+﻿const db = require('../../../config/db');
 
 exports.get = async (req, res) => {
   try {
@@ -6,7 +6,7 @@ exports.get = async (req, res) => {
     const inviteCode = rows.length > 0 ? rows[0].config_value || '' : '';
     res.json({ success: true, data: { inviteCode } });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -22,7 +22,7 @@ exports.update = async (req, res) => {
     }
     res.json({ success: true, data: { inviteCode: code } });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -33,7 +33,7 @@ exports.getAll = async (req, res) => {
     for (const r of rows) config[r.config_key] = r.config_value;
     res.json({ success: true, data: config });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -52,6 +52,6 @@ exports.updateAll = async (req, res) => {
     }
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

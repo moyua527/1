@@ -1,4 +1,4 @@
-const db = require('../../../config/db');
+﻿const db = require('../../../config/db');
 const crypto = require('crypto');
 
 module.exports = async (req, res) => {
@@ -16,6 +16,6 @@ module.exports = async (req, res) => {
     );
     res.json({ success: true, data: { id: result.insertId, token, preset_role: preset_role || 'member', expires_at: expiresAt } });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

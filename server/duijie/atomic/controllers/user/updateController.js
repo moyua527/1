@@ -1,4 +1,4 @@
-const db = require('../../../config/db');
+﻿const db = require('../../../config/db');
 const bcrypt = require('bcryptjs');
 
 const VALID_ROLES = ['admin', 'tech', 'business', 'member'];
@@ -26,6 +26,6 @@ module.exports = async (req, res) => {
     await db.query(`UPDATE voice_users SET ${fields.join(', ')} WHERE id = ?`, values);
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

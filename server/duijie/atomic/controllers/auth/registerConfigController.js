@@ -1,4 +1,4 @@
-const db = require('../../../config/db');
+﻿const db = require('../../../config/db');
 
 module.exports = async (req, res) => {
   try {
@@ -6,6 +6,6 @@ module.exports = async (req, res) => {
     const needInviteCode = rows.length > 0 && !!rows[0].config_value;
     res.json({ success: true, data: { needInviteCode } });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

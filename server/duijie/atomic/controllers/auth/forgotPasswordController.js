@@ -1,4 +1,4 @@
-const db = require('../../../config/db');
+﻿const db = require('../../../config/db');
 
 module.exports = async (req, res) => {
   try {
@@ -38,6 +38,6 @@ module.exports = async (req, res) => {
     res.json({ success: true, message: '验证码已发送', _dev_code: code });
   } catch (e) {
     console.error('[forgotPassword error]', e);
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

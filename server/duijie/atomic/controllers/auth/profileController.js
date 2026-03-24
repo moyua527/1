@@ -1,4 +1,4 @@
-const db = require('../../../config/db');
+﻿const db = require('../../../config/db');
 const bcrypt = require('bcryptjs');
 
 module.exports = async (req, res) => {
@@ -17,6 +17,6 @@ module.exports = async (req, res) => {
     const [rows] = await db.query('SELECT id, username, nickname, email, phone, avatar, role, client_id, created_at FROM voice_users WHERE id = ?', [userId]);
     res.json({ success: true, data: rows[0] });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

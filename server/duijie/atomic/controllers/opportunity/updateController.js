@@ -1,4 +1,4 @@
-const db = require('../../../config/db');
+﻿const db = require('../../../config/db');
 
 module.exports = async (req, res) => {
   try {
@@ -11,6 +11,6 @@ module.exports = async (req, res) => {
     await db.query(`UPDATE duijie_opportunities SET ${sets} WHERE id = ? AND is_deleted = 0`, [...vals, id]);
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

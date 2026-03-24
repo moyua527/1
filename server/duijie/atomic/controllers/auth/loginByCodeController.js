@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+﻿const jwt = require('jsonwebtoken');
 const db = require('../../../config/db');
 
 module.exports = async (req, res) => {
@@ -46,6 +46,6 @@ module.exports = async (req, res) => {
     });
   } catch (e) {
     console.error('[loginByCode error]', e);
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

@@ -1,4 +1,4 @@
-const getProjectDetail = require('../../services/project/getProjectDetail');
+﻿const getProjectDetail = require('../../services/project/getProjectDetail');
 const db = require('../../../config/db');
 
 module.exports = async (req, res) => {
@@ -23,6 +23,6 @@ module.exports = async (req, res) => {
     if (!allowed) return res.status(403).json({ success: false, message: '无权访问此项目' });
     res.json({ success: true, data });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

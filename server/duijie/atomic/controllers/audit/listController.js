@@ -1,4 +1,4 @@
-const db = require('../../../config/db');
+﻿const db = require('../../../config/db');
 
 module.exports = async (req, res) => {
   try {
@@ -25,6 +25,6 @@ module.exports = async (req, res) => {
     );
     res.json({ success: true, data: { logs: rows, total, page, limit } });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

@@ -1,6 +1,6 @@
 # DuiJie（对接）— 客户项目对接平台
 
-> 版本：v1.1.10 | 最后更新：2026-03-24
+> 版本：v1.1.11 | 最后更新：2026-03-24
 >
 > 线上地址：http://160.202.253.143:8080
 
@@ -277,6 +277,18 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 - **部门管理**：CRUD + 子部门、组织架构树展示
 - **成员管理**：添加/编辑/删除成员、手机号导入已注册账号、工号/职位/部门/入职日期
 - **系统管理员视角**：系统admin可查看所有企业信息（只读），展开查看企业详情和成员列表，不可移除企业人员
+- **前端组件架构**：模块化拆分为11个文件
+  - `constants.ts` - 样式常量、选项列表、角色配置
+  - `useEnterprise.ts` - 自定义Hook（状态管理+API调用）
+  - `EnterpriseCard.tsx` - 企业信息卡片
+  - `MemberList.tsx` - 成员列表Tab
+  - `DepartmentList.tsx` - 部门管理Tab
+  - `OrgTree.tsx` - 组织架构树Tab
+  - `JoinRequests.tsx` - 加入申请审批Tab
+  - `AdminAllEnterprises.tsx` - 系统管理员全部企业视图
+  - `EmptyState.tsx` - 空状态（创建/加入企业）
+  - `EnterpriseModals.tsx` - 编辑企业/成员/部门弹窗
+  - `index.tsx` - 主编排器
 
 ### 3.19 安全防护系统
 

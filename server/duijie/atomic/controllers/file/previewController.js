@@ -1,4 +1,4 @@
-const path = require('path');
+﻿const path = require('path');
 const getFileById = require('../../services/file/getFileById');
 
 const previewMimes = [
@@ -24,6 +24,6 @@ module.exports = async (req, res) => {
     res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(file.original_name || file.name)}"`);
     res.sendFile(filePath);
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };

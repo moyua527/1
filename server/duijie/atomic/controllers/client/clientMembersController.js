@@ -1,4 +1,4 @@
-const db = require('../../../config/db');
+﻿const db = require('../../../config/db');
 
 // GET /api/clients/:id/members
 exports.list = async (req, res) => {
@@ -9,7 +9,7 @@ exports.list = async (req, res) => {
     );
     res.json({ success: true, data: rows });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -24,7 +24,7 @@ exports.create = async (req, res) => {
     );
     res.json({ success: true, data: { id: result.insertId } });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -39,7 +39,7 @@ exports.update = async (req, res) => {
     );
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
 
@@ -49,6 +49,6 @@ exports.remove = async (req, res) => {
     await db.query('UPDATE duijie_client_members SET is_deleted = 1 WHERE id = ?', [req.params.id]);
     res.json({ success: true });
   } catch (e) {
-    res.status(500).json({ success: false, message: e.message });
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
