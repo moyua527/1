@@ -1,4 +1,5 @@
 const db = require('../../config/db');
+const { getIO } = require('../../socket');
 
 /**
  * 发送通知给指定用户
@@ -11,10 +12,16 @@ const db = require('../../config/db');
 async function notify(userId, type, title, content, link) {
   if (!userId) return;
   try {
-    await db.query(
+    const [result] = await db.query(
       'INSERT INTO duijie_notifications (user_id, type, title, content, link) VALUES (?, ?, ?, ?, ?)',
       [userId, type, title, content || '', link || null]
     );
+    const io = getIO();
+    if (io) {
+      io.to(`user:${userId}`).emit('new_notification', {
+        id: result.insertId, user_id: userId, type, title, content: content || '', link: link || null, is_read: 0, created_at: new Date().toISOString()
+      });
+    }
   } catch (e) {
     console.error('[notify] Failed:', e.message);
   }

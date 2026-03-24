@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell, Check, CheckCheck, ExternalLink } from 'lucide-react'
-import { fetchApi } from '../../bootstrap'
+import { fetchApi, getToken } from '../../bootstrap'
+import { io, Socket } from 'socket.io-client'
 
 const typeIcon: Record<string, string> = {
   task_assigned: '📋', task_status: '🔄', ticket_reply: '🎫', project_member: '📁', follow_reminder: '⏰',
@@ -14,21 +15,32 @@ export default function NotificationBell() {
   const [selected, setSelected] = useState<any>(null)
   const ref = useRef<HTMLDivElement>(null)
   const nav = useNavigate()
+  const socketRef = useRef<Socket | null>(null)
 
-  const load = () => {
+  const load = useCallback(() => {
     fetchApi('/api/notifications?limit=30').then(r => {
       if (r.success) {
         setNotifications(r.data.notifications || [])
         setUnread(r.data.unreadCount || 0)
       }
     })
-  }
+  }, [])
 
   useEffect(() => {
     load()
-    const t = setInterval(load, 30000)
-    return () => clearInterval(t)
-  }, [])
+    const socket = io(window.location.origin, { path: '/socket.io', withCredentials: true })
+    socketRef.current = socket
+    socket.on('connect', () => {
+      const token = getToken()
+      if (token) socket.emit('auth', token)
+    })
+    socket.on('new_notification', (data: any) => {
+      setNotifications(prev => [data, ...prev].slice(0, 30))
+      setUnread(prev => prev + 1)
+    })
+    const fallback = setInterval(load, 120000)
+    return () => { clearInterval(fallback); socket.disconnect() }
+  }, [load])
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {

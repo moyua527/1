@@ -1,4 +1,5 @@
 const { Server } = require('socket.io');
+const jwt = require('jsonwebtoken');
 
 let io = null;
 
@@ -10,6 +11,17 @@ function initSocket(httpServer) {
 
   io.on('connection', (socket) => {
     console.log(`[socket] 客户端连接: ${socket.id}`);
+
+    socket.on('auth', (token) => {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'duijie_jwt_secret_2024');
+        socket.userId = decoded.id;
+        socket.join(`user:${decoded.id}`);
+        console.log(`[socket] ${socket.id} 认证成功, 加入 user:${decoded.id}`);
+      } catch (e) {
+        console.log(`[socket] ${socket.id} 认证失败`);
+      }
+    });
 
     socket.on('join_project', (projectId) => {
       socket.join(`project:${projectId}`);
