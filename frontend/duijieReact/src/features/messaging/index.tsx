@@ -49,14 +49,17 @@ export default function Messaging() {
       if (token) socket.emit('auth', token)
     })
     socket.on('new_dm', () => {
-      loadConversations()
-      window.dispatchEvent(new Event('dm-read'))
       const sel = selectedRef.current
       if (sel) {
         dmApi.history(sel.id).then(r => {
           if (r.success) setMessages(r.data || [])
           setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+          loadConversations()
+          window.dispatchEvent(new Event('dm-read'))
         })
+      } else {
+        loadConversations()
+        window.dispatchEvent(new Event('dm-read'))
       }
     })
     const t = setInterval(loadConversations, 60000)
