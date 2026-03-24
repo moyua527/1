@@ -73,3 +73,4 @@
 | v1.0.91 | 2026-03-24 | 修复SW缓存策略：CACHE_NAME升级v2清除旧缓存，HTML改为network-first(部署后立即生效)，API/WebSocket不缓存，哈希静态资源cache-first |
 | v1.0.92 | 2026-03-24 | 修复Socket.IO认证：JWT字段名decoded.id→decoded.userId，修复所有用户加入user:undefined房间导致WebSocket推送全部失效的问题 |
 | v1.0.93 | 2026-03-24 | 双保险消息同步：恢复5秒消息轮询+WebSocket推送并行，侧边栏15秒轮询兜底，SW自动更新+controllerchange自动刷新页面 |
+| v1.0.94 | 2026-03-24 | 企业管理：成员可自行创建企业(无需管理员关联)，空状态改为创建表单，后端添加POST /api/my-enterprise接口 |

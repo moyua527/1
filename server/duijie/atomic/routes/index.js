@@ -74,6 +74,7 @@ router.get('/clients/:clientId/ai-suggestion', auth, salesTeam, require('../cont
 // My Enterprise (成员管理自己企业)
 const myEntCtrl = require('../controllers/client/myEnterpriseController');
 router.get('/my-enterprise', auth, myEntCtrl.get);
+router.post('/my-enterprise', auth, myEntCtrl.create);
 router.put('/my-enterprise', auth, myEntCtrl.update);
 router.post('/my-enterprise/members', auth, myEntCtrl.addMember);
 router.put('/my-enterprise/members/:id', auth, myEntCtrl.updateMember);

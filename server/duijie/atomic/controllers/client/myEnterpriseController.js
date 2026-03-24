@@ -9,6 +9,23 @@ async function findMyEnterprise(userId) {
   return rows[0] || null;
 }
 
+// POST /api/my-enterprise — 创建企业
+exports.create = async (req, res) => {
+  try {
+    const existing = await findMyEnterprise(req.userId);
+    if (existing) return res.status(400).json({ success: false, message: '您已拥有企业' });
+    const { name, company, email, phone, notes } = req.body;
+    if (!name || !name.trim()) return res.status(400).json({ success: false, message: '请输入企业名称' });
+    const [result] = await db.query(
+      "INSERT INTO duijie_clients (user_id, client_type, name, company, email, phone, notes, created_by, stage) VALUES (?, 'company', ?, ?, ?, ?, ?, ?, 'signed')",
+      [req.userId, name.trim(), company || null, email || null, phone || null, notes || null, req.userId]
+    );
+    res.json({ success: true, data: { id: result.insertId } });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+};
+
 // GET /api/my-enterprise
 exports.get = async (req, res) => {
   try {

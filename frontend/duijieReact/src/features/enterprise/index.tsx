@@ -25,6 +25,8 @@ export default function Enterprise() {
   const [editEntOpen, setEditEntOpen] = useState(false)
   const [entForm, setEntForm] = useState({ name: '', company: '', email: '', phone: '', notes: '' })
   const [entSaving, setEntSaving] = useState(false)
+  const [createForm, setCreateForm] = useState({ name: '', company: '', email: '', phone: '', notes: '' })
+  const [creating, setCreating] = useState(false)
   const [memberModalOpen, setMemberModalOpen] = useState(false)
   const [editingMember, setEditingMember] = useState<any>(null)
   const [memberForm, setMemberForm] = useState({ name: '', position: '', department: '', phone: '', email: '', notes: '' })
@@ -82,11 +84,46 @@ export default function Enterprise() {
 
   if (loading) return <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}>加载中...</div>
 
+  const handleCreate = async () => {
+    if (!createForm.name.trim()) { toast('请输入企业名称', 'error'); return }
+    setCreating(true)
+    const r = await fetchApi('/api/my-enterprise', { method: 'POST', body: JSON.stringify(createForm) })
+    setCreating(false)
+    if (r.success) { toast('企业创建成功', 'success'); load() }
+    else toast(r.message || '创建失败', 'error')
+  }
+
   if (!data) return (
-    <div style={{ textAlign: 'center', padding: 80 }}>
-      <Building2 size={48} color="#cbd5e1" style={{ marginBottom: 16 }} />
-      <div style={{ fontSize: 18, fontWeight: 600, color: '#64748b', marginBottom: 8 }}>暂未关联企业</div>
-      <div style={{ fontSize: 14, color: '#94a3b8' }}>您的账号尚未关联到企业客户，请联系管理员进行关联</div>
+    <div>
+      <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>企业管理</h1>
+      <p style={{ fontSize: 14, color: '#94a3b8', marginBottom: 20, marginTop: 0 }}>创建并管理您的企业信息</p>
+      <div style={section}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Building2 size={24} color="#fff" />
+          </div>
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>创建企业</div>
+            <div style={{ fontSize: 13, color: '#94a3b8' }}>填写信息创建您的企业，之后可管理成员</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Input label="企业名称 *" placeholder="如：XX科技" value={createForm.name} onChange={e => setCreateForm({ ...createForm, name: e.target.value })} />
+          <Input label="公司全称" placeholder="如：XX科技有限公司" value={createForm.company} onChange={e => setCreateForm({ ...createForm, company: e.target.value })} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <Input label="邮箱" placeholder="company@example.com" value={createForm.email} onChange={e => setCreateForm({ ...createForm, email: e.target.value })} />
+            <Input label="电话" placeholder="联系电话" value={createForm.phone} onChange={e => setCreateForm({ ...createForm, phone: e.target.value })} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>备注</label>
+            <textarea value={createForm.notes} onChange={e => setCreateForm({ ...createForm, notes: e.target.value })} rows={2} placeholder="企业简介或备注信息"
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Button onClick={handleCreate} disabled={creating}>{creating ? '创建中...' : '创建企业'}</Button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 
