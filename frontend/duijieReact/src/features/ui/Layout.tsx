@@ -55,6 +55,7 @@ export default function Layout() {
   const [profileEditing, setProfileEditing] = useState(false)
   const [profileForm, setProfileForm] = useState({ nickname: '', email: '', phone: '', password: '', confirmPassword: '' })
   const [profileSaving, setProfileSaving] = useState(false)
+  const [dmUnread, setDmUnread] = useState(0)
   const location = useLocation()
   const role = user?.role || 'member'
   const NAV_ITEMS = ALL_NAV_ITEMS.filter(n => n.roles.includes(role))
@@ -63,6 +64,17 @@ export default function Layout() {
   useEffect(() => { setCollapsed(isMobile) }, [isMobile])
   useEffect(() => { if (isMobile) setCollapsed(true) }, [location.pathname, isMobile])
   useEffect(() => { fetchApi('/api/auth/me').then(r => { if (r.success) { setUser(r.data); try { localStorage.setItem('cached_user', JSON.stringify(r.data)) } catch {} } }) }, [])
+
+  useEffect(() => {
+    const loadUnread = () => {
+      fetchApi('/api/dm/conversations').then(r => {
+        if (r.success) setDmUnread((r.data || []).reduce((s: number, c: any) => s + (c.unread_count || 0), 0))
+      })
+    }
+    loadUnread()
+    const t = setInterval(loadUnread, 15000)
+    return () => clearInterval(t)
+  }, [])
 
   const openProfile = () => {
     setProfileEditing(false)
@@ -109,11 +121,14 @@ export default function Layout() {
           <NavLink
             key={item.path}
             to={item.path}
-            style={({ isActive }) => ({ ...s.navItem, ...(isActive ? s.navItemActive : {}) })}
+            style={({ isActive }) => ({ ...s.navItem, ...(isActive ? s.navItemActive : {}), position: 'relative' as const })}
             end={item.path === '/'}
           >
             <item.icon size={18} />
             {item.label}
+            {item.path === '/messaging' && dmUnread > 0 && (
+              <span style={{ marginLeft: 'auto', minWidth: 18, height: 18, borderRadius: 9, background: '#dc2626', color: '#fff', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px' }}>{dmUnread > 99 ? '99+' : dmUnread}</span>
+            )}
           </NavLink>
         ))}
       </nav>
