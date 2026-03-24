@@ -296,7 +296,7 @@ export default function LoginPage({ onLogin }: Props) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {mode === 'login' && loginMethod === 'password' && (
             <>
-              <Input label="用户名" placeholder="输入用户名/手机号" value={username} onChange={e => setUsername(e.target.value)} />
+              <Input label="账号" placeholder="输入手机号或账号ID" value={username} onChange={e => setUsername(e.target.value)} />
               <Input label="密码" type="password" placeholder="输入密码" value={password} onChange={e => setPassword(e.target.value)} />
               <div style={{ textAlign: 'right', marginTop: -4 }}>
                 <span onClick={() => switchMode('forgot')} style={{ fontSize: 12, color: '#2563eb', cursor: 'pointer' }}>忘记密码？</span>
