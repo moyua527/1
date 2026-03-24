@@ -76,6 +76,7 @@ const myEntCtrl = require('../controllers/client/myEnterpriseController');
 router.get('/my-enterprise', auth, myEntCtrl.get);
 router.post('/my-enterprise', auth, myEntCtrl.create);
 router.put('/my-enterprise', auth, myEntCtrl.update);
+router.delete('/my-enterprise', auth, myEntCtrl.remove);
 router.post('/my-enterprise/members', auth, myEntCtrl.addMember);
 router.put('/my-enterprise/members/:id', auth, myEntCtrl.updateMember);
 router.delete('/my-enterprise/members/:id', auth, myEntCtrl.removeMember);

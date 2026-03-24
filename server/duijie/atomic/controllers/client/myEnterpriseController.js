@@ -58,6 +58,19 @@ exports.update = async (req, res) => {
   }
 };
 
+// DELETE /api/my-enterprise — 删除企业
+exports.remove = async (req, res) => {
+  try {
+    const ent = await findMyEnterprise(req.userId);
+    if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
+    await db.query('UPDATE duijie_clients SET is_deleted=1 WHERE id=?', [ent.id]);
+    await db.query('UPDATE duijie_client_members SET is_deleted=1 WHERE client_id=?', [ent.id]);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+};
+
 // POST /api/my-enterprise/members — 添加成员
 exports.addMember = async (req, res) => {
   try {

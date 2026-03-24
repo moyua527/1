@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Building2, Building, Phone, Mail, Users, MapPin, Clock, Briefcase, FileText, Edit3, UserPlus, X, Save } from 'lucide-react'
+import { Building2, Building, Phone, Mail, Users, MapPin, Clock, Briefcase, FileText, Edit3, UserPlus, X, Save, Trash2 } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import Avatar from '../ui/Avatar'
 import Modal from '../ui/Modal'
@@ -81,6 +81,12 @@ export default function Enterprise() {
     if (r.success) { toast('成员已删除', 'success'); load() }
     else toast(r.message || '删除失败', 'error')
   }
+  const handleDeleteEnterprise = async () => {
+    if (!(await confirm({ message: '确定删除该企业？删除后可重新创建。', danger: true }))) return
+    const r = await fetchApi('/api/my-enterprise', { method: 'DELETE' })
+    if (r.success) { toast('企业已删除', 'success'); setData(null) }
+    else toast(r.message || '删除失败', 'error')
+  }
 
   if (loading) return <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}>加载中...</div>
 
@@ -148,9 +154,14 @@ export default function Enterprise() {
             </div>
             {ent.company && <div style={{ fontSize: 14, color: '#64748b' }}>{ent.company}</div>}
           </div>
-          <button onClick={openEditEnt} style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#2563eb' }}>
-            <Edit3 size={14} /> 编辑
-          </button>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button onClick={openEditEnt} style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#2563eb' }}>
+              <Edit3 size={14} /> 编辑
+            </button>
+            <button onClick={handleDeleteEnterprise} style={{ background: 'none', border: '1px solid #fecaca', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#dc2626' }}>
+              <Trash2 size={14} /> 删除
+            </button>
+          </div>
         </div>
         <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 12 }}>
           {ent.company && <div style={infoRow}><Building size={16} color="#64748b" /> {ent.company}</div>}
