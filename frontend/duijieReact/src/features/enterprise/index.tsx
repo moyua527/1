@@ -20,7 +20,7 @@ const scaleOptions = ['1-10人', '11-50人', '51-200人', '201-500人', '501-100
 export default function Enterprise() {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'members' | 'departments' | 'tree'>('members')
+  const [tab, setTab] = useState<'members' | 'departments' | 'tree' | 'requests'>('members')
   const [editEntOpen, setEditEntOpen] = useState(false)
   const [entForm, setEntForm] = useState({ name: '', company: '', email: '', phone: '', notes: '', industry: '', scale: '', address: '' })
   const [entSaving, setEntSaving] = useState(false)
@@ -160,6 +160,11 @@ export default function Enterprise() {
   }
 
   // === 加入企业 ===
+  const [myRequests, setMyRequests] = useState<any[]>([])
+  const loadMyRequests = async () => {
+    const r = await fetchApi('/api/my-enterprise/my-requests')
+    if (r.success) setMyRequests(r.data || [])
+  }
   const handleJoinSearch = async () => {
     if (!joinSearch.trim()) return
     setJoinSearching(true)
@@ -171,8 +176,25 @@ export default function Enterprise() {
     setJoining(true)
     const r = await fetchApi('/api/my-enterprise/join', { method: 'POST', body: JSON.stringify({ enterprise_id: entId }) })
     setJoining(false)
-    if (r.success) { toast(r.message || '加入成功', 'success'); setJoinModalOpen(false); load() }
-    else toast(r.message || '加入失败', 'error')
+    if (r.success) { toast(r.message || '已提交申请', 'success'); loadMyRequests() }
+    else toast(r.message || '申请失败', 'error')
+  }
+
+  // === 审批 ===
+  const [joinRequests, setJoinRequests] = useState<any[]>([])
+  const loadJoinRequests = async () => {
+    const r = await fetchApi('/api/my-enterprise/join-requests')
+    if (r.success) setJoinRequests(r.data || [])
+  }
+  const handleApprove = async (id: number) => {
+    const r = await fetchApi(`/api/my-enterprise/join-requests/${id}/approve`, { method: 'POST' })
+    if (r.success) { toast('已批准', 'success'); loadJoinRequests(); load() }
+    else toast(r.message || '操作失败', 'error')
+  }
+  const handleReject = async (id: number) => {
+    const r = await fetchApi(`/api/my-enterprise/join-requests/${id}/reject`, { method: 'POST' })
+    if (r.success) { toast('已拒绝', 'success'); loadJoinRequests() }
+    else toast(r.message || '操作失败', 'error')
   }
 
   if (loading) return <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}>加载中...</div>
@@ -189,7 +211,7 @@ export default function Enterprise() {
         <div style={{ fontSize: 14, color: '#94a3b8', marginBottom: 24 }}>创建新企业或加入已有企业</div>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
           <Button onClick={() => setCreateModalOpen(true)}><Plus size={15} /> 创建企业</Button>
-          <Button variant="secondary" onClick={() => { setJoinModalOpen(true); setJoinSearch(''); setJoinResults([]) }}><LogIn size={15} /> 加入企业</Button>
+          <Button variant="secondary" onClick={() => { setJoinModalOpen(true); setJoinSearch(''); setJoinResults([]); loadMyRequests() }}><LogIn size={15} /> 加入企业</Button>
         </div>
       </div>
 
@@ -219,15 +241,37 @@ export default function Enterprise() {
                       {e.scale && <span>{e.scale}</span>}
                     </div>
                   </div>
-                  <button onClick={() => handleJoin(e.id)} disabled={joining} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500, opacity: joining ? 0.6 : 1 }}>
-                    加入
-                  </button>
+                  {myRequests.some((r: any) => r.client_id === e.id && r.status === 'pending') ? (
+                    <span style={{ padding: '6px 14px', borderRadius: 8, background: '#fef3c7', color: '#92400e', fontSize: 13, fontWeight: 500 }}>审批中</span>
+                  ) : myRequests.some((r: any) => r.client_id === e.id && r.status === 'rejected') ? (
+                    <button onClick={() => handleJoin(e.id)} disabled={joining} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#f97316', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500, opacity: joining ? 0.6 : 1 }}>
+                      重新申请
+                    </button>
+                  ) : (
+                    <button onClick={() => handleJoin(e.id)} disabled={joining} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500, opacity: joining ? 0.6 : 1 }}>
+                      申请加入
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
           ) : joinSearch.trim() && !joinSearching ? (
             <div style={{ textAlign: 'center', padding: 20, color: '#94a3b8', fontSize: 14 }}>未找到匹配的企业</div>
           ) : null}
+          {myRequests.filter((r: any) => r.status === 'pending').length > 0 && (
+            <div>
+              <label style={labelStyle}>待审批的申请</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {myRequests.filter((r: any) => r.status === 'pending').map((r: any) => (
+                  <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: '1px solid #fef3c7', borderRadius: 8, background: '#fffbeb' }}>
+                    <Building2 size={16} color="#f59e0b" />
+                    <span style={{ flex: 1, fontSize: 14, color: '#0f172a' }}>{r.enterprise_name}</span>
+                    <span style={{ fontSize: 12, color: '#92400e', background: '#fef3c7', padding: '2px 8px', borderRadius: 6 }}>等待审批</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button variant="secondary" onClick={() => setJoinModalOpen(false)}>关闭</Button>
           </div>
@@ -345,10 +389,13 @@ export default function Enterprise() {
     )
   }
 
+  useEffect(() => { if (isOwner) loadJoinRequests() }, [data])
+
   const tabItems = [
     { key: 'members' as const, label: '组织成员', icon: <Users size={15} />, count: members.length },
     { key: 'departments' as const, label: '部门管理', icon: <Building size={15} />, count: departments.length },
     { key: 'tree' as const, label: '组织架构', icon: <FolderTree size={15} /> },
+    ...(isOwner && joinRequests.length > 0 ? [{ key: 'requests' as const, label: '加入申请', icon: <LogIn size={15} />, count: joinRequests.length }] : []),
   ]
 
   return (
@@ -560,6 +607,35 @@ export default function Enterprise() {
       {tab === 'tree' && (
         <div style={{ ...section, marginTop: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0, borderTop: 'none' }}>
           {buildTree()}
+        </div>
+      )}
+
+      {/* 加入申请审批 */}
+      {tab === 'requests' && isOwner && (
+        <div style={{ ...section, marginTop: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0, borderTop: 'none' }}>
+          {joinRequests.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 24, color: '#94a3b8', fontSize: 14 }}>暂无待审批的加入申请</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {joinRequests.map((r: any) => (
+                <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', border: '1px solid #e2e8f0', borderRadius: 10, background: '#fafbfc' }}>
+                  <Avatar name={r.nickname || r.username || ''} size={40} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>{r.nickname || r.username}</div>
+                    <div style={{ fontSize: 12, color: '#94a3b8', display: 'flex', gap: 8, marginTop: 2 }}>
+                      {r.phone && <span>{r.phone}</span>}
+                      {r.email && <span>{r.email}</span>}
+                      <span>申请于 {new Date(r.created_at).toLocaleString('zh-CN')}</span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => handleApprove(r.id)} style={{ padding: '6px 16px', borderRadius: 8, border: 'none', background: '#22c55e', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>批准</button>
+                    <button onClick={() => handleReject(r.id)} style={{ padding: '6px 16px', borderRadius: 8, border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>拒绝</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
