@@ -26,6 +26,7 @@ export default function Enterprise() {
   const [entSaving, setEntSaving] = useState(false)
   const [createForm, setCreateForm] = useState({ name: '', company: '', email: '', phone: '', notes: '', industry: '', scale: '', address: '' })
   const [creating, setCreating] = useState(false)
+  const [createModalOpen, setCreateModalOpen] = useState(false)
   const [memberModalOpen, setMemberModalOpen] = useState(false)
   const [editingMember, setEditingMember] = useState<any>(null)
   const [memberForm, setMemberForm] = useState({ name: '', position: '', department: '', phone: '', email: '', notes: '', employee_id: '', join_date: '', supervisor: '', department_id: '' })
@@ -143,16 +144,16 @@ export default function Enterprise() {
     <div>
       <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>企业管理</h1>
       <p style={{ fontSize: 14, color: '#94a3b8', marginBottom: 20, marginTop: 0 }}>创建并管理您的企业信息</p>
-      <div style={section}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-          <div style={{ width: 48, height: 48, borderRadius: 12, background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Building2 size={24} color="#fff" />
-          </div>
-          <div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>创建企业</div>
-            <div style={{ fontSize: 13, color: '#94a3b8' }}>填写信息创建您的企业，之后可管理部门和成员</div>
-          </div>
+      <div style={{ ...section, textAlign: 'center', padding: '60px 20px' }}>
+        <div style={{ width: 64, height: 64, borderRadius: 16, background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+          <Building2 size={32} color="#fff" />
         </div>
+        <div style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>您还没有企业</div>
+        <div style={{ fontSize: 14, color: '#94a3b8', marginBottom: 24 }}>创建企业后可管理部门和成员</div>
+        <Button onClick={() => setCreateModalOpen(true)}><Plus size={15} /> 创建企业</Button>
+      </div>
+
+      <Modal open={createModalOpen} onClose={() => setCreateModalOpen(false)} title="创建企业">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <Input label="企业名称 *" placeholder="如：XX科技" value={createForm.name} onChange={e => setCreateForm({ ...createForm, name: e.target.value })} />
           <Input label="公司全称" placeholder="如：XX科技有限公司" value={createForm.company} onChange={e => setCreateForm({ ...createForm, company: e.target.value })} />
@@ -181,11 +182,12 @@ export default function Enterprise() {
             <label style={labelStyle}>备注</label>
             <textarea value={createForm.notes} onChange={e => setCreateForm({ ...createForm, notes: e.target.value })} rows={2} placeholder="企业简介或备注信息" style={textareaStyle} />
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <Button onClick={handleCreate} disabled={creating}>{creating ? '创建中...' : '创建企业'}</Button>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <Button variant="secondary" onClick={() => setCreateModalOpen(false)}>取消</Button>
+            <Button onClick={handleCreate} disabled={creating}>{creating ? '创建中...' : '创建'}</Button>
           </div>
         </div>
-      </div>
+      </Modal>
     </div>
   )
 
