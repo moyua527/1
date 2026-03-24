@@ -50,9 +50,10 @@ export default function Enterprise() {
     fetchApi('/api/my-enterprise').then(r => {
       if (r.success) setData(r.data)
       setLoading(false)
-    })
+    }).catch(() => setLoading(false))
   }
   useEffect(() => { load() }, [])
+  useEffect(() => { if (data?.enterprise?.is_owner === 1) loadJoinRequests() }, [data])
 
   // === 企业操作 ===
   const openEditEnt = () => {
@@ -388,8 +389,6 @@ export default function Enterprise() {
       </div>
     )
   }
-
-  useEffect(() => { if (isOwner) loadJoinRequests() }, [data])
 
   const tabItems = [
     { key: 'members' as const, label: '组织成员', icon: <Users size={15} />, count: members.length },

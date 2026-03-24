@@ -1,4 +1,4 @@
-const CACHE_NAME = 'duijie-v2';
+const CACHE_NAME = 'duijie-v3';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
