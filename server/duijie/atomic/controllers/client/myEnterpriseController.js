@@ -24,6 +24,25 @@ async function findMyEnterprise(userId) {
 function canManage(ent) { return ent && (ent.member_role === 'creator' || ent.member_role === 'admin'); }
 function isCreator(ent) { return ent && ent.member_role === 'creator'; }
 
+// GET /api/my-enterprise/all — 系统管理员查看所有企业
+exports.getAll = async (req, res) => {
+  try {
+    if (req.userRole !== 'admin') return res.status(403).json({ success: false, message: '仅系统管理员可查看' });
+    const [enterprises] = await db.query(
+      "SELECT c.*, u.nickname as creator_name FROM duijie_clients c LEFT JOIN voice_users u ON c.user_id = u.id WHERE c.client_type = 'company' AND c.is_deleted = 0 ORDER BY c.created_at DESC"
+    );
+    const list = [];
+    for (const ent of enterprises) {
+      const [members] = await db.query('SELECT * FROM duijie_client_members WHERE client_id = ? AND is_deleted = 0 ORDER BY created_at ASC', [ent.id]);
+      const [departments] = await db.query('SELECT * FROM duijie_departments WHERE client_id = ? AND is_deleted = 0 ORDER BY sort_order ASC, id ASC', [ent.id]);
+      list.push({ enterprise: ent, members, departments });
+    }
+    res.json({ success: true, data: list });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+};
+
 // POST /api/my-enterprise — 创建企业
 exports.create = async (req, res) => {
   try {

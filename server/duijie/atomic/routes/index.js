@@ -77,6 +77,7 @@ router.get('/my-enterprise', auth, myEntCtrl.get);
 router.post('/my-enterprise', auth, myEntCtrl.create);
 router.put('/my-enterprise', auth, myEntCtrl.update);
 router.delete('/my-enterprise', auth, myEntCtrl.remove);
+router.get('/my-enterprise/all', auth, myEntCtrl.getAll);
 router.get('/my-enterprise/search', auth, myEntCtrl.searchEnterprise);
 router.post('/my-enterprise/join', auth, myEntCtrl.joinEnterprise);
 router.get('/my-enterprise/join-requests', auth, myEntCtrl.listJoinRequests);
