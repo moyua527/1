@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BarChart3, TrendingUp, PieChart, Loader2, FileSignature, Users, Calendar, Activity, Target, DollarSign } from 'lucide-react'
+import { BarChart3, TrendingUp, PieChart, Loader2, FileSignature, Users, Calendar, Activity, Target, DollarSign, Printer } from 'lucide-react'
 
 const fetchApi = async (url: string) => {
   const res = await fetch(url, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
@@ -73,6 +73,12 @@ export default function Report() {
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>数据报表</h1>
           <p style={{ color: '#64748b', margin: 0, fontSize: 14 }}>销售漏斗 · 跟进趋势 · 渠道分布 · 合同统计</p>
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button onClick={() => window.print()} title="导出PDF" className="no-print"
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
+            <Printer size={14} /> 导出PDF
+          </button>
         </div>
         <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 10, padding: 3 }}>
           {rangeTabs.map((t, i) => (

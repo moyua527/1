@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Shield, ChevronLeft, ChevronRight, Filter } from 'lucide-react'
+import { Shield, ChevronLeft, ChevronRight, Filter, Download } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 
 const actionLabel: Record<string, { label: string; color: string }> = {
@@ -35,6 +35,32 @@ export default function AuditLog() {
 
   const totalPages = Math.ceil(total / limit) || 1
 
+  const exportCSV = () => {
+    let url = `/api/audit-logs?page=1&limit=10000`
+    if (filterAction) url += `&action=${filterAction}`
+    if (filterEntity) url += `&entity_type=${filterEntity}`
+    fetchApi(url).then(r => {
+      if (!r.success) return
+      const rows = r.data.logs || []
+      const header = '\uFEFF时间,用户,操作,对象类型,对象ID,详情,IP\n'
+      const csv = header + rows.map((l: any) => [
+        new Date(l.created_at).toLocaleString('zh-CN'),
+        l.nickname || l.username || '-',
+        (actionLabel[l.action]?.label) || l.action,
+        (entityLabel[l.entity_type]) || l.entity_type || '-',
+        l.entity_id || '-',
+        `"${(l.detail || '-').replace(/"/g, '""')}"`,
+        l.ip || '-'
+      ].join(',')).join('\n')
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = `审计日志_${new Date().toISOString().slice(0, 10)}.csv`
+      a.click()
+      URL.revokeObjectURL(a.href)
+    })
+  }
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
@@ -42,7 +68,11 @@ export default function AuditLog() {
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>审计日志</h1>
           <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>系统操作记录 · 共 {total} 条</p>
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <button onClick={exportCSV} className="no-print"
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
+            <Download size={14} /> 导出CSV
+          </button>
           <Filter size={16} color="#64748b" />
           <select value={filterAction} onChange={e => { setFilterAction(e.target.value); setPage(1) }}
             style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none' }}>
