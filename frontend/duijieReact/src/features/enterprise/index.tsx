@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Building2, Building, Phone, Mail, Users, MapPin, Clock, Briefcase, FileText, Edit3, UserPlus, X, Trash2, Plus, ChevronRight, ChevronDown, Hash, Calendar, GitBranch, FolderTree, MoreHorizontal, Search } from 'lucide-react'
+import { Building2, Building, Phone, Mail, Users, MapPin, Clock, Briefcase, FileText, Edit3, UserPlus, X, Trash2, Plus, ChevronRight, ChevronDown, Hash, Calendar, GitBranch, FolderTree, MoreHorizontal, Search, LogIn } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import Avatar from '../ui/Avatar'
 import Modal from '../ui/Modal'
@@ -27,6 +27,11 @@ export default function Enterprise() {
   const [createForm, setCreateForm] = useState({ name: '', company: '', email: '', phone: '', notes: '', industry: '', scale: '', address: '' })
   const [creating, setCreating] = useState(false)
   const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [joinModalOpen, setJoinModalOpen] = useState(false)
+  const [joinSearch, setJoinSearch] = useState('')
+  const [joinResults, setJoinResults] = useState<any[]>([])
+  const [joinSearching, setJoinSearching] = useState(false)
+  const [joining, setJoining] = useState(false)
   const [memberModalOpen, setMemberModalOpen] = useState(false)
   const [editingMember, setEditingMember] = useState<any>(null)
   const [memberForm, setMemberForm] = useState({ name: '', position: '', department: '', phone: '', email: '', notes: '', employee_id: '', join_date: '', supervisor: '', department_id: '' })
@@ -153,6 +158,22 @@ export default function Enterprise() {
     setExpandedDepts(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s })
   }
 
+  // === 加入企业 ===
+  const handleJoinSearch = async () => {
+    if (!joinSearch.trim()) return
+    setJoinSearching(true)
+    const r = await fetchApi(`/api/my-enterprise/search?name=${encodeURIComponent(joinSearch.trim())}`)
+    setJoinSearching(false)
+    if (r.success) setJoinResults(r.data || [])
+  }
+  const handleJoin = async (entId: number) => {
+    setJoining(true)
+    const r = await fetchApi('/api/my-enterprise/join', { method: 'POST', body: JSON.stringify({ enterprise_id: entId }) })
+    setJoining(false)
+    if (r.success) { toast(r.message || '加入成功', 'success'); setJoinModalOpen(false); load() }
+    else toast(r.message || '加入失败', 'error')
+  }
+
   if (loading) return <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}>加载中...</div>
 
   if (!data) return (
@@ -164,9 +185,53 @@ export default function Enterprise() {
           <Building2 size={32} color="#fff" />
         </div>
         <div style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>您还没有企业</div>
-        <div style={{ fontSize: 14, color: '#94a3b8', marginBottom: 24 }}>创建企业后可管理部门和成员</div>
-        <Button onClick={() => setCreateModalOpen(true)}><Plus size={15} /> 创建企业</Button>
+        <div style={{ fontSize: 14, color: '#94a3b8', marginBottom: 24 }}>创建新企业或加入已有企业</div>
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+          <Button onClick={() => setCreateModalOpen(true)}><Plus size={15} /> 创建企业</Button>
+          <Button variant="secondary" onClick={() => { setJoinModalOpen(true); setJoinSearch(''); setJoinResults([]) }}><LogIn size={15} /> 加入企业</Button>
+        </div>
       </div>
+
+      <Modal open={joinModalOpen} onClose={() => setJoinModalOpen(false)} title="加入企业">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label style={labelStyle}>搜索企业名称</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input value={joinSearch} onChange={e => setJoinSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleJoinSearch()} placeholder="输入企业名称搜索"
+                style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none' }} />
+              <button onClick={handleJoinSearch} disabled={joinSearching} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 500, opacity: joinSearching ? 0.6 : 1 }}>
+                <Search size={14} /> {joinSearching ? '搜索中...' : '搜索'}
+              </button>
+            </div>
+          </div>
+          {joinResults.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 300, overflowY: 'auto' }}>
+              {joinResults.map((e: any) => (
+                <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', border: '1px solid #e2e8f0', borderRadius: 10, background: '#fafbfc' }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Building2 size={20} color="#fff" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>{e.name}</div>
+                    <div style={{ fontSize: 12, color: '#94a3b8', display: 'flex', gap: 8 }}>
+                      {e.industry && <span>{e.industry}</span>}
+                      {e.scale && <span>{e.scale}</span>}
+                    </div>
+                  </div>
+                  <button onClick={() => handleJoin(e.id)} disabled={joining} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500, opacity: joining ? 0.6 : 1 }}>
+                    加入
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : joinSearch.trim() && !joinSearching ? (
+            <div style={{ textAlign: 'center', padding: 20, color: '#94a3b8', fontSize: 14 }}>未找到匹配的企业</div>
+          ) : null}
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Button variant="secondary" onClick={() => setJoinModalOpen(false)}>关闭</Button>
+          </div>
+        </div>
+      </Modal>
 
       <Modal open={createModalOpen} onClose={() => setCreateModalOpen(false)} title="创建企业">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -207,6 +272,7 @@ export default function Enterprise() {
   )
 
   const { enterprise: ent, members, departments = [] } = data
+  const isOwner = ent?.is_owner === 1
   const getDeptName = (id: number | null) => departments.find((d: any) => d.id === id)?.name || ''
 
   // === 组织架构树 ===
@@ -303,27 +369,29 @@ export default function Enterprise() {
             </div>
             {ent.company && <div style={{ fontSize: 14, color: '#64748b' }}>{ent.company}</div>}
           </div>
-          <div style={{ position: 'relative' }}>
-            <button onClick={() => setEntMenuOpen(!entMenuOpen)} style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#64748b' }}>
-              <MoreHorizontal size={18} />
-            </button>
-            {entMenuOpen && (
-              <>
-                <div onClick={() => setEntMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
-                <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,.1)', zIndex: 50, minWidth: 120, overflow: 'hidden' }}>
-                  <button onClick={() => { setEntMenuOpen(false); openEditEnt() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: '#334155' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-                    <Edit3 size={14} color="#2563eb" /> 编辑企业
-                  </button>
-                  <div style={{ height: 1, background: '#f1f5f9' }} />
-                  <button onClick={() => { setEntMenuOpen(false); handleDeleteEnterprise() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: '#dc2626' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-                    <Trash2 size={14} /> 删除企业
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+          {isOwner && (
+            <div style={{ position: 'relative' }}>
+              <button onClick={() => setEntMenuOpen(!entMenuOpen)} style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#64748b' }}>
+                <MoreHorizontal size={18} />
+              </button>
+              {entMenuOpen && (
+                <>
+                  <div onClick={() => setEntMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
+                  <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,.1)', zIndex: 50, minWidth: 120, overflow: 'hidden' }}>
+                    <button onClick={() => { setEntMenuOpen(false); openEditEnt() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: '#334155' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                      <Edit3 size={14} color="#2563eb" /> 编辑企业
+                    </button>
+                    <div style={{ height: 1, background: '#f1f5f9' }} />
+                    <button onClick={() => { setEntMenuOpen(false); handleDeleteEnterprise() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: '#dc2626' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                      <Trash2 size={14} /> 删除企业
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
         <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 12, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '4px 24px' }}>
           {ent.company && <div style={infoRow}><Building size={16} color="#64748b" /> {ent.company}</div>}
@@ -354,9 +422,11 @@ export default function Enterprise() {
       {/* 组织成员 */}
       {tab === 'members' && (
         <div style={{ ...section, marginTop: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0, borderTop: 'none' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 16 }}>
-            <Button onClick={openAddMember}><UserPlus size={14} /> 添加成员</Button>
-          </div>
+          {isOwner && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 16 }}>
+              <Button onClick={openAddMember}><UserPlus size={14} /> 添加成员</Button>
+            </div>
+          )}
           {members.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 24, color: '#94a3b8', fontSize: 14 }}>暂无组织成员，点击"添加成员"开始</div>
           ) : (
@@ -372,10 +442,12 @@ export default function Enterprise() {
                       </div>
                       {m.position && <div style={{ fontSize: 12, color: '#64748b' }}>{m.position}</div>}
                     </div>
-                    <div style={{ display: 'flex', gap: 4 }}>
-                      <button onClick={() => openEditMember(m)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, display: 'flex' }}><Edit3 size={13} /></button>
-                      <button onClick={() => handleDeleteMember(m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: 2, display: 'flex' }}><X size={13} /></button>
-                    </div>
+                    {isOwner && (
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button onClick={() => openEditMember(m)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, display: 'flex' }}><Edit3 size={13} /></button>
+                        <button onClick={() => handleDeleteMember(m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: 2, display: 'flex' }}><X size={13} /></button>
+                      </div>
+                    )}
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 12px', fontSize: 13, color: '#334155' }}>
                     {m.department_id && <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Building size={12} color="#94a3b8" />{getDeptName(m.department_id)}</div>}
@@ -396,9 +468,11 @@ export default function Enterprise() {
       {/* 部门管理 */}
       {tab === 'departments' && (
         <div style={{ ...section, marginTop: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0, borderTop: 'none' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 16 }}>
-            <Button onClick={() => openAddDept()}><Plus size={14} /> 添加部门</Button>
-          </div>
+          {isOwner && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 16 }}>
+              <Button onClick={() => openAddDept()}><Plus size={14} /> 添加部门</Button>
+            </div>
+          )}
           {departments.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 24, color: '#94a3b8', fontSize: 14 }}>暂无部门，点击"添加部门"创建组织结构</div>
           ) : (
@@ -412,9 +486,11 @@ export default function Enterprise() {
                       <Building size={18} color="#2563eb" />
                       <span style={{ flex: 1, fontSize: 15, fontWeight: 600, color: '#0f172a' }}>{dept.name}</span>
                       <span style={{ fontSize: 12, color: '#94a3b8' }}>{memberCount}人</span>
-                      <button onClick={() => openAddDept(dept.id)} title="添加子部门" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2563eb', padding: 2, display: 'flex' }}><Plus size={14} /></button>
-                      <button onClick={() => openEditDept(dept)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, display: 'flex' }}><Edit3 size={14} /></button>
-                      <button onClick={() => handleDeleteDept(dept.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: 2, display: 'flex' }}><Trash2 size={14} /></button>
+                      {isOwner && <>
+                        <button onClick={() => openAddDept(dept.id)} title="添加子部门" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2563eb', padding: 2, display: 'flex' }}><Plus size={14} /></button>
+                        <button onClick={() => openEditDept(dept)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, display: 'flex' }}><Edit3 size={14} /></button>
+                        <button onClick={() => handleDeleteDept(dept.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: 2, display: 'flex' }}><Trash2 size={14} /></button>
+                      </>}
                     </div>
                     {children.length > 0 && (
                       <div style={{ marginLeft: 28, borderLeft: '2px solid #e2e8f0', paddingLeft: 12, marginTop: 4 }}>
@@ -425,8 +501,10 @@ export default function Enterprise() {
                               <Building size={14} color="#64748b" />
                               <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: '#334155' }}>{child.name}</span>
                               <span style={{ fontSize: 12, color: '#94a3b8' }}>{childCount}人</span>
-                              <button onClick={() => openEditDept(child)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, display: 'flex' }}><Edit3 size={13} /></button>
-                              <button onClick={() => handleDeleteDept(child.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: 2, display: 'flex' }}><Trash2 size={13} /></button>
+                              {isOwner && <>
+                                <button onClick={() => openEditDept(child)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, display: 'flex' }}><Edit3 size={13} /></button>
+                                <button onClick={() => handleDeleteDept(child.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: 2, display: 'flex' }}><Trash2 size={13} /></button>
+                              </>}
                             </div>
                           )
                         })}

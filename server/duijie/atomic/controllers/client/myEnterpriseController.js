@@ -1,12 +1,19 @@
 const db = require('../../../config/db');
 
-// 辅助：查找当前用户关联的企业
+// 辅助：查找当前用户关联的企业（作为创建者或成员）
 async function findMyEnterprise(userId) {
-  const [rows] = await db.query(
-    "SELECT * FROM duijie_clients WHERE user_id = ? AND client_type = 'company' AND is_deleted = 0 LIMIT 1",
+  const [owned] = await db.query(
+    "SELECT *, 1 as is_owner FROM duijie_clients WHERE user_id = ? AND client_type = 'company' AND is_deleted = 0 LIMIT 1",
     [userId]
   );
-  return rows[0] || null;
+  if (owned[0]) return owned[0];
+  const [membership] = await db.query(
+    `SELECT c.*, 0 as is_owner FROM duijie_client_members m
+     INNER JOIN duijie_clients c ON c.id = m.client_id
+     WHERE m.user_id = ? AND m.is_deleted = 0 AND c.is_deleted = 0 AND c.client_type = 'company' LIMIT 1`,
+    [userId]
+  );
+  return membership[0] || null;
 }
 
 // POST /api/my-enterprise — 创建企业
@@ -119,6 +126,44 @@ exports.removeMember = async (req, res) => {
       [req.params.id, ent.id]
     );
     res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+};
+
+// GET /api/my-enterprise/search?name=xxx
+exports.searchEnterprise = async (req, res) => {
+  try {
+    const name = (req.query.name || '').trim();
+    if (!name || name.length < 1) return res.json({ success: true, data: [] });
+    const [rows] = await db.query(
+      "SELECT id, name, company, industry, scale FROM duijie_clients WHERE client_type = 'company' AND is_deleted = 0 AND (name LIKE ? OR company LIKE ?) LIMIT 10",
+      [`%${name}%`, `%${name}%`]
+    );
+    res.json({ success: true, data: rows });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+};
+
+// POST /api/my-enterprise/join
+exports.joinEnterprise = async (req, res) => {
+  try {
+    const existing = await findMyEnterprise(req.userId);
+    if (existing) return res.status(400).json({ success: false, message: '您已关联企业，无法重复加入' });
+    const { enterprise_id } = req.body;
+    if (!enterprise_id) return res.status(400).json({ success: false, message: '请选择要加入的企业' });
+    const [ent] = await db.query("SELECT id, name FROM duijie_clients WHERE id = ? AND client_type = 'company' AND is_deleted = 0", [enterprise_id]);
+    if (!ent[0]) return res.status(404).json({ success: false, message: '企业不存在' });
+    const [dup] = await db.query('SELECT id FROM duijie_client_members WHERE client_id = ? AND user_id = ? AND is_deleted = 0', [enterprise_id, req.userId]);
+    if (dup[0]) return res.status(400).json({ success: false, message: '您已是该企业成员' });
+    const [user] = await db.query('SELECT nickname, username, phone, email FROM voice_users WHERE id = ? AND is_deleted = 0', [req.userId]);
+    const u = user[0] || {};
+    await db.query(
+      'INSERT INTO duijie_client_members (client_id, user_id, name, phone, email, created_by) VALUES (?, ?, ?, ?, ?, ?)',
+      [enterprise_id, req.userId, u.nickname || u.username || '', u.phone || null, u.email || null, req.userId]
+    );
+    res.json({ success: true, message: `已成功加入「${ent[0].name}」` });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });
   }
