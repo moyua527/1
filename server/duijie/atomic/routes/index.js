@@ -77,6 +77,7 @@ router.get('/my-enterprise', auth, myEntCtrl.get);
 router.post('/my-enterprise', auth, myEntCtrl.create);
 router.put('/my-enterprise', auth, myEntCtrl.update);
 router.delete('/my-enterprise', auth, myEntCtrl.remove);
+router.get('/my-enterprise/lookup-user', auth, myEntCtrl.lookupUser);
 router.post('/my-enterprise/departments', auth, myEntCtrl.addDepartment);
 router.put('/my-enterprise/departments/:id', auth, myEntCtrl.updateDepartment);
 router.delete('/my-enterprise/departments/:id', auth, myEntCtrl.removeDepartment);

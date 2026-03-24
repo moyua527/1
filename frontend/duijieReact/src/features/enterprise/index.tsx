@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Building2, Building, Phone, Mail, Users, MapPin, Clock, Briefcase, FileText, Edit3, UserPlus, X, Trash2, Plus, ChevronRight, ChevronDown, Hash, Calendar, GitBranch, FolderTree, MoreHorizontal } from 'lucide-react'
+import { Building2, Building, Phone, Mail, Users, MapPin, Clock, Briefcase, FileText, Edit3, UserPlus, X, Trash2, Plus, ChevronRight, ChevronDown, Hash, Calendar, GitBranch, FolderTree, MoreHorizontal, Search } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import Avatar from '../ui/Avatar'
 import Modal from '../ui/Modal'
@@ -37,6 +37,8 @@ export default function Enterprise() {
   const [deptSaving, setDeptSaving] = useState(false)
   const [expandedDepts, setExpandedDepts] = useState<Set<number>>(new Set())
   const [entMenuOpen, setEntMenuOpen] = useState(false)
+  const [lookupPhone, setLookupPhone] = useState('')
+  const [lookupLoading, setLookupLoading] = useState(false)
 
   const load = () => {
     fetchApi('/api/my-enterprise').then(r => {
@@ -77,8 +79,21 @@ export default function Enterprise() {
   }
 
   // === 成员操作 ===
+  const handleLookup = async () => {
+    if (!/^\d{11}$/.test(lookupPhone)) { toast('请输入11位手机号', 'error'); return }
+    setLookupLoading(true)
+    const r = await fetchApi(`/api/my-enterprise/lookup-user?phone=${lookupPhone}`)
+    setLookupLoading(false)
+    if (r.success && r.data) {
+      setMemberForm(f => ({ ...f, name: r.data.nickname || r.data.username || f.name, phone: r.data.phone || f.phone, email: r.data.email || f.email }))
+      toast(`已导入账号: ${r.data.nickname || r.data.username}`, 'success')
+    } else {
+      toast(r.message || '未找到该手机号对应的账号', 'error')
+    }
+  }
   const openAddMember = () => {
     setEditingMember(null)
+    setLookupPhone('')
     setMemberForm({ name: '', position: '', department: '', phone: '', email: '', notes: '', employee_id: '', join_date: '', supervisor: '', department_id: '' })
     setMemberModalOpen(true)
   }
@@ -175,7 +190,7 @@ export default function Enterprise() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             <Input label="邮箱" placeholder="company@example.com" value={createForm.email} onChange={e => setCreateForm({ ...createForm, email: e.target.value })} />
-            <Input label="电话" placeholder="联系电话" value={createForm.phone} onChange={e => setCreateForm({ ...createForm, phone: e.target.value })} />
+            <Input label="电话" placeholder="联系电话" maxLength={11} value={createForm.phone} onChange={e => setCreateForm({ ...createForm, phone: e.target.value.replace(/\D/g, '').slice(0, 11) })} />
           </div>
           <Input label="地址" placeholder="公司地址" value={createForm.address} onChange={e => setCreateForm({ ...createForm, address: e.target.value })} />
           <div>
@@ -455,7 +470,7 @@ export default function Enterprise() {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             <Input label="邮箱" value={entForm.email} onChange={e => setEntForm({ ...entForm, email: e.target.value })} />
-            <Input label="电话" value={entForm.phone} onChange={e => setEntForm({ ...entForm, phone: e.target.value })} />
+            <Input label="电话" maxLength={11} value={entForm.phone} onChange={e => setEntForm({ ...entForm, phone: e.target.value.replace(/\D/g, '').slice(0, 11) })} />
           </div>
           <Input label="地址" value={entForm.address} onChange={e => setEntForm({ ...entForm, address: e.target.value })} />
           <div>
@@ -472,6 +487,18 @@ export default function Enterprise() {
       {/* 成员 Modal */}
       <Modal open={memberModalOpen} onClose={() => setMemberModalOpen(false)} title={editingMember ? '编辑成员' : '添加成员'}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {!editingMember && (
+            <div style={{ background: '#f8fafc', borderRadius: 10, padding: 14, border: '1px solid #e2e8f0' }}>
+              <label style={{ ...labelStyle, marginBottom: 8 }}>从已有账号导入</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input value={lookupPhone} onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0, 11); setLookupPhone(v) }} placeholder="输入手机号查找" maxLength={11}
+                  style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none' }} />
+                <button onClick={handleLookup} disabled={lookupLoading} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 500, opacity: lookupLoading ? 0.6 : 1 }}>
+                  <Search size={14} /> {lookupLoading ? '查找中...' : '导入'}
+                </button>
+              </div>
+            </div>
+          )}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             <Input label="姓名 *" value={memberForm.name} onChange={e => setMemberForm({ ...memberForm, name: e.target.value })} />
             <Input label="工号" placeholder="如：E001" value={memberForm.employee_id} onChange={e => setMemberForm({ ...memberForm, employee_id: e.target.value })} />
@@ -487,7 +514,7 @@ export default function Enterprise() {
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            <Input label="电话" value={memberForm.phone} onChange={e => setMemberForm({ ...memberForm, phone: e.target.value })} />
+            <Input label="电话" value={memberForm.phone} maxLength={11} onChange={e => setMemberForm({ ...memberForm, phone: e.target.value.replace(/\D/g, '').slice(0, 11) })} />
             <Input label="邮箱" value={memberForm.email} onChange={e => setMemberForm({ ...memberForm, email: e.target.value })} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>

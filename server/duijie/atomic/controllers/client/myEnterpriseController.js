@@ -124,6 +124,22 @@ exports.removeMember = async (req, res) => {
   }
 };
 
+// GET /api/my-enterprise/lookup-user?phone=xxx
+exports.lookupUser = async (req, res) => {
+  try {
+    const phone = (req.query.phone || '').trim();
+    if (!/^\d{11}$/.test(phone)) return res.status(400).json({ success: false, message: '请输入11位手机号' });
+    const [rows] = await db.query(
+      "SELECT id, username, nickname, email, phone, avatar FROM voice_users WHERE phone = ? AND is_deleted = 0 LIMIT 1",
+      [phone]
+    );
+    if (!rows[0]) return res.json({ success: true, data: null, message: '未找到该手机号对应的账号' });
+    res.json({ success: true, data: rows[0] });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+};
+
 // === 部门管理 ===
 
 // POST /api/my-enterprise/departments
