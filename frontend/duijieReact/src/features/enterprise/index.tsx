@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Building2, Building, Phone, Mail, Users, MapPin, Clock, Briefcase, FileText, Edit3, UserPlus, X, Trash2, Plus, ChevronRight, ChevronDown, Hash, Calendar, GitBranch, FolderTree } from 'lucide-react'
+import { Building2, Building, Phone, Mail, Users, MapPin, Clock, Briefcase, FileText, Edit3, UserPlus, X, Trash2, Plus, ChevronRight, ChevronDown, Hash, Calendar, GitBranch, FolderTree, MoreHorizontal } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import Avatar from '../ui/Avatar'
 import Modal from '../ui/Modal'
@@ -35,6 +35,7 @@ export default function Enterprise() {
   const [deptForm, setDeptForm] = useState({ name: '', parent_id: '' })
   const [deptSaving, setDeptSaving] = useState(false)
   const [expandedDepts, setExpandedDepts] = useState<Set<number>>(new Set())
+  const [entMenuOpen, setEntMenuOpen] = useState(false)
 
   const load = () => {
     fetchApi('/api/my-enterprise').then(r => {
@@ -285,13 +286,26 @@ export default function Enterprise() {
             </div>
             {ent.company && <div style={{ fontSize: 14, color: '#64748b' }}>{ent.company}</div>}
           </div>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button onClick={openEditEnt} style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#2563eb' }}>
-              <Edit3 size={14} /> 编辑
+          <div style={{ position: 'relative' }}>
+            <button onClick={() => setEntMenuOpen(!entMenuOpen)} style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#64748b' }}>
+              <MoreHorizontal size={18} />
             </button>
-            <button onClick={handleDeleteEnterprise} style={{ background: 'none', border: '1px solid #fecaca', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#dc2626' }}>
-              <Trash2 size={14} /> 删除
-            </button>
+            {entMenuOpen && (
+              <>
+                <div onClick={() => setEntMenuOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 40 }} />
+                <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,.1)', zIndex: 50, minWidth: 120, overflow: 'hidden' }}>
+                  <button onClick={() => { setEntMenuOpen(false); openEditEnt() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: '#334155' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#f8fafc')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                    <Edit3 size={14} color="#2563eb" /> 编辑企业
+                  </button>
+                  <div style={{ height: 1, background: '#f1f5f9' }} />
+                  <button onClick={() => { setEntMenuOpen(false); handleDeleteEnterprise() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: '#dc2626' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                    <Trash2 size={14} /> 删除企业
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
         <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 12, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '4px 24px' }}>
