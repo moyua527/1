@@ -45,6 +45,7 @@ export default function Messaging() {
     dmApi.history(user.id).then(r => {
       if (r.success) setMessages(r.data || [])
       setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+      loadConversations()
     })
     // Poll for new messages
     if (pollRef.current) clearInterval(pollRef.current)

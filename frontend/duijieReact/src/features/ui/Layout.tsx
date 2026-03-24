@@ -65,16 +65,19 @@ export default function Layout() {
   useEffect(() => { if (isMobile) setCollapsed(true) }, [location.pathname, isMobile])
   useEffect(() => { fetchApi('/api/auth/me').then(r => { if (r.success) { setUser(r.data); try { localStorage.setItem('cached_user', JSON.stringify(r.data)) } catch {} } }) }, [])
 
+  const loadDmUnread = () => {
+    fetchApi('/api/dm/conversations').then(r => {
+      if (r.success) setDmUnread((r.data || []).reduce((s: number, c: any) => s + (c.unread_count || 0), 0))
+    })
+  }
+
   useEffect(() => {
-    const loadUnread = () => {
-      fetchApi('/api/dm/conversations').then(r => {
-        if (r.success) setDmUnread((r.data || []).reduce((s: number, c: any) => s + (c.unread_count || 0), 0))
-      })
-    }
-    loadUnread()
-    const t = setInterval(loadUnread, 15000)
+    loadDmUnread()
+    const t = setInterval(loadDmUnread, 15000)
     return () => clearInterval(t)
   }, [])
+
+  useEffect(() => { loadDmUnread() }, [location.pathname])
 
   const openProfile = () => {
     setProfileEditing(false)
