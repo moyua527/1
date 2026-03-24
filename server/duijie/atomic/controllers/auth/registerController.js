@@ -30,7 +30,7 @@ module.exports = async (req, res) => {
     // 自动生成用户信息
     const username = phone || email.split('@')[0] + '_' + Date.now().toString(36);
     const nickname = phone ? '用户' + phone.slice(-4) : email.split('@')[0];
-    const randomPwd = require('crypto').randomBytes(16).toString('hex');
+    const defaultPwd = '123456';
     const displayId = await generateDisplayId('000000', 0);
     const personalCode = await generateInviteCode();
 
@@ -53,7 +53,7 @@ module.exports = async (req, res) => {
 
     const [result] = await db.query(
       'INSERT INTO voice_users (username, password, nickname, email, phone, role, display_id, personal_invite_code, invited_by, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [username, await bcrypt.hash(randomPwd, 10), nickname, email || null, phone || null, assignedRole, displayId, personalCode, inviterId, isActive]
+      [username, await bcrypt.hash(defaultPwd, 10), nickname, email || null, phone || null, assignedRole, displayId, personalCode, inviterId, isActive]
     );
     const newUserId = result.insertId;
 
