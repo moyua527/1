@@ -28,6 +28,7 @@ export default function Messaging() {
   const [showNewChat, setShowNewChat] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const selectedRef = useRef<any>(null)
+  const pollRef = useRef<any>(null)
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
   const [me, setMe] = useState<any>(null)
 
@@ -72,7 +73,17 @@ export default function Messaging() {
       loadConversations()
       window.dispatchEvent(new Event('dm-read'))
     })
+    if (pollRef.current) clearInterval(pollRef.current)
+    pollRef.current = setInterval(() => {
+      dmApi.history(user.id).then(r => {
+        if (r.success) setMessages(r.data || [])
+        loadConversations()
+        window.dispatchEvent(new Event('dm-read'))
+      })
+    }, 5000)
   }
+
+  useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current) }, [])
 
   const handleSend = async () => {
     if (!input.trim() || !selectedUser) return

@@ -25,8 +25,22 @@
     <script type="module" src="/src/main.tsx"></script>
     <script>
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(() => {});
+        var refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', function() {
+          if (!refreshing) { refreshing = true; window.location.reload(); }
+        });
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js').then(function(reg) {
+            reg.addEventListener('updatefound', function() {
+              var w = reg.installing;
+              if (w) w.addEventListener('statechange', function() {
+                if (w.state === 'installed' && navigator.serviceWorker.controller) {
+                  w.postMessage({ type: 'SKIP_WAITING' });
+                }
+              });
+            });
+            reg.update();
+          }).catch(function(){});
         });
       }
     </script>

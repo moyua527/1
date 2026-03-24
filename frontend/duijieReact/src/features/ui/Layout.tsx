@@ -76,7 +76,7 @@ export default function Layout() {
     loadDmUnread()
     const offDm = onSocket('new_dm', () => loadDmUnread())
     const offReconnect = onSocket('reconnect', () => loadDmUnread())
-    const t = setInterval(loadDmUnread, 60000)
+    const t = setInterval(loadDmUnread, 15000)
     const onDmRead = () => loadDmUnread()
     window.addEventListener('dm-read', onDmRead)
     return () => { clearInterval(t); window.removeEventListener('dm-read', onDmRead); offDm(); offReconnect() }
