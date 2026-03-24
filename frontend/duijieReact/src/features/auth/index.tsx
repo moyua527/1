@@ -202,36 +202,20 @@ export default function LoginPage({ onLogin }: Props) {
       setAgreed(true)
     }
     setError(''); setSuccess('')
-    if (!nickname.trim()) { setError('请输入昵称'); return }
-    if (!gender) { setError('请选择性别'); return }
-    if (!province || !city) { setError('请选择省份和城市'); return }
-    if (!password || password.length < 6) { setError('密码至少6个字符'); return }
-    if (password !== confirmPwd) { setError('两次密码不一致'); return }
-    if (!inviteToken && !inviteCode.trim()) { setError('请输入邀请码'); return }
+    const target = regMethod === 'phone' ? phone.trim() : email.trim()
+    if (!target) { setError(regMethod === 'phone' ? '请输入手机号' : '请输入邮箱'); return }
+    if (!verifyCode) { setError('请输入验证码'); return }
     setLoading(true)
     try {
-      const autoUsername = regMethod === 'phone' ? phone.trim() : email.trim().split('@')[0] + '_' + Date.now().toString(36)
       const res = await authApi.register({
-        username: autoUsername, password, nickname: nickname.trim(),
         email: regMethod === 'email' ? email.trim() : undefined,
         phone: regMethod === 'phone' ? phone.trim() : undefined,
-        gender: Number(gender), area_code: areaCode,
-        user_type: companyName.trim() ? 'company' : 'individual',
-        province: provinceName, city: cityName,
-        position: position.trim() || undefined,
-        company_name: companyName.trim() || undefined,
-        invite_code: inviteToken ? undefined : (inviteCode.trim() || undefined),
+        verify_code: verifyCode,
         invite_token: inviteToken || undefined,
-        verify_code: verifyCode || undefined,
       })
       if (res.success) {
-        if (res.needApproval) {
-          setNeedApproval(true)
-          setSuccess('注册成功！请等待管理员审批后方可登录')
-        } else {
-          setSuccess('注册成功！即将跳转登录...')
-          setTimeout(() => switchMode('login'), 1500)
-        }
+        if (res.token) { setToken(res.token); onLogin(res.data) }
+        else { setSuccess('注册成功！'); setTimeout(() => switchMode('login'), 1500) }
       } else setError(res.message || '注册失败')
     } catch { setError('网络错误') }
     setLoading(false)
@@ -295,7 +279,7 @@ export default function LoginPage({ onLogin }: Props) {
           </div>
         )}
 
-        {mode === 'register' && regStep === 1 && (
+        {mode === 'register' && (
           <div style={{ display: 'flex', gap: 0, marginBottom: 16, borderBottom: '1px solid #e2e8f0' }}>
             {([{ key: 'phone' as const, label: '手机号注册', icon: <Phone size={14} /> }, { key: 'email' as const, label: '邮箱注册', icon: <Mail size={14} /> }]).map(m => (
               <button key={m.key} type="button" onClick={() => { setRegMethod(m.key); setError(''); setVerifyCode('') }}
@@ -308,20 +292,6 @@ export default function LoginPage({ onLogin }: Props) {
           </div>
         )}
 
-        {mode === 'register' && regStep === 2 && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, padding: '8px 0' }}>
-            <button type="button" onClick={() => { setRegStep(1); setError('') }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2563eb', display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 500, padding: 0 }}>
-              <ArrowLeft size={16} /> 返回
-            </button>
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
-              <CheckCircle size={16} color="#16a34a" />
-              <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 500 }}>
-                {regMethod === 'phone' ? phone : email} 已验证
-              </span>
-            </div>
-          </div>
-        )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {mode === 'login' && loginMethod === 'password' && (
@@ -370,7 +340,7 @@ export default function LoginPage({ onLogin }: Props) {
             </>
           )}
 
-          {mode === 'register' && regStep === 1 && (
+          {mode === 'register' && (
             <>
               {regMethod === 'phone' && (
                 <Input label="手机号 *" placeholder="输入11位手机号" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))} maxLength={11} />
@@ -393,59 +363,6 @@ export default function LoginPage({ onLogin }: Props) {
             </>
           )}
 
-          {mode === 'register' && regStep === 2 && (
-            <>
-              <Input label="昵称 *" placeholder="输入你的昵称" value={nickname} onChange={e => setNickname(e.target.value)} />
-              <div>
-                <label style={labelStyle}>性别 *</label>
-                <div style={{ display: 'flex', gap: 4 }}>
-                  {[{ v: '1', l: '男' }, { v: '2', l: '女' }].map(g => (
-                    <button key={g.v} type="button" onClick={() => setGender(g.v)} style={pillStyle(gender === g.v)}>
-                      {g.l}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <Input label="企业名称" placeholder="没有可不填" value={companyName} onChange={e => setCompanyName(e.target.value)} />
-              {companyName.trim() && (
-                <Input label="企业职位" placeholder="如：产品经理、技术总监" value={position} onChange={e => setPosition(e.target.value)} />
-              )}
-              <div>
-                <label style={labelStyle}>所在地 *</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <select value={province} onChange={e => { setProvince(e.target.value); setCity('') }} style={selectStyle}>
-                    <option value="">省份</option>
-                    {Object.entries(areaData).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
-                  </select>
-                  <select value={city} onChange={e => setCity(e.target.value)} style={selectStyle} disabled={!province}>
-                    <option value="">城市</option>
-                    {Object.entries(cities).map(([k, v]) => <option key={k} value={k}>{v.name}</option>)}
-                  </select>
-                </div>
-              </div>
-              <Input label="密码 *" type="password" placeholder="至少6个字符" value={password} onChange={e => setPassword(e.target.value)} />
-              {password && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ flex: 1, display: 'flex', gap: 4 }}>
-                    {[1, 2, 3].map(i => (
-                      <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= pwdStrength.level ? pwdStrength.color : '#e2e8f0', transition: 'background 0.2s' }} />
-                    ))}
-                  </div>
-                  <span style={{ fontSize: 12, color: pwdStrength.color, fontWeight: 500 }}>{pwdStrength.label}</span>
-                </div>
-              )}
-              <Input label="确认密码 *" type="password" placeholder="再次输入密码" value={confirmPwd} onChange={e => setConfirmPwd(e.target.value)} />
-              {inviteToken && inviteLinkRole && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 8, background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
-                  <Link2 size={16} style={{ color: '#16a34a' }} />
-                  <span style={{ fontSize: 13, color: '#15803d' }}>通过邀请链接注册，预设角色：<strong>{inviteLinkRole}</strong>，注册后直接激活</span>
-                </div>
-              )}
-              {!inviteToken && (
-                <Input label="邀请码 *" placeholder="输入系统邀请码或他人专属邀请码" value={inviteCode} onChange={e => setInviteCode(e.target.value.toUpperCase())} />
-              )}
-            </>
-          )}
 
           {mode === 'forgot' && forgotStep === 1 && (
             <>
@@ -519,7 +436,7 @@ export default function LoginPage({ onLogin }: Props) {
             </Button>
           )}
 
-          {(mode === 'login' || (mode === 'register' && regStep === 2)) && (
+          {(mode === 'login' || mode === 'register') && (
             <>
               <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: 'pointer', marginTop: 4 }}>
                 <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}
@@ -537,26 +454,8 @@ export default function LoginPage({ onLogin }: Props) {
               </Button>
             </>
           )}
-
-          {mode === 'register' && regStep === 1 && (
-            <Button type="button" onClick={handleRegNext} style={{ width: '100%', justifyContent: 'center', padding: '10px 0', marginTop: 4 }} disabled={verifying}>
-              {verifying ? '验证中...' : <>下一步 <ArrowRight size={16} /></>}
-            </Button>
-          )}
         </div>
 
-        {mode === 'register' && needApproval && (
-          <div style={{ marginTop: 16, textAlign: 'center', padding: '12px 16px', borderRadius: 10, background: '#fffbeb', border: '1px solid #fde68a' }}>
-            <Clock size={20} style={{ color: '#d97706', margin: '0 auto 6px' }} />
-            <div style={{ fontSize: 13, color: '#92400e', fontWeight: 500 }}>注册成功，等待管理员审批</div>
-            <div style={{ fontSize: 12, color: '#b45309', marginTop: 4 }}>审批通过后即可登录使用系统</div>
-          </div>
-        )}
-        {mode === 'register' && !needApproval && !inviteToken && (
-          <div style={{ marginTop: 16, textAlign: 'center', fontSize: 12, color: '#94a3b8' }}>
-            系统邀请码注册需管理员审批 · 个人邀请码注册直接激活
-          </div>
-        )}
       </form>
 
       {showTerms && (
