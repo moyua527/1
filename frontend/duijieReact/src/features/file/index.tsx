@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { FileText, Download, Trash2, Search, Upload, Loader2, File, Image, FileSpreadsheet, FileCode, Film } from 'lucide-react'
+import { FileText, Download, Trash2, Search, Upload, Loader2, File, Image, FileSpreadsheet, FileCode, Film, Eye, X } from 'lucide-react'
 import { fetchApi, uploadFile, BACKEND_URL } from '../../bootstrap'
 import Button from '../ui/Button'
 import { toast } from '../ui/Toast'
@@ -25,6 +25,7 @@ export default function FileManager() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [preview, setPreview] = useState<any>(null)
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
 
   const load = () => {
@@ -59,6 +60,16 @@ export default function FileManager() {
 
   const handleDownload = (f: any) => {
     window.open(`${BACKEND_URL}/api/files/${f.id}/download`, '_blank')
+  }
+
+  const canPreview = (mime: string) => {
+    if (!mime) return false
+    return mime.startsWith('image/') || mime === 'application/pdf' || mime.startsWith('video/') || mime.startsWith('audio/') || mime.startsWith('text/') || mime === 'application/json'
+  }
+
+  const getPreviewUrl = (f: any) => {
+    const token = sessionStorage.getItem('token')
+    return `${BACKEND_URL}/api/files/${f.id}/preview?token=${token}`
   }
 
   return (
@@ -116,6 +127,7 @@ export default function FileManager() {
                     <td style={{ padding: '10px 16px', color: '#64748b', whiteSpace: 'nowrap' }}>{f.uploader_name || '-'}</td>
                     <td style={{ padding: '10px 16px', color: '#94a3b8', whiteSpace: 'nowrap' }}>{new Date(f.created_at).toLocaleDateString('zh-CN')}</td>
                     <td style={{ padding: '10px 16px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                      {canPreview(f.mime_type) && <button onClick={() => setPreview(f)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#7c3aed' }} title="预览"><Eye size={16} /></button>}
                       <button onClick={() => handleDownload(f)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#2563eb' }} title="下载"><Download size={16} /></button>
                       <button onClick={() => handleDelete(f)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#dc2626', marginLeft: 4 }} title="删除"><Trash2 size={16} /></button>
                     </td>
@@ -123,6 +135,42 @@ export default function FileManager() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+      {preview && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: 16 }}
+          onClick={() => setPreview(null)}>
+          <div style={{ background: '#fff', borderRadius: 16, width: '90vw', maxWidth: 900, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', borderBottom: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {iconByType(preview.mime_type)}
+                <span style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', maxWidth: 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{preview.original_name}</span>
+                <span style={{ fontSize: 12, color: '#94a3b8' }}>{formatSize(preview.size || 0)}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => handleDownload(preview)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#2563eb' }} title="下载"><Download size={18} /></button>
+                <button onClick={() => setPreview(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#64748b' }} title="关闭"><X size={18} /></button>
+              </div>
+            </div>
+            <div style={{ flex: 1, overflow: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', minHeight: 300 }}>
+              {preview.mime_type?.startsWith('image/') && (
+                <img src={getPreviewUrl(preview)} alt={preview.original_name} style={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain' }} />
+              )}
+              {preview.mime_type === 'application/pdf' && (
+                <iframe src={getPreviewUrl(preview)} style={{ width: '100%', height: '80vh', border: 'none' }} title={preview.original_name} />
+              )}
+              {preview.mime_type?.startsWith('video/') && (
+                <video src={getPreviewUrl(preview)} controls style={{ maxWidth: '100%', maxHeight: '80vh' }} />
+              )}
+              {preview.mime_type?.startsWith('audio/') && (
+                <audio src={getPreviewUrl(preview)} controls style={{ margin: 40 }} />
+              )}
+              {(preview.mime_type?.startsWith('text/') || preview.mime_type === 'application/json') && (
+                <iframe src={getPreviewUrl(preview)} style={{ width: '100%', height: '80vh', border: 'none', background: '#fff' }} title={preview.original_name} />
+              )}
+            </div>
           </div>
         </div>
       )}

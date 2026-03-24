@@ -142,6 +142,7 @@ router.get('/files/all', auth, require('../controllers/file/listAllController'))
 router.get('/files', auth, require('../controllers/file/listController'));
 router.delete('/files/:id', auth, require('../controllers/file/deleteController'));
 router.get('/files/:id/download', auth, require('../controllers/file/downloadController'));
+router.get('/files/:id/preview', auth, require('../controllers/file/previewController'));
 
 // Messages
 router.post('/messages', auth, require('../controllers/message/sendController'));
