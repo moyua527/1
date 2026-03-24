@@ -90,3 +90,4 @@
 | v1.1.13 | 2026-03-24 | P2统一输入校验层(express-validator集成16个关键路由，含认证/企业/成员/部门/客户/项目/消息)；P2结构化日志系统(winston替换运行时文件中48处console调用，分级error/combined日志文件+自动轮转) |
 | v1.1.14 | 2026-03-24 | P3数据库迁移规范化：版本化迁移系统(schema_migrations表+migrate.js运行器+4个.sql迁移文件)，deploy_update.py改用迁移运行器替代硬编码SQL，新增app.js/logger/validate/validators等文件到部署清单 |
 | v1.1.15 | 2026-03-24 | P3前端全局状态管理：Zustand替代App/Layout中分散的localStorage+useState用户状态管理，统一useUserStore(用户信息/登录初始化/登出/资料更新)，消除重复缓存逻辑 |
+| v1.1.16 | 2026-03-24 | 前端性能与架构优化：P0路由级代码分割(React.lazy+Suspense，14个模块独立chunk，首屏JS从988KB降至414KB减少58%)；P0骨架屏组件(Skeleton/SkeletonCard/SkeletonList/SkeletonDashboard)；P1全局命令面板(Ctrl+K快捷跳转页面+快捷操作，模糊搜索+键盘导航+角色过滤)；P2权限组件化RBAC(permissions.tsx统一权限配置，can()函数+usePermission Hook+Can组件替代硬编码角色判断) |

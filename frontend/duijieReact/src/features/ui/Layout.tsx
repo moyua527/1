@@ -11,6 +11,7 @@ import Button from './Button'
 import { toast } from './Toast'
 import useIsMobile from './useIsMobile'
 import NotificationBell from './NotificationBell'
+import CommandPalette from './CommandPalette'
 
 const ALL_NAV_ITEMS = [
   { path: '/', label: '仪表盘', icon: LayoutDashboard, roles: ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer', 'client'] },
@@ -153,6 +154,7 @@ export default function Layout() {
 
   return (
     <div style={s.wrapper}>
+      <CommandPalette />
       {isMobile ? (
         <>
           {sidebarOpen && <div onClick={() => setCollapsed(true)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 40, transition: 'opacity 0.2s' }} />}
