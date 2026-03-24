@@ -1,0 +1,14 @@
+{
+  "name": "DuiJie - 项目对接平台",
+  "short_name": "DuiJie",
+  "description": "客户项目管理与交付对接平台",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#2563eb",
+  "orientation": "any",
+  "icons": [
+    { "src": "/icons/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml" },
+    { "src": "/icons/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml" }
+  ]
+}

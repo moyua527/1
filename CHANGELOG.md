@@ -60,3 +60,4 @@
 | v1.0.78 | 2026-03-24 | 通知系统改为WebSocket实时推送(Socket.IO user房间+JWT认证)，取代30秒轮询，保留2分钟兜底轮询 |
 | v1.0.79 | 2026-03-24 | 新增文件在线预览(图片/PDF/视频/音频/文本弹窗内查看)，auth中间件支持query token参数 |
 | v1.0.80 | 2026-03-24 | 报表页新增"导出PDF"按钮(浏览器打印)，审计日志新增"导出CSV"按钮(含BOM中文兼容)，添加打印媒体查询CSS |
+| v1.0.81 | 2026-03-24 | PWA离线支持：manifest.json+Service Worker(cache-first静态/network-first API)+应用图标+添加到主屏幕 |
