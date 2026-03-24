@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Shield, ChevronLeft, ChevronRight, Filter, Download } from 'lucide-react'
+import { Shield, ChevronLeft, ChevronRight, Filter, Download, Search, X, Calendar } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 
 const actionLabel: Record<string, { label: string; color: string }> = {
@@ -13,6 +13,8 @@ const actionLabel: Record<string, { label: string; color: string }> = {
 const entityLabel: Record<string, string> = {
   project: '项目', task: '任务', client: '客户', ticket: '工单', user: '用户', auth: '认证',
 }
+const selectStyle: React.CSSProperties = { padding: '7px 10px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none', background: '#fff' }
+const dateStyle: React.CSSProperties = { padding: '6px 10px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none', background: '#fff', width: 140 }
 
 export default function AuditLog() {
   const [logs, setLogs] = useState<any[]>([])
@@ -20,26 +22,44 @@ export default function AuditLog() {
   const [page, setPage] = useState(1)
   const [filterAction, setFilterAction] = useState('')
   const [filterEntity, setFilterEntity] = useState('')
+  const [keyword, setKeyword] = useState('')
+  const [searchText, setSearchText] = useState('')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [showFilters, setShowFilters] = useState(false)
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
   const limit = 30
+  const searchTimer = useRef<any>(null)
 
-  const load = () => {
-    let url = `/api/audit-logs?page=${page}&limit=${limit}`
+  const buildUrl = (base: string) => {
+    let url = base
     if (filterAction) url += `&action=${filterAction}`
     if (filterEntity) url += `&entity_type=${filterEntity}`
-    fetchApi(url).then(r => {
+    if (keyword) url += `&keyword=${encodeURIComponent(keyword)}`
+    if (startDate) url += `&start_date=${startDate}`
+    if (endDate) url += `&end_date=${endDate}`
+    return url
+  }
+
+  const load = () => {
+    fetchApi(buildUrl(`/api/audit-logs?page=${page}&limit=${limit}`)).then(r => {
       if (r.success) { setLogs(r.data.logs || []); setTotal(r.data.total || 0) }
     })
   }
-  useEffect(load, [page, filterAction, filterEntity])
+  useEffect(load, [page, filterAction, filterEntity, keyword, startDate, endDate])
 
   const totalPages = Math.ceil(total / limit) || 1
+  const hasFilters = filterAction || filterEntity || keyword || startDate || endDate
+  const clearFilters = () => { setFilterAction(''); setFilterEntity(''); setKeyword(''); setSearchText(''); setStartDate(''); setEndDate(''); setPage(1) }
+
+  const handleSearch = (v: string) => {
+    setSearchText(v)
+    clearTimeout(searchTimer.current)
+    searchTimer.current = setTimeout(() => { setKeyword(v); setPage(1) }, 400)
+  }
 
   const exportCSV = () => {
-    let url = `/api/audit-logs?page=1&limit=10000`
-    if (filterAction) url += `&action=${filterAction}`
-    if (filterEntity) url += `&entity_type=${filterEntity}`
-    fetchApi(url).then(r => {
+    fetchApi(buildUrl(`/api/audit-logs?page=1&limit=10000`)).then(r => {
       if (!r.success) return
       const rows = r.data.logs || []
       const header = '\uFEFF时间,用户,操作,对象类型,对象ID,详情,IP\n'
@@ -63,29 +83,64 @@ export default function AuditLog() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>审计日志</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0f172a', margin: 0 }}>审计日志</h1>
           <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>系统操作记录 · 共 {total} 条</p>
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <button onClick={exportCSV} className="no-print"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
-            <Download size={14} /> 导出CSV
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button onClick={exportCSV}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
+            <Download size={14} /> 导出
           </button>
-          <Filter size={16} color="#64748b" />
-          <select value={filterAction} onChange={e => { setFilterAction(e.target.value); setPage(1) }}
-            style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none' }}>
-            <option value="">全部操作</option>
-            {Object.entries(actionLabel).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-          </select>
-          <select value={filterEntity} onChange={e => { setFilterEntity(e.target.value); setPage(1) }}
-            style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none' }}>
-            <option value="">全部类型</option>
-            {Object.entries(entityLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-          </select>
+          <button onClick={() => setShowFilters(!showFilters)}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, border: showFilters ? '1px solid #2563eb' : '1px solid #e2e8f0', background: showFilters ? '#eff6ff' : '#fff', color: showFilters ? '#2563eb' : '#64748b', fontSize: 13, fontWeight: 500, cursor: 'pointer', position: 'relative' }}>
+            <Filter size={14} /> 筛选
+            {hasFilters && <span style={{ position: 'absolute', top: -4, right: -4, width: 8, height: 8, borderRadius: '50%', background: '#2563eb' }} />}
+          </button>
         </div>
       </div>
+
+      {/* 筛选面板 */}
+      {showFilters && (
+        <div style={{ background: '#fff', borderRadius: 12, padding: 16, border: '1px solid #e2e8f0', marginBottom: 16, display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+          <div>
+            <label style={{ fontSize: 12, color: '#64748b', fontWeight: 500, display: 'block', marginBottom: 4 }}>搜索</label>
+            <div style={{ position: 'relative' }}>
+              <Search size={14} color="#94a3b8" style={{ position: 'absolute', left: 10, top: 9 }} />
+              <input value={searchText} onChange={e => handleSearch(e.target.value)} placeholder="用户/详情/IP"
+                style={{ ...selectStyle, paddingLeft: 30, width: 180 }} />
+            </div>
+          </div>
+          <div>
+            <label style={{ fontSize: 12, color: '#64748b', fontWeight: 500, display: 'block', marginBottom: 4 }}>操作类型</label>
+            <select value={filterAction} onChange={e => { setFilterAction(e.target.value); setPage(1) }} style={selectStyle}>
+              <option value="">全部</option>
+              {Object.entries(actionLabel).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: 12, color: '#64748b', fontWeight: 500, display: 'block', marginBottom: 4 }}>对象类型</label>
+            <select value={filterEntity} onChange={e => { setFilterEntity(e.target.value); setPage(1) }} style={selectStyle}>
+              <option value="">全部</option>
+              {Object.entries(entityLabel).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: 12, color: '#64748b', fontWeight: 500, display: 'block', marginBottom: 4 }}>开始日期</label>
+            <input type="date" value={startDate} onChange={e => { setStartDate(e.target.value); setPage(1) }} style={dateStyle} />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, color: '#64748b', fontWeight: 500, display: 'block', marginBottom: 4 }}>结束日期</label>
+            <input type="date" value={endDate} onChange={e => { setEndDate(e.target.value); setPage(1) }} style={dateStyle} />
+          </div>
+          {hasFilters && (
+            <button onClick={clearFilters} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '7px 12px', borderRadius: 8, border: 'none', background: '#fee2e2', color: '#dc2626', fontSize: 13, cursor: 'pointer', fontWeight: 500, marginBottom: 0 }}>
+              <X size={13} /> 清除
+            </button>
+          )}
+        </div>
+      )}
 
       <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
         <div style={{ overflowX: 'auto' }}>

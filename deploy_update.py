@@ -77,6 +77,7 @@ def main():
         'atomic/controllers/file/previewController.js',
         'atomic/controllers/dm/sendController.js',
         'atomic/repositories/auth/findByUsernameRepo.js',
+        'atomic/controllers/audit/listController.js',
     ]
     remote_server = f'{REMOTE_BASE}/server/duijie'
     for f in backend_files:

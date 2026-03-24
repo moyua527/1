@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { FileText, Download, Trash2, Search, Upload, Loader2, File, Image, FileSpreadsheet, FileCode, Film, Eye, X } from 'lucide-react'
+import { FileText, Download, Trash2, Search, Upload, Loader2, File, Image, FileSpreadsheet, FileCode, Film, Eye, X, CheckSquare, Square } from 'lucide-react'
 import { fetchApi, uploadFile, BACKEND_URL } from '../../bootstrap'
 import Button from '../ui/Button'
 import { toast } from '../ui/Toast'
@@ -20,12 +20,34 @@ const formatSize = (bytes: number) => {
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
 
+const getCategory = (mime: string) => {
+  if (mime?.startsWith('image/')) return 'image'
+  if (mime?.startsWith('video/') || mime?.startsWith('audio/')) return 'media'
+  if (mime?.includes('pdf') || mime?.includes('word') || mime?.includes('document') || mime?.includes('text/')) return 'doc'
+  if (mime?.includes('spreadsheet') || mime?.includes('excel') || mime?.includes('csv')) return 'sheet'
+  return 'other'
+}
+const categoryTabs = [
+  { key: '', label: '全部' },
+  { key: 'image', label: '图片' },
+  { key: 'doc', label: '文档' },
+  { key: 'sheet', label: '表格' },
+  { key: 'media', label: '音视频' },
+  { key: 'other', label: '其他' },
+]
+const tabStyle = (active: boolean): React.CSSProperties => ({
+  padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+  background: active ? '#2563eb' : 'transparent', color: active ? '#fff' : '#64748b', transition: 'all 0.15s',
+})
+
 export default function FileManager() {
   const [files, setFiles] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState<any>(null)
+  const [category, setCategory] = useState('')
+  const [selected, setSelected] = useState<Set<number>>(new Set())
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
 
   const load = () => {
@@ -34,20 +56,35 @@ export default function FileManager() {
   }
   useEffect(load, [])
 
-  const filtered = search.trim()
-    ? files.filter(f => (f.original_name || '').toLowerCase().includes(search.toLowerCase()) || (f.project_name || '').toLowerCase().includes(search.toLowerCase()))
-    : files
+  const filtered = files.filter(f => {
+    if (category && getCategory(f.mime_type) !== category) return false
+    if (search.trim()) {
+      const s = search.toLowerCase()
+      return (f.original_name || '').toLowerCase().includes(s) || (f.project_name || '').toLowerCase().includes(s)
+    }
+    return true
+  })
+
+  const toggleSelect = (id: number) => {
+    setSelected(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s })
+  }
+  const selectAll = () => {
+    if (selected.size === filtered.length) setSelected(new Set())
+    else setSelected(new Set(filtered.map(f => f.id)))
+  }
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const fileList = e.target.files
+    if (!fileList || fileList.length === 0) return
     setUploading(true)
-    const fd = new FormData()
-    fd.append('file', file)
-    const r = await uploadFile('/api/files/upload', fd)
+    for (let i = 0; i < fileList.length; i++) {
+      const fd = new FormData()
+      fd.append('file', fileList[i])
+      await uploadFile('/api/files/upload', fd)
+    }
     setUploading(false)
-    if (r.success) { toast('文件上传成功', 'success'); load() }
-    else toast(r.message || '上传失败', 'error')
+    toast(`${fileList.length}个文件上传完成`, 'success')
+    load()
     e.target.value = ''
   }
 
@@ -56,6 +93,19 @@ export default function FileManager() {
     const r = await fetchApi(`/api/files/${f.id}`, { method: 'DELETE' })
     if (r.success) { toast('文件已删除', 'success'); load() }
     else toast(r.message || '删除失败', 'error')
+  }
+
+  const handleBatchDelete = async () => {
+    if (selected.size === 0) return
+    if (!(await confirm({ message: `确定删除选中的 ${selected.size} 个文件？`, danger: true }))) return
+    let ok = 0
+    for (const id of selected) {
+      const r = await fetchApi(`/api/files/${id}`, { method: 'DELETE' })
+      if (r.success) ok++
+    }
+    toast(`已删除 ${ok} 个文件`, 'success')
+    setSelected(new Set())
+    load()
   }
 
   const handleDownload = (f: any) => {
@@ -72,24 +122,43 @@ export default function FileManager() {
     return `${BACKEND_URL}/api/files/${f.id}/preview?token=${token}`
   }
 
+  const totalSize = files.reduce((s, f) => s + (f.size || 0), 0)
+
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>文件管理</h1>
-          <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>所有项目文件 · 共 {files.length} 个</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0f172a', margin: 0 }}>文件管理</h1>
+          <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>共 {files.length} 个文件 · {formatSize(totalSize)}</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <div style={{ position: 'relative' }}>
             <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索文件..."
-              style={{ paddingLeft: 32, padding: '8px 12px 8px 32px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', width: 200 }} />
+              style={{ padding: '8px 12px 8px 32px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', width: 200 }} />
           </div>
           <label style={{ display: 'inline-flex' }}>
             <Button disabled={uploading}><Upload size={14} /> {uploading ? '上传中...' : '上传文件'}</Button>
-            <input type="file" onChange={handleUpload} style={{ display: 'none' }} />
+            <input type="file" multiple onChange={handleUpload} style={{ display: 'none' }} />
           </label>
         </div>
+      </div>
+
+      {/* 分类Tab */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+        {categoryTabs.map(t => {
+          const cnt = t.key ? files.filter(f => getCategory(f.mime_type) === t.key).length : files.length
+          return (
+            <button key={t.key} onClick={() => { setCategory(t.key); setSelected(new Set()) }} style={tabStyle(category === t.key)}>
+              {t.label} {cnt > 0 && <span style={{ opacity: 0.7, marginLeft: 2 }}>({cnt})</span>}
+            </button>
+          )
+        })}
+        {selected.size > 0 && (
+          <button onClick={handleBatchDelete} style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 8, border: 'none', background: '#fee2e2', color: '#dc2626', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
+            <Trash2 size={14} /> 删除选中 ({selected.size})
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -97,7 +166,7 @@ export default function FileManager() {
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: 80, color: '#94a3b8' }}>
           <FileText size={48} style={{ marginBottom: 12, opacity: 0.5 }} />
-          <div>{search ? '未找到匹配文件' : '暂无文件'}</div>
+          <div>{search || category ? '未找到匹配文件' : '暂无文件'}</div>
         </div>
       ) : (
         <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
@@ -105,6 +174,11 @@ export default function FileManager() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                  <th style={{ padding: '10px 12px', width: 36 }}>
+                    <button onClick={selectAll} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: selected.size === filtered.length && filtered.length > 0 ? '#2563eb' : '#cbd5e1', display: 'flex' }}>
+                      {selected.size === filtered.length && filtered.length > 0 ? <CheckSquare size={16} /> : <Square size={16} />}
+                    </button>
+                  </th>
                   <th style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: '#64748b' }}>文件名</th>
                   <th style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: '#64748b', whiteSpace: 'nowrap' }}>项目</th>
                   <th style={{ padding: '10px 16px', textAlign: 'left', fontWeight: 600, color: '#64748b', whiteSpace: 'nowrap' }}>大小</th>
@@ -115,7 +189,12 @@ export default function FileManager() {
               </thead>
               <tbody>
                 {filtered.map(f => (
-                  <tr key={f.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                  <tr key={f.id} style={{ borderBottom: '1px solid #f1f5f9', background: selected.has(f.id) ? '#eff6ff' : 'transparent' }}>
+                    <td style={{ padding: '10px 12px' }}>
+                      <button onClick={() => toggleSelect(f.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: selected.has(f.id) ? '#2563eb' : '#cbd5e1', display: 'flex' }}>
+                        {selected.has(f.id) ? <CheckSquare size={16} /> : <Square size={16} />}
+                      </button>
+                    </td>
                     <td style={{ padding: '10px 16px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         {iconByType(f.mime_type)}
