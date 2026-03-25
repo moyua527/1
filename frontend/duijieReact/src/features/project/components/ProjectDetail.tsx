@@ -226,29 +226,20 @@ export default function ProjectDetail() {
 
       {tab === 'app' && project.app_url && (
         <div style={section}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <AppWindow size={20} color="#2563eb" />
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#0f172a' }}>{project.app_name || '应用'}</h3>
+          <div style={{ borderRadius: 12, border: '1px solid #dbeafe', background: 'linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 24px', gap: 16 }}>
+            <div style={{ width: 72, height: 72, borderRadius: 18, background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', boxShadow: '0 4px 16px rgba(37,99,235,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <AppWindow size={36} color="#fff" />
             </div>
-            <a href={project.app_url} target="_blank" rel="noreferrer"
-              style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#2563eb', textDecoration: 'none' }}>
-              <ExternalLink size={14} /> 新窗口打开
-            </a>
-          </div>
-          <div style={{ borderRadius: 12, border: '1px solid #e2e8f0', background: 'linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 24px', gap: 16 }}>
-            <div style={{ width: 64, height: 64, borderRadius: 16, background: '#fff', boxShadow: '0 2px 8px rgba(37,99,235,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <AppWindow size={32} color="#2563eb" />
-            </div>
-            <h4 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: '#0f172a' }}>{project.app_name || '应用'}</h4>
-            <p style={{ margin: 0, fontSize: 13, color: '#64748b', textAlign: 'center', maxWidth: 360 }}>
-              外部应用需在独立窗口中打开以确保完整功能体验
+            <h4 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#0f172a' }}>{project.app_name || '应用'}</h4>
+            <p style={{ margin: 0, fontSize: 14, color: '#64748b', textAlign: 'center', maxWidth: 360 }}>
+              点击下方按钮在新窗口中打开应用
             </p>
             <a href={project.app_url} target="_blank" rel="noreferrer"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 24px', background: '#2563eb', color: '#fff', borderRadius: 10, fontSize: 15, textDecoration: 'none', fontWeight: 600, marginTop: 8, boxShadow: '0 2px 8px rgba(37,99,235,0.25)', transition: 'transform 0.1s' }}>
-              <ExternalLink size={16} /> 打开{project.app_name || '应用'}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 32px', background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', color: '#fff', borderRadius: 12, fontSize: 15, textDecoration: 'none', fontWeight: 600, marginTop: 8, boxShadow: '0 4px 16px rgba(37,99,235,0.3)', transition: 'all 0.2s' }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(37,99,235,0.4)' }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(37,99,235,0.3)' }}>
+              <ExternalLink size={16} /> 打开应用
             </a>
-            <span style={{ fontSize: 12, color: '#94a3b8' }}>{project.app_url}</span>
           </div>
         </div>
       )}
