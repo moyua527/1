@@ -1,27 +1,31 @@
 import { useState } from 'react'
-import { Phone, Mail, Building, Edit3, X, Calendar, GitBranch, UserPlus, Shield, Crown, Hash, User, Briefcase, FileText } from 'lucide-react'
+import { Phone, Mail, Building, Edit3, X, Calendar, GitBranch, UserPlus, Shield, Crown, Hash, User, Briefcase, FileText, KeyRound } from 'lucide-react'
 import Avatar from '../ui/Avatar'
 import Button from '../ui/Button'
 import Modal from '../ui/Modal'
-import { section, roleConfig } from './constants'
+import { section, creatorRoleConfig } from './constants'
 
 interface Props {
   members: any[]
   departments: any[]
+  roles?: any[]
   isOwner: boolean
   canAdmin: boolean
   getDeptName: (id: number | null) => string
+  getRoleName?: (roleId: number | null) => string
+  getRoleColor?: (roleId: number | null) => string
   openAddMember: () => void
   openEditMember: (m: any) => void
   handleDeleteMember: (id: number) => void
   handleRoleChange: (memberId: number, role: string) => void
+  handleAssignRole?: (memberId: number, roleId: number | null) => void
 }
 
 const detailRow: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid #f1f5f9' }
 const detailLabel: React.CSSProperties = { fontSize: 13, color: '#94a3b8', minWidth: 72, flexShrink: 0 }
 const detailValue: React.CSSProperties = { fontSize: 14, color: '#0f172a', fontWeight: 500, wordBreak: 'break-all' }
 
-export default function MemberList({ members, departments, isOwner, canAdmin, getDeptName, openAddMember, openEditMember, handleDeleteMember, handleRoleChange }: Props) {
+export default function MemberList({ members, departments, roles = [], isOwner, canAdmin, getDeptName, getRoleName, getRoleColor, openAddMember, openEditMember, handleDeleteMember, handleRoleChange, handleAssignRole }: Props) {
   const [viewingMember, setViewingMember] = useState<any>(null)
 
   return (
@@ -37,11 +41,14 @@ export default function MemberList({ members, departments, isOwner, canAdmin, ge
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
           {members.map((m: any) => {
             const mRole = m.role || 'member'
-            const rc = roleConfig[mRole] || roleConfig.member
+            const isCreatorMember = mRole === 'creator'
+            const customRoleName = getRoleName?.(m.enterprise_role_id)
+            const customRoleColor = getRoleColor?.(m.enterprise_role_id)
+            const borderColor = isCreatorMember ? '#9333ea' : customRoleName ? customRoleColor : '#e2e8f0'
             return (
             <div key={m.id} onClick={() => setViewingMember(m)}
               style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, cursor: 'pointer', transition: 'all 0.15s',
-                borderLeft: mRole === 'creator' ? '3px solid #9333ea' : mRole === 'admin' ? '3px solid #2563eb' : '1px solid #e2e8f0' }}
+                borderLeft: `3px solid ${borderColor}` }}
               onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'; (e.currentTarget as HTMLDivElement).style.borderColor = '#cbd5e1' }}
               onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'; (e.currentTarget as HTMLDivElement).style.borderColor = '#e2e8f0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
@@ -49,24 +56,32 @@ export default function MemberList({ members, departments, isOwner, canAdmin, ge
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>{m.name}</span>
-                    <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: rc.bg, color: rc.color, fontWeight: 600 }}>
-                      {mRole === 'creator' && <Crown size={9} style={{ marginRight: 2, verticalAlign: -1 }} />}
-                      {mRole === 'admin' && <Shield size={9} style={{ marginRight: 2, verticalAlign: -1 }} />}
-                      {rc.label}
-                    </span>
+                    {isCreatorMember && (
+                      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: creatorRoleConfig.bg, color: creatorRoleConfig.color, fontWeight: 600 }}>
+                        <Crown size={9} style={{ marginRight: 2, verticalAlign: -1 }} />{creatorRoleConfig.label}
+                      </span>
+                    )}
+                    {customRoleName && (
+                      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: customRoleColor + '18', color: customRoleColor, fontWeight: 600 }}>
+                        <KeyRound size={9} style={{ marginRight: 2, verticalAlign: -1 }} />{customRoleName}
+                      </span>
+                    )}
+                    {!isCreatorMember && !customRoleName && (
+                      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: '#f1f5f9', color: '#94a3b8', fontWeight: 600 }}>未分配角色</span>
+                    )}
                     {m.employee_id && <span style={{ fontSize: 11, color: '#94a3b8', background: '#f1f5f9', padding: '1px 6px', borderRadius: 4 }}>#{m.employee_id}</span>}
                   </div>
                   {m.position && <div style={{ fontSize: 12, color: '#64748b' }}>{m.position}</div>}
                 </div>
                 <div style={{ display: 'flex', gap: 4, alignItems: 'center' }} onClick={e => e.stopPropagation()}>
-                  {isOwner && mRole !== 'creator' && (
-                    <select value={mRole} onChange={e => handleRoleChange(m.id, e.target.value)}
-                      style={{ padding: '3px 6px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 11, color: '#64748b', outline: 'none', cursor: 'pointer', background: '#fff' }}>
-                      <option value="admin">管理员</option>
-                      <option value="member">成员</option>
+                  {canAdmin && !isCreatorMember && roles.length > 0 && (
+                    <select value={m.enterprise_role_id || ''} onChange={e => handleAssignRole?.(m.id, e.target.value ? Number(e.target.value) : null)}
+                      style={{ padding: '3px 6px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 11, color: '#64748b', outline: 'none', cursor: 'pointer', background: '#fff', maxWidth: 90 }}>
+                      <option value="">无角色</option>
+                      {roles.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
                     </select>
                   )}
-                  {canAdmin && mRole !== 'creator' && (
+                  {canAdmin && !isCreatorMember && (
                     <>
                       <button onClick={() => openEditMember(m)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, display: 'flex' }}><Edit3 size={13} /></button>
                       <button onClick={() => handleDeleteMember(m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: 2, display: 'flex' }}><X size={13} /></button>
@@ -93,20 +108,27 @@ export default function MemberList({ members, departments, isOwner, canAdmin, ge
       <Modal open={!!viewingMember} onClose={() => setViewingMember(null)} title="成员信息">
         {viewingMember && (() => {
           const mRole = viewingMember.role || 'member'
-          const rc = roleConfig[mRole] || roleConfig.member
+          const isCreatorM = mRole === 'creator'
+          const vRoleName = getRoleName?.(viewingMember.enterprise_role_id)
+          const vRoleColor = getRoleColor?.(viewingMember.enterprise_role_id)
           const deptName = getDeptName(viewingMember.department_id) || viewingMember.department || ''
           return (
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingBottom: 16, borderBottom: '1px solid #e2e8f0', marginBottom: 4 }}>
                 <Avatar name={viewingMember.name} size={56} />
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>{viewingMember.name}</span>
-                    <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: rc.bg, color: rc.color, fontWeight: 600 }}>
-                      {mRole === 'creator' && <Crown size={10} style={{ marginRight: 3, verticalAlign: -1 }} />}
-                      {mRole === 'admin' && <Shield size={10} style={{ marginRight: 3, verticalAlign: -1 }} />}
-                      {rc.label}
-                    </span>
+                    {isCreatorM && (
+                      <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: creatorRoleConfig.bg, color: creatorRoleConfig.color, fontWeight: 600 }}>
+                        <Crown size={10} style={{ marginRight: 3, verticalAlign: -1 }} />{creatorRoleConfig.label}
+                      </span>
+                    )}
+                    {vRoleName && (
+                      <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: vRoleColor + '18', color: vRoleColor, fontWeight: 600 }}>
+                        <KeyRound size={10} style={{ marginRight: 3, verticalAlign: -1 }} />{vRoleName}
+                      </span>
+                    )}
                   </div>
                   {viewingMember.position && <div style={{ fontSize: 14, color: '#64748b' }}>{viewingMember.position}</div>}
                 </div>
@@ -168,7 +190,7 @@ export default function MemberList({ members, departments, isOwner, canAdmin, ge
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-                {canAdmin && mRole !== 'creator' && (
+                {canAdmin && !isCreatorM && (
                   <Button variant="secondary" onClick={() => { setViewingMember(null); openEditMember(viewingMember) }}>编辑</Button>
                 )}
                 <Button onClick={() => setViewingMember(null)}>关闭</Button>

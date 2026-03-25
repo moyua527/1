@@ -223,19 +223,49 @@ export function useEnterprise() {
     else toast(r.message || '操作失败', 'error')
   }
 
+  // === 角色操作 ===
+  const handleCreateRole = async (form: any) => {
+    const r = await fetchApi('/api/my-enterprise/roles', { method: 'POST', body: JSON.stringify(form) })
+    if (r.success) { toast('角色已创建', 'success'); load() }
+    else toast(r.message || '创建失败', 'error')
+  }
+  const handleUpdateRole = async (id: number, form: any) => {
+    const r = await fetchApi(`/api/my-enterprise/roles/${id}`, { method: 'PUT', body: JSON.stringify(form) })
+    if (r.success) { toast('角色已更新', 'success'); load() }
+    else toast(r.message || '更新失败', 'error')
+  }
+  const handleDeleteRole = async (id: number) => {
+    if (!(await confirm({ message: '确定删除该角色？', danger: true }))) return
+    const r = await fetchApi(`/api/my-enterprise/roles/${id}`, { method: 'DELETE' })
+    if (r.success) { toast('角色已删除', 'success'); load() }
+    else toast(r.message || '删除失败', 'error')
+  }
+  const handleAssignRole = async (memberId: number, roleId: number | null) => {
+    const r = await fetchApi(`/api/my-enterprise/members/${memberId}/assign-role`, { method: 'PUT', body: JSON.stringify({ enterprise_role_id: roleId }) })
+    if (r.success) { toast('角色已分配', 'success'); load() }
+    else toast(r.message || '操作失败', 'error')
+  }
+
   // 派生数据
   const ent = data?.enterprise
   const members = data?.members || []
   const departments = data?.departments || []
+  const roles = data?.roles || []
+  const enterprisePerms = data?.enterprisePerms || {}
   const myRole = ent?.member_role || 'member'
   const isOwner = myRole === 'creator'
-  const canAdmin = myRole === 'creator' || myRole === 'admin'
+  const canAdmin = isOwner || !!enterprisePerms.can_manage_members
+  const canManageRoles = isOwner || !!enterprisePerms.can_manage_roles
   const getDeptName = (id: number | null) => departments.find((d: any) => d.id === id)?.name || ''
+  const getRoleName = (roleId: number | null) => roles.find((r: any) => r.id === roleId)?.name || ''
+  const getRoleColor = (roleId: number | null) => roles.find((r: any) => r.id === roleId)?.color || '#64748b'
+
+  // 同步企业权限到 userStore
 
   return {
     // 状态
     data, loading, tab, setTab, isSysAdmin, enterprises, activeId, switchEnterprise,
-    ent, members, departments, myRole, isOwner, canAdmin, getDeptName,
+    ent, members, departments, roles, enterprisePerms, myRole, isOwner, canAdmin, canManageRoles, getDeptName, getRoleName, getRoleColor,
     // 企业
     editEntOpen, setEditEntOpen, entForm, setEntForm, entSaving, entMenuOpen, setEntMenuOpen,
     openEditEnt, handleSaveEnt, handleDeleteEnterprise,
@@ -247,6 +277,8 @@ export function useEnterprise() {
     memberModalOpen, setMemberModalOpen, editingMember, memberForm, setMemberForm, memberSaving,
     lookupPhone, setLookupPhone, lookupLoading,
     openAddMember, openEditMember, handleSaveMember, handleDeleteMember, handleRoleChange, handleLookup,
+    // 角色
+    handleCreateRole, handleUpdateRole, handleDeleteRole, handleAssignRole,
     // 部门
     deptModalOpen, setDeptModalOpen, editingDept, deptForm, setDeptForm, deptSaving, deptMenuId, setDeptMenuId,
     openAddDept, openEditDept, handleSaveDept, handleDeleteDept,

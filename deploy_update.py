@@ -44,69 +44,47 @@ def main():
         if line.startswith('DB_PASSWORD='): db_pass = line.split('=',1)[1].strip()
         if line.startswith('DB_NAME='): db_name = line.split('=',1)[1].strip()
 
-    # 1. Upload backend files
-    print('\n[1/5] Uploading backend files...')
-    backend_files = [
-        'standalone.js',
-        'app.js',
-        'package.json',
-        'config/logger.js',
-        'atomic/middleware/validate.js',
-        'atomic/middleware/validators.js',
-        'atomic/services/auth/loginService.js',
-        'atomic/controllers/auth/registerController.js',
-        'atomic/controllers/auth/profileController.js',
-        'atomic/controllers/user/createController.js',
-        'atomic/controllers/user/updateController.js',
-        'atomic/middleware/xssMiddleware.js',
-        'atomic/repositories/client/createRepo.js',
-        'atomic/controllers/project/teamUsersController.js',
-        'atomic/controllers/project/clientAvailableUsersController.js',
-        'atomic/controllers/project/addClientMemberController.js',
-        'atomic/controllers/project/removeClientMemberController.js',
-        'atomic/controllers/project/addMemberController.js',
-        'atomic/repositories/project/findByIdRepo.js',
-        'atomic/services/project/createProject.js',
-        'atomic/routes/index.js',
-        'atomic/routes/auth.js',
-        'atomic/routes/admin.js',
-        'atomic/routes/project.js',
-        'atomic/routes/client.js',
-        'atomic/routes/task.js',
-        'atomic/routes/communication.js',
-        'atomic/routes/upload.js',
-        'atomic/controllers/dm/recallController.js',
-        'atomic/repositories/dashboard/statsRepo.js',
-        'atomic/controllers/dashboard/chartController.js',
-        'atomic/repositories/project/createRepo.js',
-        'atomic/controllers/client/clientMembersController.js',
-        'atomic/controllers/client/myEnterpriseController.js',
-        'atomic/middleware/auth.js',
-        'atomic/repositories/project/findAllRepo.js',
-        'atomic/controllers/project/listController.js',
-        'atomic/controllers/auth/verifyCodeController.js',
-        'atomic/controllers/auth/sendCodeController.js',
-        'atomic/controllers/auth/forgotPasswordController.js',
-        'atomic/controllers/auth/resetPasswordController.js',
-        'socket/index.js',
-        'atomic/utils/notify.js',
-        'atomic/controllers/file/previewController.js',
-        'atomic/controllers/dm/sendController.js',
-        'atomic/repositories/auth/findByUsernameRepo.js',
-        'atomic/controllers/audit/listController.js',
-        'atomic/utils/auditLog.js',
-        'listeners/projectListener.js',
-        'listeners/taskListener.js',
-        'listeners/messageListener.js',
-    ]
+    # 1. Upload backend files (full sync)
+    print('\n[1/5] Uploading backend files (full sync)...')
     remote_server = f'{REMOTE_BASE}/server/duijie'
-    for f in backend_files:
-        local_f = os.path.join(LOCAL_BASE, 'server', 'duijie', f)
-        remote_f = f'{remote_server}/{f}'
-        remote_dir = '/'.join(remote_f.split('/')[:-1])
-        run_cmd(ssh, f'mkdir -p {remote_dir}')
-        sftp.put(local_f, remote_f)
-        print(f'    ↑ {remote_f}')
+    local_server = os.path.join(LOCAL_BASE, 'server', 'duijie')
+    SKIP_DIRS = {'node_modules', 'uploads', 'logs', 'tests', '.env'}
+    SYNC_EXTS = {'.js', '.json'}
+    upload_count = 0
+
+    def ensure_remote_dir(path):
+        try: sftp.stat(path)
+        except:
+            parts = path.split('/')
+            for i in range(2, len(parts) + 1):
+                p = '/'.join(parts[:i])
+                try: sftp.stat(p)
+                except: sftp.mkdir(p)
+
+    def sync_dir(local, remote):
+        nonlocal upload_count
+        for item in os.listdir(local):
+            lp = os.path.join(local, item)
+            rp = f'{remote}/{item}'
+            if os.path.isdir(lp):
+                if item in SKIP_DIRS: continue
+                ensure_remote_dir(rp)
+                sync_dir(lp, rp)
+            elif os.path.isfile(lp) and os.path.splitext(item)[1] in SYNC_EXTS:
+                sftp.put(lp, rp)
+                upload_count += 1
+
+    for d in ['atomic', 'config', 'socket', 'listeners', 'scripts', 'events']:
+        ld = os.path.join(local_server, d)
+        if os.path.isdir(ld):
+            ensure_remote_dir(f'{remote_server}/{d}')
+            sync_dir(ld, f'{remote_server}/{d}')
+    for f in ['standalone.js', 'app.js', 'package.json']:
+        lp = os.path.join(local_server, f)
+        if os.path.isfile(lp):
+            sftp.put(lp, f'{remote_server}/{f}')
+            upload_count += 1
+    print(f'    ↑ {upload_count} files uploaded')
 
     # 2. Install new npm packages
     print('\n[2/5] Installing npm packages...')

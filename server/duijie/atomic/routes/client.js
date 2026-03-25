@@ -1,6 +1,7 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const roleGuard = require('../middleware/roleGuard');
+const enterprisePermGuard = require('../middleware/enterprisePermGuard');
 const validate = require('../middleware/validate');
 const V = require('../middleware/validators');
 const router = express.Router();
@@ -9,7 +10,7 @@ const salesTeam = roleGuard('admin', 'business');
 
 // Clients
 router.get('/clients/available-members', auth, salesTeam, require('../controllers/client/availableMembersController'));
-router.post('/clients', auth, salesTeam, V.createClient, validate, require('../controllers/client/createController'));
+router.post('/clients', auth, roleGuard('admin', 'business', { soft: true }), enterprisePermGuard('can_manage_client'), V.createClient, validate, require('../controllers/client/createController'));
 router.get('/clients', auth, roleGuard('admin', 'business'), require('../controllers/client/listController'));
 router.get('/clients/:id', auth, roleGuard('admin', 'business', 'member', 'viewer', 'tech'), require('../controllers/client/detailController'));
 router.put('/clients/:id', auth, salesTeam, require('../controllers/client/updateController'));
@@ -44,6 +45,13 @@ router.put('/my-enterprise/members/:id', auth, V.updateMember, validate, myEntCt
 router.put('/my-enterprise/members/:id/role', auth, V.updateMemberRole, validate, myEntCtrl.updateMemberRole);
 router.delete('/my-enterprise/members/:id', auth, myEntCtrl.removeMember);
 router.put('/my-enterprise/switch', auth, myEntCtrl.switchEnterprise);
+
+// Enterprise Roles
+router.get('/my-enterprise/roles', auth, myEntCtrl.listRoles);
+router.post('/my-enterprise/roles', auth, myEntCtrl.createRole);
+router.put('/my-enterprise/roles/:id', auth, myEntCtrl.updateRole);
+router.delete('/my-enterprise/roles/:id', auth, myEntCtrl.removeRole);
+router.put('/my-enterprise/members/:id/assign-role', auth, myEntCtrl.assignRole);
 
 // Client Members
 const clientMembersCtrl = require('../controllers/client/clientMembersController');

@@ -40,14 +40,36 @@ const PERMISSIONS: Record<string, string[]> = {
   'staff:assignable':     ['admin', 'business', 'tech'],
 }
 
+const PERM_TO_ENTERPRISE: Record<string, string> = {
+  'project:create': 'can_create_project',
+  'project:edit': 'can_edit_project',
+  'project:delete': 'can_delete_project',
+  'client:create': 'can_manage_client',
+  'client:manage': 'can_manage_client',
+  'report:view': 'can_view_report',
+  'task:create': 'can_manage_task',
+}
+
 export function can(role: string, permission: string): boolean {
   const allowed = PERMISSIONS[permission]
-  return allowed ? allowed.includes(role) : false
+  if (allowed && allowed.includes(role)) return true
+  const entKey = PERM_TO_ENTERPRISE[permission]
+  if (entKey) {
+    const perms = useUserStore.getState().enterprisePerms as any
+    if (perms?.is_creator || perms?.[entKey]) return true
+  }
+  return false
 }
 
 export function usePermission(permission: string): boolean {
   const role = useUserStore(s => s.user?.role) || ''
-  return can(role, permission)
+  const enterprisePerms = useUserStore(s => s.enterprisePerms)
+  const allowed = PERMISSIONS[permission]
+  if (allowed && allowed.includes(role)) return true
+  const entKey = PERM_TO_ENTERPRISE[permission]
+  if (entKey && (enterprisePerms as any)?.is_creator) return true
+  if (entKey && (enterprisePerms as any)?.[entKey]) return true
+  return false
 }
 
 export function useRole(): string {

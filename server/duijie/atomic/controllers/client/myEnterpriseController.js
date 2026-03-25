@@ -3,6 +3,7 @@ const crud = require('./enterpriseCrudController');
 const member = require('./enterpriseMemberController');
 const join = require('./enterpriseJoinController');
 const dept = require('./enterpriseDeptController');
+const role = require('./enterpriseRoleController');
 
 module.exports = {
   getAll: crud.getAll,
@@ -28,4 +29,10 @@ module.exports = {
   addDepartment: dept.addDepartment,
   updateDepartment: dept.updateDepartment,
   removeDepartment: dept.removeDepartment,
+
+  listRoles: role.list,
+  createRole: role.create,
+  updateRole: role.update,
+  removeRole: role.remove,
+  assignRole: role.assignRole,
 };

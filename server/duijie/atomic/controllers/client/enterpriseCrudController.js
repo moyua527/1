@@ -1,5 +1,6 @@
 const db = require('../../../config/db');
-const { findMyEnterprises, findActiveEnterprise, isCreator } = require('./enterpriseHelpers');
+const { findMyEnterprises, findActiveEnterprise, isCreator, getEnterprisePerms } = require('./enterpriseHelpers');
+const { createDefaultRoles } = require('./enterpriseRoleController');
 
 exports.getAll = async (req, res) => {
   try {
@@ -36,6 +37,7 @@ exports.create = async (req, res) => {
       [result.insertId, req.userId, u.nickname || u.username || '', u.phone || null, u.email || null, req.userId]
     );
     await db.query('UPDATE voice_users SET active_enterprise_id = ? WHERE id = ?', [result.insertId, req.userId]);
+    await createDefaultRoles(result.insertId, req.userId);
     res.json({ success: true, data: { id: result.insertId } });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });
@@ -49,9 +51,11 @@ exports.get = async (req, res) => {
     const active = await findActiveEnterprise(req.userId);
     const [members] = await db.query('SELECT * FROM duijie_client_members WHERE client_id = ? AND is_deleted = 0 ORDER BY created_at ASC', [active.id]);
     const [departments] = await db.query('SELECT * FROM duijie_departments WHERE client_id = ? AND is_deleted = 0 ORDER BY sort_order ASC, id ASC', [active.id]);
+    const [roles] = await db.query('SELECT * FROM enterprise_roles WHERE enterprise_id = ? AND is_deleted = 0 ORDER BY sort_order ASC, id ASC', [active.id]);
+    const perms = await getEnterprisePerms(req.userId);
     res.json({ success: true, data: {
       enterprises: enterprises.map(e => ({ id: e.id, name: e.name, company: e.company, member_role: e.member_role })),
-      activeId: active.id, enterprise: active, members, departments
+      activeId: active.id, enterprise: active, members, departments, roles, enterprisePerms: perms
     }});
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });

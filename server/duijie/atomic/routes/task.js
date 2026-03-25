@@ -1,13 +1,14 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const roleGuard = require('../middleware/roleGuard');
+const enterprisePermGuard = require('../middleware/enterprisePermGuard');
 const upload = require('./upload');
 const router = express.Router();
 
 const taskStaff = roleGuard('admin', 'tech', 'business', 'member', 'viewer');
 
 // Tasks
-router.post('/tasks', auth, upload.array('files', 10), require('../controllers/task/createController'));
+router.post('/tasks', auth, roleGuard('admin', 'tech', 'business', { soft: true }), enterprisePermGuard('can_manage_task'), upload.array('files', 10), require('../controllers/task/createController'));
 router.get('/tasks', auth, require('../controllers/task/listController'));
 router.put('/tasks/:id', auth, taskStaff, require('../controllers/task/updateController'));
 router.patch('/tasks/:id/move', auth, taskStaff, require('../controllers/task/moveController'));

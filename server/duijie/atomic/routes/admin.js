@@ -32,7 +32,8 @@ router.get('/app/version', require('../controllers/system/appVersionController')
 
 // Dashboard
 router.get('/dashboard/stats', auth, require('../controllers/dashboard/statsController'));
-router.get('/dashboard/report', auth, require('../controllers/dashboard/reportController'));
+const enterprisePermGuard = require('../middleware/enterprisePermGuard');
+router.get('/dashboard/report', auth, roleGuard('admin', 'sales_manager', 'business', { soft: true }), enterprisePermGuard('can_view_report'), require('../controllers/dashboard/reportController'));
 router.get('/dashboard/chart', auth, require('../controllers/dashboard/chartController'));
 
 // Invite Links

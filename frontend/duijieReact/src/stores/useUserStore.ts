@@ -17,12 +17,26 @@ interface User {
   personal_invite_code?: string
 }
 
+interface EnterprisePerms {
+  is_creator?: boolean
+  can_manage_members?: boolean
+  can_manage_roles?: boolean
+  can_create_project?: boolean
+  can_edit_project?: boolean
+  can_delete_project?: boolean
+  can_manage_client?: boolean
+  can_view_report?: boolean
+  can_manage_task?: boolean
+}
+
 interface UserState {
   user: User | null
   checking: boolean
   hasEnterprise: boolean
+  enterprisePerms: EnterprisePerms
   setUser: (user: User | null) => void
   setHasEnterprise: (v: boolean) => void
+  setEnterprisePerms: (perms: EnterprisePerms) => void
   init: () => Promise<void>
   checkEnterprise: () => Promise<void>
   logout: () => Promise<void>
@@ -51,6 +65,7 @@ const useUserStore = create<UserState>((set, get) => ({
   user: readCache(),
   checking: true,
   hasEnterprise: true,
+  enterprisePerms: {},
 
   setUser: (user) => {
     writeCache(user)
@@ -58,6 +73,7 @@ const useUserStore = create<UserState>((set, get) => ({
   },
 
   setHasEnterprise: (v) => set({ hasEnterprise: v }),
+  setEnterprisePerms: (perms) => set({ enterprisePerms: perms }),
 
   checkEnterprise: async () => {
     set({ hasEnterprise: true })
