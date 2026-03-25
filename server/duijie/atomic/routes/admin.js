@@ -5,6 +5,21 @@ const router = express.Router();
 
 const adminOnly = roleGuard('admin');
 
+// Health check (public)
+router.get('/health', async (req, res) => {
+  const status = { status: 'ok', timestamp: new Date().toISOString(), version: require('../../package.json').version };
+  try {
+    const db = require('../../config/db');
+    const [rows] = await db.query('SELECT 1 as ping');
+    status.database = rows[0]?.ping === 1 ? 'connected' : 'error';
+  } catch (e) {
+    status.database = 'disconnected';
+    status.status = 'degraded';
+  }
+  const code = status.status === 'ok' ? 200 : 503;
+  res.status(code).json(status);
+});
+
 // System config
 const configCtrl = require('../controllers/system/configController');
 router.get('/system/invite-code', auth, configCtrl.get);

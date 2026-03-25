@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { fetchApi } from '../../bootstrap'
 import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
@@ -6,7 +6,7 @@ import Modal from '../ui/Modal'
 import Input from '../ui/Input'
 import Button from '../ui/Button'
 import Badge from '../ui/Badge'
-import { Plug2, Plus, Copy, RotateCcw, Trash2, TestTube2, Eye, EyeOff, Edit2, ExternalLink, ChevronDown } from 'lucide-react'
+import { Plug2, Plus, Copy, RotateCcw, Trash2, Eye, EyeOff, Edit2, ExternalLink, ArrowLeft, Maximize2, Minimize2, RefreshCw, Monitor } from 'lucide-react'
 
 const PERMISSION_OPTIONS = [
   { value: 'clients:read', label: '读取客户', desc: '查询客户列表和详情' },
@@ -25,6 +25,103 @@ interface Partner {
 const card: React.CSSProperties = { background: '#fff', borderRadius: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }
 const headerStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid #f1f5f9' }
 
+function AppViewer({ partner, onBack }: { partner: Partner; onBack: () => void }) {
+  const [fullscreen, setFullscreen] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+
+  const appUrl = partner.partner_url?.replace(/\/+$/, '') || ''
+
+  const handleReload = () => {
+    setLoading(true)
+    setLoadError(false)
+    if (iframeRef.current) {
+      iframeRef.current.src = appUrl
+    }
+  }
+
+  const wrapperStyle: React.CSSProperties = fullscreen
+    ? { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, background: '#fff', display: 'flex', flexDirection: 'column' }
+    : { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)' }
+
+  return (
+    <div style={wrapperStyle}>
+      {/* 顶部工具栏 */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: '#fff', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
+        <button onClick={onBack} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', display: 'flex', color: '#64748b' }} title="返回">
+          <ArrowLeft size={16} />
+        </button>
+
+        <div style={{ width: 28, height: 28, borderRadius: 7, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Monitor size={15} color="#2563eb" />
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>{partner.partner_name}</div>
+          <div style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>{appUrl}</div>
+        </div>
+
+        <button onClick={handleReload} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', display: 'flex', color: '#64748b' }} title="刷新">
+          <RefreshCw size={15} />
+        </button>
+        <a href={appUrl} target="_blank" rel="noreferrer" style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', display: 'flex', color: '#64748b', textDecoration: 'none' }} title="新窗口打开">
+          <ExternalLink size={15} />
+        </a>
+        <button onClick={() => setFullscreen(!fullscreen)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', display: 'flex', color: '#64748b' }} title={fullscreen ? '退出全屏' : '全屏'}>
+          {fullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+        </button>
+      </div>
+
+      {/* iframe 区域 */}
+      <div style={{ flex: 1, position: 'relative', background: '#f1f5f9' }}>
+        {loading && !loadError && (
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1, background: '#fff' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ width: 40, height: 40, border: '3px solid #e2e8f0', borderTop: '3px solid #2563eb', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
+              <div style={{ color: '#64748b', fontSize: 14 }}>正在加载 {partner.partner_name}...</div>
+            </div>
+          </div>
+        )}
+
+        {loadError && (
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2, background: '#fff' }}>
+            <div style={{ textAlign: 'center', maxWidth: 420, padding: 40 }}>
+              <div style={{ width: 64, height: 64, borderRadius: 16, background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                <Monitor size={32} color="#dc2626" />
+              </div>
+              <h3 style={{ margin: '0 0 8px', fontSize: 18, color: '#0f172a' }}>无法在页面内嵌入</h3>
+              <p style={{ margin: '0 0 20px', fontSize: 14, color: '#64748b', lineHeight: 1.6 }}>
+                对方的系统禁止了页面内嵌。你可以在新窗口中打开使用，或联系对方开发者解除限制。
+              </p>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+                <a href={appUrl} target="_blank" rel="noreferrer"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 24px', background: '#2563eb', color: '#fff', borderRadius: 10, fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>
+                  <ExternalLink size={15} /> 新窗口打开 {partner.partner_name}
+                </a>
+                <button onClick={handleReload}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#f1f5f9', color: '#334155', borderRadius: 10, fontSize: 14, border: 'none', cursor: 'pointer', fontWeight: 500 }}>
+                  <RefreshCw size={14} /> 重试
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <iframe
+          ref={iframeRef}
+          src={appUrl}
+          onLoad={() => setLoading(false)}
+          onError={() => { setLoading(false); setLoadError(true) }}
+          style={{ width: '100%', height: '100%', border: 'none', display: loadError ? 'none' : 'block' }}
+          sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-downloads"
+        />
+      </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+    </div>
+  )
+}
+
 export default function PartnerManagement() {
   const [partners, setPartners] = useState<Partner[]>([])
   const [loading, setLoading] = useState(true)
@@ -33,7 +130,7 @@ export default function PartnerManagement() {
   const [form, setForm] = useState({ partner_name: '', partner_url: '', partner_key: '', permissions: [] as string[], notes: '' })
   const [saving, setSaving] = useState(false)
   const [visibleKeys, setVisibleKeys] = useState<Set<number>>(new Set())
-  const [testResult, setTestResult] = useState<{ id: number; ok: boolean; msg: string } | null>(null)
+  const [viewing, setViewing] = useState<Partner | null>(null)
 
   const load = async () => {
     setLoading(true)
@@ -72,7 +169,7 @@ export default function PartnerManagement() {
       toast(r.message || '保存成功', 'success')
       if (!editing && r.data?.api_key) {
         await navigator.clipboard?.writeText(r.data.api_key).catch(() => {})
-        toast('API Key 已复制到剪贴板，请发送给合作方', 'success')
+        toast('API Key 已复制到剪贴板', 'success')
       }
       setModalOpen(false)
       load()
@@ -85,11 +182,11 @@ export default function PartnerManagement() {
   }
 
   const handleResetKey = async (p: Partner) => {
-    const ok = await confirm({ message: `确定重置 [${p.partner_name}] 的 API Key？旧 Key 将立即失效。`, danger: true })
+    const ok = await confirm({ message: `确定重置 [${p.partner_name}] 的 API Key？`, danger: true })
     if (!ok) return
     const r = await fetchApi(`/api/partners/${p.id}/reset-key`, { method: 'POST' })
     if (r.success) {
-      toast('已重置，新 Key 已复制到剪贴板', 'success')
+      toast('已重置', 'success')
       await navigator.clipboard?.writeText(r.data.api_key).catch(() => {})
       load()
     }
@@ -104,16 +201,10 @@ export default function PartnerManagement() {
   }
 
   const handleDelete = async (p: Partner) => {
-    const ok = await confirm({ message: `确定删除合作方 [${p.partner_name}]？删除后对方将无法调用任何接口。`, danger: true })
+    const ok = await confirm({ message: `确定删除合作方 [${p.partner_name}]？`, danger: true })
     if (!ok) return
     const r = await fetchApi(`/api/partners/${p.id}`, { method: 'DELETE' })
     if (r.success) { toast('已删除', 'success'); load() }
-  }
-
-  const handleTest = async (p: Partner) => {
-    setTestResult({ id: p.id, ok: false, msg: '测试中...' })
-    const r = await fetchApi(`/api/partners/${p.id}/test`, { method: 'POST' })
-    setTestResult({ id: p.id, ok: r.success, msg: r.message || (r.success ? '连接成功' : '连接失败') })
   }
 
   const togglePerm = (perm: string) => {
@@ -129,6 +220,10 @@ export default function PartnerManagement() {
 
   const maskKey = (key: string) => key.substring(0, 6) + '••••••••••••••••'
 
+  if (viewing) {
+    return <AppViewer partner={viewing} onBack={() => setViewing(null)} />
+  }
+
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
@@ -136,24 +231,9 @@ export default function PartnerManagement() {
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
             <Plug2 size={24} color="#2563eb" /> 合作方管理
           </h1>
-          <p style={{ fontSize: 13, color: '#94a3b8', margin: '4px 0 0' }}>管理第三方系统的 API Key 和对接配置，实现深度集成</p>
+          <p style={{ fontSize: 13, color: '#94a3b8', margin: '4px 0 0' }}>管理合作方系统，直接在 DuiJie 中打开使用对方的程序</p>
         </div>
         <Button onClick={openCreate}><Plus size={14} /> 添加合作方</Button>
-      </div>
-
-      {/* 统计卡片 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
-        {[
-          { label: '合作方总数', value: partners.length, color: '#2563eb' },
-          { label: '已启用', value: partners.filter(p => p.is_active).length, color: '#16a34a' },
-          { label: '已禁用', value: partners.filter(p => !p.is_active).length, color: '#94a3b8' },
-          { label: '总调用次数', value: partners.reduce((s, p) => s + (p.call_count || 0), 0), color: '#8b5cf6' },
-        ].map(c => (
-          <div key={c.label} style={{ background: '#fff', borderRadius: 12, padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-            <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 4 }}>{c.label}</div>
-            <div style={{ fontSize: 24, fontWeight: 700, color: c.color }}>{c.value}</div>
-          </div>
-        ))}
       </div>
 
       {loading ? (
@@ -162,122 +242,75 @@ export default function PartnerManagement() {
         <div style={{ ...card, padding: '60px 24px', textAlign: 'center' }}>
           <Plug2 size={48} color="#cbd5e1" />
           <h3 style={{ color: '#64748b', margin: '16px 0 8px' }}>暂无合作方</h3>
-          <p style={{ color: '#94a3b8', fontSize: 14, marginBottom: 20 }}>添加合作方后，将自动生成 API Key 供对方调用你的系统</p>
+          <p style={{ color: '#94a3b8', fontSize: 14, marginBottom: 20 }}>添加合作方后，可以直接在这里打开对方的程序</p>
           <Button onClick={openCreate}><Plus size={14} /> 添加第一个合作方</Button>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
           {partners.map(p => (
-            <div key={p.id} style={{ ...card, borderLeft: `4px solid ${p.is_active ? '#2563eb' : '#cbd5e1'}` }}>
-              <div style={headerStyle}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 10, background: p.is_active ? '#eff6ff' : '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Plug2 size={20} color={p.is_active ? '#2563eb' : '#94a3b8'} />
+            <div key={p.id} style={{ ...card, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '20px 24px', flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, background: p.is_active ? '#eff6ff' : '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Monitor size={24} color={p.is_active ? '#2563eb' : '#94a3b8'} />
                   </div>
-                  <div>
-                    <div style={{ fontSize: 16, fontWeight: 600, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      {p.partner_name}
-                      <Badge color={p.is_active ? 'green' : 'gray'}>{p.is_active ? '已启用' : '已禁用'}</Badge>
-                    </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 17, fontWeight: 600, color: '#0f172a' }}>{p.partner_name}</div>
                     <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
-                      创建于 {new Date(p.created_at).toLocaleDateString('zh-CN')} · 调用 {p.call_count} 次
-                      {p.last_used_at && ` · 最近: ${new Date(p.last_used_at).toLocaleString('zh-CN')}`}
+                      {p.partner_url ? <span style={{ fontFamily: 'monospace' }}>{p.partner_url}</span> : '未配置地址'}
                     </div>
                   </div>
+                  <Badge color={p.is_active ? 'green' : 'gray'}>{p.is_active ? '在线' : '离线'}</Badge>
                 </div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <button onClick={() => openEdit(p)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', color: '#64748b', display: 'flex' }} title="编辑"><Edit2 size={14} /></button>
-                  <button onClick={() => handleToggle(p)} style={{ background: p.is_active ? '#fef2f2' : '#f0fdf4', border: 'none', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', color: p.is_active ? '#dc2626' : '#16a34a', display: 'flex', fontSize: 12, alignItems: 'center' }}>
-                    {p.is_active ? '禁用' : '启用'}
+
+                {p.notes && <div style={{ fontSize: 13, color: '#64748b', marginBottom: 12, padding: '8px 12px', background: '#f8fafc', borderRadius: 8 }}>{p.notes}</div>}
+
+                {/* API Key 小行 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#94a3b8' }}>
+                  <span>Key: {visibleKeys.has(p.id) ? p.api_key : maskKey(p.api_key)}</span>
+                  <button onClick={() => toggleKeyVisible(p.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', padding: 0 }}>
+                    {visibleKeys.has(p.id) ? <EyeOff size={11} /> : <Eye size={11} />}
                   </button>
-                  <button onClick={() => handleDelete(p)} style={{ background: '#fef2f2', border: 'none', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', color: '#dc2626', display: 'flex' }} title="删除"><Trash2 size={14} /></button>
+                  <button onClick={() => handleCopyKey(p.api_key)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2563eb', display: 'flex', padding: 0 }}><Copy size={11} /></button>
+                  <button onClick={() => handleResetKey(p)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f59e0b', display: 'flex', padding: 0 }}><RotateCcw size={11} /></button>
                 </div>
               </div>
 
-              <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {/* API Key */}
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>分配给对方的 API Key</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f8fafc', borderRadius: 8, padding: '8px 12px', fontFamily: 'monospace', fontSize: 13 }}>
-                    <span style={{ flex: 1, color: '#334155', wordBreak: 'break-all' }}>
-                      {visibleKeys.has(p.id) ? p.api_key : maskKey(p.api_key)}
-                    </span>
-                    <button onClick={() => toggleKeyVisible(p.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', padding: 2 }}>
-                      {visibleKeys.has(p.id) ? <EyeOff size={14} /> : <Eye size={14} />}
-                    </button>
-                    <button onClick={() => handleCopyKey(p.api_key)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2563eb', display: 'flex', padding: 2 }} title="复制"><Copy size={14} /></button>
-                    <button onClick={() => handleResetKey(p)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f59e0b', display: 'flex', padding: 2 }} title="重置"><RotateCcw size={14} /></button>
-                  </div>
-                </div>
-
-                {/* 权限 */}
-                <div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>已授权接口</div>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {(p.permissions || []).map(perm => {
-                      const opt = PERMISSION_OPTIONS.find(o => o.value === perm)
-                      return <Badge key={perm} color="blue">{opt?.label || perm}</Badge>
-                    })}
-                    {(!p.permissions || !p.permissions.length) && <span style={{ fontSize: 13, color: '#94a3b8' }}>无权限</span>}
-                  </div>
-                </div>
-
-                {/* 合作方接口地址 + 测试 */}
-                {p.partner_url && (
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: '#64748b', marginBottom: 6 }}>对方接口地址</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 13, color: '#334155', fontFamily: 'monospace' }}>{p.partner_url}</span>
-                      <a href={p.partner_url} target="_blank" rel="noreferrer" style={{ color: '#2563eb', display: 'flex' }}><ExternalLink size={13} /></a>
-                      <button onClick={() => handleTest(p)} style={{ background: '#eff6ff', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', color: '#2563eb', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <TestTube2 size={12} /> 测试连接
-                      </button>
-                    </div>
-                    {testResult?.id === p.id && (
-                      <div style={{ marginTop: 6, fontSize: 12, color: testResult.ok ? '#16a34a' : '#dc2626', background: testResult.ok ? '#f0fdf4' : '#fef2f2', padding: '6px 10px', borderRadius: 6 }}>
-                        {testResult.msg}
-                      </div>
-                    )}
-                  </div>
+              {/* 底部按钮 */}
+              <div style={{ padding: '12px 24px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: 8 }}>
+                {p.partner_url ? (
+                  <button onClick={() => setViewing(p)}
+                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 0', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
+                    <Monitor size={16} /> 打开程序
+                  </button>
+                ) : (
+                  <button onClick={() => openEdit(p)}
+                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 0', background: '#f1f5f9', color: '#64748b', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 14 }}>
+                    配置地址后可打开
+                  </button>
                 )}
-
-                {p.notes && <div style={{ fontSize: 13, color: '#94a3b8', fontStyle: 'italic' }}>备注: {p.notes}</div>}
+                <button onClick={() => openEdit(p)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 10, padding: '10px 12px', cursor: 'pointer', color: '#64748b', display: 'flex' }} title="编辑"><Edit2 size={15} /></button>
+                <button onClick={() => handleDelete(p)} style={{ background: '#fef2f2', border: 'none', borderRadius: 10, padding: '10px 12px', cursor: 'pointer', color: '#dc2626', display: 'flex' }} title="删除"><Trash2 size={15} /></button>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* 创建/编辑弹窗 */}
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? '编辑合作方' : '添加合作方'}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Input label="合作方名称 *" placeholder="如：货联、本地桥" value={form.partner_name} onChange={e => setForm({ ...form, partner_name: e.target.value })} />
-          <Input label="对方接口地址" placeholder="如：http://111.170.173.24:1120/api" value={form.partner_url} onChange={e => setForm({ ...form, partner_url: e.target.value })} />
-          <Input label="对方给的 API Key" placeholder="对方分配给你的密钥（用于调对方接口）" value={form.partner_key} onChange={e => setForm({ ...form, partner_key: e.target.value })} />
-
-          <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 8 }}>授权接口权限</label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {PERMISSION_OPTIONS.map(opt => (
-                <label key={opt.value} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: form.permissions.includes(opt.value) ? '#eff6ff' : '#f8fafc', borderRadius: 8, cursor: 'pointer', border: `1px solid ${form.permissions.includes(opt.value) ? '#93c5fd' : '#e2e8f0'}` }}>
-                  <input type="checkbox" checked={form.permissions.includes(opt.value)} onChange={() => togglePerm(opt.value)} style={{ accentColor: '#2563eb' }} />
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>{opt.label}</div>
-                    <div style={{ fontSize: 12, color: '#94a3b8' }}>{opt.desc}</div>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
+          <Input label="程序地址 *" placeholder="如：http://111.170.173.24:1120" value={form.partner_url} onChange={e => setForm({ ...form, partner_url: e.target.value })} />
+          <p style={{ margin: '-8px 0 0', fontSize: 12, color: '#94a3b8' }}>填写对方网页程序的访问地址，添加后可在 DuiJie 中直接打开使用</p>
 
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>备注</label>
-            <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} placeholder="内部备注信息"
+            <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} placeholder="备注信息，如：货运管理系统、物流调度平台"
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
           </div>
 
           <Button onClick={handleSave} disabled={saving} style={{ marginTop: 4 }}>
-            {saving ? '保存中...' : editing ? '保存修改' : '创建并生成 API Key'}
+            {saving ? '保存中...' : editing ? '保存修改' : '添加合作方'}
           </Button>
         </div>
       </Modal>

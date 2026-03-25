@@ -54,10 +54,6 @@ app.use('/api', (req, res, next) => {
 app.use('/api', require('./atomic/middleware/auditMiddleware'));
 app.use('/api', routes);
 
-// 全局错误处理（生产环境不暴露内部错误信息）
-app.use((err, req, res, next) => {
-  logger.error(`${req.method} ${req.originalUrl} userId=${req.userId || 'anon'} ${err.message}`, { stack: err.stack?.split('\n').slice(0, 3).join('\n') });
-  res.status(err.status || 500).json({ success: false, message: '服务器内部错误' });
-});
+app.use(require('./atomic/middleware/errorHandler'));
 
 module.exports = app;

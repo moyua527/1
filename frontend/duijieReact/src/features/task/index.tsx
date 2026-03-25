@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { fetchApi } from '../../bootstrap'
+import { fetchApi, BACKEND_URL } from '../../bootstrap'
 import { taskApi } from './services/api'
 import Badge from '../ui/Badge'
 import Button from '../ui/Button'
@@ -9,8 +9,6 @@ import { Plus, GripVertical, Paperclip, Download, Search, Filter } from 'lucide-
 import TaskDetailModal from './components/TaskDetailModal'
 import TaskCreateModal from './components/TaskCreateModal'
 import { can } from '../../stores/permissions'
-
-const BACKEND_URL = (window as any).__ENV__?.BACKEND_URL || ''
 
 interface Task { id: number; title: string; description?: string; status: string; priority: string; project_id: number; project_name?: string; due_date?: string; assignee_name?: string }
 

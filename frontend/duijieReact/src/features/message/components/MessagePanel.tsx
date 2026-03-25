@@ -3,6 +3,7 @@ import { Send } from 'lucide-react'
 import { io, Socket } from 'socket.io-client'
 import { messageApi } from '../services/api'
 import Avatar from '../../ui/Avatar'
+import { isCapacitor, SERVER_URL } from '../../../utils/capacitor'
 
 const bubble: React.CSSProperties = { padding: '8px 12px', background: '#eff6ff', borderRadius: '12px 12px 12px 4px', maxWidth: '80%', fontSize: 14, color: '#334155', lineHeight: 1.5 }
 
@@ -19,7 +20,7 @@ export default function MessagePanel({ projectId }: Props) {
 
   useEffect(() => {
     load()
-    const socket = io(window.location.origin, { path: '/socket.io', withCredentials: true })
+    const socket = io(isCapacitor ? SERVER_URL : window.location.origin, { path: '/socket.io', withCredentials: true })
     socketRef.current = socket
     socket.on('connect', () => { setConnected(true); socket.emit('join_project', projectId) })
     socket.on('disconnect', () => setConnected(false))

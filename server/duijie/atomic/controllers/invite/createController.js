@@ -1,5 +1,5 @@
-﻿const db = require('../../../config/db');
 const crypto = require('crypto');
+const createInvite = require('../../services/invite/createInvite');
 
 module.exports = async (req, res) => {
   try {
@@ -10,11 +10,15 @@ module.exports = async (req, res) => {
     }
     const token = crypto.randomBytes(16).toString('hex');
     const expiresAt = expires_hours ? new Date(Date.now() + expires_hours * 3600000) : null;
-    const [result] = await db.query(
-      'INSERT INTO duijie_invite_links (token, preset_role, created_by, expires_at, note) VALUES (?, ?, ?, ?, ?)',
-      [token, preset_role || 'member', req.user.userId, expiresAt, note || null]
-    );
-    res.json({ success: true, data: { id: result.insertId, token, preset_role: preset_role || 'member', expires_at: expiresAt } });
+    const role = preset_role || 'member';
+    const id = await createInvite({
+      token,
+      preset_role: role,
+      created_by: req.user.userId,
+      expires_at: expiresAt,
+      note: note || null,
+    });
+    res.json({ success: true, data: { id, token, preset_role: role, expires_at: expiresAt } });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });
   }

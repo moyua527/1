@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Download, X } from 'lucide-react'
-import { isCapacitor, APP_VERSION } from '../../utils/capacitor'
+import { Download } from 'lucide-react'
+import { isCapacitor, APP_VERSION, SERVER_URL } from '../../utils/capacitor'
 
 function compareVersions(a: string, b: string): number {
   const pa = a.split('.').map(Number)
@@ -27,10 +27,10 @@ export default function AppUpdateChecker() {
 
   useEffect(() => {
     if (!isCapacitor) return
-    const key = `update_dismissed_${APP_VERSION}`
-    if (sessionStorage.getItem(key)) return
+    if (sessionStorage.getItem(`update_skip_${APP_VERSION}`)) return
 
-    fetch('/api/app/version')
+    const apiUrl = `${SERVER_URL}/api/app/version`
+    fetch(apiUrl)
       .then(r => r.json())
       .then(res => {
         if (!res.success || !res.data) return
@@ -44,10 +44,14 @@ export default function AppUpdateChecker() {
 
   if (!info || dismissed) return null
 
-  const isForce = compareVersions(APP_VERSION, info.minVersion) < 0 || info.forceUpdate
+  const isForce = info.forceUpdate || compareVersions(APP_VERSION, info.minVersion) < 0
+
+  const handleDownload = () => {
+    window.open(info.downloadUrl, '_system')
+  }
 
   const handleDismiss = () => {
-    sessionStorage.setItem(`update_dismissed_${APP_VERSION}`, '1')
+    sessionStorage.setItem(`update_skip_${APP_VERSION}`, '1')
     setDismissed(true)
   }
 
@@ -73,23 +77,27 @@ export default function AppUpdateChecker() {
 
         <div style={{ padding: '20px 24px' }}>
           {info.changelog && (
-            <p style={{ margin: '0 0 16px', fontSize: 13, color: '#475569', lineHeight: 1.6 }}>
+            <div style={{
+              margin: '0 0 16px', padding: 12, background: '#f8fafc',
+              borderRadius: 8, fontSize: 13, color: '#475569', lineHeight: 1.6,
+            }}>
+              <div style={{ fontWeight: 600, marginBottom: 4, color: '#334155' }}>更新内容：</div>
               {info.changelog}
-            </p>
+            </div>
           )}
 
-          <a
-            href={info.downloadUrl}
-            target="_blank"
-            rel="noreferrer"
+          <button
+            onClick={handleDownload}
             style={{
-              display: 'block', textAlign: 'center', padding: '12px 0',
-              background: '#2563eb', color: '#fff', borderRadius: 10,
-              fontSize: 15, fontWeight: 600, textDecoration: 'none',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              width: '100%', padding: '13px 0',
+              background: '#2563eb', color: '#fff', borderRadius: 10, border: 'none',
+              fontSize: 15, fontWeight: 600, cursor: 'pointer',
             }}
           >
-            立即下载更新
-          </a>
+            <Download size={18} />
+            立即下载安装
+          </button>
 
           {!isForce && (
             <button
@@ -105,11 +113,8 @@ export default function AppUpdateChecker() {
           )}
 
           {isForce && (
-            <p style={{
-              textAlign: 'center', marginTop: 10, fontSize: 12,
-              color: '#ef4444',
-            }}>
-              当前版本过旧，必须更新后才能使用
+            <p style={{ textAlign: 'center', marginTop: 12, fontSize: 12, color: '#ef4444' }}>
+              当前版本过旧，请更新后使用
             </p>
           )}
         </div>

@@ -1,0 +1,65 @@
+---
+description: 项目更新后的必须操作流程，每次修改代码后必须执行
+globs: 
+alwaysApply: true
+---
+
+# 部署工作流规则
+
+每次修改完项目代码后，**必须按顺序完成以下所有步骤**，不能跳过任何一步。
+
+## 必须执行的步骤
+
+### 1. 更新项目文档 (`PROJECT.md`)
+- 同步修改涉及的功能描述、API 接口、数据库表结构、角色权限等
+- 如果新增了功能模块，添加到对应章节
+- 如果删除了功能或角色，从文档中移除
+- 保持版本号和最后更新日期为最新
+
+### 2. 更新历史记录 (`CHANGELOG.md`)
+- 在表格顶部新增一行记录
+- 格式：`| 版本号 | 日期 | 变更描述 |`
+- 版本号规则：大功能用 `v1.1.xx`，小修复用 `v1.1.xx.x`
+
+### 3. 构建前端（如有前端改动）
+```powershell
+cd frontend/duijieReact
+npm run build
+```
+
+### 4. 提交代码到 Git
+```powershell
+cd e:\DuiJie
+git add -A
+git commit -m "v1.1.xx: 变更描述"
+git tag v1.1.xx          # 大版本才打 tag
+git push origin main --tags
+```
+
+### 5. 部署到服务器
+```powershell
+$env:SSH_PASS='Xiao134679'; py -3 deploy_update.py
+```
+
+### 6. 验证部署
+- 如果 deploy 脚本的迁移在 001 报错卡住，需要手动执行新的迁移 SQL
+- 如果新增了后端文件（控制器、路由等）不在 deploy_update.py 的文件列表中，需要全量同步后端文件
+- 部署后确认 PM2 状态正常（uptime > 0，不是持续重启）
+
+## 注意事项
+
+- PowerShell 不支持 `&&` 连接命令，需要分开执行
+- PowerShell 不支持 heredoc，git commit message 用简单的 `-m "..."` 格式
+- `deploy_update.py` 有一个硬编码的后端文件列表，新增文件需要添加到列表中，否则不会上传
+- 如果遇到服务器 MODULE_NOT_FOUND 错误，说明有文件没上传，需要全量同步
+- Service Worker 缓存版本在 `public/sw.js` 中的 `CACHE_NAME`，大版本更新时递增
+
+## 服务器信息
+
+- IP: 160.202.253.143
+- SSH: root / 通过 $env:SSH_PASS 环境变量传入
+- 项目路径: /opt/duijie
+- 进程管理: PM2 (进程名 duijie)
+- 数据库: MySQL 8.0, 库名 duijie_db, 用户 duijie
+- Web: Nginx 端口 8080
+- 后端: Node.js 端口 1800

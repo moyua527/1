@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Bell, Check, CheckCheck, ExternalLink } from 'lucide-react'
 import { fetchApi, getToken } from '../../bootstrap'
 import { io, Socket } from 'socket.io-client'
+import { isCapacitor, SERVER_URL } from '../../utils/capacitor'
 
 const typeIcon: Record<string, string> = {
   task_assigned: '📋', task_status: '🔄', ticket_reply: '🎫', project_member: '📁', follow_reminder: '⏰',
@@ -28,7 +29,7 @@ export default function NotificationBell() {
 
   useEffect(() => {
     load()
-    const socket = io(window.location.origin, { path: '/socket.io', withCredentials: true })
+    const socket = io(isCapacitor ? SERVER_URL : window.location.origin, { path: '/socket.io', withCredentials: true })
     socketRef.current = socket
     socket.on('connect', () => {
       const token = getToken()

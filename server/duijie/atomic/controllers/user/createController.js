@@ -1,6 +1,4 @@
-﻿const db = require('../../../config/db');
-const bcrypt = require('bcryptjs');
-const generateInviteCode = require('../../utils/generateInviteCode');
+const createUser = require('../../services/user/createUser');
 
 const VALID_ROLES = ['admin', 'tech', 'business', 'member'];
 
@@ -10,15 +8,10 @@ module.exports = async (req, res) => {
     if (!username || !password) return res.status(400).json({ success: false, message: '用户名和密码必填' });
     if (!VALID_ROLES.includes(role)) return res.status(400).json({ success: false, message: '角色无效' });
 
-    const [existing] = await db.query('SELECT id FROM voice_users WHERE username = ? AND is_deleted = 0', [username]);
-    if (existing.length > 0) return res.status(400).json({ success: false, message: '用户名已存在' });
+    const result = await createUser({ username, password, nickname, role, client_id, manager_id });
+    if (result.duplicate) return res.status(400).json({ success: false, message: '用户名已存在' });
 
-    const personalCode = await generateInviteCode();
-    const [result] = await db.query(
-      'INSERT INTO voice_users (username, password, nickname, role, client_id, manager_id, personal_invite_code) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [username, await bcrypt.hash(password, 10), nickname || username, role, client_id || null, manager_id || null, personalCode]
-    );
-    res.json({ success: true, data: { id: result.insertId } });
+    res.json({ success: true, data: { id: result.id } });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });
   }

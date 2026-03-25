@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { Send, Star, ChevronLeft, Clock, Loader2, CheckCircle, XCircle, Paperclip, Download, X } from 'lucide-react'
-import { fetchApi, uploadFile } from '../../bootstrap'
+import { fetchApi, uploadFile, BACKEND_URL } from '../../bootstrap'
 import { can } from '../../stores/permissions'
 import Avatar from '../ui/Avatar'
 import Modal from '../ui/Modal'
@@ -22,7 +22,6 @@ const statusMap: Record<string, { label: string; color: string; icon: any }> = {
   closed: { label: '已关闭', color: '#6b7280', icon: XCircle },
 }
 const fmtSize = (b: number) => b < 1024 ? b + 'B' : b < 1048576 ? (b / 1024).toFixed(1) + 'KB' : (b / 1048576).toFixed(1) + 'MB'
-const BACKEND_URL = (window as any).__ENV__?.BACKEND_URL || ''
 
 interface Props {
   ticket: any; user: any; staffMembers: any[]

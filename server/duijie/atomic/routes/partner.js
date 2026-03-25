@@ -204,4 +204,43 @@ router.post('/partners/:id/test', auth, adminOnly, async (req, res) => {
   }
 });
 
+// 代理请求：在 DuiJie 后端转发请求到合作方的 API
+router.post('/partners/:id/fetch', auth, adminOnly, async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT partner_url, partner_key, partner_name FROM duijie_partner_api_keys WHERE id = ?', [req.params.id]);
+    if (!rows.length) return res.status(404).json({ success: false, message: '合作方不存在' });
+    const { partner_url, partner_key, partner_name } = rows[0];
+    if (!partner_url) return res.status(400).json({ success: false, message: '未配置合作方接口地址' });
+
+    const { path = '', method = 'GET', body: reqBody } = req.body;
+    const url = partner_url.replace(/\/+$/, '') + '/' + path.replace(/^\/+/, '');
+
+    const axios = require('axios');
+    const config = {
+      method: method.toLowerCase(),
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(partner_key ? { 'X-API-Key': partner_key, 'Authorization': `Bearer ${partner_key}` } : {}),
+      },
+      timeout: 15000,
+    };
+    if (reqBody && ['post', 'put', 'patch'].includes(config.method)) {
+      config.data = reqBody;
+    }
+
+    const resp = await axios(config);
+    logger.info(`partner proxy [${partner_name}] ${method} ${url} -> ${resp.status}`);
+    res.json({ success: true, data: resp.data, status: resp.status });
+  } catch (e) {
+    const status = e.response?.status;
+    const data = e.response?.data;
+    if (status && data) {
+      res.json({ success: false, data, status, message: `对方返回 ${status}` });
+    } else {
+      res.json({ success: false, message: `请求失败: ${e.message}` });
+    }
+  }
+});
+
 module.exports = router;

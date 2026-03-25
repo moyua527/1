@@ -1,8 +1,8 @@
-﻿const db = require('../../../config/db');
+const deleteOpportunity = require('../../services/opportunity/deleteOpportunity');
 
 module.exports = async (req, res) => {
   try {
-    await db.query('UPDATE duijie_opportunities SET is_deleted = 1 WHERE id = ?', [req.params.id]);
+    await deleteOpportunity(req.params.id);
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });

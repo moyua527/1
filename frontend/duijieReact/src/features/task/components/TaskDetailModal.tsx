@@ -1,13 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
-import { fetchApi, uploadFile } from '../../../bootstrap'
+import { fetchApi, uploadFile, BACKEND_URL } from '../../../bootstrap'
 import { taskApi } from '../services/api'
 import Modal from '../../ui/Modal'
 import Badge from '../../ui/Badge'
 import { toast } from '../../ui/Toast'
 import { confirm } from '../../ui/ConfirmDialog'
 import { Paperclip, Download, Trash2, Upload, Calendar, User, Flag, AlignLeft, Loader2 } from 'lucide-react'
-
-const BACKEND_URL = (window as any).__ENV__?.BACKEND_URL || ''
 const fmtSize = (b: number) => b < 1024 ? b + 'B' : b < 1048576 ? (b / 1024).toFixed(1) + 'KB' : (b / 1048576).toFixed(1) + 'MB'
 
 const priorityOptions = [
