@@ -1,4 +1,4 @@
-import { Users, Building, FolderTree, LogIn, ArrowLeftRight, Crown, Shield } from 'lucide-react'
+import { Users, Building, FolderTree, LogIn, ArrowLeftRight, Crown, Shield, Plus } from 'lucide-react'
 import { useEnterprise } from './useEnterprise'
 import { section } from './constants'
 import EmptyState from './EmptyState'
@@ -9,6 +9,7 @@ import OrgTree from './OrgTree'
 import JoinRequests from './JoinRequests'
 import AdminAllEnterprises from './AdminAllEnterprises'
 import EnterpriseModals from './EnterpriseModals'
+import JoinCreateModals from './JoinCreateModals'
 
 export default function Enterprise() {
   const h = useEnterprise()
@@ -43,30 +44,40 @@ export default function Enterprise() {
       <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>企业管理</h1>
       <p style={{ fontSize: 14, color: '#94a3b8', marginBottom: 20, marginTop: 0 }}>管理企业信息、部门与组织成员</p>
 
-      {h.enterprises.length > 1 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: '#f8fafc', borderRadius: 10, marginBottom: 16, border: '1px solid #e2e8f0', flexWrap: 'wrap' }}>
-          <ArrowLeftRight size={15} color="#64748b" />
-          <span style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>切换企业：</span>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {h.enterprises.map((ent: any) => (
-              <button key={ent.id} onClick={() => ent.id !== h.activeId && h.switchEnterprise(ent.id)}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 14px', borderRadius: 7, fontSize: 13,
-                  border: ent.id === h.activeId ? '1.5px solid #2563eb' : '1px solid #e2e8f0',
-                  background: ent.id === h.activeId ? '#eff6ff' : '#fff',
-                  color: ent.id === h.activeId ? '#2563eb' : '#334155',
-                  fontWeight: ent.id === h.activeId ? 600 : 400,
-                  cursor: ent.id === h.activeId ? 'default' : 'pointer', transition: 'all 0.15s' }}>
-                {ent.name}
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 10, marginLeft: 2, color: ent.id === h.activeId ? '#60a5fa' : '#94a3b8' }}>
-                  {ent.member_role === 'creator' && <Crown size={9} />}
-                  {ent.member_role === 'admin' && <Shield size={9} />}
-                  {ent.member_role === 'creator' ? '创建者' : ent.member_role === 'admin' ? '管理员' : '成员'}
-                </span>
-              </button>
-            ))}
-          </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: '#f8fafc', borderRadius: 10, marginBottom: 16, border: '1px solid #e2e8f0', flexWrap: 'wrap' }}>
+        <ArrowLeftRight size={15} color="#64748b" />
+        <span style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>我的企业：</span>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {h.enterprises.map((ent: any) => (
+            <button key={ent.id} onClick={() => ent.id !== h.activeId && h.switchEnterprise(ent.id)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 14px', borderRadius: 7, fontSize: 13,
+                border: ent.id === h.activeId ? '1.5px solid #2563eb' : '1px solid #e2e8f0',
+                background: ent.id === h.activeId ? '#eff6ff' : '#fff',
+                color: ent.id === h.activeId ? '#2563eb' : '#334155',
+                fontWeight: ent.id === h.activeId ? 600 : 400,
+                cursor: ent.id === h.activeId ? 'default' : 'pointer', transition: 'all 0.15s' }}>
+              {ent.name}
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 10, marginLeft: 2, color: ent.id === h.activeId ? '#60a5fa' : '#94a3b8' }}>
+                {ent.member_role === 'creator' && <Crown size={9} />}
+                {ent.member_role === 'admin' && <Shield size={9} />}
+                {ent.member_role === 'creator' ? '创建者' : ent.member_role === 'admin' ? '管理员' : '成员'}
+              </span>
+            </button>
+          ))}
+          <button onClick={() => { h.setJoinModalOpen(true); h.setJoinSearch(''); h.setJoinResults([]); h.loadMyRequests() }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 14px', borderRadius: 7, fontSize: 13,
+              border: '1px dashed #94a3b8', background: '#fff', color: '#64748b', cursor: 'pointer', transition: 'all 0.15s' }}>
+            <LogIn size={13} /> 加入企业
+          </button>
+          {!h.enterprises.some((e: any) => e.member_role === 'creator') && (
+            <button onClick={() => h.setCreateModalOpen(true)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 14px', borderRadius: 7, fontSize: 13,
+                border: '1px dashed #94a3b8', background: '#fff', color: '#64748b', cursor: 'pointer', transition: 'all 0.15s' }}>
+              <Plus size={13} /> 创建企业
+            </button>
+          )}
         </div>
-      )}
+      </div>
 
       <EnterpriseCard
         ent={h.ent} myRole={h.myRole} isOwner={h.isOwner}
@@ -114,6 +125,16 @@ export default function Enterprise() {
       )}
 
       {h.isSysAdmin && <AdminAllEnterprises allEnterprises={h.allEnterprises} expandedEntId={h.expandedEntId} setExpandedEntId={h.setExpandedEntId} />}
+
+      <JoinCreateModals
+        joinModalOpen={h.joinModalOpen} setJoinModalOpen={h.setJoinModalOpen}
+        joinSearch={h.joinSearch} setJoinSearch={h.setJoinSearch}
+        joinResults={h.joinResults} joinSearching={h.joinSearching} joining={h.joining}
+        myRequests={h.myRequests} handleJoinSearch={h.handleJoinSearch} handleJoin={h.handleJoin}
+        createModalOpen={h.createModalOpen} setCreateModalOpen={h.setCreateModalOpen}
+        createForm={h.createForm} setCreateForm={h.setCreateForm}
+        creating={h.creating} handleCreate={h.handleCreate}
+      />
 
       <EnterpriseModals
         editEntOpen={h.editEntOpen} setEditEntOpen={h.setEditEntOpen}
