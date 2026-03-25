@@ -112,7 +112,7 @@ const useUserStore = create<UserState>((set, get) => ({
     clearToken()
     writeCache(null)
     set({ user: null })
-    window.location.reload()
+    window.location.href = '/'
   },
 
   updateProfile: (data) => {
