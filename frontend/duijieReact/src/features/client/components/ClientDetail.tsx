@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Tag, Building, Mail, Phone, FileText, Clock, MoreVertical, Settings, History, Trash2, UserPlus, Users, Zap, Sparkles, Loader2, Building2, UserCircle } from 'lucide-react'
+import { ArrowLeft, Tag, Building, Mail, Phone, FileText, Clock, MoreVertical, Settings, History, Trash2, UserPlus, Users, Sparkles, Loader2, Building2, UserCircle } from 'lucide-react'
 import { clientApi } from '../services/api'
 import Avatar from '../../ui/Avatar'
 import Button from '../../ui/Button'
@@ -13,6 +13,8 @@ import ContractSection from './ContractSection'
 import FollowUpSection from './FollowUpSection'
 import EnterpriseMemberSection from './EnterpriseMemberSection'
 import ClientEditModal from './ClientEditModal'
+import ScoreSection from './ScoreSection'
+import TagManageModal from './TagManageModal'
 
 export default function ClientDetail() {
   const { id } = useParams()
@@ -28,12 +30,8 @@ export default function ClientDetail() {
   const [score, setScore] = useState<any>(null)
   const [aiSuggestion, setAiSuggestion] = useState('')
   const [aiLoading, setAiLoading] = useState(false)
-  const [allTags, setAllTags] = useState<any[]>([])
   const [clientTags, setClientTags] = useState<any[]>([])
   const [tagModalOpen, setTagModalOpen] = useState(false)
-  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([])
-  const [newTagName, setNewTagName] = useState('')
-  const [newTagColor, setNewTagColor] = useState('#6b7280')
   const [contracts, setContracts] = useState<any[]>([])
   const [orgMembers, setOrgMembers] = useState<any[]>([])
 
@@ -68,29 +66,6 @@ export default function ClientDetail() {
     const r = await clientApi.remove(id!)
     if (r.success) { toast('客户已删除', 'success'); nav('/clients') }
     else toast(r.message || '删除失败', 'error')
-  }
-
-  const openTagModal = async () => {
-    const r = await clientApi.allTags()
-    if (r.success) setAllTags(r.data || [])
-    setSelectedTagIds(clientTags.map((t: any) => t.id))
-    setTagModalOpen(true)
-  }
-  const toggleTag = (tid: number) => { setSelectedTagIds(prev => prev.includes(tid) ? prev.filter(i => i !== tid) : [...prev, tid]) }
-  const handleSaveTags = async () => {
-    const r = await clientApi.setClientTags(id!, selectedTagIds)
-    if (r.success) { toast('标签已更新', 'success'); setTagModalOpen(false); load() }
-    else toast(r.message || '保存失败', 'error')
-  }
-  const handleCreateTag = async () => {
-    if (!newTagName.trim()) return
-    const r = await clientApi.createTag({ name: newTagName.trim(), color: newTagColor })
-    if (r.success) {
-      setNewTagName('')
-      const r2 = await clientApi.allTags()
-      if (r2.success) setAllTags(r2.data || [])
-      setSelectedTagIds(prev => [...prev, r.data.id])
-    } else toast(r.message || '创建失败', 'error')
   }
 
   if (!client) return <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}>加载中...</div>
@@ -160,32 +135,7 @@ export default function ClientDetail() {
       </div>
 
       {/* Score Section */}
-      {score && (() => {
-        const colors: Record<string, string> = { A: '#16a34a', B: '#2563eb', C: '#d97706', D: '#f97316', E: '#dc2626' }
-        const dimLabels: Record<string, string> = { follow: '跟进活跃', contract: '合同价值', stage: '阶段进展', contact: '联系人', info: '信息完整' }
-        const dimMax: Record<string, number> = { follow: 30, contract: 25, stage: 20, contact: 10, info: 15 }
-        return (
-          <div style={{ ...sectionStyle, marginTop: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <Zap size={18} color={colors[score.label]} />
-              <span style={{ fontSize: 16, fontWeight: 600, color: '#334155' }}>智能评分</span>
-              <span style={{ fontSize: 24, fontWeight: 700, color: colors[score.label], marginLeft: 'auto' }}>{score.label}</span>
-              <span style={{ fontSize: 14, color: '#94a3b8' }}>{score.total}/100</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {Object.entries(score.breakdown).map(([k, v]) => (
-                <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-                  <span style={{ width: 70, color: '#64748b', flexShrink: 0 }}>{dimLabels[k] || k}</span>
-                  <div style={{ flex: 1, height: 6, background: '#f1f5f9', borderRadius: 3, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${((v as number) / dimMax[k]) * 100}%`, background: colors[score.label], borderRadius: 3, transition: 'width 0.3s' }} />
-                  </div>
-                  <span style={{ width: 36, textAlign: 'right', color: '#94a3b8', fontSize: 12 }}>{v as number}/{dimMax[k]}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )
-      })()}
+      <ScoreSection score={score} />
 
       {/* Tags Section */}
       <div style={{ ...sectionStyle, marginTop: 16 }}>
@@ -194,7 +144,7 @@ export default function ClientDetail() {
             <Tag size={18} color="#f59e0b" />
             <span style={{ fontSize: 16, fontWeight: 600, color: '#334155' }}>标签</span>
           </div>
-          <button onClick={openTagModal} style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 12, color: '#64748b' }}>管理标签</button>
+          <button onClick={() => setTagModalOpen(true)} style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 12, color: '#64748b' }}>管理标签</button>
         </div>
         {clientTags.length === 0 ? (
           <div style={{ fontSize: 13, color: '#94a3b8' }}>暂无标签，点击"管理标签"添加</div>
@@ -262,37 +212,7 @@ export default function ClientDetail() {
         )}
       </Modal>
 
-      <Modal open={tagModalOpen} onClose={() => setTagModalOpen(false)} title="管理标签">
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-            <input value={newTagName} onChange={e => setNewTagName(e.target.value)} placeholder="新标签名称..."
-              style={{ flex: 1, padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none' }} />
-            <input type="color" value={newTagColor} onChange={e => setNewTagColor(e.target.value)}
-              style={{ width: 36, height: 32, border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer', padding: 2 }} />
-            <button onClick={handleCreateTag}
-              style={{ padding: '6px 12px', borderRadius: 6, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer', fontSize: 13 }}>创建</button>
-          </div>
-          {allTags.length === 0 ? (
-            <div style={{ fontSize: 13, color: '#94a3b8', textAlign: 'center', padding: 16 }}>暂无标签，请先创建</div>
-          ) : (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {allTags.map((t: any) => {
-                const selected = selectedTagIds.includes(t.id)
-                return (
-                  <button key={t.id} onClick={() => toggleTag(t.id)}
-                    style={{ padding: '5px 12px', borderRadius: 16, border: selected ? `2px solid ${t.color}` : '2px solid #e2e8f0', background: selected ? t.color + '18' : '#fff', color: selected ? t.color : '#64748b', cursor: 'pointer', fontSize: 13, fontWeight: selected ? 600 : 400, transition: 'all 0.15s' }}>
-                    {t.name}
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-          <Button variant="secondary" onClick={() => setTagModalOpen(false)}>取消</Button>
-          <Button onClick={handleSaveTags}>保存</Button>
-        </div>
-      </Modal>
+      <TagManageModal open={tagModalOpen} onClose={() => setTagModalOpen(false)} clientId={id!} clientTags={clientTags} onSaved={load} />
     </div>
   )
 }

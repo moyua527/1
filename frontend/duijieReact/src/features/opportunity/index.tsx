@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Plus, Loader2, DollarSign, Calendar, User, Trash2, Edit3, X, TrendingUp } from 'lucide-react'
+import { Plus, Loader2, DollarSign, Calendar, User, Trash2, Edit3, TrendingUp } from 'lucide-react'
 import { clientApi } from '../client/services/api'
 import { can } from '../../stores/permissions'
 import Button from '../ui/Button'
-import Modal from '../ui/Modal'
-import Input from '../ui/Input'
 import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
+import OpportunityFormModal from './OpportunityFormModal'
 
 const stageMap: Record<string, { label: string; color: string; bg: string }> = {
   lead: { label: '线索', color: '#6b7280', bg: '#f3f4f6' },
@@ -22,13 +21,10 @@ const stageKeys = ['lead', 'qualify', 'proposal', 'negotiate', 'won', 'lost']
 export default function OpportunityList() {
   const [items, setItems] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [showCreate, setShowCreate] = useState(false)
-  const [showEdit, setShowEdit] = useState(false)
-  const [editItem, setEditItem] = useState<any>(null)
-  const [submitting, setSubmitting] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editing, setEditing] = useState<any>(null)
   const [clients, setClients] = useState<any[]>([])
   const [staffMembers, setStaffMembers] = useState<any[]>([])
-  const [form, setForm] = useState({ title: '', client_id: '', amount: '', probability: '50', stage: 'lead', expected_close: '', assigned_to: '', notes: '' })
   const [dragOverStage, setDragOverStage] = useState<string | null>(null)
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
 
@@ -38,41 +34,21 @@ export default function OpportunityList() {
   }
   useEffect(load, [])
 
-  const openCreate = () => {
-    setForm({ title: '', client_id: '', amount: '', probability: '50', stage: 'lead', expected_close: '', assigned_to: '', notes: '' })
+  const loadFormData = () => {
     clientApi.list().then(r => { if (r.success) setClients(r.data || []) })
     clientApi.availableMembers().then(r => { if (r.success) setStaffMembers((r.data || []).filter((u: any) => can(u.role, 'staff:assignable'))) })
-    setShowCreate(true)
+  }
+
+  const openCreate = () => {
+    setEditing(null)
+    loadFormData()
+    setModalOpen(true)
   }
 
   const openEdit = (item: any) => {
-    setEditItem(item)
-    setForm({
-      title: item.title || '', client_id: item.client_id ? String(item.client_id) : '', amount: item.amount ? String(item.amount) : '',
-      probability: String(item.probability || 50), stage: item.stage || 'lead',
-      expected_close: item.expected_close ? item.expected_close.slice(0, 10) : '', assigned_to: item.assigned_to ? String(item.assigned_to) : '', notes: item.notes || ''
-    })
-    clientApi.list().then(r => { if (r.success) setClients(r.data || []) })
-    clientApi.availableMembers().then(r => { if (r.success) setStaffMembers((r.data || []).filter((u: any) => can(u.role, 'staff:assignable'))) })
-    setShowEdit(true)
-  }
-
-  const handleCreate = async () => {
-    if (!form.title.trim()) { toast('请输入商机标题', 'error'); return }
-    setSubmitting(true)
-    const r = await clientApi.createOpportunity({ ...form, amount: Number(form.amount) || 0, probability: Number(form.probability) || 50, client_id: form.client_id ? Number(form.client_id) : null, assigned_to: form.assigned_to ? Number(form.assigned_to) : null })
-    setSubmitting(false)
-    if (r.success) { toast('商机创建成功', 'success'); setShowCreate(false); load() }
-    else toast(r.message || '创建失败', 'error')
-  }
-
-  const handleUpdate = async () => {
-    if (!form.title.trim()) { toast('请输入商机标题', 'error'); return }
-    setSubmitting(true)
-    const r = await clientApi.updateOpportunity(editItem.id, { ...form, amount: Number(form.amount) || 0, probability: Number(form.probability) || 50, client_id: form.client_id ? Number(form.client_id) : null, assigned_to: form.assigned_to ? Number(form.assigned_to) : null })
-    setSubmitting(false)
-    if (r.success) { toast('商机已更新', 'success'); setShowEdit(false); load() }
-    else toast(r.message || '更新失败', 'error')
+    setEditing(item)
+    loadFormData()
+    setModalOpen(true)
   }
 
   const handleDelete = async (item: any) => {
@@ -91,47 +67,6 @@ export default function OpportunityList() {
 
   const totalAmount = items.filter(i => i.stage !== 'lost').reduce((s, i) => s + Number(i.amount || 0), 0)
   const wonAmount = items.filter(i => i.stage === 'won').reduce((s, i) => s + Number(i.amount || 0), 0)
-
-  const formFields = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-      <Input label="商机标题 *" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
-      <div>
-        <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>关联客户</label>
-        <select value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value })}
-          style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
-          <option value="">不关联</option>
-          {clients.map((c: any) => <option key={c.id} value={c.id}>#{c.id} {c.name}{c.company ? ` (${c.company})` : ''}</option>)}
-        </select>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <Input label="预计金额 (¥)" type="number" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} />
-        <Input label="成交概率 (%)" type="number" value={form.probability} onChange={e => setForm({ ...form, probability: e.target.value })} />
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>商机阶段</label>
-          <select value={form.stage} onChange={e => setForm({ ...form, stage: e.target.value })}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
-            {stageKeys.map(k => <option key={k} value={k}>{stageMap[k].label}</option>)}
-          </select>
-        </div>
-        <Input label="预计成交日期" type="date" value={form.expected_close} onChange={e => setForm({ ...form, expected_close: e.target.value })} />
-      </div>
-      <div>
-        <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>负责人</label>
-        <select value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })}
-          style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
-          <option value="">暂不分配</option>
-          {staffMembers.map((u: any) => <option key={u.id} value={u.id}>{u.nickname || u.username}</option>)}
-        </select>
-      </div>
-      <div>
-        <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>备注</label>
-        <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2}
-          style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
-      </div>
-    </div>
-  )
 
   return (
     <div>
@@ -225,21 +160,7 @@ export default function OpportunityList() {
         </div>
       )}
 
-      <Modal open={showCreate} onClose={() => setShowCreate(false)} title="新建商机">
-        {formFields}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-          <Button variant="secondary" onClick={() => setShowCreate(false)}>取消</Button>
-          <Button onClick={handleCreate} disabled={submitting}>{submitting ? '创建中...' : '创建'}</Button>
-        </div>
-      </Modal>
-
-      <Modal open={showEdit} onClose={() => setShowEdit(false)} title="编辑商机">
-        {formFields}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
-          <Button variant="secondary" onClick={() => setShowEdit(false)}>取消</Button>
-          <Button onClick={handleUpdate} disabled={submitting}>{submitting ? '保存中...' : '保存'}</Button>
-        </div>
-      </Modal>
+      <OpportunityFormModal open={modalOpen} onClose={() => setModalOpen(false)} editing={editing} clients={clients} staffMembers={staffMembers} onSaved={load} />
     </div>
   )
 }

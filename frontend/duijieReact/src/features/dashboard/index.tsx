@@ -4,6 +4,7 @@ import { FolderKanban, Users, ListTodo, CheckCircle, TrendingUp, Clock, Loader2,
 import { fetchApi } from '../../bootstrap'
 import { can } from '../../stores/permissions'
 import DashboardCharts from './DashboardCharts'
+import ClientDashboard from './ClientDashboard'
 
 interface Stats {
   totalProjects: number; activeProjects: number; completedProjects: number
@@ -45,6 +46,8 @@ export default function Dashboard() {
   const canTasks = can(r, 'dashboard:tasks')
   const canAmount = can(r, 'dashboard:amount')
 
+  const isClient = r === 'client'
+
   useEffect(() => {
     fetchApi('/api/dashboard/stats').then(r => { if (r.success) setStats(r.data) }).catch(() => {
       setStats({ totalProjects: 0, activeProjects: 0, completedProjects: 0, totalClients: 0, totalTasks: 0, pendingTasks: 0, completedTasks: 0 })
@@ -54,6 +57,9 @@ export default function Dashboard() {
   useEffect(() => {
     fetchApi(`/api/dashboard/chart?days=${chartDays}`).then(r => { if (r.success) setChartData(r.data) })
   }, [chartDays])
+
+  if (isClient && stats) return <ClientDashboard stats={stats} nav={nav} />
+  if (isClient && !stats) return <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
 
   const items = stats ? [
     { label: '总项目', value: stats.totalProjects, icon: FolderKanban, bg: '#dbeafe', color: '#2563eb', path: '/projects' },
