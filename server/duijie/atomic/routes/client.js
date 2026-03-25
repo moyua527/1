@@ -30,6 +30,7 @@ router.post('/my-enterprise', auth, V.createEnterprise, validate, myEntCtrl.crea
 router.put('/my-enterprise', auth, V.updateEnterprise, validate, myEntCtrl.update);
 router.delete('/my-enterprise', auth, myEntCtrl.remove);
 router.get('/my-enterprise/all', auth, myEntCtrl.getAll);
+router.get('/my-enterprise/projects', auth, myEntCtrl.listProjects);
 router.get('/my-enterprise/search', auth, V.searchEnterprise, validate, myEntCtrl.searchEnterprise);
 router.post('/my-enterprise/join', auth, V.joinEnterprise, validate, myEntCtrl.joinEnterprise);
 router.get('/my-enterprise/join-requests', auth, myEntCtrl.listJoinRequests);

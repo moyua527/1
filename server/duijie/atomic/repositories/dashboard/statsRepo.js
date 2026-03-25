@@ -84,7 +84,7 @@ module.exports = async (auth = {}) => {
     taskParams = [auth.userId, auth.userId, auth.userId];
   }
   const [[tasks]] = await db.query(
-    `SELECT COUNT(*) as total, SUM(t.status = 'todo') as pending, SUM(t.status = 'done') as done
+    `SELECT COUNT(*) as total, SUM(t.status = 'todo') as pending, SUM(t.status = 'accepted') as done
      FROM duijie_tasks t WHERE t.is_deleted = 0 ${taskWhere}`, taskParams
   );
 

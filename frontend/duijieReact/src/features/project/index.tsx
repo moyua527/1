@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react'
-import { useNavigate, useOutletContext } from 'react-router-dom'
-import { Plus, FolderKanban, Loader2, Search, X, AppWindow } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { useNavigate, useOutletContext, useLocation } from 'react-router-dom'
+import { Plus, FolderKanban, Loader2, Search } from 'lucide-react'
 import { projectApi } from './services/api'
-import { clientApi } from '../client/services/api'
 import { can } from '../../stores/permissions'
 import Button from '../ui/Button'
 import Badge from '../ui/Badge'
@@ -37,34 +36,31 @@ export default function ProjectList() {
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [form, setForm] = useState({ name: '', description: '', client_id: '', app_name: '', app_url: '' })
-  const [allClients, setAllClients] = useState<any[]>([])
-  const [teamUsers, setTeamUsers] = useState<any[]>([])
-  const [selectedMembers, setSelectedMembers] = useState<number[]>([])
+  const [form, setForm] = useState({ name: '', description: '' })
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const nav = useNavigate()
+  const location = useLocation()
   const { user } = useOutletContext<{ user: any }>()
   const canCreate = can(user?.role || '', 'project:create')
 
-  const load = () => {
+  const load = useCallback(() => {
     setLoading(true)
-    console.log('[ProjectList] load() called, token exists:', !!sessionStorage.getItem('token'))
-    projectApi.list({ _t: String(Date.now()) }).then(r => {
-      console.log('[ProjectList] API response:', JSON.stringify(r).substring(0, 300))
-      if (r.success) setProjects(r.data?.rows || [])
-      else console.warn('[ProjectList] API returned success=false:', r.message)
-    }).catch(err => {
-      console.error('[ProjectList] API error:', err)
+    projectApi.list({ _t: String(Date.now()), limit: '200' }).then(r => {
+      if (r.success) {
+        const d = r.data
+        const rows = Array.isArray(d?.rows) ? d.rows : Array.isArray(d) ? d : []
+        setProjects(rows)
+      } else {
+        setProjects([])
+        toast(r.message || '加载项目列表失败', 'error')
+      }
+    }).catch(() => {
+      setProjects([])
+      toast('网络错误，无法加载项目', 'error')
     }).finally(() => setLoading(false))
-  }
-  useEffect(() => {
-    load()
-    if (canCreate) {
-      clientApi.list().then(r => { if (r.success) setAllClients(r.data || []) })
-      projectApi.teamUsers().then(r => { if (r.success) setTeamUsers(r.data || []) })
-    }
   }, [])
+  useEffect(() => { load() }, [load, location.pathname])
 
   const filtered = projects.filter(p => {
     if (statusFilter && p.status !== statusFilter) return false
@@ -78,10 +74,9 @@ export default function ProjectList() {
   const handleCreate = async () => {
     if (!form.name.trim()) { toast('请输入项目名称', 'error'); return }
     setSubmitting(true)
-    if (!form.client_id) { toast('请关联企业', 'error'); setSubmitting(false); return }
-    const r = await projectApi.create({ ...form, client_id: Number(form.client_id), member_ids: selectedMembers })
+    const r = await projectApi.create(form)
     setSubmitting(false)
-    if (r.success) { toast('项目创建成功', 'success'); setShowCreate(false); setForm({ name: '', description: '', client_id: '', app_name: '', app_url: '' }); setSelectedMembers([]); load() }
+    if (r.success) { toast('项目创建成功', 'success'); setShowCreate(false); setForm({ name: '', description: '' }); load() }
     else toast(r.message || '创建失败', 'error')
   }
 
@@ -144,53 +139,14 @@ export default function ProjectList() {
 
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title="新建项目">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <Input label="项目名称" placeholder="输入项目名称" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
-          <Input label="项目描述" placeholder="简要描述" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
-          <div style={{ background: '#f8fafc', borderRadius: 10, padding: 14, border: '1px solid #e2e8f0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 10 }}><AppWindow size={14} /> 关联应用（可选）</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <Input label="应用名称" placeholder="如：客户门户" value={form.app_name} onChange={e => setForm({ ...form, app_name: e.target.value })} />
-              <Input label="应用链接" placeholder="https://example.com" value={form.app_url} onChange={e => setForm({ ...form, app_url: e.target.value })} />
-            </div>
-          </div>
+          <Input label="项目名称 *" placeholder="输入项目名称" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>关联企业 <span style={{ color: '#dc2626' }}>*</span></label>
-            <select value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value })}
-              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
-              <option value="">请选择企业</option>
-              {allClients.filter((c: any) => c.client_type === 'company').map((c: any) => <option key={c.id} value={c.id}>{c.name}{c.company ? ` (${c.company})` : ''}</option>)}
-            </select>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>项目描述</label>
+            <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={3} placeholder="简要描述项目内容"
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
           </div>
-          <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>项目成员{selectedMembers.length > 0 && <span style={{ color: '#94a3b8', fontWeight: 400 }}> · 已选 {selectedMembers.length} 人</span>}</label>
-            <div style={{ border: '1px solid #e2e8f0', borderRadius: 8, maxHeight: 200, overflowY: 'auto' }}>
-              {teamUsers.map((u: any) => {
-                const checked = selectedMembers.includes(u.id)
-                const name = u.nickname || u.username
-                const initial = name.charAt(0)
-                const roleColors: Record<string, string> = { admin: '#dc2626', tech: '#16a34a', business: '#2563eb', member: '#6b7280' }
-                const bgColor = roleColors[u.role] || '#6b7280'
-                const roleLabels: Record<string, string> = { admin: '管理员', tech: '技术员', business: '业务员', member: '成员', marketing: '市场', support: '客服' }
-                return (
-                  <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', background: checked ? '#f8fafc' : '#fff', transition: 'background 0.1s' }}
-                    onMouseEnter={e => { if (!checked) e.currentTarget.style.background = '#f8fafc' }}
-                    onMouseLeave={e => { if (!checked) e.currentTarget.style.background = '#fff' }}>
-                    <input type="checkbox" checked={checked} onChange={() => setSelectedMembers(prev => checked ? prev.filter(id => id !== u.id) : [...prev, u.id])}
-                      style={{ width: 16, height: 16, accentColor: '#2563eb', cursor: 'pointer', flexShrink: 0 }} />
-                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: bgColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600, flexShrink: 0 }}>
-                      {initial}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{name}</div>
-                      <div style={{ fontSize: 12, color: '#94a3b8' }}>@{u.username} · {roleLabels[u.role] || u.role}</div>
-                    </div>
-                  </label>
-                )
-              })}
-              {teamUsers.length === 0 && <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>暂无可选成员</div>}
-            </div>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+          <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>创建后可在项目详情中添加成员、关联应用等</p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
             <Button variant="secondary" onClick={() => setShowCreate(false)}>取消</Button>
             <Button onClick={handleCreate} disabled={submitting}>{submitting ? '创建中...' : '创建'}</Button>
           </div>

@@ -92,3 +92,5 @@
 | v1.1.15 | 2026-03-24 | P3前端全局状态管理：Zustand替代App/Layout中分散的localStorage+useState用户状态管理，统一useUserStore(用户信息/登录初始化/登出/资料更新)，消除重复缓存逻辑 |
 | v1.1.16 | 2026-03-24 | 前端性能与架构优化：P0路由级代码分割(React.lazy+Suspense，14个模块独立chunk，首屏JS从988KB降至414KB减少58%)；P0骨架屏组件(Skeleton/SkeletonCard/SkeletonList/SkeletonDashboard)；P1全局命令面板(Ctrl+K快捷跳转页面+快捷操作，模糊搜索+键盘导航+角色过滤)；P2权限组件化RBAC(permissions.tsx统一权限配置，can()函数+usePermission Hook+Can组件替代硬编码角色判断) |
 | v1.1.17 | 2026-03-24 | 深度优化：P0审计日志虚拟滚动(@tanstack/react-virtual，每页200条仅渲染可视区域DOM)；P1乐观更新(任务拖拽+商机移阶段即时更新UI，失败自动回滚)；P2 RBAC扩展至8个模块(仪表盘/项目/客户/商机/任务/工单/员工分配全部改用can()统一权限函数) |
+| v1.1.18 | 2026-03-26 | 移动端/APK：Capacitor 原生强制抽屉侧栏；根节点单滚动区(flex+min-height:0)；侧栏层级与触控优化；项目列表按企业 clientId 可见关联客户项目+加载失败提示；企业管理 Badge/MemberList 类型修复 |
+| v1.1.27 | 2026-03-26 | 项目健康检查修复：P0修复Dashboard已完成任务统计(done→accepted)；P1导航栏+命令面板迁移RBAC(can()统一权限，消除双重权限逻辑)；P1关闭验证码测试模式(移除_dev_code)；P2合作方模块文档补充(PROJECT.md)；P2修复PM2重启2697次(服务器缺listUsers模块，全量同步修复) |

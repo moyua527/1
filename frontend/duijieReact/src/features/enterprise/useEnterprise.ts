@@ -10,7 +10,7 @@ export function useEnterprise() {
   const [loading, setLoading] = useState(true)
   const [enterprises, setEnterprises] = useState<any[]>([])
   const [activeId, setActiveId] = useState<number | null>(null)
-  const [tab, setTab] = useState<'members' | 'departments' | 'tree' | 'requests'>('members')
+  const [tab, setTab] = useState<'members' | 'departments' | 'tree' | 'projects' | 'roles' | 'requests'>('members')
   const [editEntOpen, setEditEntOpen] = useState(false)
   const [entForm, setEntForm] = useState({ ...emptyEntForm })
   const [entSaving, setEntSaving] = useState(false)
@@ -120,13 +120,13 @@ export function useEnterprise() {
   }
   const openEditMember = (m: any) => {
     setEditingMember(m)
-    setMemberForm({ name: m.name || '', position: m.position || '', department: m.department || '', phone: m.phone || '', email: m.email || '', notes: m.notes || '', employee_id: m.employee_id || '', join_date: m.join_date ? m.join_date.slice(0, 10) : '', supervisor: m.supervisor || '', department_id: m.department_id ? String(m.department_id) : '' })
+    setMemberForm({ name: m.name || '', position: m.position || '', department: m.department || '', phone: m.phone || '', email: m.email || '', notes: m.notes || '', employee_id: m.employee_id || '', join_date: m.join_date ? m.join_date.slice(0, 10) : '', supervisor: m.supervisor || '', department_id: m.department_id ? String(m.department_id) : '', enterprise_role_id: m.enterprise_role_id ? String(m.enterprise_role_id) : '' })
     setMemberModalOpen(true)
   }
   const handleSaveMember = async () => {
     if (!memberForm.name.trim()) { toast('请输入成员姓名', 'error'); return }
     setMemberSaving(true)
-    const payload = { ...memberForm, department_id: memberForm.department_id ? Number(memberForm.department_id) : null }
+    const payload = { ...memberForm, department_id: memberForm.department_id ? Number(memberForm.department_id) : null, enterprise_role_id: memberForm.enterprise_role_id ? Number(memberForm.enterprise_role_id) : null }
     const r = editingMember
       ? await fetchApi(`/api/my-enterprise/members/${editingMember.id}`, { method: 'PUT', body: JSON.stringify(payload) })
       : await fetchApi('/api/my-enterprise/members', { method: 'POST', body: JSON.stringify(payload) })
@@ -245,6 +245,11 @@ export function useEnterprise() {
     if (r.success) { toast('角色已分配', 'success'); load() }
     else toast(r.message || '操作失败', 'error')
   }
+  const inlineCreateRole = async (form: any): Promise<number | null> => {
+    const r = await fetchApi('/api/my-enterprise/roles', { method: 'POST', body: JSON.stringify(form) })
+    if (r.success) { toast(`角色「${form.name}」已创建`, 'success'); await load(); return r.data?.id || null }
+    else { toast(r.message || '创建失败', 'error'); return null }
+  }
 
   // 派生数据
   const ent = data?.enterprise
@@ -278,7 +283,7 @@ export function useEnterprise() {
     lookupPhone, setLookupPhone, lookupLoading,
     openAddMember, openEditMember, handleSaveMember, handleDeleteMember, handleRoleChange, handleLookup,
     // 角色
-    handleCreateRole, handleUpdateRole, handleDeleteRole, handleAssignRole,
+    handleCreateRole, handleUpdateRole, handleDeleteRole, handleAssignRole, inlineCreateRole,
     // 部门
     deptModalOpen, setDeptModalOpen, editingDept, deptForm, setDeptForm, deptSaving, deptMenuId, setDeptMenuId,
     openAddDept, openEditDept, handleSaveDept, handleDeleteDept,

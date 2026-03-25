@@ -18,14 +18,13 @@ interface Props {
   openEditMember: (m: any) => void
   handleDeleteMember: (id: number) => void
   handleRoleChange: (memberId: number, role: string) => void
-  handleAssignRole?: (memberId: number, roleId: number | null) => void
 }
 
 const detailRow: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid #f1f5f9' }
 const detailLabel: React.CSSProperties = { fontSize: 13, color: '#94a3b8', minWidth: 72, flexShrink: 0 }
 const detailValue: React.CSSProperties = { fontSize: 14, color: '#0f172a', fontWeight: 500, wordBreak: 'break-all' }
 
-export default function MemberList({ members, departments, roles = [], isOwner, canAdmin, getDeptName, getRoleName, getRoleColor, openAddMember, openEditMember, handleDeleteMember, handleRoleChange, handleAssignRole }: Props) {
+export default function MemberList({ members, departments, roles = [], isOwner, canAdmin, getDeptName, getRoleName, getRoleColor, openAddMember, openEditMember, handleDeleteMember, handleRoleChange }: Props) {
   const [viewingMember, setViewingMember] = useState<any>(null)
 
   return (
@@ -74,13 +73,6 @@ export default function MemberList({ members, departments, roles = [], isOwner, 
                   {m.position && <div style={{ fontSize: 12, color: '#64748b' }}>{m.position}</div>}
                 </div>
                 <div style={{ display: 'flex', gap: 4, alignItems: 'center' }} onClick={e => e.stopPropagation()}>
-                  {canAdmin && !isCreatorMember && roles.length > 0 && (
-                    <select value={m.enterprise_role_id || ''} onChange={e => handleAssignRole?.(m.id, e.target.value ? Number(e.target.value) : null)}
-                      style={{ padding: '3px 6px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 11, color: '#64748b', outline: 'none', cursor: 'pointer', background: '#fff', maxWidth: 90 }}>
-                      <option value="">无角色</option>
-                      {roles.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
-                    </select>
-                  )}
                   {canAdmin && !isCreatorMember && (
                     <>
                       <button onClick={() => openEditMember(m)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, display: 'flex' }}><Edit3 size={13} /></button>

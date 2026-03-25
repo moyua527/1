@@ -93,6 +93,31 @@ exports.remove = async (req, res) => {
   }
 };
 
+exports.listProjects = async (req, res) => {
+  try {
+    const ent = await findActiveEnterprise(req.userId);
+    if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
+    const [projects] = await db.query(
+      `SELECT p.*, u.nickname as creator_name, c.name as client_name
+       FROM duijie_projects p
+       LEFT JOIN voice_users u ON u.id = p.created_by
+       LEFT JOIN duijie_clients c ON c.id = p.client_id
+       WHERE p.is_deleted = 0 AND (
+         p.client_id = ?
+         OR p.created_by IN (
+           SELECT user_id FROM duijie_client_members WHERE client_id = ? AND is_deleted = 0 AND user_id IS NOT NULL
+         )
+         OR p.created_by = ?
+       )
+       ORDER BY p.created_at DESC`,
+      [ent.id, ent.id, ent.user_id]
+    );
+    res.json({ success: true, data: projects });
+  } catch (e) {
+    res.status(500).json({ success: false, message: '服务器内部错误' });
+  }
+};
+
 exports.searchEnterprise = async (req, res) => {
   try {
     const name = (req.query.name || '').trim();

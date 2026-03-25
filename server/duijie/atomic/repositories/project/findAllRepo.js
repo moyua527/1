@@ -17,9 +17,17 @@ module.exports = async ({ status, client_id, page = 1, limit = 20 }, auth = {}) 
     params.push(auth.userId, auth.userId, auth.userId, auth.userId);
     countParams.push(auth.userId, auth.userId, auth.userId, auth.userId);
   } else if (auth.userId) {
-    sql += ` AND ${isMember}`; countSql += ` AND ${isMember}`;
-    params.push(auth.userId, auth.userId);
-    countParams.push(auth.userId, auth.userId);
+    // 企业端用户 JWT 带 clientId：可见本企业（客户）下全部项目，否则仅参与的项目
+    if (auth.clientId) {
+      const filter = ` AND (p.client_id = ? OR ${isMember})`;
+      sql += filter; countSql += filter;
+      params.push(auth.clientId, auth.userId, auth.userId);
+      countParams.push(auth.clientId, auth.userId, auth.userId);
+    } else {
+      sql += ` AND ${isMember}`; countSql += ` AND ${isMember}`;
+      params.push(auth.userId, auth.userId);
+      countParams.push(auth.userId, auth.userId);
+    }
   }
 
   if (status) { sql += ' AND p.status = ?'; countSql += ' AND p.status = ?'; params.push(status); countParams.push(status); }

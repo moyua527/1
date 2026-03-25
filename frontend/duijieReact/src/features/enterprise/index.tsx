@@ -1,4 +1,4 @@
-import { Users, Building, FolderTree, LogIn, ArrowLeftRight, Crown, Shield, Plus } from 'lucide-react'
+import { Users, Building, FolderTree, LogIn, ArrowLeftRight, Crown, Shield, Plus, KeyRound, FolderKanban } from 'lucide-react'
 import { useEnterprise } from './useEnterprise'
 import { section } from './constants'
 import EmptyState from './EmptyState'
@@ -7,6 +7,8 @@ import MemberList from './MemberList'
 import DepartmentList from './DepartmentList'
 import OrgTree from './OrgTree'
 import JoinRequests from './JoinRequests'
+import RoleList from './RoleList'
+import EnterpriseProjects from './EnterpriseProjects'
 import AdminAllEnterprises from './AdminAllEnterprises'
 import EnterpriseModals from './EnterpriseModals'
 import JoinCreateModals from './JoinCreateModals'
@@ -36,6 +38,8 @@ export default function Enterprise() {
     { key: 'members' as const, label: '组织成员', icon: <Users size={15} />, count: h.members.length },
     { key: 'departments' as const, label: '部门管理', icon: <Building size={15} />, count: h.departments.length },
     { key: 'tree' as const, label: '组织架构', icon: <FolderTree size={15} /> },
+    { key: 'projects' as const, label: '企业项目', icon: <FolderKanban size={15} /> },
+    ...((h.isOwner || h.canManageRoles) ? [{ key: 'roles' as const, label: '角色管理', icon: <KeyRound size={15} />, count: h.roles.length }] : []),
     ...(h.canAdmin && h.joinRequests.length > 0 ? [{ key: 'requests' as const, label: '加入申请', icon: <LogIn size={15} />, count: h.joinRequests.length }] : []),
   ]
 
@@ -102,10 +106,20 @@ export default function Enterprise() {
 
       {h.tab === 'members' && (
         <MemberList
-          members={h.members} departments={h.departments}
+          members={h.members} departments={h.departments} roles={h.roles}
           isOwner={h.isOwner} canAdmin={h.canAdmin} getDeptName={h.getDeptName}
+          getRoleName={h.getRoleName} getRoleColor={h.getRoleColor}
           openAddMember={h.openAddMember} openEditMember={h.openEditMember}
           handleDeleteMember={h.handleDeleteMember} handleRoleChange={h.handleRoleChange}
+        />
+      )}
+
+      {h.tab === 'projects' && <EnterpriseProjects />}
+
+      {h.tab === 'roles' && (
+        <RoleList
+          roles={h.roles} isOwner={h.isOwner} canManageRoles={h.canManageRoles}
+          onCreateRole={h.handleCreateRole} onUpdateRole={h.handleUpdateRole} onDeleteRole={h.handleDeleteRole}
         />
       )}
 
@@ -147,7 +161,7 @@ export default function Enterprise() {
         memberSaving={h.memberSaving} handleSaveMember={h.handleSaveMember}
         lookupPhone={h.lookupPhone} setLookupPhone={h.setLookupPhone}
         lookupLoading={h.lookupLoading} handleLookup={h.handleLookup}
-        departments={h.departments}
+        departments={h.departments} roles={h.roles} onCreateRole={h.inlineCreateRole}
         deptModalOpen={h.deptModalOpen} setDeptModalOpen={h.setDeptModalOpen}
         editingDept={h.editingDept} deptForm={h.deptForm} setDeptForm={h.setDeptForm}
         deptSaving={h.deptSaving} handleSaveDept={h.handleSaveDept}

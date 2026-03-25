@@ -37,7 +37,7 @@ export default function App() {
 
   useEffect(() => { init() }, [init])
 
-  if (checking) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#94a3b8' }}>加载中...</div>
+  if (checking) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: 0, color: '#94a3b8' }}>加载中...</div>
   if (!user) return <LoginPage onLogin={setUser} />
   if (!hasEnterprise) return <><ToastContainer /><EnterpriseOnboarding /></>
 

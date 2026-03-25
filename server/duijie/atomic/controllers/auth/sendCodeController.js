@@ -35,11 +35,10 @@ module.exports = async (req, res) => {
       [type, target, code]
     );
 
-    // TODO: integrate actual SMS/email sending service
-    logger.info(`验证码 ${type}: ${target} -> ${code}`);
+    // TODO: integrate actual SMS/email sending service (e.g. aliyun SMS / SMTP)
+    logger.info(`验证码已生成 ${type}: ${target}`);
 
-    // 临时测试模式：将验证码返回前端（上线前需删除 _dev_code 字段）
-    res.json({ success: true, message: '验证码已发送', _dev_code: code });
+    res.json({ success: true, message: '验证码已发送' });
   } catch (e) {
     logger.error(`sendCode: ${e.message}`);
     res.status(500).json({ success: false, message: '服务器内部错误' });

@@ -1,6 +1,6 @@
 # DuiJie（对接）— 客户项目对接平台
 
-> 版本：v1.1.17 | 最后更新：2026-03-24
+> 版本：v1.1.18 | 最后更新：2026-03-26
 >
 > 线上地址：http://160.202.253.143:8080
 
@@ -263,6 +263,18 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 - **离线降级**：网络不可用时从缓存加载页面，确保基本可用性
 - **自动更新**：新版本部署后自动清理旧缓存，`skipWaiting` + `clients.claim` 确保即时生效
 
+### 3.17 合作方管理（Partner，仅 admin）
+
+- **合作方列表**：卡片式展示，显示名称、地址、状态（在线/离线）、API Key（脱敏+显示/隐藏切换）、备注
+- **添加/编辑合作方**：名称、程序地址（URL）、API Key、权限选择（clients:read/write, projects:read/write, webhook）、备注
+- **API Key 管理**：创建时自动生成、复制、重置（二次确认）、脱敏显示
+- **打开程序**：配置地址后可直接在 DuiJie 内通过 iframe 打开合作方程序，支持全屏/刷新/新窗口打开
+- **嵌入容错**：对方禁止 iframe 嵌入时自动显示友好提示 + 新窗口打开按钮
+- **启用/禁用**：一键切换合作方状态
+- **开放 API**：合作方通过 `X-API-Key` Header 调用 DuiJie 开放接口（客户查询/创建、项目查询、Webhook 接收）
+- **代理请求**：DuiJie 后端可代理请求到合作方 API（`/api/partners/:id/fetch`），解决跨域问题
+- **连接测试**：测试 DuiJie 到合作方接口的连通性
+
 ### 3.18 企业管理（Enterprise）
 
 - **创建企业**：用户自行创建企业，创建者自动成为最高管理员（creator角色）
@@ -433,7 +445,7 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | 方法 | 路径 | 说明 | 权限 |
 |------|------|------|------|
 | POST | `/api/projects` | 创建项目 | 认证 |
-| GET | `/api/projects` | 项目列表 | 认证 |
+| GET | `/api/projects` | 项目列表（admin 全量；business 按负责客户或参与项目；其余角色：JWT 含 `clientId` 时可见该客户下全部项目，否则仅参与/创建的项目） | 认证 |
 | GET | `/api/projects/:id` | 项目详情（含成员） | 认证 |
 | PUT | `/api/projects/:id` | 更新项目 | 认证 |
 | DELETE | `/api/projects/:id` | 删除项目 | 认证 |
@@ -582,6 +594,29 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 |------|------|------|------|
 | GET | `/api/notifications` | 通知列表 | 认证 |
 | PATCH | `/api/notifications/:id/read` | 标记已读（id=all全部已读） | 认证 |
+
+### 4.21 合作方管理（Partner）
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/api/partners` | 合作方列表 | admin |
+| POST | `/api/partners` | 创建合作方 | admin |
+| PUT | `/api/partners/:id` | 更新合作方 | admin |
+| DELETE | `/api/partners/:id` | 删除合作方 | admin |
+| POST | `/api/partners/:id/reset-key` | 重置 API Key | admin |
+| POST | `/api/partners/:id/test` | 测试连通性 | admin |
+| POST | `/api/partners/:id/fetch` | 代理请求到合作方 | admin |
+
+### 4.22 合作方开放接口（Open API）
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/api/open/clients` | 查询客户列表 | X-API-Key + clients:read |
+| GET | `/api/open/clients/:id` | 查询单个客户 | X-API-Key + clients:read |
+| POST | `/api/open/clients` | 创建客户 | X-API-Key + clients:write |
+| GET | `/api/open/projects` | 查询项目列表 | X-API-Key + projects:read |
+| GET | `/api/open/projects/:id` | 查询单个项目 | X-API-Key + projects:read |
+| POST | `/api/open/webhook` | 接收 Webhook 事件 | X-API-Key + webhook |
 
 ---
 

@@ -5,7 +5,7 @@ exports.addMember = async (req, res) => {
   try {
     const ent = await findActiveEnterprise(req.userId);
     if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
-    const { name, position, department, phone, email, notes, employee_id, join_date, supervisor, department_id } = req.body;
+    const { name, position, department, phone, email, notes, employee_id, join_date, supervisor, department_id, enterprise_role_id } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ success: false, message: '请输入成员姓名' });
     let userId = null;
     if (phone) {
@@ -17,8 +17,8 @@ exports.addMember = async (req, res) => {
       if (match[0]) userId = match[0].id;
     }
     const [result] = await db.query(
-      'INSERT INTO duijie_client_members (client_id, user_id, name, position, department, phone, email, notes, employee_id, join_date, supervisor, department_id, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [ent.id, userId, name.trim(), position || null, department || null, phone || null, email || null, notes || null, employee_id || null, join_date || null, supervisor || null, department_id || null, req.userId]
+      'INSERT INTO duijie_client_members (client_id, user_id, name, position, department, phone, email, notes, employee_id, join_date, supervisor, department_id, enterprise_role_id, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [ent.id, userId, name.trim(), position || null, department || null, phone || null, email || null, notes || null, employee_id || null, join_date || null, supervisor || null, department_id || null, enterprise_role_id || null, req.userId]
     );
     res.json({ success: true, data: { id: result.insertId } });
   } catch (e) {
@@ -30,11 +30,11 @@ exports.updateMember = async (req, res) => {
   try {
     const ent = await findActiveEnterprise(req.userId);
     if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
-    const { name, position, department, phone, email, notes, employee_id, join_date, supervisor, department_id } = req.body;
+    const { name, position, department, phone, email, notes, employee_id, join_date, supervisor, department_id, enterprise_role_id } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ success: false, message: '请输入成员姓名' });
     await db.query(
-      'UPDATE duijie_client_members SET name=?, position=?, department=?, phone=?, email=?, notes=?, employee_id=?, join_date=?, supervisor=?, department_id=? WHERE id=? AND client_id=? AND is_deleted=0',
-      [name.trim(), position || null, department || null, phone || null, email || null, notes || null, employee_id || null, join_date || null, supervisor || null, department_id || null, req.params.id, ent.id]
+      'UPDATE duijie_client_members SET name=?, position=?, department=?, phone=?, email=?, notes=?, employee_id=?, join_date=?, supervisor=?, department_id=?, enterprise_role_id=? WHERE id=? AND client_id=? AND is_deleted=0',
+      [name.trim(), position || null, department || null, phone || null, email || null, notes || null, employee_id || null, join_date || null, supervisor || null, department_id || null, enterprise_role_id || null, req.params.id, ent.id]
     );
     res.json({ success: true });
   } catch (e) {

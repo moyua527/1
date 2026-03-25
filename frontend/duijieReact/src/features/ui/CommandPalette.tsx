@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, LayoutDashboard, FolderKanban, Users, ListTodo, TrendingUp, MessageSquare, BarChart3, FileText, Shield, ScrollText, Settings, Building2, Plus, ArrowRight, Ticket } from 'lucide-react'
+import { Search, LayoutDashboard, FolderKanban, Users, ListTodo, TrendingUp, MessageSquare, BarChart3, FileText, Shield, ScrollText, Settings, Building2, Plus, ArrowRight, Ticket, Plug2 } from 'lucide-react'
 import useUserStore from '../../stores/useUserStore'
+import { can } from '../../stores/permissions'
 
 interface CmdItem {
   id: string
@@ -13,25 +14,26 @@ interface CmdItem {
 }
 
 const NAV_DEFS = [
-  { path: '/', label: '仪表盘', icon: LayoutDashboard, roles: ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'member', 'viewer'], keywords: 'dashboard home 首页' },
-  { path: '/projects', label: '项目管理', icon: FolderKanban, roles: ['admin', 'sales_manager', 'tech', 'business', 'member', 'viewer'], keywords: 'project 项目列表' },
-  { path: '/clients', label: '客户管理', icon: Users, roles: ['admin', 'sales_manager', 'business', 'marketing'], keywords: 'client customer 客户列表' },
-  { path: '/opportunities', label: '商机管理', icon: TrendingUp, roles: ['admin', 'sales_manager', 'business'], keywords: 'opportunity sales 销售管道 商机' },
-  { path: '/tasks', label: '任务看板', icon: ListTodo, roles: ['admin', 'sales_manager', 'tech', 'business', 'member', 'viewer'], keywords: 'task kanban 任务 看板' },
-  { path: '/enterprise', label: '企业管理', icon: Building2, roles: ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'member', 'viewer'], keywords: 'enterprise company 企业 组织' },
-  { path: '/messaging', label: '站内消息', icon: MessageSquare, roles: ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'member', 'viewer'], keywords: 'message chat dm 消息 聊天' },
-  { path: '/tickets', label: '工单系统', icon: Ticket, roles: ['admin', 'sales_manager', 'tech', 'business', 'member'], keywords: 'ticket issue 工单 问题 需求 咨询' },
-  { path: '/report', label: '数据报表', icon: BarChart3, roles: ['admin', 'sales_manager', 'business'], keywords: 'report chart 报表 图表 统计' },
-  { path: '/files', label: '文件管理', icon: FileText, roles: ['admin', 'sales_manager', 'tech', 'business', 'member', 'viewer'], keywords: 'file upload 文件 上传 下载' },
-  { path: '/users', label: '用户管理', icon: Shield, roles: ['admin'], keywords: 'user account 用户 账号' },
-  { path: '/audit', label: '审计日志', icon: ScrollText, roles: ['admin'], keywords: 'audit log 审计 日志 操作记录' },
-  { path: '/settings', label: '系统配置', icon: Settings, roles: ['admin'], keywords: 'settings config 设置 配置' },
+  { path: '/', label: '仪表盘', icon: LayoutDashboard, perm: 'dashboard:view', keywords: 'dashboard home 首页' },
+  { path: '/projects', label: '项目管理', icon: FolderKanban, perm: 'project:view', keywords: 'project 项目列表' },
+  { path: '/clients', label: '客户管理', icon: Users, perm: 'client:manage', keywords: 'client customer 客户列表' },
+  { path: '/opportunities', label: '商机管理', icon: TrendingUp, perm: 'opportunity:view', keywords: 'opportunity sales 销售管道 商机' },
+  { path: '/tasks', label: '任务看板', icon: ListTodo, perm: 'task:view', keywords: 'task kanban 任务 看板' },
+  { path: '/enterprise', label: '企业管理', icon: Building2, perm: 'enterprise:view', keywords: 'enterprise company 企业 组织' },
+  { path: '/messaging', label: '站内消息', icon: MessageSquare, perm: 'messaging:view', keywords: 'message chat dm 消息 聊天' },
+  { path: '/tickets', label: '工单系统', icon: Ticket, perm: 'ticket:view', keywords: 'ticket issue 工单 问题 需求 咨询' },
+  { path: '/report', label: '数据报表', icon: BarChart3, perm: 'report:view', keywords: 'report chart 报表 图表 统计' },
+  { path: '/files', label: '文件管理', icon: FileText, perm: 'file:view', keywords: 'file upload 文件 上传 下载' },
+  { path: '/users', label: '用户管理', icon: Shield, perm: 'user:manage', keywords: 'user account 用户 账号' },
+  { path: '/audit', label: '审计日志', icon: ScrollText, perm: 'audit:view', keywords: 'audit log 审计 日志 操作记录' },
+  { path: '/partners', label: '合作方管理', icon: Plug2, perm: 'partner:manage', keywords: 'partner 合作方' },
+  { path: '/settings', label: '系统配置', icon: Settings, perm: 'settings:manage', keywords: 'settings config 设置 配置' },
 ]
 
 const ACTION_DEFS = [
-  { id: 'new-project', label: '新建项目', icon: Plus, path: '/projects', roles: ['admin', 'sales_manager'], keywords: 'create new project 新建 创建 项目' },
-  { id: 'new-client', label: '新建客户', icon: Plus, path: '/clients', roles: ['admin', 'sales_manager', 'business', 'marketing'], keywords: 'create new client 新建 创建 客户' },
-  { id: 'new-opportunity', label: '新建商机', icon: Plus, path: '/opportunities', roles: ['admin', 'sales_manager', 'business'], keywords: 'create new opportunity 新建 创建 商机' },
+  { id: 'new-project', label: '新建项目', icon: Plus, path: '/projects', perm: 'project:create', keywords: 'create new project 新建 创建 项目' },
+  { id: 'new-client', label: '新建客户', icon: Plus, path: '/clients', perm: 'client:create', keywords: 'create new client 新建 创建 客户' },
+  { id: 'new-opportunity', label: '新建商机', icon: Plus, path: '/opportunities', perm: 'opportunity:create', keywords: 'create new opportunity 新建 创建 商机' },
 ]
 
 export default function CommandPalette() {
@@ -46,7 +48,7 @@ export default function CommandPalette() {
   const items: CmdItem[] = (() => {
     const result: CmdItem[] = []
     for (const d of NAV_DEFS) {
-      if (!d.roles.includes(role)) continue
+      if (!can(role, d.perm)) continue
       result.push({
         id: `nav-${d.path}`,
         label: d.label,
@@ -57,7 +59,7 @@ export default function CommandPalette() {
       })
     }
     for (const d of ACTION_DEFS) {
-      if (!d.roles.includes(role)) continue
+      if (!can(role, d.perm)) continue
       result.push({
         id: d.id,
         label: d.label,

@@ -82,7 +82,7 @@ const useUserStore = create<UserState>((set, get) => ({
   init: async () => {
     if (!getToken()) {
       writeCache(null)
-      set({ user: null, checking: false, hasEnterprise: true })
+      set({ user: null, checking: false, hasEnterprise: true, enterprisePerms: {} })
       return
     }
     try {
@@ -90,6 +90,11 @@ const useUserStore = create<UserState>((set, get) => ({
       if (r.success) {
         writeCache(r.data)
         set({ user: r.data, hasEnterprise: true, checking: false })
+        fetchApi('/api/my-enterprise').then(er => {
+          if (er.success && er.data?.enterprisePerms) {
+            set({ enterprisePerms: er.data.enterprisePerms })
+          }
+        }).catch(() => {})
       } else {
         writeCache(null)
         set({ user: null, checking: false, hasEnterprise: true })
