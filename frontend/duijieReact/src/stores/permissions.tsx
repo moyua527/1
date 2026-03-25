@@ -8,8 +8,8 @@ const PERMISSIONS: Record<string, string[]> = {
 
   'project:view':         ['admin', 'sales_manager', 'tech', 'business', 'member', 'viewer'],
   'project:create':       ['admin', 'sales_manager'],
-  'project:edit':         ['admin', 'tech', 'business'],
-  'project:delete':       ['admin'],
+  'project:edit':         ['admin', 'sales_manager', 'tech', 'business'],
+  'project:delete':       ['admin', 'sales_manager'],
 
   'client:view':          ['admin', 'sales_manager', 'business', 'marketing', 'member', 'viewer', 'tech'],
   'client:manage':        ['admin', 'sales_manager', 'business', 'marketing'],
