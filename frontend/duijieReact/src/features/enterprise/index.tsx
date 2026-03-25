@@ -48,22 +48,25 @@ export default function Enterprise() {
         <ArrowLeftRight size={15} color="#64748b" />
         <span style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>我的企业：</span>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {h.enterprises.map((ent: any) => (
-            <button key={ent.id} onClick={() => ent.id !== h.activeId && h.switchEnterprise(ent.id)}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 14px', borderRadius: 7, fontSize: 13,
-                border: ent.id === h.activeId ? '1.5px solid #2563eb' : '1px solid #e2e8f0',
-                background: ent.id === h.activeId ? '#eff6ff' : '#fff',
-                color: ent.id === h.activeId ? '#2563eb' : '#334155',
-                fontWeight: ent.id === h.activeId ? 600 : 400,
-                cursor: ent.id === h.activeId ? 'default' : 'pointer', transition: 'all 0.15s' }}>
-              {ent.name}
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 10, marginLeft: 2, color: ent.id === h.activeId ? '#60a5fa' : '#94a3b8' }}>
-                {ent.member_role === 'creator' && <Crown size={9} />}
-                {ent.member_role === 'admin' && <Shield size={9} />}
-                {ent.member_role === 'creator' ? '创建者' : ent.member_role === 'admin' ? '管理员' : '成员'}
-              </span>
-            </button>
-          ))}
+          {h.enterprises.map((ent: any) => {
+            const isActive = ent.id === h.activeId
+            return (
+              <button key={ent.id} onClick={() => { if (!isActive) h.switchEnterprise(ent.id) }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 14px', borderRadius: 7, fontSize: 13,
+                  border: isActive ? '1.5px solid #2563eb' : '1px solid #e2e8f0',
+                  background: isActive ? '#eff6ff' : '#fff',
+                  color: isActive ? '#2563eb' : '#334155',
+                  fontWeight: isActive ? 600 : 400,
+                  cursor: isActive ? 'default' : 'pointer', transition: 'all 0.15s' }}>
+                {ent.name}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 10, marginLeft: 2, color: isActive ? '#60a5fa' : '#94a3b8' }}>
+                  {ent.member_role === 'creator' && <Crown size={9} />}
+                  {ent.member_role === 'admin' && <Shield size={9} />}
+                  {ent.member_role === 'creator' ? '创建者' : ent.member_role === 'admin' ? '管理员' : '成员'}
+                </span>
+              </button>
+            )
+          })}
           <button onClick={() => { h.setJoinModalOpen(true); h.setJoinSearch(''); h.setJoinResults([]); h.loadMyRequests() }}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 14px', borderRadius: 7, fontSize: 13,
               border: '1px dashed #94a3b8', background: '#fff', color: '#64748b', cursor: 'pointer', transition: 'all 0.15s' }}>

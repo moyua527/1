@@ -180,9 +180,19 @@ export function useEnterprise() {
 
   // === 切换企业 ===
   const switchEnterprise = async (entId: number) => {
-    const r = await fetchApi('/api/my-enterprise/switch', { method: 'PUT', body: JSON.stringify({ enterprise_id: entId }) })
-    if (r.success) { toast('已切换企业', 'success'); load() }
-    else toast(r.message || '切换失败', 'error')
+    try {
+      const r = await fetchApi('/api/my-enterprise/switch', { method: 'PUT', body: JSON.stringify({ enterprise_id: entId }) })
+      if (r.success) {
+        toast('已切换企业', 'success')
+        setActiveId(entId)
+        await new Promise(resolve => setTimeout(resolve, 200))
+        load()
+      } else {
+        toast(r.message || '切换失败', 'error')
+      }
+    } catch (e) {
+      toast('切换企业请求失败，请重试', 'error')
+    }
   }
 
   // === 加入企业 ===

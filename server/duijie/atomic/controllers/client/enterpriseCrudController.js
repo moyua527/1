@@ -120,9 +120,9 @@ exports.switchEnterprise = async (req, res) => {
     const { enterprise_id } = req.body;
     if (!enterprise_id) return res.status(400).json({ success: false, message: '请选择企业' });
     const enterprises = await findMyEnterprises(req.userId);
-    const target = enterprises.find(e => e.id === enterprise_id);
+    const target = enterprises.find(e => e.id === Number(enterprise_id));
     if (!target) return res.status(403).json({ success: false, message: '您不属于该企业' });
-    await db.query('UPDATE voice_users SET active_enterprise_id = ? WHERE id = ?', [enterprise_id, req.userId]);
+    await db.query('UPDATE voice_users SET active_enterprise_id = ? WHERE id = ?', [Number(enterprise_id), req.userId]);
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });
