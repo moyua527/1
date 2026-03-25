@@ -59,6 +59,8 @@ export default function ProjectDetail() {
   const [memberSearch, setMemberSearch] = useState('')
   const [clientMemberSearch, setClientMemberSearch] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [showAppEdit, setShowAppEdit] = useState(false)
+  const [appForm, setAppForm] = useState({ app_name: '', app_url: '' })
   const [clientModal, setClientModal] = useState(false)
   const [clientData, setClientData] = useState<any>(null)
 
@@ -136,6 +138,49 @@ export default function ProjectDetail() {
             <div><div style={{ fontSize: 13, color: '#64748b' }}>任务数</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{tasks.length}</div></div>
           </div>
         </div>
+        <div style={section}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <AppWindow size={16} color="#2563eb" />
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#0f172a' }}>关联应用</h3>
+            </div>
+            {canEdit && <button onClick={() => { setAppForm({ app_name: project.app_name || '', app_url: project.app_url || '' }); setShowAppEdit(true) }}
+              style={{ fontSize: 12, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>{project.app_url ? '编辑' : '添加'}</button>}
+          </div>
+          {project.app_url ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+              <AppWindow size={20} color="#2563eb" />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{project.app_name || '应用'}</div>
+                <div style={{ fontSize: 12, color: '#94a3b8' }}>{project.app_url}</div>
+              </div>
+              <a href={project.app_url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#2563eb', textDecoration: 'none', padding: '6px 14px', background: '#eff6ff', borderRadius: 6 }}>
+                <ExternalLink size={14} /> 打开
+              </a>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: 20, color: '#94a3b8', fontSize: 13 }}>暂无关联应用{canEdit ? '，点击"添加"按钮关联' : ''}</div>
+          )}
+        </div>
+        <Modal open={showAppEdit} onClose={() => setShowAppEdit(false)} title={project.app_url ? '编辑关联应用' : '添加关联应用'}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <Input label="应用名称" placeholder="如：客户门户、货联系统" value={appForm.app_name} onChange={e => setAppForm({ ...appForm, app_name: e.target.value })} />
+            <Input label="应用链接" placeholder="https://example.com" value={appForm.app_url} onChange={e => setAppForm({ ...appForm, app_url: e.target.value })} />
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              {project.app_url && <Button variant="secondary" onClick={async () => {
+                const r = await projectApi.update(id!, { app_name: '', app_url: '' })
+                if (r.success) { toast('已移除应用', 'success'); setShowAppEdit(false); loadProject() }
+                else toast(r.message || '操作失败', 'error')
+              }}>移除应用</Button>}
+              <Button onClick={async () => {
+                if (!appForm.app_url.trim()) { toast('请输入应用链接', 'error'); return }
+                const r = await projectApi.update(id!, appForm)
+                if (r.success) { toast('应用已保存', 'success'); setShowAppEdit(false); loadProject() }
+                else toast(r.message || '保存失败', 'error')
+              }}>保存</Button>
+            </div>
+          </div>
+        </Modal>
         <div style={section}>
           <h3 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 600, color: '#0f172a' }}>项目成员</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>

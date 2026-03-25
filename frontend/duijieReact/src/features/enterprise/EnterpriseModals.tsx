@@ -2,7 +2,7 @@ import { Search } from 'lucide-react'
 import Modal from '../ui/Modal'
 import Input from '../ui/Input'
 import Button from '../ui/Button'
-import { labelStyle, selectStyle, textareaStyle, industryOptions, scaleOptions, companyTypeOptions } from './constants'
+import { labelStyle, selectStyle, textareaStyle, industryOptions, scaleOptions, companyTypeOptions, positionOptions } from './constants'
 
 interface Props {
   // 编辑企业
@@ -127,7 +127,13 @@ export default function EnterpriseModals(props: Props) {
             <Input label="工号" placeholder="如：E001" value={memberForm.employee_id} onChange={e => setMemberForm({ ...memberForm, employee_id: e.target.value })} />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            <Input label="职位" placeholder="如：技术总监" value={memberForm.position} onChange={e => setMemberForm({ ...memberForm, position: e.target.value })} />
+            <div>
+              <label style={labelStyle}>职位</label>
+              <select value={memberForm.position} onChange={e => setMemberForm({ ...memberForm, position: e.target.value })} style={selectStyle}>
+                <option value="">请选择职位</option>
+                {positionOptions.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
             <div>
               <label style={labelStyle}>所属部门</label>
               <select value={memberForm.department_id} onChange={e => setMemberForm({ ...memberForm, department_id: e.target.value })} style={selectStyle}>
