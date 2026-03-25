@@ -8,6 +8,25 @@ import useUserStore from './stores/useUserStore'
 import { can } from './stores/permissions'
 import EnterpriseOnboarding from './features/enterprise/EnterpriseOnboarding'
 
+const importFns = {
+  dashboard:    () => import('./features/dashboard/index'),
+  projectList:  () => import('./features/project/index'),
+  projectDetail:() => import('./features/project/components/ProjectDetail'),
+  clientList:   () => import('./features/client/index'),
+  clientDetail: () => import('./features/client/components/ClientDetail'),
+  taskBoard:    () => import('./features/task/index'),
+  report:       () => import('./features/dashboard/Report'),
+  userMgmt:     () => import('./features/user/index'),
+  opportunity:  () => import('./features/opportunity/index'),
+  messaging:    () => import('./features/messaging/index'),
+  auditLog:     () => import('./features/audit/index'),
+  fileManager:  () => import('./features/file/index'),
+  settings:     () => import('./features/settings/index'),
+  enterprise:   () => import('./features/enterprise/index'),
+  ticket:       () => import('./features/ticket/index'),
+  partner:      () => import('./features/partner/index'),
+}
+
 function lazyLoad(importFn: () => Promise<{ default: ComponentType<any> }>) {
   return lazy(() => importFn().catch(() => {
     window.location.reload()
@@ -15,27 +34,38 @@ function lazyLoad(importFn: () => Promise<{ default: ComponentType<any> }>) {
   }))
 }
 
-const Dashboard = lazyLoad(() => import('./features/dashboard/index'))
-const ProjectList = lazyLoad(() => import('./features/project/index'))
-const ProjectDetail = lazyLoad(() => import('./features/project/components/ProjectDetail'))
-const ClientList = lazyLoad(() => import('./features/client/index'))
-const ClientDetail = lazyLoad(() => import('./features/client/components/ClientDetail'))
-const TaskBoard = lazyLoad(() => import('./features/task/index'))
-const Report = lazyLoad(() => import('./features/dashboard/Report'))
-const UserManagement = lazyLoad(() => import('./features/user/index'))
-const OpportunityList = lazyLoad(() => import('./features/opportunity/index'))
-const Messaging = lazyLoad(() => import('./features/messaging/index'))
-const AuditLog = lazyLoad(() => import('./features/audit/index'))
-const FileManager = lazyLoad(() => import('./features/file/index'))
-const SystemSettings = lazyLoad(() => import('./features/settings/index'))
-const Enterprise = lazyLoad(() => import('./features/enterprise/index'))
-const TicketPage = lazyLoad(() => import('./features/ticket/index'))
-const PartnerManagement = lazyLoad(() => import('./features/partner/index'))
+const Dashboard = lazyLoad(importFns.dashboard)
+const ProjectList = lazyLoad(importFns.projectList)
+const ProjectDetail = lazyLoad(importFns.projectDetail)
+const ClientList = lazyLoad(importFns.clientList)
+const ClientDetail = lazyLoad(importFns.clientDetail)
+const TaskBoard = lazyLoad(importFns.taskBoard)
+const Report = lazyLoad(importFns.report)
+const UserManagement = lazyLoad(importFns.userMgmt)
+const OpportunityList = lazyLoad(importFns.opportunity)
+const Messaging = lazyLoad(importFns.messaging)
+const AuditLog = lazyLoad(importFns.auditLog)
+const FileManager = lazyLoad(importFns.fileManager)
+const SystemSettings = lazyLoad(importFns.settings)
+const Enterprise = lazyLoad(importFns.enterprise)
+const TicketPage = lazyLoad(importFns.ticket)
+const PartnerManagement = lazyLoad(importFns.partner)
+
+function prefetchAll() {
+  Object.values(importFns).forEach(fn => fn().catch(() => {}))
+}
 
 export default function App() {
   const { user, checking, hasEnterprise, setUser, init } = useUserStore()
 
   useEffect(() => { init() }, [init])
+
+  useEffect(() => {
+    if (user) {
+      const id = (window.requestIdleCallback || ((cb: any) => setTimeout(cb, 200)))(prefetchAll)
+      return () => (window.cancelIdleCallback || clearTimeout)(id)
+    }
+  }, [user])
 
   if (checking) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: 0, color: '#94a3b8' }}>加载中...</div>
   if (!user) return <LoginPage onLogin={setUser} />
