@@ -1,4 +1,4 @@
-import { Users, Building, FolderTree, LogIn } from 'lucide-react'
+import { Users, Building, FolderTree, LogIn, ArrowLeftRight, Crown, Shield } from 'lucide-react'
 import { useEnterprise } from './useEnterprise'
 import { section } from './constants'
 import EmptyState from './EmptyState'
@@ -42,6 +42,31 @@ export default function Enterprise() {
     <div>
       <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>企业管理</h1>
       <p style={{ fontSize: 14, color: '#94a3b8', marginBottom: 20, marginTop: 0 }}>管理企业信息、部门与组织成员</p>
+
+      {h.enterprises.length > 1 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: '#f8fafc', borderRadius: 10, marginBottom: 16, border: '1px solid #e2e8f0', flexWrap: 'wrap' }}>
+          <ArrowLeftRight size={15} color="#64748b" />
+          <span style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>切换企业：</span>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {h.enterprises.map((ent: any) => (
+              <button key={ent.id} onClick={() => ent.id !== h.activeId && h.switchEnterprise(ent.id)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 14px', borderRadius: 7, fontSize: 13,
+                  border: ent.id === h.activeId ? '1.5px solid #2563eb' : '1px solid #e2e8f0',
+                  background: ent.id === h.activeId ? '#eff6ff' : '#fff',
+                  color: ent.id === h.activeId ? '#2563eb' : '#334155',
+                  fontWeight: ent.id === h.activeId ? 600 : 400,
+                  cursor: ent.id === h.activeId ? 'default' : 'pointer', transition: 'all 0.15s' }}>
+                {ent.name}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 10, marginLeft: 2, color: ent.id === h.activeId ? '#60a5fa' : '#94a3b8' }}>
+                  {ent.member_role === 'creator' && <Crown size={9} />}
+                  {ent.member_role === 'admin' && <Shield size={9} />}
+                  {ent.member_role === 'creator' ? '创建者' : ent.member_role === 'admin' ? '管理员' : '成员'}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <EnterpriseCard
         ent={h.ent} myRole={h.myRole} isOwner={h.isOwner}

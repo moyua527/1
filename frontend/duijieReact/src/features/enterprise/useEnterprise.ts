@@ -8,6 +8,8 @@ import useUserStore from '../../stores/useUserStore'
 export function useEnterprise() {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [enterprises, setEnterprises] = useState<any[]>([])
+  const [activeId, setActiveId] = useState<number | null>(null)
   const [tab, setTab] = useState<'members' | 'departments' | 'tree' | 'requests'>('members')
   const [editEntOpen, setEditEntOpen] = useState(false)
   const [entForm, setEntForm] = useState({ ...emptyEntForm })
@@ -43,7 +45,11 @@ export function useEnterprise() {
 
   const load = () => {
     fetchApi('/api/my-enterprise').then(r => {
-      if (r.success) setData(r.data)
+      if (r.success) {
+        setData(r.data)
+        setEnterprises(r.data?.enterprises || [])
+        setActiveId(r.data?.activeId || null)
+      }
       setLoading(false)
     }).catch(() => setLoading(false))
   }
@@ -172,6 +178,13 @@ export function useEnterprise() {
     setExpandedDepts(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s })
   }
 
+  // === 切换企业 ===
+  const switchEnterprise = async (entId: number) => {
+    const r = await fetchApi('/api/my-enterprise/switch', { method: 'PUT', body: JSON.stringify({ enterprise_id: entId }) })
+    if (r.success) { toast('已切换企业', 'success'); load() }
+    else toast(r.message || '切换失败', 'error')
+  }
+
   // === 加入企业 ===
   const handleJoinSearch = async () => {
     if (!joinSearch.trim()) return
@@ -211,7 +224,7 @@ export function useEnterprise() {
 
   return {
     // 状态
-    data, loading, tab, setTab, isSysAdmin,
+    data, loading, tab, setTab, isSysAdmin, enterprises, activeId, switchEnterprise,
     ent, members, departments, myRole, isOwner, canAdmin, getDeptName,
     // 企业
     editEntOpen, setEditEntOpen, entForm, setEntForm, entSaving, entMenuOpen, setEntMenuOpen,

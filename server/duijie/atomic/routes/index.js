@@ -94,6 +94,7 @@ router.post('/my-enterprise/members', auth, V.addMember, validate, myEntCtrl.add
 router.put('/my-enterprise/members/:id', auth, V.updateMember, validate, myEntCtrl.updateMember);
 router.put('/my-enterprise/members/:id/role', auth, V.updateMemberRole, validate, myEntCtrl.updateMemberRole);
 router.delete('/my-enterprise/members/:id', auth, myEntCtrl.removeMember);
+router.put('/my-enterprise/switch', auth, myEntCtrl.switchEnterprise);
 
 // Client Members (企业成员)
 const clientMembersCtrl = require('../controllers/client/clientMembersController');
