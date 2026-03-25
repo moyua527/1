@@ -1,4 +1,4 @@
-import { useEffect, lazy, Suspense } from 'react'
+import { useEffect, lazy, Suspense, ComponentType } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from './features/auth/index'
 import Layout from './features/ui/Layout'
@@ -7,20 +7,27 @@ import useUserStore from './stores/useUserStore'
 import { can } from './stores/permissions'
 import EnterpriseOnboarding from './features/enterprise/EnterpriseOnboarding'
 
-const Dashboard = lazy(() => import('./features/dashboard/index'))
-const ProjectList = lazy(() => import('./features/project/index'))
-const ProjectDetail = lazy(() => import('./features/project/components/ProjectDetail'))
-const ClientList = lazy(() => import('./features/client/index'))
-const ClientDetail = lazy(() => import('./features/client/components/ClientDetail'))
-const TaskBoard = lazy(() => import('./features/task/index'))
-const Report = lazy(() => import('./features/dashboard/Report'))
-const UserManagement = lazy(() => import('./features/user/index'))
-const OpportunityList = lazy(() => import('./features/opportunity/index'))
-const Messaging = lazy(() => import('./features/messaging/index'))
-const AuditLog = lazy(() => import('./features/audit/index'))
-const FileManager = lazy(() => import('./features/file/index'))
-const SystemSettings = lazy(() => import('./features/settings/index'))
-const Enterprise = lazy(() => import('./features/enterprise/index'))
+function lazyLoad(importFn: () => Promise<{ default: ComponentType<any> }>) {
+  return lazy(() => importFn().catch(() => {
+    window.location.reload()
+    return new Promise<{ default: ComponentType<any> }>(() => {})
+  }))
+}
+
+const Dashboard = lazyLoad(() => import('./features/dashboard/index'))
+const ProjectList = lazyLoad(() => import('./features/project/index'))
+const ProjectDetail = lazyLoad(() => import('./features/project/components/ProjectDetail'))
+const ClientList = lazyLoad(() => import('./features/client/index'))
+const ClientDetail = lazyLoad(() => import('./features/client/components/ClientDetail'))
+const TaskBoard = lazyLoad(() => import('./features/task/index'))
+const Report = lazyLoad(() => import('./features/dashboard/Report'))
+const UserManagement = lazyLoad(() => import('./features/user/index'))
+const OpportunityList = lazyLoad(() => import('./features/opportunity/index'))
+const Messaging = lazyLoad(() => import('./features/messaging/index'))
+const AuditLog = lazyLoad(() => import('./features/audit/index'))
+const FileManager = lazyLoad(() => import('./features/file/index'))
+const SystemSettings = lazyLoad(() => import('./features/settings/index'))
+const Enterprise = lazyLoad(() => import('./features/enterprise/index'))
 
 export default function App() {
   const { user, checking, hasEnterprise, setUser, init } = useUserStore()
