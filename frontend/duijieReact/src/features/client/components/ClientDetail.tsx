@@ -34,6 +34,7 @@ export default function ClientDetail() {
   const [tagModalOpen, setTagModalOpen] = useState(false)
   const [contracts, setContracts] = useState<any[]>([])
   const [orgMembers, setOrgMembers] = useState<any[]>([])
+  const [openSection, setOpenSection] = useState<string | null>(null)
 
   const load = () => {
     if (!id) return
@@ -159,7 +160,6 @@ export default function ClientDetail() {
 
       {/* Module Cards Grid */}
       {(() => {
-        const [openSection, setOpenSection] = useState<string | null>(null)
         const cards = [
           { key: 'contacts', icon: <Contact size={22} color="#2563eb" />, label: '联系人', count: contacts.length, bg: '#eff6ff', border: '#dbeafe' },
           ...(client.client_type === 'company' ? [{ key: 'members', icon: <Users size={22} color="#16a34a" />, label: '企业成员', count: orgMembers.length, bg: '#f0fdf4', border: '#dcfce7' }] : []),
