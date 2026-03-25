@@ -14,16 +14,16 @@ import NotificationBell from './NotificationBell'
 import CommandPalette from './CommandPalette'
 
 const ALL_NAV_ITEMS = [
-  { path: '/', label: '仪表盘', icon: LayoutDashboard, roles: ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer'] },
-  { path: '/projects', label: '项目管理', icon: FolderKanban, roles: ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'viewer'] },
-  { path: '/clients', label: '客户管理', icon: Users, roles: ['admin', 'sales_manager', 'business', 'marketing', 'support'] },
+  { path: '/', label: '仪表盘', icon: LayoutDashboard, roles: ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'member', 'viewer'] },
+  { path: '/projects', label: '项目管理', icon: FolderKanban, roles: ['admin', 'sales_manager', 'tech', 'business', 'member', 'viewer'] },
+  { path: '/clients', label: '客户管理', icon: Users, roles: ['admin', 'sales_manager', 'business', 'marketing'] },
   { path: '/opportunities', label: '商机管理', icon: TrendingUp, roles: ['admin', 'sales_manager', 'business'] },
-  { path: '/tasks', label: '任务看板', icon: ListTodo, roles: ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'viewer'] },
+  { path: '/tasks', label: '任务看板', icon: ListTodo, roles: ['admin', 'sales_manager', 'tech', 'business', 'member', 'viewer'] },
   { path: '/enterprise', label: '企业管理', icon: Building2, roles: ['member', 'viewer'] },
-  { path: '/messaging', label: '站内消息', icon: MessageSquare, roles: ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer'] },
-  { path: '/tickets', label: '工单系统', icon: Ticket, roles: ['admin', 'sales_manager', 'tech', 'business', 'support', 'member'] },
+  { path: '/messaging', label: '站内消息', icon: MessageSquare, roles: ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'member', 'viewer'] },
+  { path: '/tickets', label: '工单系统', icon: Ticket, roles: ['admin', 'sales_manager', 'tech', 'business', 'member'] },
   { path: '/report', label: '数据报表', icon: BarChart3, roles: ['admin', 'sales_manager', 'business'] },
-  { path: '/files', label: '文件管理', icon: FileText, roles: ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'viewer'] },
+  { path: '/files', label: '文件管理', icon: FileText, roles: ['admin', 'sales_manager', 'tech', 'business', 'member', 'viewer'] },
   { path: '/users', label: '用户管理', icon: Shield, roles: ['admin'] },
   { path: '/audit', label: '审计日志', icon: ScrollText, roles: ['admin'] },
   { path: '/settings', label: '系统配置', icon: Settings, roles: ['admin'] },
@@ -31,7 +31,7 @@ const ALL_NAV_ITEMS = [
 
 const roleLabel: Record<string, string> = {
   admin: '管理员', sales_manager: '销售经理', tech: '技术员', business: '业务员',
-  marketing: '市场', support: '客服', member: '成员', viewer: '观察者',
+  marketing: '市场', member: '成员', viewer: '观察者',
 }
 
 const s = {

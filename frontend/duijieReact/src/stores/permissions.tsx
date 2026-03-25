@@ -1,40 +1,40 @@
 import useUserStore from './useUserStore'
 
 const PERMISSIONS: Record<string, string[]> = {
-  'dashboard:view':       ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer'],
+  'dashboard:view':       ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'member', 'viewer'],
   'dashboard:clients':    ['admin', 'business'],
   'dashboard:tasks':      ['admin', 'tech', 'business', 'member'],
   'dashboard:amount':     ['admin', 'tech', 'business', 'member'],
 
-  'project:view':         ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'viewer'],
+  'project:view':         ['admin', 'sales_manager', 'tech', 'business', 'member', 'viewer'],
   'project:create':       ['admin', 'sales_manager'],
   'project:edit':         ['admin', 'tech', 'business'],
   'project:delete':       ['admin'],
 
-  'client:view':          ['admin', 'sales_manager', 'business', 'marketing', 'support', 'member', 'viewer', 'tech'],
-  'client:manage':        ['admin', 'sales_manager', 'business', 'marketing', 'support'],
+  'client:view':          ['admin', 'sales_manager', 'business', 'marketing', 'member', 'viewer', 'tech'],
+  'client:manage':        ['admin', 'sales_manager', 'business', 'marketing'],
   'client:create':        ['admin', 'sales_manager', 'business', 'marketing'],
 
   'opportunity:view':     ['admin', 'sales_manager', 'business'],
   'opportunity:create':   ['admin', 'sales_manager', 'business'],
 
-  'task:view':            ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'viewer'],
+  'task:view':            ['admin', 'sales_manager', 'tech', 'business', 'member', 'viewer'],
   'task:create':          ['admin', 'business'],
 
-  'enterprise:view':      ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer'],
+  'enterprise:view':      ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'member', 'viewer'],
 
-  'messaging:view':       ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer'],
+  'messaging:view':       ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'member', 'viewer'],
 
   'report:view':          ['admin', 'sales_manager', 'business'],
 
-  'file:view':            ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'viewer'],
+  'file:view':            ['admin', 'sales_manager', 'tech', 'business', 'member', 'viewer'],
 
   'user:manage':          ['admin'],
   'audit:view':           ['admin'],
   'settings:manage':      ['admin'],
 
-  'ticket:view':          ['admin', 'sales_manager', 'tech', 'business', 'support', 'member'],
-  'ticket:staff':         ['admin', 'sales_manager', 'tech', 'business', 'support'],
+  'ticket:view':          ['admin', 'sales_manager', 'tech', 'business', 'member'],
+  'ticket:staff':         ['admin', 'sales_manager', 'tech', 'business'],
 
   'staff:assignable':     ['admin', 'business', 'tech'],
 }

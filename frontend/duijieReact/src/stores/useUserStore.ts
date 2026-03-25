@@ -47,7 +47,7 @@ function writeCache(u: User | null) {
   } catch {}
 }
 
-const ENTERPRISE_EXEMPT_ROLES = ['admin', 'sales_manager', 'business', 'marketing', 'tech', 'support']
+const ENTERPRISE_EXEMPT_ROLES = ['admin', 'sales_manager', 'business', 'marketing', 'tech']
 
 const useUserStore = create<UserState>((set, get) => ({
   user: readCache(),

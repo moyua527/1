@@ -3,11 +3,12 @@ import { Plus, Trash2, Edit2, Shield, Loader2, Code2, Briefcase, User, Search, P
 import { fetchApi } from '../../bootstrap'
 import { clientApi } from '../client/services/api'
 import Button from '../ui/Button'
-import Modal from '../ui/Modal'
-import Input from '../ui/Input'
 import Avatar from '../ui/Avatar'
 import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
+import UserDetailModal from './components/UserDetailModal'
+import UserFormModal from './components/UserFormModal'
+import InviteLinkSection from './components/InviteLinkSection'
 
 const roleMap: Record<string, { label: string; color: string; bg: string; icon: any }> = {
   admin: { label: '管理员', color: '#dc2626', bg: '#fef2f2', icon: Shield },
@@ -38,38 +39,27 @@ export default function UserManagement() {
   const [showCreate, setShowCreate] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
   const [editUser, setEditUser] = useState<any>(null)
-  const [submitting, setSubmitting] = useState(false)
-  const [form, setForm] = useState({ username: '', password: '', nickname: '', role: 'member', email: '', phone: '', client_id: '', manager_id: '' })
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [inviteLinks, setInviteLinks] = useState<any[]>([])
   const [showInviteModal, setShowInviteModal] = useState(false)
-  const [inviteForm, setInviteForm] = useState({ preset_role: 'member', expires_hours: '72', note: '' })
   const [detailUser, setDetailUser] = useState<any>(null)
   const [page, setPage] = useState(1)
   const [selected, setSelected] = useState<number[]>([])
   const [menuOpen, setMenuOpen] = useState<number | null>(null)
-
-  const selectStyle: React.CSSProperties = { width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }
-  const groupTitle = (t: string) => <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', padding: '8px 0 4px', borderBottom: '1px solid #f1f5f9', marginBottom: 4 }}>{t}</div>
 
   const load = () => {
     setLoading(true)
     Promise.all([
       fetchApi('/api/users'),
       clientApi.list(),
-      fetchApi('/api/invite-links'),
-    ]).then(([ur, cr, lr]) => {
+    ]).then(([ur, cr]) => {
       if (ur.success) setUsers(ur.data || [])
       if (cr.success) setClients(cr.data || [])
-      if (lr.success) setInviteLinks(lr.data || [])
     }).finally(() => setLoading(false))
   }
 
   useEffect(() => { load() }, [])
-
-  const resetForm = () => setForm({ username: '', password: '', nickname: '', role: 'member', email: '', phone: '', client_id: '', manager_id: '' })
 
   const filtered = useMemo(() => {
     return users.filter((u: any) => {
@@ -90,38 +80,9 @@ export default function UserManagement() {
 
   useEffect(() => { setPage(1) }, [search, roleFilter, statusFilter])
 
-  const handleCreate = async () => {
-    if (!form.username.trim()) { toast('请输入用户名', 'error'); return }
-    if (!form.password.trim()) { toast('请输入密码', 'error'); return }
-    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { toast('邮箱格式不正确', 'error'); return }
-    if (form.phone && !/^1\d{10}$/.test(form.phone)) { toast('手机号格式不正确', 'error'); return }
-    setSubmitting(true)
-    const r = await fetchApi('/api/users', { method: 'POST', body: JSON.stringify(form) })
-    setSubmitting(false)
-    if (r.success) { toast('账号创建成功', 'success'); setShowCreate(false); resetForm(); load() }
-    else toast(r.message || '创建失败', 'error')
-  }
-
   const openEdit = (u: any) => {
     setEditUser(u)
-    setForm({ username: u.username, password: '', nickname: u.nickname || '', role: u.role, email: u.email || '', phone: u.phone || '', client_id: u.client_id ? String(u.client_id) : '', manager_id: u.manager_id ? String(u.manager_id) : '' })
     setShowEdit(true)
-  }
-
-  const handleUpdate = async () => {
-    if (!editUser) return
-    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { toast('邮箱格式不正确', 'error'); return }
-    if (form.phone && !/^1\d{10}$/.test(form.phone)) { toast('手机号格式不正确', 'error'); return }
-    if (form.role !== editUser.role) {
-      if (!(await confirm({ message: `确定将角色从「${roleMap[editUser.role]?.label}」改为「${roleMap[form.role]?.label}」？`, danger: false }))) return
-    }
-    setSubmitting(true)
-    const body: any = { nickname: form.nickname, role: form.role, email: form.email || null, phone: form.phone || null, manager_id: form.manager_id ? Number(form.manager_id) : null }
-    if (form.password.trim()) body.password = form.password
-    const r = await fetchApi(`/api/users/${editUser.id}`, { method: 'PUT', body: JSON.stringify(body) })
-    setSubmitting(false)
-    if (r.success) { toast('更新成功', 'success'); setShowEdit(false); setEditUser(null); resetForm(); load() }
-    else toast(r.message || '更新失败', 'error')
   }
 
   const handleDelete = async (u: any) => {
@@ -217,7 +178,7 @@ export default function UserManagement() {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <Button variant="secondary" onClick={handleExport}><Download size={15} /> 导出</Button>
           <Button variant="secondary" onClick={() => setShowInviteModal(true)}><Link2 size={15} /> 邀请链接</Button>
-          <Button onClick={() => { resetForm(); setShowCreate(true) }}><Plus size={15} /> 新增用户</Button>
+          <Button onClick={() => setShowCreate(true)}><Plus size={15} /> 新增用户</Button>
         </div>
       </div>
 
@@ -280,7 +241,7 @@ export default function UserManagement() {
         <div style={{ background: '#fff', borderRadius: 12, padding: 60, textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
           <Users size={48} color="#cbd5e1" style={{ marginBottom: 12 }} />
           <div style={{ fontSize: 16, color: '#64748b', marginBottom: 8 }}>暂无用户</div>
-          <Button onClick={() => { resetForm(); setShowCreate(true) }}><Plus size={14} /> 去新增</Button>
+          <Button onClick={() => setShowCreate(true)}><Plus size={14} /> 去新增</Button>
         </div>
       ) : (
         <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
@@ -400,217 +361,38 @@ export default function UserManagement() {
       )}
 
       {/* Detail Modal */}
-      <Modal open={!!detailUser} onClose={() => setDetailUser(null)} title="账号详情">
-        {detailUser && (() => {
-          const r = roleMap[detailUser.role] || roleMap.member
-          const RIcon = r.icon
-          const st = getStatusInfo(detailUser)
-          const genderLabel = detailUser.gender === 1 ? '男' : detailUser.gender === 2 ? '女' : '未设置'
-          const sections = [
-            { title: '基础信息', icon: User, items: [
-              { label: '用户ID', value: detailUser.display_id || `#${detailUser.id}` },
-              { label: '用户名', value: `@${detailUser.username}` },
-              { label: '昵称', value: detailUser.nickname || '未设置' },
-              { label: '性别', value: genderLabel },
-              { label: '手机号', value: detailUser.phone || '未绑定' },
-              { label: '邮箱', value: detailUser.email || '未绑定' },
-            ]},
-            { title: '权限信息', icon: Shield, items: [
-              { label: '角色', value: r.label, color: r.color },
-              { label: '状态', value: st.label, color: st.color },
-              { label: '上级', value: detailUser.manager_name || '无' },
-              { label: '邀请码', value: detailUser.personal_invite_code || '无' },
-            ]},
-            { title: '操作记录', icon: Clock, items: [
-              { label: '注册时间', value: fmtDate(detailUser.created_at) },
-              { label: '最近登录', value: fmtDate(detailUser.last_login_at) },
-              { label: '最后修改', value: fmtDate(detailUser.updated_at) },
-              { label: '地区码', value: detailUser.area_code || '未设置' },
-            ]},
-          ]
-          return (
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20, padding: 16, background: '#f8fafc', borderRadius: 12 }}>
-                <Avatar name={detailUser.nickname || detailUser.username} size={56} />
-                <div>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>{detailUser.nickname || detailUser.username}</div>
-                  <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>@{detailUser.username}</div>
-                  <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
-                    <span style={{ fontSize: 11, padding: '2px 10px', borderRadius: 10, background: r.bg, color: r.color, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}><RIcon size={12} /> {r.label}</span>
-                    <span style={{ fontSize: 11, padding: '2px 10px', borderRadius: 10, background: st.bg, color: st.color, fontWeight: 500 }}>{st.label}</span>
-                  </div>
-                </div>
-              </div>
-              {sections.map(sec => (
-                <div key={sec.title} style={{ marginBottom: 16 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: '#0f172a', marginBottom: 8, padding: '6px 0', borderBottom: '1px solid #f1f5f9' }}>
-                    <sec.icon size={14} color="#64748b" /> {sec.title}
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
-                    {sec.items.map(item => (
-                      <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderBottom: '1px solid #fafafa' }}>
-                        <span style={{ fontSize: 12, color: '#94a3b8', minWidth: 56 }}>{item.label}</span>
-                        <span style={{ fontSize: 13, color: (item as any).color || '#0f172a', fontWeight: 500, wordBreak: 'break-all' }}>{item.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-                <Button variant="secondary" onClick={() => setDetailUser(null)}>关闭</Button>
-                <Button onClick={() => { setDetailUser(null); openEdit(detailUser) }}><Edit2 size={14} /> 编辑</Button>
-              </div>
-            </div>
-          )
-        })()}
-      </Modal>
+      <UserDetailModal
+        detailUser={detailUser}
+        open={!!detailUser}
+        onClose={() => setDetailUser(null)}
+        onEdit={openEdit}
+      />
 
       {/* Create Modal */}
-      <Modal open={showCreate} onClose={() => setShowCreate(false)} title="新增用户">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {groupTitle('基础信息')}
-          <Input label="昵称" placeholder="显示名称" value={form.nickname} onChange={e => setForm({ ...form, nickname: e.target.value })} />
-          <div style={{ display: 'flex', gap: 12 }}>
-            <div style={{ flex: 1 }}><Input label="手机号" placeholder="11位手机号" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
-            <div style={{ flex: 1 }}><Input label="邮箱" placeholder="email@example.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
-          </div>
-
-          {groupTitle('账号信息')}
-          <div style={{ display: 'flex', gap: 12 }}>
-            <div style={{ flex: 1 }}><Input label="用户名 *" placeholder="登录用户名" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} required /></div>
-            <div style={{ flex: 1 }}><Input label="密码 *" placeholder="登录密码" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required /></div>
-          </div>
-
-          {groupTitle('权限信息')}
-          <div style={{ display: 'flex', gap: 12 }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>角色 <span style={{ color: '#dc2626' }}>*</span></label>
-              <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} style={selectStyle}>
-                {Object.entries(roleMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-              </select>
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>上级经理</label>
-              <select value={form.manager_id} onChange={e => setForm({ ...form, manager_id: e.target.value })} style={selectStyle}>
-                <option value="">无</option>
-                {users.filter(u => u.role === 'admin').map(u => (
-                  <option key={u.id} value={u.id}>{u.nickname || u.username} ({roleMap[u.role]?.label})</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
-            <Button variant="secondary" onClick={() => setShowCreate(false)}>取消</Button>
-            <Button onClick={handleCreate} disabled={submitting}>{submitting ? '创建中...' : '创建'}</Button>
-          </div>
-        </div>
-      </Modal>
+      <UserFormModal
+        mode="create"
+        editUser={null}
+        open={showCreate}
+        onClose={() => setShowCreate(false)}
+        onSaved={load}
+        users={users}
+      />
 
       {/* Edit Modal */}
-      <Modal open={showEdit} onClose={() => { setShowEdit(false); setEditUser(null) }} title="编辑用户">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {groupTitle('基础信息')}
-          <div style={{ fontSize: 13, color: '#64748b', padding: '4px 0' }}>用户名: <strong style={{ color: '#0f172a' }}>{editUser?.username}</strong></div>
-          <Input label="昵称" placeholder="显示名称" value={form.nickname} onChange={e => setForm({ ...form, nickname: e.target.value })} />
-          <div style={{ display: 'flex', gap: 12 }}>
-            <div style={{ flex: 1 }}><Input label="手机号" placeholder="11位手机号" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
-            <div style={{ flex: 1 }}><Input label="邮箱" placeholder="email@example.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
-          </div>
-
-          {groupTitle('账号安全')}
-          <Input label="新密码" placeholder="留空则不修改" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
-
-          {groupTitle('权限信息')}
-          <div style={{ display: 'flex', gap: 12 }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>角色</label>
-              <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} style={selectStyle}>
-                {Object.entries(roleMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-              </select>
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>上级经理</label>
-              <select value={form.manager_id} onChange={e => setForm({ ...form, manager_id: e.target.value })} style={selectStyle}>
-                <option value="">无</option>
-                {users.filter(u => u.role === 'admin' && u.id !== editUser?.id).map(u => (
-                  <option key={u.id} value={u.id}>{u.nickname || u.username} ({roleMap[u.role]?.label})</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
-            <Button variant="secondary" onClick={() => { setShowEdit(false); setEditUser(null) }}>取消</Button>
-            <Button onClick={handleUpdate} disabled={submitting}>{submitting ? '保存中...' : '保存'}</Button>
-          </div>
-        </div>
-      </Modal>
+      <UserFormModal
+        mode="edit"
+        editUser={editUser}
+        open={showEdit}
+        onClose={() => { setShowEdit(false); setEditUser(null) }}
+        onSaved={load}
+        users={users}
+      />
 
       {/* Invite Link Modal */}
-      <Modal open={showInviteModal} onClose={() => setShowInviteModal(false)} title="邀请链接管理">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ padding: 16, background: '#f8fafc', borderRadius: 10, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>生成新邀请链接</div>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ fontSize: 12, color: '#64748b' }}>预设角色</label>
-                <select value={inviteForm.preset_role} onChange={e => setInviteForm({ ...inviteForm, preset_role: e.target.value })} style={{ width: '100%', padding: '6px 8px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}>
-                  {Object.entries(roleMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-                </select>
-              </div>
-              <div style={{ flex: 1 }}>
-                <label style={{ fontSize: 12, color: '#64748b' }}>有效期</label>
-                <select value={inviteForm.expires_hours} onChange={e => setInviteForm({ ...inviteForm, expires_hours: e.target.value })} style={{ width: '100%', padding: '6px 8px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}>
-                  <option value="24">24小时</option>
-                  <option value="72">3天</option>
-                  <option value="168">7天</option>
-                  <option value="720">30天</option>
-                  <option value="">永久</option>
-                </select>
-              </div>
-            </div>
-            <Input label="备注" placeholder="可选" value={inviteForm.note} onChange={e => setInviteForm({ ...inviteForm, note: e.target.value })} />
-            <Button onClick={async () => {
-              const r2 = await fetchApi('/api/invite-links', { method: 'POST', body: JSON.stringify({ preset_role: inviteForm.preset_role, expires_hours: inviteForm.expires_hours ? Number(inviteForm.expires_hours) : null, note: inviteForm.note }) })
-              if (r2.success) {
-                const url = `${window.location.origin}/?invite=${r2.data.token}`
-                navigator.clipboard.writeText(url).then(() => toast('链接已复制到剪贴板', 'success')).catch(() => toast('生成成功，请手动复制', 'success'))
-                load()
-              } else toast(r2.message || '生成失败', 'error')
-            }}><Link2 size={14} /> 生成并复制链接</Button>
-          </div>
-          {inviteLinks.length > 0 && (
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 8 }}>已生成的链接 ({inviteLinks.length})</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 300, overflowY: 'auto' }}>
-                {inviteLinks.map((link: any) => {
-                  const used = !!link.used_by
-                  const expired = link.expires_at && new Date(link.expires_at) < new Date()
-                  const status = used ? '已使用' : expired ? '已过期' : '可用'
-                  const statusColor = used ? '#16a34a' : expired ? '#dc2626' : '#2563eb'
-                  return (
-                    <div key={link.id} style={{ padding: '10px 12px', background: '#fff', borderRadius: 8, border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 12, display: 'flex', gap: 6, alignItems: 'center' }}>
-                          <span style={{ color: statusColor, fontWeight: 600, fontSize: 11, padding: '1px 6px', borderRadius: 4, background: used ? '#f0fdf4' : expired ? '#fef2f2' : '#eff6ff' }}>{status}</span>
-                          <span style={{ color: '#64748b' }}>角色: {roleMap[link.preset_role]?.label || link.preset_role}</span>
-                          {link.note && <span style={{ color: '#94a3b8' }}>· {link.note}</span>}
-                        </div>
-                        {used && <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>使用者: {link.used_by_name || link.used_by_username}</div>}
-                      </div>
-                      {!used && !expired && (
-                        <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/?invite=${link.token}`); toast('已复制', 'success') }} style={{ background: '#f1f5f9', border: 'none', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', color: '#64748b', display: 'flex' }}><Copy size={14} /></button>
-                      )}
-                      <button onClick={async () => { const r2 = await fetchApi(`/api/invite-links/${link.id}`, { method: 'DELETE' }); if (r2.success) { toast('已删除', 'success'); load() } }} style={{ background: '#fef2f2', border: 'none', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', color: '#dc2626', display: 'flex' }}><Trash2 size={14} /></button>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      </Modal>
+      <InviteLinkSection
+        open={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+      />
     </div>
   )
 }
