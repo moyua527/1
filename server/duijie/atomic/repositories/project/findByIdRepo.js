@@ -7,9 +7,9 @@ module.exports = async (id) => {
   );
   if (!rows[0]) return null;
   const [members] = await db.query(
-    `SELECT pm.role as member_role, u.id, u.username, u.nickname, u.avatar
+    `SELECT pm.role as member_role, pm.source, u.id, u.username, u.nickname, u.avatar
      FROM duijie_project_members pm INNER JOIN voice_users u ON pm.user_id = u.id
-     WHERE pm.project_id = ? AND u.is_deleted = 0 ORDER BY pm.role DESC`,
+     WHERE pm.project_id = ? AND u.is_deleted = 0 ORDER BY pm.source ASC, pm.role DESC`,
     [id]
   );
   return { ...rows[0], members };

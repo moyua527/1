@@ -1,4 +1,4 @@
-﻿const db = require('../../../config/db');
+const db = require('../../../config/db');
 const { notify } = require('../../utils/notify');
 
 module.exports = async (req, res) => {
@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
     if (existing) return res.status(400).json({ success: false, message: '该用户已是项目成员' });
 
     await db.query(
-      'INSERT INTO duijie_project_members (project_id, user_id, role) VALUES (?, ?, ?)',
+      "INSERT INTO duijie_project_members (project_id, user_id, role, source) VALUES (?, ?, ?, 'internal')",
       [id, user_id, memberRole]
     );
     const [[project]] = await db.query('SELECT name FROM duijie_projects WHERE id = ?', [id]);

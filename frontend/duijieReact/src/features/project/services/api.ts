@@ -13,4 +13,7 @@ export const projectApi = {
   availableUsers: (id: string) => fetchApi(`/api/projects/${id}/available-users`),
   addMember: (id: string, data: { user_id: number; role: string }) => fetchApi(`/api/projects/${id}/members`, { method: 'POST', body: JSON.stringify(data) }),
   removeMember: (id: string, userId: string) => fetchApi(`/api/projects/${id}/members/${userId}`, { method: 'DELETE' }),
+  clientAvailableUsers: (id: string) => fetchApi(`/api/projects/${id}/client-available-users`),
+  addClientMember: (id: string, data: { user_id: number }) => fetchApi(`/api/projects/${id}/client-members`, { method: 'POST', body: JSON.stringify(data) }),
+  removeClientMember: (id: string, userId: string) => fetchApi(`/api/projects/${id}/client-members/${userId}`, { method: 'DELETE' }),
 }

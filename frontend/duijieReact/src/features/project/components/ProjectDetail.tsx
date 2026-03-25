@@ -59,10 +59,14 @@ export default function ProjectDetail() {
   const [showCreateTask, setShowCreateTask] = useState(false)
   const [showDeleteTask, setShowDeleteTask] = useState(false)
   const [showAddMember, setShowAddMember] = useState(false)
+  const [showAddClientMember, setShowAddClientMember] = useState(false)
   const [availableUsers, setAvailableUsers] = useState<any[]>([])
+  const [clientAvailableUsers, setClientAvailableUsers] = useState<any[]>([])
   const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set())
+  const [selectedClientUserIds, setSelectedClientUserIds] = useState<Set<number>>(new Set())
   const [memberRole, setMemberRole] = useState('editor')
   const [memberSearch, setMemberSearch] = useState('')
+  const [clientMemberSearch, setClientMemberSearch] = useState('')
   const [taskForm, setTaskForm] = useState({ title: '', description: '', due_date: '', priority: 'medium' })
   const [taskFiles, setTaskFiles] = useState<File[]>([])
   const [deleteSelected, setDeleteSelected] = useState<Set<number>>(new Set())
@@ -155,26 +159,49 @@ export default function ProjectDetail() {
           </div>
         </div>
         <div style={section}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#0f172a' }}>项目成员</h3>
-            {canEdit && <Button onClick={() => { setShowAddMember(true); setSelectedUserIds(new Set()); setMemberRole('editor'); setMemberSearch(''); projectApi.availableUsers(id!).then(r => { if (r.success) setAvailableUsers(r.data || []) }) }}>管理成员</Button>}
-          </div>
-          {project.members && project.members.length > 0 ? (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-              {project.members.map((m: any) => (
-                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0', cursor: 'pointer', transition: 'all 0.15s' }}
-                  onClick={() => setSelectedMember(m)}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#2563eb'; e.currentTarget.style.background = '#eff6ff' }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.background = '#f8fafc' }}>
-                  <Avatar name={m.nickname || m.username || '?'} size={32} />
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>{m.nickname || m.username}</div>
-                    <div style={{ fontSize: 11, color: '#94a3b8' }}>{m.member_role === 'owner' ? '负责人' : m.member_role === 'editor' ? '编辑者' : '查看者'}</div>
+          <h3 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 600, color: '#0f172a' }}>项目成员</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#2563eb' }}>我方团队</span>
+                {canEdit && <button onClick={() => { setShowAddMember(true); setSelectedUserIds(new Set()); setMemberRole('editor'); setMemberSearch(''); projectApi.availableUsers(id!).then(r => { if (r.success) setAvailableUsers(r.data || []) }) }}
+                  style={{ fontSize: 12, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>管理</button>}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {(project.members || []).filter((m: any) => m.source !== 'client').map((m: any) => (
+                  <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', cursor: 'pointer' }}
+                    onClick={() => setSelectedMember(m)}>
+                    <Avatar name={m.nickname || m.username || '?'} size={28} />
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: '#0f172a' }}>{m.nickname || m.username}</div>
+                      <div style={{ fontSize: 11, color: '#94a3b8' }}>{m.member_role === 'owner' ? '负责人' : m.member_role === 'editor' ? '编辑者' : '查看者'}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+                {(project.members || []).filter((m: any) => m.source !== 'client').length === 0 && <div style={{ color: '#94a3b8', fontSize: 13, padding: 8 }}>暂无</div>}
+              </div>
             </div>
-          ) : <div style={{ color: '#94a3b8', fontSize: 14 }}>暂无成员</div>}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#16a34a' }}>客户企业</span>
+                <button onClick={() => { setShowAddClientMember(true); setSelectedClientUserIds(new Set()); setClientMemberSearch(''); projectApi.clientAvailableUsers(id!).then(r => { if (r.success) setClientAvailableUsers(r.data || []) }) }}
+                  style={{ fontSize: 12, color: '#16a34a', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>管理</button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {(project.members || []).filter((m: any) => m.source === 'client').map((m: any) => (
+                  <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f0fdf4', borderRadius: 8, border: '1px solid #dcfce7', cursor: 'pointer' }}
+                    onClick={() => setSelectedMember(m)}>
+                    <Avatar name={m.nickname || m.username || '?'} size={28} />
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: '#0f172a' }}>{m.nickname || m.username}</div>
+                      <div style={{ fontSize: 11, color: '#94a3b8' }}>查看者</div>
+                    </div>
+                  </div>
+                ))}
+                {(project.members || []).filter((m: any) => m.source === 'client').length === 0 && <div style={{ color: '#94a3b8', fontSize: 13, padding: 8 }}>暂无</div>}
+              </div>
+            </div>
+          </div>
         </div>
 
         <Modal open={showAddMember} onClose={() => setShowAddMember(false)} title="管理项目成员">
@@ -243,6 +270,66 @@ export default function ProjectDetail() {
                   if (ok > 0) { toast(`已添加 ${ok} 名成员`, 'success'); setSelectedUserIds(new Set()); loadProject(); projectApi.availableUsers(id!).then(r => { if (r.success) setAvailableUsers(r.data || []) }) }
                   else toast('添加失败', 'error')
                 }}>{submitting ? '添加中...' : `添加${selectedUserIds.size > 0 ? ` (${selectedUserIds.size})` : ''}`}</Button>
+              </div>
+            </div>
+          </div>
+        </Modal>
+
+        <Modal open={showAddClientMember} onClose={() => setShowAddClientMember(false)} title="管理客户方成员">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {(project.members || []).filter((m: any) => m.source === 'client').length > 0 && (
+              <div>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 8 }}>当前客户方成员</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {(project.members || []).filter((m: any) => m.source === 'client').map((m: any) => (
+                    <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f0fdf4', borderRadius: 8, border: '1px solid #dcfce7' }}>
+                      <Avatar name={m.nickname || m.username || '?'} size={28} />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>{m.nickname || m.username}</div>
+                        <div style={{ fontSize: 11, color: '#94a3b8' }}>查看者</div>
+                      </div>
+                      <button onClick={async () => { const r = await projectApi.removeClientMember(id!, String(m.id)); if (r.success) { toast('已移除', 'success'); loadProject(); projectApi.clientAvailableUsers(id!).then(r => { if (r.success) setClientAvailableUsers(r.data || []) }) } else toast(r.message || '移除失败', 'error') }}
+                        style={{ padding: '4px 12px', borderRadius: 6, background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', cursor: 'pointer', fontSize: 12, fontWeight: 500 }}>移除</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 16 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 8 }}>从客户企业添加成员</label>
+              <Input placeholder="输入姓名筛选" value={clientMemberSearch} onChange={e => setClientMemberSearch(e.target.value)} />
+              <div style={{ maxHeight: 180, overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: 8, marginTop: 8 }}>
+                {clientAvailableUsers.filter(u => { if (!clientMemberSearch) return true; const s = clientMemberSearch.toLowerCase(); return (u.nickname || '').toLowerCase().includes(s) || (u.member_name || '').toLowerCase().includes(s) }).map((u: any) => {
+                  const checked = selectedClientUserIds.has(u.id)
+                  return (
+                  <div key={u.id} onClick={() => setSelectedClientUserIds(prev => { const n = new Set(prev); n.has(u.id) ? n.delete(u.id) : n.add(u.id); return n })}
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', cursor: 'pointer', background: checked ? '#f0fdf4' : 'transparent', borderBottom: '1px solid #f1f5f9' }}>
+                    <input type="checkbox" checked={checked} readOnly style={{ accentColor: '#16a34a', width: 16, height: 16, cursor: 'pointer' }} />
+                    <Avatar name={u.member_name || u.nickname || u.username || '?'} size={28} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>{u.member_name || u.nickname || u.username}</div>
+                      {u.position && <div style={{ fontSize: 11, color: '#94a3b8' }}>{u.position}</div>}
+                    </div>
+                  </div>
+                  )
+                })}
+                {clientAvailableUsers.filter(u => { if (!clientMemberSearch) return true; const s = clientMemberSearch.toLowerCase(); return (u.nickname || '').toLowerCase().includes(s) || (u.member_name || '').toLowerCase().includes(s) }).length === 0 && (
+                  <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>无可添加的企业成员</div>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center' }}>
+                {selectedClientUserIds.size > 0 && <span style={{ fontSize: 12, color: '#64748b' }}>已选 {selectedClientUserIds.size} 人</span>}
+                <Button disabled={selectedClientUserIds.size === 0 || submitting} onClick={async () => {
+                  setSubmitting(true)
+                  let ok = 0
+                  for (const uid of selectedClientUserIds) {
+                    const r = await projectApi.addClientMember(id!, { user_id: uid })
+                    if (r.success) ok++
+                  }
+                  setSubmitting(false)
+                  if (ok > 0) { toast(`已添加 ${ok} 名客户方成员`, 'success'); setSelectedClientUserIds(new Set()); loadProject(); projectApi.clientAvailableUsers(id!).then(r => { if (r.success) setClientAvailableUsers(r.data || []) }) }
+                  else toast('添加失败', 'error')
+                }}>{submitting ? '添加中...' : `添加${selectedClientUserIds.size > 0 ? ` (${selectedClientUserIds.size})` : ''}`}</Button>
               </div>
             </div>
           </div>
