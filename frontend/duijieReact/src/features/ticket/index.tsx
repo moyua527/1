@@ -1,13 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Ticket, Plus, Send, Star, ChevronLeft, Clock, AlertTriangle, CheckCircle, XCircle, Loader2, User, Paperclip, Download, X } from 'lucide-react'
-import { fetchApi, uploadFile } from '../../bootstrap'
+import { Ticket, Plus, Clock, Loader2, CheckCircle, XCircle, Star } from 'lucide-react'
+import { fetchApi } from '../../bootstrap'
 import { can } from '../../stores/permissions'
-import Avatar from '../ui/Avatar'
-import Modal from '../ui/Modal'
-import Button from '../ui/Button'
-import Input from '../ui/Input'
-import { toast } from '../ui/Toast'
+import TicketDetail from './TicketDetail'
+import TicketCreateModal from './TicketCreateModal'
 
 const typeMap: Record<string, { label: string; color: string }> = {
   requirement: { label: '需求', color: '#2563eb' }, bug: { label: '问题', color: '#dc2626' },
@@ -24,17 +21,8 @@ const statusMap: Record<string, { label: string; color: string; icon: any }> = {
   closed: { label: '已关闭', color: '#6b7280', icon: XCircle },
 }
 
-const ticketApi = {
-  list: () => fetchApi('/api/tickets'),
-  detail: (id: number) => fetchApi(`/api/tickets/${id}`),
-  update: (id: number, d: any) => fetchApi(`/api/tickets/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
-  rate: (id: number, rating: number, rating_comment: string) => fetchApi(`/api/tickets/${id}/rate`, { method: 'POST', body: JSON.stringify({ rating, rating_comment }) }),
-}
-const fmtSize = (b: number) => b < 1024 ? b + 'B' : b < 1048576 ? (b / 1024).toFixed(1) + 'KB' : (b / 1048576).toFixed(1) + 'MB'
-const BACKEND_URL = (window as any).__ENV__?.BACKEND_URL || ''
-
 export default function TicketPage() {
-  const { user, isMobile } = useOutletContext<{ user: any; isMobile: boolean }>()
+  const { user } = useOutletContext<{ user: any; isMobile: boolean }>()
   const isStaff = can(user?.role || '', 'ticket:staff')
 
   const [tickets, setTickets] = useState<any[]>([])
@@ -42,96 +30,26 @@ export default function TicketPage() {
   const [selected, setSelected] = useState<any>(null)
   const [detailLoading, setDetailLoading] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
-  const [form, setForm] = useState({ title: '', content: '', type: 'question', priority: 'medium', project_id: '' })
-  const [projects, setProjects] = useState<any[]>([])
   const [staffMembers, setStaffMembers] = useState<any[]>([])
-  const [replyText, setReplyText] = useState('')
-  const [sending, setSending] = useState(false)
   const [filter, setFilter] = useState('all')
-  const [rateOpen, setRateOpen] = useState(false)
-  const [rateForm, setRateForm] = useState({ rating: 5, comment: '' })
-  const [createFiles, setCreateFiles] = useState<File[]>([])
-  const [replyFiles, setReplyFiles] = useState<File[]>([])
-  const createFileRef = useRef<HTMLInputElement>(null)
-  const replyFileRef = useRef<HTMLInputElement>(null)
-  const repliesEndRef = useRef<HTMLDivElement>(null)
 
   const load = () => {
     setLoading(true)
-    ticketApi.list().then(r => { if (r.success) setTickets(r.data || []) }).finally(() => setLoading(false))
+    fetchApi('/api/tickets').then(r => { if (r.success) setTickets(r.data || []) }).finally(() => setLoading(false))
   }
   useEffect(load, [])
-
-  const openDetail = (t: any) => {
-    setDetailLoading(true)
-    ticketApi.detail(t.id).then(r => {
-      if (r.success) setSelected(r.data)
-      setDetailLoading(false)
-      setTimeout(() => repliesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
-    })
-  }
-
-  const openCreate = () => {
-    setForm({ title: '', content: '', type: 'question', priority: 'medium', project_id: '' })
-    setCreateFiles([])
-    fetchApi('/api/projects').then(r => { if (r.success) setProjects(r.data?.rows || r.data || []) })
-    setCreateOpen(true)
-  }
-
-  const handleCreate = async () => {
-    if (!form.title.trim()) { toast('标题必填', 'error'); return }
-    const fd = new FormData()
-    fd.append('title', form.title)
-    fd.append('content', form.content)
-    fd.append('type', form.type)
-    fd.append('priority', form.priority)
-    if (form.project_id) fd.append('project_id', form.project_id)
-    createFiles.forEach(f => fd.append('files', f))
-    const r = await uploadFile('/api/tickets', fd)
-    if (r.success) { toast('工单已提交', 'success'); setCreateOpen(false); setCreateFiles([]); load() }
-    else toast(r.message || '提交失败', 'error')
-  }
-
-  const handleReply = async () => {
-    if (!replyText.trim() && replyFiles.length === 0) return
-    if (!selected) return
-    setSending(true)
-    const fd = new FormData()
-    fd.append('content', replyText.trim())
-    replyFiles.forEach(f => fd.append('files', f))
-    const r = await uploadFile(`/api/tickets/${selected.id}/reply`, fd)
-    setSending(false)
-    if (r.success) { setReplyText(''); setReplyFiles([]); openDetail(selected); load() }
-    else toast(r.message || '回复失败', 'error')
-  }
-
-  const handleStatusChange = async (status: string) => {
-    if (!selected) return
-    const r = await ticketApi.update(selected.id, { status })
-    if (r.success) { openDetail(selected); load() }
-  }
-
-  const handleAssign = async (assigned_to: number) => {
-    if (!selected) return
-    const r = await ticketApi.update(selected.id, { assigned_to })
-    if (r.success) { openDetail(selected); load() }
-  }
-
-  const openRate = () => {
-    setRateForm({ rating: 5, comment: '' })
-    setRateOpen(true)
-  }
-
-  const handleRate = async () => {
-    if (!selected) return
-    const r = await ticketApi.rate(selected.id, rateForm.rating, rateForm.comment)
-    if (r.success) { toast('评价成功', 'success'); setRateOpen(false); openDetail(selected); load() }
-    else toast(r.message || '评价失败', 'error')
-  }
 
   useEffect(() => {
     if (isStaff) fetchApi('/api/users').then(r => { if (r.success) setStaffMembers(r.data || []) }).catch(() => {})
   }, [isStaff])
+
+  const openDetail = (t: any) => {
+    setDetailLoading(true)
+    fetchApi(`/api/tickets/${t.id}`).then(r => {
+      if (r.success) setSelected(r.data)
+      setDetailLoading(false)
+    })
+  }
 
   const filtered = filter === 'all' ? tickets : tickets.filter(t => t.status === filter)
   const statusTabs = [
@@ -142,162 +60,10 @@ export default function TicketPage() {
     { key: 'closed', label: '已关闭', count: tickets.filter(t => t.status === 'closed').length },
   ]
 
-  // Detail view
   if (selected && !detailLoading) {
-    const st = statusMap[selected.status] || statusMap.open
-    const StIcon = st.icon
-    return (
-      <div style={{ maxWidth: 800, margin: '0 auto' }}>
-        <button onClick={() => setSelected(null)} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: 14, marginBottom: 16, padding: 0 }}>
-          <ChevronLeft size={16} /> 返回列表
-        </button>
-        <div style={{ background: '#fff', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-            <div>
-              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#0f172a' }}>{selected.title}</h2>
-              <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6, background: st.color + '18', color: st.color, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}><StIcon size={12} />{st.label}</span>
-                <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6, background: (typeMap[selected.type]?.color || '#6b7280') + '18', color: typeMap[selected.type]?.color || '#6b7280' }}>{typeMap[selected.type]?.label || selected.type}</span>
-                <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6, background: (priorityMap[selected.priority]?.color || '#6b7280') + '18', color: priorityMap[selected.priority]?.color || '#6b7280' }}>{priorityMap[selected.priority]?.label || selected.priority}</span>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              {isStaff && selected.status === 'open' && <button onClick={() => handleStatusChange('processing')} style={{ fontSize: 12, padding: '4px 12px', borderRadius: 6, background: '#2563eb', color: '#fff', border: 'none', cursor: 'pointer' }}>开始处理</button>}
-              {isStaff && selected.status === 'processing' && <button onClick={() => handleStatusChange('resolved')} style={{ fontSize: 12, padding: '4px 12px', borderRadius: 6, background: '#16a34a', color: '#fff', border: 'none', cursor: 'pointer' }}>标记解决</button>}
-              {(selected.status === 'resolved') && !selected.rating && selected.created_by === user?.id && <button onClick={openRate} style={{ fontSize: 12, padding: '4px 12px', borderRadius: 6, background: '#d97706', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}><Star size={12} />评价</button>}
-            </div>
-          </div>
-          <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <span>提交者：{selected.creator_name || selected.creator_username}</span>
-            {selected.assignee_name && <span>处理人：{selected.assignee_name || selected.assignee_username}</span>}
-            {selected.project_name && <span>项目：{selected.project_name}</span>}
-            <span>{new Date(selected.created_at).toLocaleString('zh-CN')}</span>
-          </div>
-          {isStaff && !selected.assigned_to && staffMembers.length > 0 && (
-            <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 12, color: '#94a3b8' }}>分配给：</span>
-              <select onChange={e => handleAssign(Number(e.target.value))} defaultValue="" style={{ fontSize: 12, padding: '4px 8px', borderRadius: 6, border: '1px solid #e2e8f0' }}>
-                <option value="" disabled>选择处理人</option>
-                {staffMembers.map((m: any) => <option key={m.id} value={m.id}>{m.nickname || m.username}</option>)}
-              </select>
-            </div>
-          )}
-          <div style={{ padding: 16, background: '#f8fafc', borderRadius: 8, fontSize: 14, color: '#334155', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: 16 }}>{selected.content || '(无描述)'}</div>
-          {selected.attachments?.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
-              {selected.attachments.map((a: any) => (
-                <a key={a.id} href={`${BACKEND_URL}/uploads/${a.filename}`} target="_blank" rel="noreferrer"
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, background: '#f1f5f9', border: '1px solid #e2e8f0', fontSize: 12, color: '#334155', textDecoration: 'none' }}>
-                  <Paperclip size={14} color="#64748b" /> {a.original_name} <span style={{ color: '#94a3b8' }}>({fmtSize(a.file_size)})</span> <Download size={12} color="#2563eb" />
-                </a>
-              ))}
-            </div>
-          )}
-
-          {/* Rating display */}
-          {selected.rating && (
-            <div style={{ padding: 12, background: '#fef3c7', borderRadius: 8, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ display: 'flex', gap: 2 }}>
-                {[1,2,3,4,5].map(i => <Star key={i} size={16} color="#d97706" fill={i <= selected.rating ? '#d97706' : 'none'} />)}
-              </div>
-              {selected.rating_comment && <span style={{ fontSize: 13, color: '#92400e' }}>{selected.rating_comment}</span>}
-            </div>
-          )}
-
-          {/* Replies */}
-          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 16 }}>
-            <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 12 }}>回复 ({selected.replies?.length || 0})</div>
-            {(selected.replies || []).map((r: any) => {
-              const isMe = r.created_by === user?.id
-              return (
-                <div key={r.id} style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
-                  <Avatar name={r.creator_name || r.creator_username} size={32} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{r.creator_name || r.creator_username}</span>
-                      {isStaff && r.creator_role && ['admin','sales_manager','tech','business','support'].includes(r.creator_role) && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: '#eff6ff', color: '#2563eb' }}>工作人员</span>}
-                      <span style={{ fontSize: 11, color: '#94a3b8' }}>{new Date(r.created_at).toLocaleString('zh-CN')}</span>
-                    </div>
-                    <div style={{ fontSize: 13, color: '#334155', marginTop: 4, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{r.content}</div>
-                    {r.attachments?.length > 0 && (
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
-                        {r.attachments.map((a: any) => (
-                          <a key={a.id} href={`${BACKEND_URL}/uploads/${a.filename}`} target="_blank" rel="noreferrer"
-                            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6, background: '#f1f5f9', border: '1px solid #e2e8f0', fontSize: 11, color: '#334155', textDecoration: 'none' }}>
-                            <Paperclip size={12} color="#64748b" /> {a.original_name} <span style={{ color: '#94a3b8' }}>({fmtSize(a.file_size)})</span> <Download size={10} color="#2563eb" />
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-            <div ref={repliesEndRef} />
-          </div>
-
-          {/* Reply input */}
-          {selected.status !== 'closed' && (
-            <div style={{ marginTop: 12 }}>
-              {replyFiles.length > 0 && (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
-                  {replyFiles.map((f, i) => (
-                    <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6, background: '#eff6ff', border: '1px solid #bfdbfe', fontSize: 12, color: '#1e40af' }}>
-                      <Paperclip size={12} /> {f.name} ({fmtSize(f.size)})
-                      <button onClick={() => setReplyFiles(replyFiles.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}><X size={12} color="#94a3b8" /></button>
-                    </span>
-                  ))}
-                </div>
-              )}
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="输入回复..."
-                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReply() } }}
-                  style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none', background: '#f8fafc' }} />
-                <input ref={replyFileRef} type="file" multiple hidden onChange={e => { if (e.target.files) setReplyFiles([...replyFiles, ...Array.from(e.target.files)]); e.target.value = '' }} />
-                <button onClick={() => replyFileRef.current?.click()} title="添加附件"
-                  style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                  <Paperclip size={16} color="#64748b" />
-                </button>
-                <button onClick={handleReply} disabled={sending || (!replyText.trim() && replyFiles.length === 0)}
-                  style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, opacity: (!replyText.trim() && replyFiles.length === 0) ? 0.5 : 1 }}>
-                  <Send size={16} /> 回复
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Rate modal */}
-        <Modal open={rateOpen} onClose={() => setRateOpen(false)} title="评价工单服务">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 8 }}>满意度评分</div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {[1,2,3,4,5].map(i => (
-                  <button key={i} onClick={() => setRateForm({ ...rateForm, rating: i })}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-                    <Star size={32} color="#d97706" fill={i <= rateForm.rating ? '#d97706' : 'none'} />
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 8 }}>评价内容（选填）</div>
-              <textarea value={rateForm.comment} onChange={e => setRateForm({ ...rateForm, comment: e.target.value })}
-                placeholder="请输入您的评价..." rows={3}
-                style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none', resize: 'vertical' }} />
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              <Button variant="secondary" onClick={() => setRateOpen(false)}>取消</Button>
-              <Button onClick={handleRate}>提交评价</Button>
-            </div>
-          </div>
-        </Modal>
-      </div>
-    )
+    return <TicketDetail ticket={selected} user={user} staffMembers={staffMembers} onBack={() => setSelected(null)} onRefresh={load} onReloadDetail={openDetail} />
   }
 
-  // List view
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
@@ -305,12 +71,11 @@ export default function TicketPage() {
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>工单</h1>
           <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>{isStaff ? '管理工单' : '提交需求或问题'}</p>
         </div>
-        <button onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 10, background: '#2563eb', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500 }}>
+        <button onClick={() => setCreateOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 10, background: '#2563eb', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500 }}>
           <Plus size={16} /> 新建工单
         </button>
       </div>
 
-      {/* Status tabs */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 16, overflowX: 'auto', paddingBottom: 4 }}>
         {statusTabs.map(tab => (
           <button key={tab.key} onClick={() => setFilter(tab.key)}
@@ -342,9 +107,7 @@ export default function TicketPage() {
                 style={{ background: '#fff', borderRadius: 10, padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 16, transition: 'box-shadow 0.15s' }}
                 onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)')}
                 onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)')}>
-                <div style={{ width: 36, height: 36, borderRadius: 8, background: st.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <StIcon size={18} color={st.color} />
-                </div>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: st.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><StIcon size={18} color={st.color} /></div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{t.title}</span>
@@ -367,72 +130,7 @@ export default function TicketPage() {
         </div>
       )}
 
-      {/* Create Modal */}
-      <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="新建工单">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <Input label="标题" placeholder="简要描述您的需求或问题" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 6 }}>详细描述</div>
-            <textarea value={form.content} onChange={e => setForm({ ...form, content: e.target.value })}
-              placeholder="请详细描述..." rows={4}
-              style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none', resize: 'vertical' }} />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 6 }}>类型</div>
-              <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none' }}>
-                <option value="question">咨询</option>
-                <option value="requirement">需求</option>
-                <option value="bug">问题</option>
-                <option value="other">其他</option>
-              </select>
-            </div>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 6 }}>优先级</div>
-              <select value={form.priority} onChange={e => setForm({ ...form, priority: e.target.value })}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none' }}>
-                <option value="low">低</option>
-                <option value="medium">中</option>
-                <option value="high">高</option>
-                <option value="urgent">紧急</option>
-              </select>
-            </div>
-          </div>
-          {projects.length > 0 && (
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 6 }}>关联项目（选填）</div>
-              <select value={form.project_id} onChange={e => setForm({ ...form, project_id: e.target.value })}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none' }}>
-                <option value="">不关联</option>
-                {projects.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
-            </div>
-          )}
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 6 }}>附件（选填）</div>
-            <input ref={createFileRef} type="file" multiple hidden onChange={e => { if (e.target.files) setCreateFiles([...createFiles, ...Array.from(e.target.files)]); e.target.value = '' }} />
-            <button type="button" onClick={() => createFileRef.current?.click()}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px dashed #cbd5e1', background: '#f8fafc', cursor: 'pointer', fontSize: 13, color: '#64748b', width: '100%', justifyContent: 'center' }}>
-              <Paperclip size={14} /> 点击选择文件
-            </button>
-            {createFiles.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-                {createFiles.map((f, i) => (
-                  <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6, background: '#eff6ff', border: '1px solid #bfdbfe', fontSize: 12, color: '#1e40af' }}>
-                    <Paperclip size={12} /> {f.name} ({fmtSize(f.size)})
-                    <button onClick={() => setCreateFiles(createFiles.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}><X size={12} color="#94a3b8" /></button>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 8, borderTop: '1px solid #e2e8f0' }}>
-            <Button variant="secondary" onClick={() => setCreateOpen(false)}>取消</Button>
-            <Button onClick={handleCreate}>提交工单</Button>
-          </div>
-        </div>
-      </Modal>
+      <TicketCreateModal open={createOpen} onClose={() => setCreateOpen(false)} onCreated={load} />
     </div>
   )
 }

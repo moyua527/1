@@ -1,0 +1,62 @@
+const db = require('../../../config/db');
+const { findActiveEnterprise, isCreator } = require('./enterpriseHelpers');
+
+exports.addMember = async (req, res) => {
+  try {
+    const ent = await findActiveEnterprise(req.userId);
+    if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
+    const { name, position, department, phone, email, notes, employee_id, join_date, supervisor, department_id } = req.body;
+    if (!name || !name.trim()) return res.status(400).json({ success: false, message: '请输入成员姓名' });
+    const [result] = await db.query(
+      'INSERT INTO duijie_client_members (client_id, name, position, department, phone, email, notes, employee_id, join_date, supervisor, department_id, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [ent.id, name.trim(), position || null, department || null, phone || null, email || null, notes || null, employee_id || null, join_date || null, supervisor || null, department_id || null, req.userId]
+    );
+    res.json({ success: true, data: { id: result.insertId } });
+  } catch (e) {
+    res.status(500).json({ success: false, message: '服务器内部错误' });
+  }
+};
+
+exports.updateMember = async (req, res) => {
+  try {
+    const ent = await findActiveEnterprise(req.userId);
+    if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
+    const { name, position, department, phone, email, notes, employee_id, join_date, supervisor, department_id } = req.body;
+    if (!name || !name.trim()) return res.status(400).json({ success: false, message: '请输入成员姓名' });
+    await db.query(
+      'UPDATE duijie_client_members SET name=?, position=?, department=?, phone=?, email=?, notes=?, employee_id=?, join_date=?, supervisor=?, department_id=? WHERE id=? AND client_id=? AND is_deleted=0',
+      [name.trim(), position || null, department || null, phone || null, email || null, notes || null, employee_id || null, join_date || null, supervisor || null, department_id || null, req.params.id, ent.id]
+    );
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: '服务器内部错误' });
+  }
+};
+
+exports.removeMember = async (req, res) => {
+  try {
+    const ent = await findActiveEnterprise(req.userId);
+    if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
+    await db.query('UPDATE duijie_client_members SET is_deleted=1 WHERE id=? AND client_id=?', [req.params.id, ent.id]);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: '服务器内部错误' });
+  }
+};
+
+exports.updateMemberRole = async (req, res) => {
+  try {
+    const ent = await findActiveEnterprise(req.userId);
+    if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
+    if (!isCreator(ent)) return res.status(403).json({ success: false, message: '仅企业创建者可修改成员角色' });
+    const { role } = req.body;
+    if (!['admin', 'member'].includes(role)) return res.status(400).json({ success: false, message: '角色只能是 admin 或 member' });
+    const [target] = await db.query('SELECT * FROM duijie_client_members WHERE id = ? AND client_id = ? AND is_deleted = 0', [req.params.id, ent.id]);
+    if (!target[0]) return res.status(404).json({ success: false, message: '成员不存在' });
+    if (target[0].role === 'creator') return res.status(400).json({ success: false, message: '无法修改创建者角色' });
+    await db.query('UPDATE duijie_client_members SET role = ? WHERE id = ?', [role, req.params.id]);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: '服务器内部错误' });
+  }
+};
