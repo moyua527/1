@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { FileText, Download, Trash2, Search, Upload, Loader2, File, Image, FileSpreadsheet, FileCode, Film, Eye, X, CheckSquare, Square } from 'lucide-react'
 import { fetchApi, uploadFile, BACKEND_URL } from '../../bootstrap'
@@ -49,6 +49,7 @@ export default function FileManager() {
   const [category, setCategory] = useState('')
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const load = () => {
     setLoading(true)
@@ -137,10 +138,8 @@ export default function FileManager() {
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索文件..."
               style={{ padding: '8px 12px 8px 32px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13, outline: 'none', width: 200 }} />
           </div>
-          <label style={{ display: 'inline-flex' }}>
-            <Button disabled={uploading}><Upload size={14} /> {uploading ? '上传中...' : '上传文件'}</Button>
-            <input type="file" multiple onChange={handleUpload} style={{ display: 'none' }} />
-          </label>
+          <Button disabled={uploading} onClick={() => fileInputRef.current?.click()}><Upload size={14} /> {uploading ? '上传中...' : '上传文件'}</Button>
+          <input ref={fileInputRef} type="file" multiple onChange={handleUpload} style={{ display: 'none' }} />
         </div>
       </div>
 
