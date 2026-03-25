@@ -7,9 +7,18 @@ exports.addMember = async (req, res) => {
     if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
     const { name, position, department, phone, email, notes, employee_id, join_date, supervisor, department_id } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ success: false, message: '请输入成员姓名' });
+    let userId = null;
+    if (phone) {
+      const [match] = await db.query('SELECT id FROM voice_users WHERE phone = ? AND is_deleted = 0 LIMIT 1', [phone]);
+      if (match[0]) userId = match[0].id;
+    }
+    if (!userId && email) {
+      const [match] = await db.query('SELECT id FROM voice_users WHERE email = ? AND is_deleted = 0 LIMIT 1', [email]);
+      if (match[0]) userId = match[0].id;
+    }
     const [result] = await db.query(
-      'INSERT INTO duijie_client_members (client_id, name, position, department, phone, email, notes, employee_id, join_date, supervisor, department_id, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [ent.id, name.trim(), position || null, department || null, phone || null, email || null, notes || null, employee_id || null, join_date || null, supervisor || null, department_id || null, req.userId]
+      'INSERT INTO duijie_client_members (client_id, user_id, name, position, department, phone, email, notes, employee_id, join_date, supervisor, department_id, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [ent.id, userId, name.trim(), position || null, department || null, phone || null, email || null, notes || null, employee_id || null, join_date || null, supervisor || null, department_id || null, req.userId]
     );
     res.json({ success: true, data: { id: result.insertId } });
   } catch (e) {
