@@ -78,7 +78,7 @@ export default function ProjectList() {
   const handleCreate = async () => {
     if (!form.name.trim()) { toast('请输入项目名称', 'error'); return }
     setSubmitting(true)
-    if (!form.client_id) { toast('请关联客户', 'error'); setSubmitting(false); return }
+    if (!form.client_id) { toast('请关联企业', 'error'); setSubmitting(false); return }
     const r = await projectApi.create({ ...form, client_id: Number(form.client_id), member_ids: selectedMembers })
     setSubmitting(false)
     if (r.success) { toast('项目创建成功', 'success'); setShowCreate(false); setForm({ name: '', description: '', client_id: '', app_name: '', app_url: '' }); setSelectedMembers([]); load() }
@@ -132,7 +132,7 @@ export default function ProjectList() {
                   <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#0f172a' }}>{p.name}</h3>
                   <Badge color={st.color}>{st.label}</Badge>
                 </div>
-                {p.client_name && <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>客户: {p.client_name}</div>}
+                {p.client_name && <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>企业: {p.client_name}</div>}
                 {p.description && <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description}</div>}
                 <ProgressBar value={p.progress || 0} />
                 <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>进度 {p.progress || 0}%</div>
@@ -154,11 +154,11 @@ export default function ProjectList() {
             </div>
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>关联客户 <span style={{ color: '#dc2626' }}>*</span></label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>关联企业 <span style={{ color: '#dc2626' }}>*</span></label>
             <select value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value })}
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
-              <option value="">请选择客户</option>
-              {allClients.map((c: any) => <option key={c.id} value={c.id}>#{c.id} {c.name}{c.company ? ` (${c.company})` : ''}</option>)}
+              <option value="">请选择企业</option>
+              {allClients.filter((c: any) => c.client_type === 'company').map((c: any) => <option key={c.id} value={c.id}>{c.name}{c.company ? ` (${c.company})` : ''}</option>)}
             </select>
           </div>
           <div>
