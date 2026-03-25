@@ -39,6 +39,9 @@ router.put('/system/invite-code', auth, configCtrl.update);
 router.get('/system/config', auth, adminOnly, configCtrl.getAll);
 router.put('/system/config', auth, adminOnly, configCtrl.updateAll);
 
+// App version check (public, for APK update)
+router.get('/app/version', require('../controllers/system/appVersionController'));
+
 // Dashboard
 router.get('/dashboard/stats', auth, require('../controllers/dashboard/statsController'));
 router.get('/dashboard/report', auth, require('../controllers/dashboard/reportController'));

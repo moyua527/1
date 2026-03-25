@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, LayoutDashboard, FolderKanban, Users, ListTodo, TrendingUp, MessageSquare, BarChart3, FileText, Shield, ScrollText, Settings, Building2, Plus, ArrowRight } from 'lucide-react'
+import { Search, LayoutDashboard, FolderKanban, Users, ListTodo, TrendingUp, MessageSquare, BarChart3, FileText, Shield, ScrollText, Settings, Building2, Plus, ArrowRight, Ticket } from 'lucide-react'
 import useUserStore from '../../stores/useUserStore'
 
 interface CmdItem {
@@ -20,6 +20,7 @@ const NAV_DEFS = [
   { path: '/tasks', label: '任务看板', icon: ListTodo, roles: ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'viewer'], keywords: 'task kanban 任务 看板' },
   { path: '/enterprise', label: '企业管理', icon: Building2, roles: ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer', 'client'], keywords: 'enterprise company 企业 组织' },
   { path: '/messaging', label: '站内消息', icon: MessageSquare, roles: ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer', 'client'], keywords: 'message chat dm 消息 聊天' },
+  { path: '/tickets', label: '工单系统', icon: Ticket, roles: ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'client'], keywords: 'ticket issue 工单 问题 需求 咨询' },
   { path: '/report', label: '数据报表', icon: BarChart3, roles: ['admin', 'sales_manager', 'business'], keywords: 'report chart 报表 图表 统计' },
   { path: '/files', label: '文件管理', icon: FileText, roles: ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'viewer'], keywords: 'file upload 文件 上传 下载' },
   { path: '/users', label: '用户管理', icon: Shield, roles: ['admin'], keywords: 'user account 用户 账号' },

@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'DuiJie',
   webDir: 'dist',
   server: {
-    url: 'http://160.202.253.143:1800',
+    url: 'http://160.202.253.143:8080',
     cleartext: true,
   },
   android: {

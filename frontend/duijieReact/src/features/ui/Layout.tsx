@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield, Settings, Copy, TrendingUp, MessageSquare, ScrollText, FileText, Edit2, Building2 } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield, Settings, Copy, TrendingUp, MessageSquare, ScrollText, FileText, Edit2, Building2, Ticket } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
 import { onSocket } from './smartSocket'
@@ -21,6 +21,7 @@ const ALL_NAV_ITEMS = [
   { path: '/tasks', label: '任务看板', icon: ListTodo, roles: ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'viewer'] },
   { path: '/enterprise', label: '企业管理', icon: Building2, roles: ['member', 'client'] },
   { path: '/messaging', label: '站内消息', icon: MessageSquare, roles: ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer', 'client'] },
+  { path: '/tickets', label: '工单系统', icon: Ticket, roles: ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'client'] },
   { path: '/report', label: '数据报表', icon: BarChart3, roles: ['admin', 'sales_manager', 'business'] },
   { path: '/files', label: '文件管理', icon: FileText, roles: ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'viewer'] },
   { path: '/users', label: '用户管理', icon: Shield, roles: ['admin'] },

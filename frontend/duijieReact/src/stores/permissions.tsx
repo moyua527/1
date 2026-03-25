@@ -33,7 +33,8 @@ const PERMISSIONS: Record<string, string[]> = {
   'audit:view':           ['admin'],
   'settings:manage':      ['admin'],
 
-  'ticket:staff':         ['admin', 'tech', 'business', 'member'],
+  'ticket:view':          ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'client'],
+  'ticket:staff':         ['admin', 'sales_manager', 'tech', 'business', 'support'],
 
   'staff:assignable':     ['admin', 'business', 'tech'],
 }
