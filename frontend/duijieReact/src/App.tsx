@@ -5,6 +5,7 @@ import Layout from './features/ui/Layout'
 import ToastContainer from './features/ui/Toast'
 import useUserStore from './stores/useUserStore'
 import { can } from './stores/permissions'
+import EnterpriseOnboarding from './features/enterprise/EnterpriseOnboarding'
 
 const Dashboard = lazy(() => import('./features/dashboard/index'))
 const ProjectList = lazy(() => import('./features/project/index'))
@@ -22,12 +23,13 @@ const SystemSettings = lazy(() => import('./features/settings/index'))
 const Enterprise = lazy(() => import('./features/enterprise/index'))
 
 export default function App() {
-  const { user, checking, setUser, init } = useUserStore()
+  const { user, checking, hasEnterprise, setUser, init } = useUserStore()
 
   useEffect(() => { init() }, [init])
 
   if (checking) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: '#94a3b8' }}>加载中...</div>
   if (!user) return <LoginPage onLogin={setUser} />
+  if (!hasEnterprise) return <><ToastContainer /><EnterpriseOnboarding /></>
 
   const r = user.role
   const canProjects = can(r, 'project:view')
