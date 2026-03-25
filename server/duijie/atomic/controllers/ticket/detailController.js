@@ -1,4 +1,4 @@
-﻿const db = require('../../../config/db');
+const db = require('../../../config/db');
 
 module.exports = async (req, res) => {
   try {
@@ -13,9 +13,6 @@ module.exports = async (req, res) => {
        WHERE t.id = ? AND t.is_deleted = 0`, [req.params.id]
     );
     if (!ticket) return res.status(404).json({ success: false, message: '工单不存在' });
-    if (req.userRole === 'client' && ticket.created_by !== req.userId) {
-      return res.status(403).json({ success: false, message: '无权限' });
-    }
     const [replies] = await db.query(
       `SELECT r.*, u.nickname as creator_name, u.username as creator_username, u.role as creator_role
        FROM duijie_ticket_replies r LEFT JOIN voice_users u ON r.created_by = u.id

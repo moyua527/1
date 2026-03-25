@@ -1,17 +1,17 @@
 import useUserStore from './useUserStore'
 
 const PERMISSIONS: Record<string, string[]> = {
-  'dashboard:view':       ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer', 'client'],
+  'dashboard:view':       ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer'],
   'dashboard:clients':    ['admin', 'business'],
   'dashboard:tasks':      ['admin', 'tech', 'business', 'member'],
   'dashboard:amount':     ['admin', 'tech', 'business', 'member'],
 
-  'project:view':         ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'viewer', 'client'],
+  'project:view':         ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'viewer'],
   'project:create':       ['admin', 'sales_manager'],
   'project:edit':         ['admin', 'tech', 'business'],
   'project:delete':       ['admin'],
 
-  'client:view':          ['admin', 'sales_manager', 'business', 'marketing', 'support', 'member', 'client', 'viewer', 'tech'],
+  'client:view':          ['admin', 'sales_manager', 'business', 'marketing', 'support', 'member', 'viewer', 'tech'],
   'client:manage':        ['admin', 'sales_manager', 'business', 'marketing', 'support'],
   'client:create':        ['admin', 'sales_manager', 'business', 'marketing'],
 
@@ -21,9 +21,9 @@ const PERMISSIONS: Record<string, string[]> = {
   'task:view':            ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'viewer'],
   'task:create':          ['admin', 'business'],
 
-  'enterprise:view':      ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer', 'client'],
+  'enterprise:view':      ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer'],
 
-  'messaging:view':       ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer', 'client'],
+  'messaging:view':       ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer'],
 
   'report:view':          ['admin', 'sales_manager', 'business'],
 
@@ -33,7 +33,7 @@ const PERMISSIONS: Record<string, string[]> = {
   'audit:view':           ['admin'],
   'settings:manage':      ['admin'],
 
-  'ticket:view':          ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'client'],
+  'ticket:view':          ['admin', 'sales_manager', 'tech', 'business', 'support', 'member'],
   'ticket:staff':         ['admin', 'sales_manager', 'tech', 'business', 'support'],
 
   'staff:assignable':     ['admin', 'business', 'tech'],

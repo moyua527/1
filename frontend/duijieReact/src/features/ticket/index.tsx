@@ -35,7 +35,6 @@ const BACKEND_URL = (window as any).__ENV__?.BACKEND_URL || ''
 
 export default function TicketPage() {
   const { user, isMobile } = useOutletContext<{ user: any; isMobile: boolean }>()
-  const isClient = user?.role === 'client'
   const isStaff = can(user?.role || '', 'ticket:staff')
 
   const [tickets, setTickets] = useState<any[]>([])
@@ -165,7 +164,7 @@ export default function TicketPage() {
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {isStaff && selected.status === 'open' && <button onClick={() => handleStatusChange('processing')} style={{ fontSize: 12, padding: '4px 12px', borderRadius: 6, background: '#2563eb', color: '#fff', border: 'none', cursor: 'pointer' }}>开始处理</button>}
               {isStaff && selected.status === 'processing' && <button onClick={() => handleStatusChange('resolved')} style={{ fontSize: 12, padding: '4px 12px', borderRadius: 6, background: '#16a34a', color: '#fff', border: 'none', cursor: 'pointer' }}>标记解决</button>}
-              {isClient && (selected.status === 'resolved') && !selected.rating && <button onClick={openRate} style={{ fontSize: 12, padding: '4px 12px', borderRadius: 6, background: '#d97706', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}><Star size={12} />评价</button>}
+              {(selected.status === 'resolved') && !selected.rating && selected.created_by === user?.id && <button onClick={openRate} style={{ fontSize: 12, padding: '4px 12px', borderRadius: 6, background: '#d97706', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}><Star size={12} />评价</button>}
             </div>
           </div>
           <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
@@ -216,7 +215,7 @@ export default function TicketPage() {
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{r.creator_name || r.creator_username}</span>
-                      {r.creator_role && r.creator_role !== 'client' && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: '#eff6ff', color: '#2563eb' }}>工作人员</span>}
+                      {isStaff && r.creator_role && ['admin','sales_manager','tech','business','support'].includes(r.creator_role) && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: '#eff6ff', color: '#2563eb' }}>工作人员</span>}
                       <span style={{ fontSize: 11, color: '#94a3b8' }}>{new Date(r.created_at).toLocaleString('zh-CN')}</span>
                     </div>
                     <div style={{ fontSize: 13, color: '#334155', marginTop: 4, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{r.content}</div>
@@ -304,7 +303,7 @@ export default function TicketPage() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>工单</h1>
-          <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>{isClient ? '提交需求或问题' : '管理客户工单'}</p>
+          <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>{isStaff ? '管理工单' : '提交需求或问题'}</p>
         </div>
         <button onClick={openCreate} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 10, background: '#2563eb', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500 }}>
           <Plus size={16} /> 新建工单

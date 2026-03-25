@@ -13,14 +13,14 @@ interface CmdItem {
 }
 
 const NAV_DEFS = [
-  { path: '/', label: '仪表盘', icon: LayoutDashboard, roles: ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer', 'client'], keywords: 'dashboard home 首页' },
-  { path: '/projects', label: '项目管理', icon: FolderKanban, roles: ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'viewer', 'client'], keywords: 'project 项目列表' },
+  { path: '/', label: '仪表盘', icon: LayoutDashboard, roles: ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer'], keywords: 'dashboard home 首页' },
+  { path: '/projects', label: '项目管理', icon: FolderKanban, roles: ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'viewer'], keywords: 'project 项目列表' },
   { path: '/clients', label: '客户管理', icon: Users, roles: ['admin', 'sales_manager', 'business', 'marketing', 'support'], keywords: 'client customer 客户列表' },
   { path: '/opportunities', label: '商机管理', icon: TrendingUp, roles: ['admin', 'sales_manager', 'business'], keywords: 'opportunity sales 销售管道 商机' },
   { path: '/tasks', label: '任务看板', icon: ListTodo, roles: ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'viewer'], keywords: 'task kanban 任务 看板' },
-  { path: '/enterprise', label: '企业管理', icon: Building2, roles: ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer', 'client'], keywords: 'enterprise company 企业 组织' },
-  { path: '/messaging', label: '站内消息', icon: MessageSquare, roles: ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer', 'client'], keywords: 'message chat dm 消息 聊天' },
-  { path: '/tickets', label: '工单系统', icon: Ticket, roles: ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'client'], keywords: 'ticket issue 工单 问题 需求 咨询' },
+  { path: '/enterprise', label: '企业管理', icon: Building2, roles: ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer'], keywords: 'enterprise company 企业 组织' },
+  { path: '/messaging', label: '站内消息', icon: MessageSquare, roles: ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'support', 'member', 'viewer'], keywords: 'message chat dm 消息 聊天' },
+  { path: '/tickets', label: '工单系统', icon: Ticket, roles: ['admin', 'sales_manager', 'tech', 'business', 'support', 'member'], keywords: 'ticket issue 工单 问题 需求 咨询' },
   { path: '/report', label: '数据报表', icon: BarChart3, roles: ['admin', 'sales_manager', 'business'], keywords: 'report chart 报表 图表 统计' },
   { path: '/files', label: '文件管理', icon: FileText, roles: ['admin', 'sales_manager', 'tech', 'business', 'support', 'member', 'viewer'], keywords: 'file upload 文件 上传 下载' },
   { path: '/users', label: '用户管理', icon: Shield, roles: ['admin'], keywords: 'user account 用户 账号' },

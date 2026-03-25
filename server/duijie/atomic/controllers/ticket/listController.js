@@ -1,14 +1,9 @@
-﻿const db = require('../../../config/db');
+const db = require('../../../config/db');
 
 module.exports = async (req, res) => {
   try {
     let where = 't.is_deleted = 0';
     const params = [];
-    // Client only sees their own tickets
-    if (req.userRole === 'client') {
-      where += ' AND t.created_by = ?';
-      params.push(req.userId);
-    }
     const [rows] = await db.query(
       `SELECT t.*, u1.nickname as creator_name, u1.username as creator_username,
         u2.nickname as assignee_name, u2.username as assignee_username,
