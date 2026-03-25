@@ -13,10 +13,10 @@ module.exports = async (req, res) => {
     const isAdmin = req.userRole === 'admin';
     if (!isAdmin) {
       const [[membership]] = await db.query(
-        "SELECT role FROM duijie_client_members WHERE client_id = ? AND user_id = ? AND is_deleted = 0 AND role IN ('creator','admin')",
+        "SELECT role FROM duijie_client_members WHERE client_id = ? AND user_id = ? AND is_deleted = 0",
         [project.client_id, req.userId]
       );
-      if (!membership) return res.status(403).json({ success: false, message: '仅企业管理员可添加客户方成员' });
+      if (!membership) return res.status(403).json({ success: false, message: '仅客户企业成员可添加客户方成员' });
     }
 
     const [[isMember]] = await db.query(
