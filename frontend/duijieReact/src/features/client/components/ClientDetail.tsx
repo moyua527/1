@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Tag, Building, Mail, Phone, FileText, Clock, MoreVertical, Settings, History, Trash2, UserPlus, Users, Sparkles, Loader2, Building2, UserCircle } from 'lucide-react'
+import { ArrowLeft, Tag, Building, Mail, Phone, FileText, Clock, MoreVertical, Settings, History, Trash2, UserPlus, Users, Sparkles, Loader2, Building2, UserCircle, ChevronRight, Contact, FileSignature, MessageSquare } from 'lucide-react'
 import { clientApi } from '../services/api'
 import Avatar from '../../ui/Avatar'
 import Button from '../../ui/Button'
@@ -157,36 +157,65 @@ export default function ClientDetail() {
         )}
       </div>
 
-      {/* Extracted Sections */}
-      <ContactSection clientId={id!} contacts={contacts} onRefresh={load} />
-      {client.client_type === 'company' && <EnterpriseMemberSection clientId={id!} members={orgMembers} onRefresh={load} />}
-      <ContractSection clientId={id!} contracts={contracts} onRefresh={load} />
-
-      {/* AI Suggestion */}
-      <div style={{ ...sectionStyle, marginTop: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Sparkles size={18} color="#7c3aed" />
-            <span style={{ fontSize: 16, fontWeight: 600, color: '#334155' }}>AI 跟进建议</span>
+      {/* Module Cards Grid */}
+      {(() => {
+        const [openSection, setOpenSection] = useState<string | null>(null)
+        const cards = [
+          { key: 'contacts', icon: <Contact size={22} color="#2563eb" />, label: '联系人', count: contacts.length, bg: '#eff6ff', border: '#dbeafe' },
+          ...(client.client_type === 'company' ? [{ key: 'members', icon: <Users size={22} color="#16a34a" />, label: '企业成员', count: orgMembers.length, bg: '#f0fdf4', border: '#dcfce7' }] : []),
+          { key: 'contracts', icon: <FileSignature size={22} color="#d97706" />, label: '合同订单', count: contracts.length, bg: '#fffbeb', border: '#fef3c7' },
+          { key: 'ai', icon: <Sparkles size={22} color="#7c3aed" />, label: 'AI 跟进建议', bg: '#faf5ff', border: '#e9d5ff' },
+          { key: 'followups', icon: <MessageSquare size={22} color="#0891b2" />, label: '跟进记录', count: followUps.length, bg: '#ecfeff', border: '#cffafe' },
+        ]
+        return (<>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginTop: 16 }}>
+            {cards.map(c => (
+              <div key={c.key} onClick={() => setOpenSection(c.key)}
+                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 18px', background: c.bg, borderRadius: 12, border: `1px solid ${c.border}`, cursor: 'pointer', transition: 'all 0.2s' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}>
+                {c.icon}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{c.label}</div>
+                  {'count' in c && <div style={{ fontSize: 12, color: '#64748b' }}>{c.count} 条</div>}
+                </div>
+                <ChevronRight size={16} color="#94a3b8" />
+              </div>
+            ))}
           </div>
-          <Button onClick={async () => {
-            setAiLoading(true); setAiSuggestion('')
-            const r = await clientApi.aiSuggestion(id!)
-            setAiLoading(false)
-            if (r.success) setAiSuggestion(r.data)
-            else toast(r.message || 'AI 服务不可用', 'error')
-          }} disabled={aiLoading}>
-            {aiLoading ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> 分析中...</> : <><Sparkles size={14} /> 获取建议</>}
-          </Button>
-        </div>
-        {aiSuggestion ? (
-          <div style={{ background: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: 10, padding: 14, fontSize: 14, color: '#334155', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{aiSuggestion}</div>
-        ) : (
-          <div style={{ fontSize: 13, color: '#94a3b8', textAlign: 'center', padding: 12 }}>点击"获取建议"让 AI 分析客户数据并给出跟进建议</div>
-        )}
-      </div>
 
-      <FollowUpSection clientId={id!} followUps={followUps} onRefresh={load} />
+          <Modal open={openSection === 'contacts'} onClose={() => setOpenSection(null)} title="联系人">
+            <ContactSection clientId={id!} contacts={contacts} onRefresh={load} embedded />
+          </Modal>
+          <Modal open={openSection === 'members'} onClose={() => setOpenSection(null)} title="企业成员">
+            <EnterpriseMemberSection clientId={id!} members={orgMembers} onRefresh={load} embedded />
+          </Modal>
+          <Modal open={openSection === 'contracts'} onClose={() => setOpenSection(null)} title="合同订单">
+            <ContractSection clientId={id!} contracts={contracts} onRefresh={load} embedded />
+          </Modal>
+          <Modal open={openSection === 'ai'} onClose={() => setOpenSection(null)} title="AI 跟进建议">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <Button onClick={async () => {
+                setAiLoading(true); setAiSuggestion('')
+                const r = await clientApi.aiSuggestion(id!)
+                setAiLoading(false)
+                if (r.success) setAiSuggestion(r.data)
+                else toast(r.message || 'AI 服务不可用', 'error')
+              }} disabled={aiLoading}>
+                {aiLoading ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> 分析中...</> : <><Sparkles size={14} /> 获取建议</>}
+              </Button>
+              {aiSuggestion ? (
+                <div style={{ background: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: 10, padding: 14, fontSize: 14, color: '#334155', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{aiSuggestion}</div>
+              ) : (
+                <div style={{ fontSize: 13, color: '#94a3b8', textAlign: 'center', padding: 12 }}>点击"获取建议"让 AI 分析客户数据并给出跟进建议</div>
+              )}
+            </div>
+          </Modal>
+          <Modal open={openSection === 'followups'} onClose={() => setOpenSection(null)} title="跟进记录">
+            <FollowUpSection clientId={id!} followUps={followUps} onRefresh={load} embedded />
+          </Modal>
+        </>)
+      })()}
 
       {/* Modals */}
       <ClientEditModal open={editOpen} onClose={() => setEditOpen(false)} client={client} clientId={id!} onSaved={load} />

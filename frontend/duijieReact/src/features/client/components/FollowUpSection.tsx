@@ -5,7 +5,7 @@ import Button from '../../ui/Button'
 import { toast } from '../../ui/Toast'
 import { sectionStyle, followTypeMap } from './constants'
 
-interface Props { clientId: string; followUps: any[]; onRefresh: () => void }
+interface Props { clientId: string; followUps: any[]; onRefresh: () => void; embedded?: boolean }
 
 const getFollowIcon = (type: string) => {
   switch (type) {
@@ -17,7 +17,7 @@ const getFollowIcon = (type: string) => {
   }
 }
 
-export default function FollowUpSection({ clientId, followUps, onRefresh }: Props) {
+export default function FollowUpSection({ clientId, followUps, onRefresh, embedded }: Props) {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<any>(null)
   const [form, setForm] = useState({ content: '', follow_type: 'phone', next_follow_date: '' })
@@ -54,7 +54,7 @@ export default function FollowUpSection({ clientId, followUps, onRefresh }: Prop
   }
 
   return (
-    <div style={{ ...sectionStyle, marginTop: 16 }}>
+    <div style={embedded ? {} : { ...sectionStyle, marginTop: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <MessageSquare size={18} color="#2563eb" />

@@ -36,6 +36,7 @@ const PERMISSIONS: Record<string, string[]> = {
   'ticket:view':          ['admin', 'sales_manager', 'tech', 'business', 'member'],
   'ticket:staff':         ['admin', 'sales_manager', 'tech', 'business'],
 
+  'partner:manage':       ['admin'],
   'staff:assignable':     ['admin', 'business', 'tech'],
 }
 

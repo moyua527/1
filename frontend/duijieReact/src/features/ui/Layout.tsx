@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield, Settings, Copy, TrendingUp, MessageSquare, ScrollText, FileText, Edit2, Building2, Ticket } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield, Settings, Copy, TrendingUp, MessageSquare, ScrollText, FileText, Edit2, Building2, Ticket, Plug2 } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
 import { onSocket } from './smartSocket'
@@ -25,6 +25,7 @@ const ALL_NAV_ITEMS = [
   { path: '/files', label: '文件管理', icon: FileText, roles: ['admin', 'sales_manager', 'tech', 'business', 'member', 'viewer'] },
   { path: '/users', label: '用户管理', icon: Shield, roles: ['admin'] },
   { path: '/audit', label: '审计日志', icon: ScrollText, roles: ['admin'] },
+  { path: '/partners', label: '合作方管理', icon: Plug2, roles: ['admin'] },
   { path: '/settings', label: '系统配置', icon: Settings, roles: ['admin'] },
 ]
 

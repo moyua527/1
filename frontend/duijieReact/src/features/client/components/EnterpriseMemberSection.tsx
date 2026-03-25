@@ -9,9 +9,9 @@ import { toast } from '../../ui/Toast'
 import { confirm } from '../../ui/ConfirmDialog'
 import { sectionStyle } from './constants'
 
-interface Props { clientId: string; members: any[]; onRefresh: () => void }
+interface Props { clientId: string; members: any[]; onRefresh: () => void; embedded?: boolean }
 
-export default function EnterpriseMemberSection({ clientId, members, onRefresh }: Props) {
+export default function EnterpriseMemberSection({ clientId, members, onRefresh, embedded }: Props) {
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<any>(null)
   const [form, setForm] = useState({ name: '', position: '', department: '', phone: '', email: '', notes: '' })
@@ -37,7 +37,7 @@ export default function EnterpriseMemberSection({ clientId, members, onRefresh }
   }
 
   return (
-    <div style={{ ...sectionStyle, marginTop: 16 }}>
+    <div style={embedded ? {} : { ...sectionStyle, marginTop: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Building2 size={18} color="#0284c7" />

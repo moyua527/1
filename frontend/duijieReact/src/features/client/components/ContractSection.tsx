@@ -8,9 +8,9 @@ import { toast } from '../../ui/Toast'
 import { confirm } from '../../ui/ConfirmDialog'
 import { sectionStyle, contractStatusMap } from './constants'
 
-interface Props { clientId: string; contracts: any[]; onRefresh: () => void }
+interface Props { clientId: string; contracts: any[]; onRefresh: () => void; embedded?: boolean }
 
-export default function ContractSection({ clientId, contracts, onRefresh }: Props) {
+export default function ContractSection({ clientId, contracts, onRefresh, embedded }: Props) {
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<any>(null)
   const [form, setForm] = useState({ title: '', amount: '', status: 'draft', signed_date: '', expire_date: '', notes: '' })
@@ -41,7 +41,7 @@ export default function ContractSection({ clientId, contracts, onRefresh }: Prop
   }
 
   return (
-    <div style={{ ...sectionStyle, marginTop: 16 }}>
+    <div style={embedded ? {} : { ...sectionStyle, marginTop: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <FileSignature size={18} color="#16a34a" />

@@ -30,6 +30,7 @@ const FileManager = lazyLoad(() => import('./features/file/index'))
 const SystemSettings = lazyLoad(() => import('./features/settings/index'))
 const Enterprise = lazyLoad(() => import('./features/enterprise/index'))
 const TicketPage = lazyLoad(() => import('./features/ticket/index'))
+const PartnerManagement = lazyLoad(() => import('./features/partner/index'))
 
 export default function App() {
   const { user, checking, hasEnterprise, setUser, init } = useUserStore()
@@ -74,6 +75,7 @@ export default function App() {
             <Route path="/files" element={<FileManager />} />
             {canAudit && <Route path="/audit" element={<AuditLog />} />}
             {canSettings && <Route path="/settings" element={<SystemSettings />} />}
+            {canSettings && <Route path="/partners" element={<PartnerManagement />} />}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

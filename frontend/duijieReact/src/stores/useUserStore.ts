@@ -47,12 +47,10 @@ function writeCache(u: User | null) {
   } catch {}
 }
 
-const ENTERPRISE_EXEMPT_ROLES = ['admin', 'sales_manager', 'business', 'marketing', 'tech']
-
 const useUserStore = create<UserState>((set, get) => ({
   user: readCache(),
   checking: true,
-  hasEnterprise: false,
+  hasEnterprise: true,
 
   setUser: (user) => {
     writeCache(user)
@@ -62,44 +60,27 @@ const useUserStore = create<UserState>((set, get) => ({
   setHasEnterprise: (v) => set({ hasEnterprise: v }),
 
   checkEnterprise: async () => {
-    const user = get().user
-    if (!user || ENTERPRISE_EXEMPT_ROLES.includes(user.role)) {
-      set({ hasEnterprise: true })
-      return
-    }
-    try {
-      const r = await fetchApi('/api/my-enterprise')
-      set({ hasEnterprise: r.success && r.data !== null })
-    } catch {
-      set({ hasEnterprise: false })
-    }
+    set({ hasEnterprise: true })
   },
 
   init: async () => {
     if (!getToken()) {
       writeCache(null)
-      set({ user: null, checking: false, hasEnterprise: false })
+      set({ user: null, checking: false, hasEnterprise: true })
       return
     }
     try {
       const r = await authApi.me()
       if (r.success) {
         writeCache(r.data)
-        set({ user: r.data })
-        const role = r.data.role
-        if (ENTERPRISE_EXEMPT_ROLES.includes(role)) {
-          set({ hasEnterprise: true, checking: false })
-        } else {
-          const entR = await fetchApi('/api/my-enterprise')
-          set({ hasEnterprise: entR.success && entR.data !== null, checking: false })
-        }
+        set({ user: r.data, hasEnterprise: true, checking: false })
       } else {
         writeCache(null)
-        set({ user: null, checking: false, hasEnterprise: false })
+        set({ user: null, checking: false, hasEnterprise: true })
       }
     } catch {
       writeCache(null)
-      set({ user: null, checking: false, hasEnterprise: false })
+      set({ user: null, checking: false, hasEnterprise: true })
     }
   },
 
