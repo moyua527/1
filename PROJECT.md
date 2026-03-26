@@ -664,6 +664,8 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 
 项目列表、详情、导出与企业项目接口均返回双方企业字段：`internal_client_id`、`internal_client_name`、`internal_client_company`、`client_id`、`client_name`、`client_company`。
 
+项目详情页的企业信息与成员区按当前登录用户的活跃企业视角显示：当前企业显示为“我方企业 / 我方团队”，另一侧显示为“客户企业”或“对方企业”。
+
 ---
 
 ## 五、数据库表结构

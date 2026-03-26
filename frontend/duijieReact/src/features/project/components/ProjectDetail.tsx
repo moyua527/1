@@ -61,6 +61,7 @@ export default function ProjectDetail() {
   const [clientModal, setClientModal] = useState(false)
   const [clientData, setClientData] = useState<any>(null)
   const [enterpriseRoles, setEnterpriseRoles] = useState<any[]>([])
+  const [activeEnterpriseId, setActiveEnterpriseId] = useState<number | null>(null)
 
   const openClientModal = (clientId: number) => {
     setClientModal(true)
@@ -83,11 +84,24 @@ export default function ProjectDetail() {
     if (!id) return
     projectApi.detail(id).then(r => { if (r.success) setProject(r.data) })
     loadTasks()
+    fetchApi('/api/my-enterprise').then(r => {
+      if (r.success && r.data?.activeId) setActiveEnterpriseId(Number(r.data.activeId))
+      else setActiveEnterpriseId(null)
+    }).catch(() => setActiveEnterpriseId(null))
   }, [id])
 
   if (!project) return <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}>加载中...</div>
 
   const st = statusMap[project.status] || statusMap.planning
+  const internalMembers = (project.members || []).filter((m: any) => m.source !== 'client')
+  const clientMembers = (project.members || []).filter((m: any) => m.source === 'client')
+  const isClientPerspective = !!activeEnterpriseId && !!project.client_id && Number(activeEnterpriseId) === Number(project.client_id)
+  const myEnterpriseName = isClientPerspective ? (project.client_name || '-') : (project.internal_client_name || '-')
+  const otherEnterpriseName = isClientPerspective ? (project.internal_client_name || '-') : (project.client_name || '-')
+  const myMembers = isClientPerspective ? clientMembers : internalMembers
+  const otherMembers = isClientPerspective ? internalMembers : clientMembers
+  const myTeamTitle = `我方团队（${myEnterpriseName}）`
+  const otherTeamTitle = `${isClientPerspective ? '对方企业' : '客户企业'}（${otherEnterpriseName}）`
 
   const handleDelete = async () => {
     if (!(await confirm({ message: '确定删除此项目？', danger: true }))) return
@@ -122,8 +136,8 @@ export default function ProjectDetail() {
           <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0f172a', margin: 0 }}>{project.name}</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
             <Badge color={st.color}>{st.label}</Badge>
-            {project.internal_client_name && <span style={{ fontSize: 13, color: '#64748b' }}>我方企业: <span style={{ color: '#0f172a' }}>{project.internal_client_name}</span></span>}
-            {project.client_name && <span style={{ fontSize: 13, color: '#64748b' }}>客户企业: <span onClick={() => project.client_id && openClientModal(project.client_id)} style={{ color: '#2563eb', cursor: 'pointer' }}>{project.client_name}</span></span>}
+            <span style={{ fontSize: 13, color: '#64748b' }}>我方企业: <span style={{ color: '#0f172a' }}>{myEnterpriseName}</span></span>
+            <span style={{ fontSize: 13, color: '#64748b' }}>{isClientPerspective ? '对方企业' : '客户企业'}: {isClientPerspective ? <span style={{ color: '#0f172a' }}>{otherEnterpriseName}</span> : <span onClick={() => project.client_id && openClientModal(project.client_id)} style={{ color: '#2563eb', cursor: 'pointer' }}>{otherEnterpriseName}</span>}</span>
           </div>
         </div>
         {canDelete && <Button variant="danger" onClick={handleDelete}><Trash2 size={14} /> 删除</Button>}
@@ -150,8 +164,8 @@ export default function ProjectDetail() {
             <div><div style={{ fontSize: 13, color: '#64748b' }}>开始日期</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.start_date || '未设置'}</div></div>
             <div><div style={{ fontSize: 13, color: '#64748b' }}>结束日期</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.end_date || '未设置'}</div></div>
             <div><div style={{ fontSize: 13, color: '#64748b' }}>预算</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.budget > 0 ? `¥${Number(project.budget).toLocaleString()}` : '未设置'}</div></div>
-            <div><div style={{ fontSize: 13, color: '#64748b' }}>我方企业</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.internal_client_name || '-'}</div></div>
-            <div><div style={{ fontSize: 13, color: '#64748b' }}>客户企业</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.client_id ? <span onClick={() => openClientModal(project.client_id)} style={{ color: '#2563eb', cursor: 'pointer' }}>{project.client_name}</span> : (project.client_name || '-')}</div></div>
+            <div><div style={{ fontSize: 13, color: '#64748b' }}>我方企业</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{myEnterpriseName}</div></div>
+            <div><div style={{ fontSize: 13, color: '#64748b' }}>{isClientPerspective ? '对方企业' : '客户企业'}</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{isClientPerspective ? otherEnterpriseName : (project.client_id ? <span onClick={() => openClientModal(project.client_id)} style={{ color: '#2563eb', cursor: 'pointer' }}>{otherEnterpriseName}</span> : otherEnterpriseName)}</div></div>
             <div><div style={{ fontSize: 13, color: '#64748b' }}>创建时间</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.created_at ? new Date(project.created_at).toLocaleDateString('zh-CN') : '-'}</div></div>
             <div><div style={{ fontSize: 13, color: '#64748b' }}>任务数</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{tasks.length}</div></div>
           </div>
@@ -203,10 +217,13 @@ export default function ProjectDetail() {
         </Modal>
 
         <MembersSection
-          project={project}
+          myTeamTitle={myTeamTitle}
+          otherTeamTitle={otherTeamTitle}
+          myMembers={myMembers}
+          otherMembers={otherMembers}
           canEdit={canEdit}
-          onManageMembers={openManageMembers}
-          onManageClientMembers={openManageClientMembers}
+          onManageMyMembers={isClientPerspective ? openManageClientMembers : openManageMembers}
+          onManageOtherMembers={isClientPerspective ? openManageMembers : openManageClientMembers}
           onSelectMember={setSelectedMember}
         />
 
@@ -214,7 +231,7 @@ export default function ProjectDetail() {
           open={showAddMember}
           onClose={() => setShowAddMember(false)}
           projectId={id!}
-          members={(project.members || []).filter((m: any) => m.source !== 'client')}
+          members={internalMembers}
           availableUsers={availableUsers}
           enterpriseRoles={enterpriseRoles}
           onRefresh={loadProject}
@@ -225,7 +242,7 @@ export default function ProjectDetail() {
           open={showAddClientMember}
           onClose={() => setShowAddClientMember(false)}
           projectId={id!}
-          clientMembers={(project.members || []).filter((m: any) => m.source === 'client')}
+          clientMembers={clientMembers}
           clientAvailableUsers={clientAvailableUsers}
           onRefresh={loadProject}
           onRefreshAvailable={refreshClientAvailableUsers}
