@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { fetchApi, BACKEND_URL } from '../../bootstrap'
 import { taskApi } from './services/api'
+import useLiveData from '../../hooks/useLiveData'
 import Badge from '../ui/Badge'
 import Button from '../ui/Button'
 import { toast } from '../ui/Toast'
@@ -53,6 +54,7 @@ export default function TaskBoard() {
   }
 
   useEffect(() => { reload() }, [filterProject])
+  useLiveData(['task'], reload)
 
   const filtered = allTasks.filter(t => {
     if (searchText) {

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { FileText, Download, Trash2, Search, Upload, Loader2, File, Image, FileSpreadsheet, FileCode, Film, Eye, X, CheckSquare, Square } from 'lucide-react'
 import { fetchApi, uploadFile, BACKEND_URL } from '../../bootstrap'
+import useLiveData from '../../hooks/useLiveData'
 import Button from '../ui/Button'
 import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
@@ -56,6 +57,7 @@ export default function FileManager() {
     fetchApi('/api/files/all').then(r => { if (r.success) setFiles(r.data || []) }).finally(() => setLoading(false))
   }
   useEffect(load, [])
+  useLiveData(['file'], load)
 
   const filtered = files.filter(f => {
     if (category && getCategory(f.mime_type) !== category) return false

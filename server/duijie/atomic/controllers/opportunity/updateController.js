@@ -1,4 +1,5 @@
 const updateOpportunity = require('../../services/opportunity/updateOpportunity');
+const { broadcast } = require('../../utils/broadcast');
 
 module.exports = async (req, res) => {
   try {
@@ -7,6 +8,7 @@ module.exports = async (req, res) => {
     const keys = Object.keys(fields).filter(k => fields[k] !== undefined);
     if (!keys.length) return res.json({ success: true });
     await updateOpportunity(id, fields);
+    broadcast('opportunity', 'updated', { id, userId: req.userId });
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });

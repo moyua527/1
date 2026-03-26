@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import { FolderKanban, Users, ListTodo, CheckCircle, TrendingUp, Clock, Loader2, DollarSign, FileSignature, AlertTriangle, Bell, MessageSquare } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { can } from '../../stores/permissions'
+import useLiveData from '../../hooks/useLiveData'
 import DashboardCharts from './DashboardCharts'
 import ClientDashboard from './ClientDashboard'
 
@@ -48,11 +49,13 @@ export default function Dashboard() {
 
   const isClient = r === 'client'
 
-  useEffect(() => {
+  const loadStats = useCallback(() => {
     fetchApi('/api/dashboard/stats').then(r => { if (r.success) setStats(r.data) }).catch(() => {
       setStats({ totalProjects: 0, activeProjects: 0, completedProjects: 0, totalClients: 0, totalTasks: 0, pendingTasks: 0, completedTasks: 0 })
     })
   }, [])
+  useEffect(loadStats, [loadStats])
+  useLiveData(['project', 'client', 'task', 'opportunity'], loadStats)
 
   useEffect(() => {
     fetchApi(`/api/dashboard/chart?days=${chartDays}`).then(r => { if (r.success) setChartData(r.data) })

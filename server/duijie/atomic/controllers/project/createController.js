@@ -1,5 +1,6 @@
 const createProject = require('../../services/project/createProject');
 const db = require('../../../config/db');
+const { broadcast } = require('../../utils/broadcast');
 
 module.exports = async (req, res) => {
   try {
@@ -10,6 +11,7 @@ module.exports = async (req, res) => {
       clientId = userRow[0]?.active_enterprise_id || null;
     }
     const id = await createProject({ ...req.body, client_id: clientId, created_by: req.userId });
+    broadcast('project', 'created', { id, userId: req.userId });
     res.json({ success: true, data: { id } });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });

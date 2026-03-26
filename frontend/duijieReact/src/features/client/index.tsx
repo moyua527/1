@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, useOutletContext } from 'react-router-dom
 import { Plus, Users, Loader2, Search, Download, Zap, Upload, Building2, UserCircle } from 'lucide-react'
 import { clientApi } from './services/api'
 import { can } from '../../stores/permissions'
+import useLiveData from '../../hooks/useLiveData'
 import Button from '../ui/Button'
 import Avatar from '../ui/Avatar'
 import { toast } from '../ui/Toast'
@@ -43,6 +44,7 @@ export default function ClientList() {
     clientApi.allScores().then(r => { if (r.success) setScores(r.data || {}) })
   }
   useEffect(load, [])
+  useLiveData(['client'], load)
 
   return (
     <div>

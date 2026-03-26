@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import { Ticket, Plus, Clock, Loader2, CheckCircle, XCircle, Star } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { can } from '../../stores/permissions'
+import useLiveData from '../../hooks/useLiveData'
 import TicketDetail from './TicketDetail'
 import TicketCreateModal from './TicketCreateModal'
 
@@ -38,6 +39,7 @@ export default function TicketPage() {
     fetchApi('/api/tickets').then(r => { if (r.success) setTickets(r.data || []) }).finally(() => setLoading(false))
   }
   useEffect(load, [])
+  useLiveData(['ticket'], load)
 
   useEffect(() => {
     if (isStaff) fetchApi('/api/users').then(r => { if (r.success) setStaffMembers(r.data || []) }).catch(() => {})

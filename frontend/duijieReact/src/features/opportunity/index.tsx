@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import { Plus, Loader2, DollarSign, Calendar, User, Trash2, Edit3, TrendingUp } from 'lucide-react'
 import { clientApi } from '../client/services/api'
 import { can } from '../../stores/permissions'
+import useLiveData from '../../hooks/useLiveData'
 import Button from '../ui/Button'
 import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
@@ -33,6 +34,7 @@ export default function OpportunityList() {
     clientApi.opportunities().then(r => { if (r.success) setItems(r.data || []) }).finally(() => setLoading(false))
   }
   useEffect(load, [])
+  useLiveData(['opportunity'], load)
 
   const loadFormData = () => {
     clientApi.list().then(r => { if (r.success) setClients(r.data || []) })

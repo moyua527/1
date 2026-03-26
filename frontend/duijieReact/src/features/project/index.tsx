@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext, useLocation } from 'react-router-dom'
 import { Plus, FolderKanban, Loader2, Search } from 'lucide-react'
 import { projectApi } from './services/api'
 import { can } from '../../stores/permissions'
+import useLiveData from '../../hooks/useLiveData'
 import Button from '../ui/Button'
 import Badge from '../ui/Badge'
 import ProgressBar from '../ui/ProgressBar'
@@ -61,6 +62,7 @@ export default function ProjectList() {
     }).finally(() => setLoading(false))
   }, [])
   useEffect(() => { load() }, [load, location.pathname])
+  useLiveData(['project'], load)
 
   const filtered = projects.filter(p => {
     if (statusFilter && p.status !== statusFilter) return false
