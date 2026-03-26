@@ -1,43 +1,43 @@
 import useUserStore from './useUserStore'
 
 const PERMISSIONS: Record<string, string[]> = {
-  'dashboard:view':       ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'member', 'viewer'],
-  'dashboard:clients':    ['admin', 'business'],
-  'dashboard:tasks':      ['admin', 'tech', 'business', 'member'],
-  'dashboard:amount':     ['admin', 'tech', 'business', 'member'],
+  'dashboard:view':       ['admin', 'member'],
+  'dashboard:clients':    ['admin', 'member'],
+  'dashboard:tasks':      ['admin', 'member'],
+  'dashboard:amount':     ['admin', 'member'],
 
-  'project:view':         ['admin', 'sales_manager', 'tech', 'business', 'member', 'viewer'],
-  'project:create':       ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'member'],
-  'project:edit':         ['admin', 'sales_manager', 'tech', 'business'],
-  'project:delete':       ['admin', 'sales_manager'],
+  'project:view':         ['admin', 'member'],
+  'project:create':       ['admin', 'member'],
+  'project:edit':         ['admin'],
+  'project:delete':       ['admin'],
 
-  'client:view':          ['admin', 'sales_manager', 'business', 'marketing', 'member', 'viewer', 'tech'],
-  'client:manage':        ['admin', 'sales_manager', 'business', 'marketing'],
-  'client:create':        ['admin', 'sales_manager', 'business', 'marketing'],
+  'client:view':          ['admin', 'member'],
+  'client:manage':        ['admin'],
+  'client:create':        ['admin'],
 
-  'opportunity:view':     ['admin', 'sales_manager', 'business'],
-  'opportunity:create':   ['admin', 'sales_manager', 'business'],
+  'opportunity:view':     ['admin', 'member'],
+  'opportunity:create':   ['admin', 'member'],
 
-  'task:view':            ['admin', 'sales_manager', 'tech', 'business', 'member', 'viewer'],
-  'task:create':          ['admin', 'business'],
+  'task:view':            ['admin', 'member'],
+  'task:create':          ['admin'],
 
-  'enterprise:view':      ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'member', 'viewer'],
+  'enterprise:view':      ['admin', 'member'],
 
-  'messaging:view':       ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'member', 'viewer'],
+  'messaging:view':       ['admin', 'member'],
 
-  'report:view':          ['admin', 'sales_manager', 'business'],
+  'report:view':          ['admin'],
 
-  'file:view':            ['admin', 'sales_manager', 'tech', 'business', 'member', 'viewer'],
+  'file:view':            ['admin', 'member'],
 
   'user:manage':          ['admin'],
   'audit:view':           ['admin'],
   'settings:manage':      ['admin'],
 
-  'ticket:view':          ['admin', 'sales_manager', 'tech', 'business', 'member'],
-  'ticket:staff':         ['admin', 'sales_manager', 'tech', 'business'],
+  'ticket:view':          ['admin', 'member'],
+  'ticket:staff':         ['admin'],
 
   'partner:manage':       ['admin'],
-  'staff:assignable':     ['admin', 'business', 'tech'],
+  'staff:assignable':     ['admin', 'member'],
 }
 
 const PERM_TO_ENTERPRISE: Record<string, string> = {

@@ -3,10 +3,7 @@ const db = require('../../../config/db');
 module.exports = async (auth = {}) => {
   let filter = '';
   const params = [];
-  if (auth.role === 'business' && auth.userId) {
-    filter = `AND (c.assigned_to = ? OR c.created_by = ?)`;
-    params.push(auth.userId, auth.userId);
-  } else if (auth.role === 'member' && auth.userId) {
+  if (auth.role !== 'admin' && auth.userId) {
     filter = `AND c.id IN (
       SELECT DISTINCT p.client_id FROM duijie_projects p
       WHERE p.is_deleted = 0 AND (p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?))

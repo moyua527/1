@@ -6,7 +6,7 @@ const validate = require('../middleware/validate');
 const V = require('../middleware/validators');
 const router = express.Router();
 
-const projectStaff = roleGuard('admin', 'sales_manager', 'tech', 'business', 'member', 'viewer', 'marketing');
+const projectStaff = roleGuard('admin', 'member');
 
 router.post('/projects', auth, V.createProject, validate, require('../controllers/project/createController'));
 router.get('/projects/team-users', auth, require('../controllers/project/teamUsersController'));

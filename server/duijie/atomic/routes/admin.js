@@ -33,7 +33,7 @@ router.get('/app/version', require('../controllers/system/appVersionController')
 // Dashboard
 router.get('/dashboard/stats', auth, require('../controllers/dashboard/statsController'));
 const enterprisePermGuard = require('../middleware/enterprisePermGuard');
-router.get('/dashboard/report', auth, roleGuard('admin', 'sales_manager', 'business', { soft: true }), enterprisePermGuard('can_view_report'), require('../controllers/dashboard/reportController'));
+router.get('/dashboard/report', auth, roleGuard('admin', 'member', { soft: true }), enterprisePermGuard('can_view_report'), require('../controllers/dashboard/reportController'));
 router.get('/dashboard/chart', auth, require('../controllers/dashboard/chartController'));
 router.get('/dashboard/workspace', auth, require('../controllers/dashboard/workspaceController'));
 

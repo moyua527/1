@@ -4,7 +4,7 @@ const createInvite = require('../../services/invite/createInvite');
 module.exports = async (req, res) => {
   try {
     const { preset_role, expires_hours, note } = req.body;
-    const validRoles = ['admin', 'tech', 'business', 'member'];
+    const validRoles = ['admin', 'member'];
     if (preset_role && !validRoles.includes(preset_role)) {
       return res.status(400).json({ success: false, message: '角色无效' });
     }

@@ -6,22 +6,22 @@ const validate = require('../middleware/validate');
 const V = require('../middleware/validators');
 const router = express.Router();
 
-const salesTeam = roleGuard('admin', 'business');
+const staff = roleGuard('admin', 'member');
 
 // Clients
-router.get('/clients/available-members', auth, salesTeam, require('../controllers/client/availableMembersController'));
-router.post('/clients', auth, roleGuard('admin', 'business', { soft: true }), enterprisePermGuard('can_manage_client'), V.createClient, validate, require('../controllers/client/createController'));
-router.get('/clients', auth, roleGuard('admin', 'business'), require('../controllers/client/listController'));
-router.get('/clients/:id', auth, roleGuard('admin', 'business', 'member', 'viewer', 'tech'), require('../controllers/client/detailController'));
-router.put('/clients/:id', auth, salesTeam, require('../controllers/client/updateController'));
+router.get('/clients/available-members', auth, staff, require('../controllers/client/availableMembersController'));
+router.post('/clients', auth, roleGuard('admin', 'member', { soft: true }), enterprisePermGuard('can_manage_client'), V.createClient, validate, require('../controllers/client/createController'));
+router.get('/clients', auth, staff, require('../controllers/client/listController'));
+router.get('/clients/:id', auth, staff, require('../controllers/client/detailController'));
+router.put('/clients/:id', auth, staff, require('../controllers/client/updateController'));
 router.delete('/clients/:id', auth, roleGuard('admin'), require('../controllers/client/deleteController'));
 router.post('/clients/import', auth, roleGuard('admin'), require('../controllers/client/importController'));
-router.get('/clients/:id/logs', auth, salesTeam, require('../controllers/client/logsController'));
-router.get('/clients/:id/score', auth, salesTeam, require('../controllers/client/scoreController'));
-router.get('/client-scores', auth, salesTeam, require('../controllers/client/scoresController'));
+router.get('/clients/:id/logs', auth, staff, require('../controllers/client/logsController'));
+router.get('/clients/:id/score', auth, staff, require('../controllers/client/scoreController'));
+router.get('/client-scores', auth, staff, require('../controllers/client/scoresController'));
 
 // AI
-router.get('/clients/:clientId/ai-suggestion', auth, salesTeam, require('../controllers/ai/suggestionController'));
+router.get('/clients/:clientId/ai-suggestion', auth, staff, require('../controllers/ai/suggestionController'));
 
 // My Enterprise
 const myEntCtrl = require('../controllers/client/myEnterpriseController');
@@ -56,41 +56,41 @@ router.put('/my-enterprise/members/:id/assign-role', auth, myEntCtrl.assignRole)
 
 // Client Members
 const clientMembersCtrl = require('../controllers/client/clientMembersController');
-router.get('/clients/:id/members', auth, roleGuard('admin', 'business'), clientMembersCtrl.list);
-router.post('/clients/:id/members', auth, salesTeam, clientMembersCtrl.create);
-router.put('/client-members/:id', auth, salesTeam, clientMembersCtrl.update);
+router.get('/clients/:id/members', auth, staff, clientMembersCtrl.list);
+router.post('/clients/:id/members', auth, staff, clientMembersCtrl.create);
+router.put('/client-members/:id', auth, staff, clientMembersCtrl.update);
 router.delete('/client-members/:id', auth, roleGuard('admin'), clientMembersCtrl.remove);
 
 // Contacts
-router.post('/contacts', auth, salesTeam, require('../controllers/contact/createController'));
-router.get('/clients/:clientId/contacts', auth, roleGuard('admin', 'business'), require('../controllers/contact/listController'));
-router.put('/contacts/:id', auth, salesTeam, require('../controllers/contact/updateController'));
+router.post('/contacts', auth, staff, require('../controllers/contact/createController'));
+router.get('/clients/:clientId/contacts', auth, staff, require('../controllers/contact/listController'));
+router.put('/contacts/:id', auth, staff, require('../controllers/contact/updateController'));
 router.delete('/contacts/:id', auth, roleGuard('admin'), require('../controllers/contact/deleteController'));
 
 // Tags
 const clientTagsCtrl = require('../controllers/tag/clientTagsController');
-router.post('/tags', auth, salesTeam, require('../controllers/tag/createController'));
-router.get('/tags', auth, salesTeam, require('../controllers/tag/listController'));
+router.post('/tags', auth, staff, require('../controllers/tag/createController'));
+router.get('/tags', auth, staff, require('../controllers/tag/listController'));
 router.delete('/tags/:id', auth, roleGuard('admin'), require('../controllers/tag/deleteController'));
-router.get('/clients/:clientId/tags', auth, salesTeam, clientTagsCtrl.get);
-router.put('/clients/:clientId/tags', auth, salesTeam, clientTagsCtrl.set);
+router.get('/clients/:clientId/tags', auth, staff, clientTagsCtrl.get);
+router.put('/clients/:clientId/tags', auth, staff, clientTagsCtrl.set);
 
 // Contracts
-router.post('/contracts', auth, roleGuard('admin', 'business'), require('../controllers/contract/createController'));
-router.get('/clients/:clientId/contracts', auth, roleGuard('admin', 'business'), require('../controllers/contract/listController'));
-router.put('/contracts/:id', auth, roleGuard('admin', 'business'), require('../controllers/contract/updateController'));
+router.post('/contracts', auth, staff, require('../controllers/contract/createController'));
+router.get('/clients/:clientId/contracts', auth, staff, require('../controllers/contract/listController'));
+router.put('/contracts/:id', auth, staff, require('../controllers/contract/updateController'));
 router.delete('/contracts/:id', auth, roleGuard('admin'), require('../controllers/contract/deleteController'));
 
 // Follow-ups
-router.post('/follow-ups', auth, salesTeam, require('../controllers/followUp/createController'));
-router.get('/clients/:clientId/follow-ups', auth, roleGuard('admin', 'business'), require('../controllers/followUp/listController'));
-router.put('/follow-ups/:id', auth, roleGuard('admin', 'business'), require('../controllers/followUp/updateController'));
-router.delete('/follow-ups/:id', auth, roleGuard('admin', 'business'), require('../controllers/followUp/deleteController'));
+router.post('/follow-ups', auth, staff, require('../controllers/followUp/createController'));
+router.get('/clients/:clientId/follow-ups', auth, staff, require('../controllers/followUp/listController'));
+router.put('/follow-ups/:id', auth, staff, require('../controllers/followUp/updateController'));
+router.delete('/follow-ups/:id', auth, staff, require('../controllers/followUp/deleteController'));
 
 // Opportunities
-router.post('/opportunities', auth, roleGuard('admin', 'business'), require('../controllers/opportunity/createController'));
-router.get('/opportunities', auth, roleGuard('admin', 'business'), require('../controllers/opportunity/listController'));
-router.put('/opportunities/:id', auth, roleGuard('admin', 'business'), require('../controllers/opportunity/updateController'));
+router.post('/opportunities', auth, staff, require('../controllers/opportunity/createController'));
+router.get('/opportunities', auth, staff, require('../controllers/opportunity/listController'));
+router.put('/opportunities/:id', auth, staff, require('../controllers/opportunity/updateController'));
 router.delete('/opportunities/:id', auth, roleGuard('admin'), require('../controllers/opportunity/deleteController'));
 
 module.exports = router;

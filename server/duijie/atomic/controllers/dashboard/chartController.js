@@ -22,11 +22,14 @@ module.exports = async (req, res) => {
        GROUP BY DATE(t.created_at) ORDER BY date`, [days, ...tp]
     );
 
-    // Client trend (admin/business only)
+    // Client trend
     let clientTrend = [];
-    if (['admin', 'business'].includes(role)) {
+    {
       let cf = '', cfp = [];
-      if (role === 'business') { cf = 'AND (assigned_to = ? OR created_by = ?)'; cfp = [uid, uid]; }
+      if (role !== 'admin' && uid) {
+        cf = 'AND id IN (SELECT DISTINCT p.client_id FROM duijie_projects p WHERE p.is_deleted = 0 AND (p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?)))';
+        cfp = [uid, uid];
+      }
       const [rows] = await db.query(
         `SELECT DATE(created_at) as date, COUNT(*) as count FROM duijie_clients
          WHERE is_deleted = 0 AND created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY) ${cf}
@@ -40,11 +43,11 @@ module.exports = async (req, res) => {
       `SELECT t.status, COUNT(*) as count FROM duijie_tasks t WHERE t.is_deleted = 0 ${tf} GROUP BY t.status`, tp
     );
 
-    // Opportunity stage distribution (admin/business)
+    // Opportunity stage distribution
     let oppDist = [];
-    if (['admin', 'business'].includes(role)) {
+    {
       let of = '', ofp = [];
-      if (role === 'business') { of = 'AND (assigned_to = ? OR created_by = ?)'; ofp = [uid, uid]; }
+      if (role !== 'admin' && uid) { of = 'AND (assigned_to = ? OR created_by = ?)'; ofp = [uid, uid]; }
       const [rows] = await db.query(
         `SELECT stage, COUNT(*) as count, COALESCE(SUM(amount),0) as amount FROM duijie_opportunities
          WHERE is_deleted = 0 ${of} GROUP BY stage`, ofp

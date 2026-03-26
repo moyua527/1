@@ -5,9 +5,6 @@ function buildProjectFilter(auth) {
   if (auth.role === 'admin') {
     return { where: '', params: [] };
   }
-  if (auth.role === 'business' && auth.userId) {
-    return { where: `AND (p.client_id IN (SELECT id FROM duijie_clients WHERE (assigned_to = ? OR created_by = ?) AND is_deleted = 0) OR ${isMember})`, params: [auth.userId, auth.userId, auth.userId, auth.userId] };
-  }
   if (auth.userId) {
     return { where: `AND ${isMember}`, params: [auth.userId, auth.userId] };
   }
@@ -16,7 +13,7 @@ function buildProjectFilter(auth) {
 
 module.exports = async (auth = {}) => {
   const pf = buildProjectFilter(auth);
-  const showClientData = ['admin', 'business'].includes(auth.role);
+  const showClientData = true;
 
   const [[projects]] = await db.query(
     `SELECT COUNT(*) as total, SUM(status = 'in_progress') as active, SUM(status = 'completed') as completed
@@ -28,8 +25,8 @@ module.exports = async (auth = {}) => {
 
   if (showClientData) {
     let cf = '', cfParams = [];
-    if (auth.role === 'business' && auth.userId) {
-      cf = `AND (c.assigned_to = ? OR c.created_by = ?)`;
+    if (auth.role !== 'admin' && auth.userId) {
+      cf = `AND c.id IN (SELECT DISTINCT p.client_id FROM duijie_projects p WHERE p.is_deleted = 0 AND (p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?)))`;
       cfParams = [auth.userId, auth.userId];
     }
 

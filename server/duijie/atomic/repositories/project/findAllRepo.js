@@ -11,11 +11,6 @@ module.exports = async ({ status, client_id, page = 1, limit = 20 }, auth = {}) 
 
   if (auth.role === 'admin') {
     // 全部可见
-  } else if (auth.role === 'business' && auth.userId) {
-    const filter = ` AND (p.client_id IN (SELECT id FROM duijie_clients WHERE (assigned_to = ? OR created_by = ?) AND is_deleted = 0) OR ${isMember})`;
-    sql += filter; countSql += filter;
-    params.push(auth.userId, auth.userId, auth.userId, auth.userId);
-    countParams.push(auth.userId, auth.userId, auth.userId, auth.userId);
   } else if (auth.userId) {
     // 企业端用户 JWT 带 clientId：可见本企业（客户）下全部项目，否则仅参与的项目
     if (auth.clientId) {

@@ -3,7 +3,7 @@ const db = require('../../../config/db');
 module.exports = async (userId, userRole) => {
   let filter = '';
   const params = [];
-  if (userRole === 'business') {
+  if (userRole !== 'admin' && userId) {
     filter = 'AND (o.assigned_to = ? OR o.created_by = ?)';
     params.push(userId, userId);
   }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Plus, Trash2, Edit2, Shield, Loader2, Code2, Briefcase, User, Search, Power, Link2, Copy, Clock, CheckCircle2, Mail, Phone, Calendar, Hash, MapPin, UserCheck, Eye, KeyRound, Download, ChevronLeft, ChevronRight, Users, X, MoreVertical } from 'lucide-react'
+import { Plus, Trash2, Edit2, Shield, Loader2, User, Search, Power, Link2, Copy, Clock, CheckCircle2, Mail, Phone, Calendar, Hash, MapPin, UserCheck, Eye, KeyRound, Download, ChevronLeft, ChevronRight, Users, X, MoreVertical } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { clientApi } from '../client/services/api'
 import Button from '../ui/Button'
@@ -12,8 +12,6 @@ import InviteLinkSection from './components/InviteLinkSection'
 
 const roleMap: Record<string, { label: string; color: string; bg: string; icon: any }> = {
   admin: { label: '管理员', color: '#dc2626', bg: '#fef2f2', icon: Shield },
-  tech: { label: '技术员', color: '#7c3aed', bg: '#f5f3ff', icon: Code2 },
-  business: { label: '业务员', color: '#0891b2', bg: '#ecfeff', icon: Briefcase },
   member: { label: '成员', color: '#2563eb', bg: '#eff6ff', icon: User },
 }
 

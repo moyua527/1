@@ -1,6 +1,6 @@
 const createUser = require('../../services/user/createUser');
 
-const VALID_ROLES = ['admin', 'tech', 'business', 'member'];
+const VALID_ROLES = ['admin', 'member'];
 
 module.exports = async (req, res) => {
   try {

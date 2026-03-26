@@ -7,12 +7,9 @@ module.exports = async (req, res) => {
     let where = 'f.is_deleted = 0';
     const params = [];
 
-    if (role === 'member') {
+    if (role !== 'admin' && uid) {
       where += ' AND (p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?))';
       params.push(uid, uid);
-    } else if (role === 'business') {
-      where += ' AND (p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?) OR p.client_id IN (SELECT id FROM duijie_clients WHERE (assigned_to = ? OR created_by = ?) AND is_deleted = 0))';
-      params.push(uid, uid, uid, uid);
     }
 
     const [rows] = await db.query(
