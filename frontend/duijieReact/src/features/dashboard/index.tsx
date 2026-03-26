@@ -6,6 +6,7 @@ import { can } from '../../stores/permissions'
 import useLiveData from '../../hooks/useLiveData'
 import DashboardCharts from './DashboardCharts'
 import ClientDashboard from './ClientDashboard'
+import WorkspaceSection from './WorkspaceSection'
 
 interface Stats {
   totalProjects: number; activeProjects: number; completedProjects: number
@@ -100,6 +101,7 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+      <WorkspaceSection />
       {chartData && <DashboardCharts chartData={chartData} days={chartDays} onDaysChange={setChartDays} canClients={canClients} />}
       {canClients && stats?.clientStages && (() => {
         const stages = stats.clientStages!

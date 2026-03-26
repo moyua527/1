@@ -8,6 +8,7 @@ interface User {
   nickname?: string
   avatar?: string
   role: string
+  totp_enabled?: boolean
   email?: string
   phone?: string
   client_id?: number | null
@@ -127,9 +128,14 @@ const useUserStore = create<UserState>((set, get) => ({
 
   logout: async () => {
     try {
+      const deviceToken = localStorage.getItem('push_device_token')
+      if (deviceToken) {
+        await fetchApi('/api/notifications/devices/unregister', { method: 'POST', body: JSON.stringify({ device_token: deviceToken }) })
+      }
       await fetch('/api/auth/logout', { method: 'POST' })
     } catch {}
     clearToken()
+    localStorage.removeItem('push_device_token')
     writeCache(null)
     set({ user: null })
     window.location.href = '/'

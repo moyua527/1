@@ -96,3 +96,4 @@
 | v1.1.27 | 2026-03-26 | 项目健康检查修复：P0修复Dashboard已完成任务统计(done→accepted)；P1导航栏+命令面板迁移RBAC(can()统一权限，消除双重权限逻辑)；P1关闭验证码测试模式(移除_dev_code)；P2合作方模块文档补充(PROJECT.md)；P2修复PM2重启2697次(服务器缺listUsers模块，全量同步修复) |
 | v1.1.30 | 2026-03-26 | 实时数据同步：后端broadcast工具+12个写操作控制器(project/task/client/opportunity)广播data_changed事件；前端useLiveData Hook订阅WS事件+Tab焦点刷新(5s节流)，已接入7个页面(Dashboard/项目/客户/任务/商机/工单/文件)；路由预加载(requestIdleCallback后台预加载所有chunk消除导航卡顿) |
 | v1.1.33 | 2026-03-26 | 项目级权限(双身份模型)：DB迁移project_members加enterprise_role_id；后端getProjectPerms工具+myPerms接口+updateMemberRole控制器；前端useProjectPerms Hook+ProjectDetail项目角色驱动权限+成员管理支持企业角色选择/修改/显示；修复新注册用户企业检查+恢复验证码测试模式 |
+| v1.1.34 | 2026-03-26 | 通知与协作增强：通知分类Tab+分类未读数+category字段；个人工作台聚合接口与首页卡片（待办/项目动态/待审批/即将到期）；审计日志新增时间轴视图；项目/任务CSV导出；TOTP 两步验证（登录挑战、个人资料启用/关闭）；移动端推送底座（设备令牌注册/注销、FCM 调用、Capacitor Push Bridge） |

@@ -238,11 +238,21 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 
 - 导航栏铃铛图标 + 未读计数徽章
 - 下拉通知列表（最新 30 条）+ 通知详情查看
+- **分类视图**：全部 / 项目 / 任务 / 审批 / 系统 Tab 切换，支持分类未读数展示
 - 点击单条标记已读 + 跳转链接
 - **全部已读**：一键标记全部通知为已读
 - 异步触发：工单回复、任务分配等场景自动生成通知
 - **WebSocket 实时推送**：通知创建后通过 Socket.IO 即时推送到用户端，无需轮询；保留 2 分钟兜底轮询作为降级方案
 - Socket 认证：连接后发送 JWT Token 加入 `user:<id>` 房间，确保通知精准投递
+- **移动端推送底座**：移动端可注册设备令牌，通知创建后在站内消息之外尝试调用 FCM 推送（未配置 `FCM_SERVER_KEY` 时自动跳过）
+
+### 3.13.1 个人工作台（Workspace）
+
+- **我的待办**：展示当前用户负责的未完成任务，按优先级和截止时间排序
+- **即将到期**：展示 3 天内到期的任务，突出今日/紧急状态
+- **我的项目**：展示我参与项目的近期动态、进行中任务数、完成进度
+- **待审批**：企业创建者/管理员可直接看到待处理的加入企业申请
+- **聚合接口**：`GET /api/dashboard/workspace`
 
 ### 3.14 审计日志（Audit Log，仅 admin）
 
@@ -250,6 +260,7 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 - 记录用户、操作类型、对象类型、IP 地址
 - 管理员查看页：操作类型筛选 + 对象类型筛选 + **日期范围筛选** + **关键词搜索**（操作详情/用户名/昵称） + 分页
 - **导出CSV**：按当前筛选条件导出全部日志为 CSV 文件（含 BOM 支持 Excel 中文显示）
+- **双视图**：支持表格 / 时间轴切换，时间轴按日期分组展示事件流
 
 ### 3.15 系统配置（Settings，仅 admin）
 
@@ -391,6 +402,7 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 
 **应用层防护：**
 - **密码 bcrypt 哈希**：所有密码存储和验证均使用 bcrypt（兼容明文旧数据自动升级）
+- **TOTP 两步验证（2FA）**：支持用户在个人资料中生成验证器密钥、启用/关闭动态验证码校验；登录/验证码登录在密码或验证码校验成功后进入二次验证挑战流程
 - **登录暴力破解防护**：登录 15 分钟/10 次，注册 1 小时/5 次
 - **API 速率限制**：全局每 IP 每 15 分钟最多 300 次
 - **Helmet 安全响应头**：X-Content-Type-Options、X-Frame-Options、X-XSS-Protection
@@ -420,6 +432,8 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 - **横向滚动**：客户阶段 Tab、任务看板列
 - **内容间距**：移动端自动缩小 padding
 - **自定义 Hook**：`useIsMobile(breakpoint=768)` 检测移动端
+- **Capacitor 推送桥接**：登录后原生 App 自动尝试注册 Push 权限并把设备令牌回传后端；退出登录时自动注销设备令牌
+- **Android 预留配置**：`android/app/build.gradle` 已兼容 `google-services.json` 存在时自动启用 Google Services 插件
 
 ---
 
@@ -442,6 +456,11 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | POST | `/api/auth/logout` | 登出 | 公开 |
 | GET | `/api/auth/me` | 当前用户信息 | 认证 |
 | PUT | `/api/auth/profile` | 更新个人资料 | 认证 |
+| POST | `/api/auth/2fa/login/verify` | 登录二次验证（challenge_token + TOTP） | 公开 |
+| GET | `/api/auth/2fa/status` | 查询当前用户 2FA 状态 | 认证 |
+| POST | `/api/auth/2fa/setup` | 生成验证器密钥 | 认证 |
+| POST | `/api/auth/2fa/enable` | 启用 2FA | 认证 |
+| POST | `/api/auth/2fa/disable` | 关闭 2FA | 认证 |
 
 ### 4.2 系统配置（System）
 
@@ -457,6 +476,7 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | 方法 | 路径 | 说明 | 权限 |
 |------|------|------|------|
 | GET | `/api/dashboard/stats` | 统计数据 | 认证 |
+| GET | `/api/dashboard/workspace` | 个人工作台聚合数据（待办/项目动态/待审批/即将到期） | 认证 |
 | GET | `/api/dashboard/report` | 报表数据 | 认证 |
 | GET | `/api/dashboard/chart` | 图表数据（支持 days 参数） | 认证 |
 
@@ -465,6 +485,7 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | 方法 | 路径 | 说明 | 权限 |
 |------|------|------|------|
 | POST | `/api/projects` | 创建项目 | 认证 |
+| GET | `/api/projects/export` | 导出项目列表（CSV） | 认证 |
 | GET | `/api/projects` | 项目列表（admin 全量；business 按负责客户或参与项目；其余角色：JWT 含 `clientId` 时可见该客户下全部项目，否则仅参与/创建的项目） | 认证 |
 | GET | `/api/projects/:id` | 项目详情（含成员） | 认证 |
 | PUT | `/api/projects/:id` | 更新项目 | 认证 |
@@ -526,6 +547,7 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | 方法 | 路径 | 说明 | 权限 |
 |------|------|------|------|
 | POST | `/api/tasks` | 创建任务 | staff |
+| GET | `/api/tasks/export` | 导出任务列表（CSV） | staff |
 | GET | `/api/tasks` | 任务列表 | staff |
 | PUT | `/api/tasks/:id` | 更新任务 | staff |
 | PATCH | `/api/tasks/:id/move` | 移动状态 | staff |
@@ -614,6 +636,8 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 |------|------|------|------|
 | GET | `/api/notifications` | 通知列表 | 认证 |
 | PATCH | `/api/notifications/:id/read` | 标记已读（id=all全部已读） | 认证 |
+| POST | `/api/notifications/devices` | 注册移动设备令牌 | 认证 |
+| POST | `/api/notifications/devices/unregister` | 注销移动设备令牌 | 认证 |
 
 ### 4.21 合作方管理（Partner）
 
@@ -642,11 +666,11 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 
 ## 五、数据库表结构
 
-数据库：`duijie_db`，共 21 张表。
+数据库：`duijie_db`，共 25 张表。
 
 | 表名 | 说明 |
 |------|------|
-| `voice_users` | 用户表（id, username, password, nickname, email, phone, avatar, role, client_id, manager_id, last_login_at） |
+| `voice_users` | 用户表（id, username, password, nickname, email, phone, avatar, role, client_id, manager_id, last_login_at, totp_secret, totp_enabled） |
 | `system_config` | 系统配置（JWT_SECRET, INVITE_CODE） |
 | `duijie_clients` | 客户/企业表（assigned_to, credit_code, legal_person, registered_capital, established_date, business_scope, company_type, website） |
 | `duijie_opportunities` | 商机表（title, client_id, amount, probability, stage, assigned_to） |
@@ -665,11 +689,12 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | `duijie_tags` | 标签表 |
 | `duijie_client_tags` | 客户标签关联表 |
 | `duijie_client_logs` | 客户变更日志表 |
-| `duijie_notifications` | 通知表（user_id, type, title, content, link, is_read） |
+| `duijie_notifications` | 通知表（user_id, type, category, title, content, link, is_read） |
 | `duijie_audit_logs` | 审计日志表（user_id, username, action, entity_type, entity_id, detail, ip） |
 | `duijie_client_members` | 企业成员表（client_id, user_id, name, role[creator/admin/member], position, department_id, phone, email） |
 | `duijie_departments` | 部门表（client_id, name, parent_id, sort_order） |
 | `duijie_join_requests` | 加入企业申请表（client_id, user_id, status[pending/approved/rejected]） |
+| `duijie_device_tokens` | 移动设备令牌表（user_id, platform, device_token, app_version, is_active, last_seen_at） |
 
 ---
 

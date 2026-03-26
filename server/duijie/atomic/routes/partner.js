@@ -127,7 +127,10 @@ router.get('/partners', auth, adminOnly, async (req, res) => {
     const [rows] = await db.query(
       'SELECT id, partner_name, api_key, partner_url, permissions, is_active, last_used_at, call_count, created_at, notes FROM duijie_partner_api_keys ORDER BY id DESC'
     );
-    rows.forEach(r => { if (r.permissions) r.permissions = JSON.parse(r.permissions); });
+    rows.forEach(r => {
+      if (Array.isArray(r.permissions)) return;
+      if (r.permissions) r.permissions = JSON.parse(r.permissions);
+    });
     res.json({ success: true, data: rows });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });

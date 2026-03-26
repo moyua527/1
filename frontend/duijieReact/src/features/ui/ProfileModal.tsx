@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Edit2, Copy } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
+import { authApi } from '../auth/services/api'
 import Avatar from './Avatar'
 import Modal from './Modal'
 import Input from './Input'
@@ -23,10 +24,81 @@ export default function ProfileModal({ open, onClose, user, onProfileUpdated }: 
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({ nickname: '', email: '', phone: '', password: '', confirmPassword: '' })
   const [saving, setSaving] = useState(false)
+  const [twoFactorStatus, setTwoFactorStatus] = useState({ enabled: false, has_secret: false })
+  const [setupData, setSetupData] = useState<{ secret: string; issuer: string; account_name: string; otpauth_url: string } | null>(null)
+  const [setupCode, setSetupCode] = useState('')
+  const [disableCode, setDisableCode] = useState('')
+  const [twoFactorBusy, setTwoFactorBusy] = useState(false)
 
   useEffect(() => {
-    if (open) setEditing(false)
-  }, [open])
+    if (!open) return
+    setEditing(false)
+    setSetupData(null)
+    setSetupCode('')
+    setDisableCode('')
+    authApi.twoFactorStatus().then(r => {
+      if (r.success) setTwoFactorStatus({ enabled: !!r.data?.enabled, has_secret: !!r.data?.has_secret })
+      else setTwoFactorStatus({ enabled: !!user?.totp_enabled, has_secret: false })
+    }).catch(() => setTwoFactorStatus({ enabled: !!user?.totp_enabled, has_secret: false }))
+  }, [open, user?.totp_enabled])
+
+  const copyText = async (value: string, message: string) => {
+    try {
+      if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(value)
+      else {
+        const t = document.createElement('textarea')
+        t.value = value
+        t.style.position = 'fixed'
+        t.style.opacity = '0'
+        document.body.appendChild(t)
+        t.select()
+        document.execCommand('copy')
+        document.body.removeChild(t)
+      }
+      toast(message, 'success')
+    } catch {
+      toast('复制失败', 'error')
+    }
+  }
+
+  const startTwoFactorSetup = async () => {
+    setTwoFactorBusy(true)
+    const r = await authApi.twoFactorSetup()
+    setTwoFactorBusy(false)
+    if (r.success) {
+      setSetupData(r.data)
+      setTwoFactorStatus({ enabled: false, has_secret: true })
+      toast('验证器密钥已生成', 'success')
+    } else toast(r.message || '生成验证器密钥失败', 'error')
+  }
+
+  const enableTwoFactor = async () => {
+    if (!/^\d{6}$/.test(setupCode)) { toast('请输入6位动态验证码', 'error'); return }
+    setTwoFactorBusy(true)
+    const r = await authApi.twoFactorEnable(setupCode)
+    setTwoFactorBusy(false)
+    if (r.success) {
+      setTwoFactorStatus({ enabled: true, has_secret: true })
+      setSetupData(null)
+      setSetupCode('')
+      onProfileUpdated({ totp_enabled: true })
+      toast('两步验证已启用', 'success')
+    } else toast(r.message || '启用失败', 'error')
+  }
+
+  const disableTwoFactor = async () => {
+    if (!/^\d{6}$/.test(disableCode)) { toast('请输入6位动态验证码', 'error'); return }
+    setTwoFactorBusy(true)
+    const r = await authApi.twoFactorDisable(disableCode)
+    setTwoFactorBusy(false)
+    if (r.success) {
+      setTwoFactorStatus({ enabled: false, has_secret: false })
+      setDisableCode('')
+      setSetupData(null)
+      onProfileUpdated({ totp_enabled: false })
+      toast('两步验证已关闭', 'success')
+    } else toast(r.message || '关闭失败', 'error')
+  }
 
   const startEditing = () => {
     if (user) setForm({ nickname: user.nickname || '', email: user.email || '', phone: user.phone || '', password: '', confirmPassword: '' })
@@ -90,12 +162,66 @@ export default function ProfileModal({ open, onClose, user, onProfileUpdated }: 
             </div>
           </div>
 
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid #e2e8f0' }}>两步验证</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: 14, borderRadius: 10, background: twoFactorStatus.enabled ? '#f0fdf4' : '#f8fafc', border: `1px solid ${twoFactorStatus.enabled ? '#bbf7d0' : '#e2e8f0'}` }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{twoFactorStatus.enabled ? '已启用动态验证码保护' : '未启用两步验证'}</div>
+                  <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{twoFactorStatus.enabled ? '登录时需再输入验证器中的 6 位动态码。' : '建议为关键账号开启，防止密码泄露后被直接登录。'}</div>
+                </div>
+                <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 999, background: twoFactorStatus.enabled ? '#16a34a' : '#94a3b8', color: '#fff', fontWeight: 600, flexShrink: 0 }}>{twoFactorStatus.enabled ? '已开启' : '未开启'}</span>
+              </div>
+
+              {!twoFactorStatus.enabled && !setupData && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <Button onClick={startTwoFactorSetup} disabled={twoFactorBusy}>{twoFactorBusy ? '生成中...' : (twoFactorStatus.has_secret ? '重新生成密钥' : '开始设置 2FA')}</Button>
+                </div>
+              )}
+
+              {!twoFactorStatus.enabled && setupData && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 14, borderRadius: 10, background: '#fff', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: 12, color: '#64748b', lineHeight: 1.7 }}>
+                    请在验证器中手动添加账号，然后输入 6 位动态码完成启用。
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 4 }}>密钥</div>
+                      <code style={{ display: 'block', padding: '10px 12px', borderRadius: 8, background: '#f8fafc', color: '#0f172a', fontSize: 13, wordBreak: 'break-all' }}>{setupData.secret}</code>
+                    </div>
+                    <button onClick={() => copyText(setupData.secret, '密钥已复制')} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#475569', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <Copy size={14} /> 复制
+                    </button>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12, color: '#64748b' }}>
+                    <span>发行方：{setupData.issuer}</span>
+                    <span>账户：{setupData.account_name}</span>
+                  </div>
+                  <Input label="动态验证码" placeholder="输入验证器中的6位动态码" value={setupCode} onChange={e => setSetupCode(e.target.value.replace(/\D/g, '').slice(0, 6))} maxLength={6} />
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                    <Button variant="secondary" onClick={startTwoFactorSetup} disabled={twoFactorBusy}>重新生成</Button>
+                    <Button onClick={enableTwoFactor} disabled={twoFactorBusy}>{twoFactorBusy ? '启用中...' : '启用两步验证'}</Button>
+                  </div>
+                </div>
+              )}
+
+              {twoFactorStatus.enabled && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 14, borderRadius: 10, background: '#fff', border: '1px solid #e2e8f0' }}>
+                  <Input label="关闭前验证" placeholder="输入当前6位动态码" value={disableCode} onChange={e => setDisableCode(e.target.value.replace(/\D/g, '').slice(0, 6))} maxLength={6} />
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <Button variant="secondary" onClick={disableTwoFactor} disabled={twoFactorBusy}>{twoFactorBusy ? '关闭中...' : '关闭两步验证'}</Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           {user.personal_invite_code && (
           <div>
             <div style={{ fontSize: 13, fontWeight: 600, color: '#334155', marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid #e2e8f0' }}>我的专属邀请码</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: 'linear-gradient(135deg, #eff6ff, #f5f3ff)', borderRadius: 10, border: '1px solid #e0e7ff' }}>
               <code style={{ fontSize: 20, fontWeight: 700, letterSpacing: 3, color: '#1e40af', flex: 1 }}>{user.personal_invite_code}</code>
-              <button onClick={() => { try { const t = document.createElement('textarea'); t.value = user.personal_invite_code || ''; t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t); } catch {} toast('邀请码已复制', 'success') }}
+              <button onClick={() => copyText(user.personal_invite_code || '', '邀请码已复制')}
                 style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 8, border: '1px solid #c7d2fe', background: '#fff', color: '#4f46e5', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
                 <Copy size={14} /> 复制
               </button>

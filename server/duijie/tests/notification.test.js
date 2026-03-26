@@ -24,7 +24,9 @@ describe('Notification API', () => {
       const res = await authGet('/api/notifications', adminToken);
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(Array.isArray(res.body.data)).toBe(true);
+      expect(Array.isArray(res.body.data.notifications)).toBe(true);
+      expect(res.body.data).toHaveProperty('unreadCount');
+      expect(res.body.data).toHaveProperty('unreadByCategory');
     });
   });
 

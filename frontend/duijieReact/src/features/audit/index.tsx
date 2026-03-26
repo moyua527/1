@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Shield, ChevronLeft, ChevronRight, Filter, Download, Search, X, Calendar } from 'lucide-react'
+import { Shield, ChevronLeft, ChevronRight, Filter, Download, Search, X, Calendar, List, Clock } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { useVirtualizer } from '@tanstack/react-virtual'
 
@@ -28,6 +28,7 @@ export default function AuditLog() {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [showFilters, setShowFilters] = useState(false)
+  const [viewMode, setViewMode] = useState<'table' | 'timeline'>('table')
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
   const limit = 200
   const searchTimer = useRef<any>(null)
@@ -97,6 +98,14 @@ export default function AuditLog() {
           <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>系统操作记录 · 共 {total} 条</p>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: 8, padding: 2 }}>
+            <button onClick={() => setViewMode('table')} style={{ padding: '5px 10px', borderRadius: 6, border: 'none', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: viewMode === 'table' ? '#fff' : 'transparent', color: viewMode === 'table' ? '#2563eb' : '#64748b', boxShadow: viewMode === 'table' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none', fontWeight: 500 }}>
+              <List size={13} /> 表格
+            </button>
+            <button onClick={() => setViewMode('timeline')} style={{ padding: '5px 10px', borderRadius: 6, border: 'none', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, background: viewMode === 'timeline' ? '#fff' : 'transparent', color: viewMode === 'timeline' ? '#2563eb' : '#64748b', boxShadow: viewMode === 'timeline' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none', fontWeight: 500 }}>
+              <Clock size={13} /> 时间轴
+            </button>
+          </div>
           <button onClick={exportCSV}
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
             <Download size={14} /> 导出
@@ -150,6 +159,47 @@ export default function AuditLog() {
         </div>
       )}
 
+      {viewMode === 'timeline' ? (
+        <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', padding: 24, maxHeight: 650, overflowY: 'auto' }}>
+          {logs.length === 0 ? (
+            <div style={{ padding: 32, textAlign: 'center', color: '#94a3b8' }}>暂无日志记录</div>
+          ) : (() => {
+            let lastDate = ''
+            return logs.map((log: any) => {
+              const a = actionLabel[log.action] || { label: log.action, color: '#6b7280' }
+              const date = new Date(log.created_at).toLocaleDateString('zh-CN')
+              const time = new Date(log.created_at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+              const showDate = date !== lastDate
+              lastDate = date
+              return (
+                <div key={log.id}>
+                  {showDate && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '16px 0 8px', paddingLeft: 20 }}>
+                      <Calendar size={14} color="#2563eb" />
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#2563eb' }}>{date}</span>
+                      <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: 12, paddingLeft: 20, position: 'relative' }}>
+                    <div style={{ position: 'absolute', left: 28, top: 0, bottom: 0, width: 2, background: '#f1f5f9' }} />
+                    <div style={{ width: 10, height: 10, borderRadius: '50%', background: a.color, flexShrink: 0, marginTop: 6, zIndex: 1, border: '2px solid #fff', boxShadow: '0 0 0 2px ' + a.color + '30' }} />
+                    <div style={{ flex: 1, paddingBottom: 12 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>{time}</span>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{log.nickname || log.username || '-'}</span>
+                        <span style={{ fontSize: 11, padding: '1px 8px', borderRadius: 4, background: a.color + '18', color: a.color, fontWeight: 600 }}>{a.label}</span>
+                        <span style={{ fontSize: 12, color: '#64748b' }}>{entityLabel[log.entity_type] || log.entity_type || '-'}{log.entity_id ? ` #${log.entity_id}` : ''}</span>
+                      </div>
+                      {log.detail && <div style={{ fontSize: 12, color: '#334155', marginTop: 3, lineHeight: 1.5 }}>{log.detail}</div>}
+                      {log.ip && <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2, fontFamily: 'monospace' }}>{log.ip}</div>}
+                    </div>
+                  </div>
+                </div>
+              )
+            })
+          })()}
+        </div>
+      ) : (
       <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -208,6 +258,7 @@ export default function AuditLog() {
           </div>
         )}
       </div>
+      )}
     </div>
   )
 }

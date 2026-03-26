@@ -20,7 +20,11 @@ module.exports = (...requiredPermissions) => {
       }
 
       const partner = rows[0];
-      const permissions = partner.permissions ? JSON.parse(partner.permissions) : [];
+      const permissions = Array.isArray(partner.permissions)
+        ? partner.permissions
+        : partner.permissions
+          ? JSON.parse(partner.permissions)
+          : [];
 
       if (requiredPermissions.length > 0) {
         const hasPermission = requiredPermissions.some(p => permissions.includes(p));

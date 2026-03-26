@@ -1,6 +1,14 @@
 const db = require('../../config/db');
 const { getIO } = require('../../socket');
 const logger = require('../../config/logger');
+const { sendMobilePush } = require('./mobilePush');
+
+const TYPE_TO_CATEGORY = {
+  project_member: 'project', project_update: 'project',
+  task_assigned: 'task', task_status: 'task', task_comment: 'task',
+  join_request: 'approval', join_approved: 'approval', join_rejected: 'approval',
+  ticket_reply: 'system', follow_reminder: 'system',
+};
 
 /**
  * 发送通知给指定用户
@@ -12,17 +20,19 @@ const logger = require('../../config/logger');
  */
 async function notify(userId, type, title, content, link) {
   if (!userId) return;
+  const category = TYPE_TO_CATEGORY[type] || 'system';
   try {
     const [result] = await db.query(
-      'INSERT INTO duijie_notifications (user_id, type, title, content, link) VALUES (?, ?, ?, ?, ?)',
-      [userId, type, title, content || '', link || null]
+      'INSERT INTO duijie_notifications (user_id, type, title, content, link, category) VALUES (?, ?, ?, ?, ?, ?)',
+      [userId, type, title, content || '', link || null, category]
     );
     const io = getIO();
     if (io) {
       io.to(`user:${userId}`).emit('new_notification', {
-        id: result.insertId, user_id: userId, type, title, content: content || '', link: link || null, is_read: 0, created_at: new Date().toISOString()
+        id: result.insertId, user_id: userId, type, category, title, content: content || '', link: link || null, is_read: 0, created_at: new Date().toISOString()
       });
     }
+    await sendMobilePush(userId, { title, body: content || '', link: link || null, type, category });
   } catch (e) {
     logger.error(`notify failed: ${e.message}`);
   }

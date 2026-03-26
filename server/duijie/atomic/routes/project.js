@@ -10,6 +10,7 @@ const projectStaff = roleGuard('admin', 'sales_manager', 'tech', 'business', 'me
 
 router.post('/projects', auth, V.createProject, validate, require('../controllers/project/createController'));
 router.get('/projects/team-users', auth, require('../controllers/project/teamUsersController'));
+router.get('/projects/export', auth, require('../controllers/project/exportController'));
 router.get('/projects', auth, projectStaff, require('../controllers/project/listController'));
 router.get('/projects/:id', auth, projectStaff, require('../controllers/project/detailController'));
 router.put('/projects/:id', auth, require('../controllers/project/updateController'));

@@ -2,6 +2,7 @@ import { useEffect, lazy, Suspense, ComponentType } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import LoginPage from './features/auth/index'
 import Layout from './features/ui/Layout'
+import MobilePushBridge from './features/ui/MobilePushBridge'
 import ToastContainer from './features/ui/Toast'
 import AppUpdateChecker from './features/ui/AppUpdateChecker'
 import useUserStore from './stores/useUserStore'
@@ -86,6 +87,7 @@ export default function App() {
   return (
     <>
       <ToastContainer />
+      <MobilePushBridge />
       <AppUpdateChecker />
       <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8', padding: 40 }}>加载中...</div>}>
         <Routes>

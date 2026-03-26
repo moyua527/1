@@ -4,7 +4,7 @@
   "main": "standalone.js",
   "scripts": {
     "start": "node standalone.js",
-    "test": "jest --runInBand --forceExit",
+    "test": "node scripts/migrate.js && jest --runInBand --forceExit",
     "migrate": "node scripts/migrate.js"
   },
   "dependencies": {

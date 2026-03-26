@@ -19,7 +19,7 @@ module.exports = async (req, res) => {
       `SELECT f.*, p.name as project_name, u.nickname as uploader_name
        FROM duijie_files f
        LEFT JOIN duijie_projects p ON f.project_id = p.id
-       LEFT JOIN voice_users u ON f.created_by = u.id
+       LEFT JOIN voice_users u ON f.uploaded_by = u.id
        WHERE ${where}
        ORDER BY f.created_at DESC LIMIT 200`, params
     );

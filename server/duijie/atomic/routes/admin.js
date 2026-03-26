@@ -35,6 +35,7 @@ router.get('/dashboard/stats', auth, require('../controllers/dashboard/statsCont
 const enterprisePermGuard = require('../middleware/enterprisePermGuard');
 router.get('/dashboard/report', auth, roleGuard('admin', 'sales_manager', 'business', { soft: true }), enterprisePermGuard('can_view_report'), require('../controllers/dashboard/reportController'));
 router.get('/dashboard/chart', auth, require('../controllers/dashboard/chartController'));
+router.get('/dashboard/workspace', auth, require('../controllers/dashboard/workspaceController'));
 
 // Invite Links
 router.post('/invite-links', auth, adminOnly, require('../controllers/invite/createController'));

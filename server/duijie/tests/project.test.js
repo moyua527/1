@@ -66,7 +66,7 @@ describe('Project API', () => {
       if (!projectId) return;
       const res = await authPut(`/api/projects/${projectId}`, adminToken, {
         name: 'Jest测试项目-更新',
-        status: 'active',
+        status: 'in_progress',
       });
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);

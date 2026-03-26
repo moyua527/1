@@ -6,6 +6,15 @@ exports.login = [
   body('password').notEmpty().withMessage('请输入密码'),
 ];
 
+exports.twoFactorLoginVerify = [
+  body('challenge_token').trim().notEmpty().withMessage('缺少验证票据'),
+  body('totp_code').matches(/^\d{6}$/).withMessage('动态验证码应为6位数字'),
+];
+
+exports.twoFactorCode = [
+  body('totp_code').matches(/^\d{6}$/).withMessage('动态验证码应为6位数字'),
+];
+
 exports.register = [
   body('phone').optional().matches(/^\d{11}$/).withMessage('手机号格式不正确'),
   body('email').optional().isEmail().withMessage('邮箱格式不正确'),

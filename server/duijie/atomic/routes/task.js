@@ -9,6 +9,7 @@ const taskStaff = roleGuard('admin', 'tech', 'business', 'member', 'viewer');
 
 // Tasks
 router.post('/tasks', auth, roleGuard('admin', 'tech', 'business', { soft: true }), enterprisePermGuard('can_manage_task'), upload.array('files', 10), require('../controllers/task/createController'));
+router.get('/tasks/export', auth, require('../controllers/task/exportController'));
 router.get('/tasks', auth, require('../controllers/task/listController'));
 router.put('/tasks/:id', auth, taskStaff, require('../controllers/task/updateController'));
 router.patch('/tasks/:id/move', auth, taskStaff, require('../controllers/task/moveController'));

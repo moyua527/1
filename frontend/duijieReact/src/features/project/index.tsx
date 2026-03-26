@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useOutletContext, useLocation } from 'react-router-dom'
-import { Plus, FolderKanban, Loader2, Search } from 'lucide-react'
+import { Plus, FolderKanban, Loader2, Search, Download } from 'lucide-react'
 import { projectApi } from './services/api'
 import { can } from '../../stores/permissions'
 import useLiveData from '../../hooks/useLiveData'
@@ -95,6 +95,10 @@ export default function ProjectList() {
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索项目..."
               style={{ padding: '8px 12px 8px 32px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none', width: 180 }} />
           </div>
+          <button onClick={() => { window.open('/api/projects/export', '_blank') }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
+            <Download size={14} /> 导出
+          </button>
           {canCreate && <Button onClick={() => setShowCreate(true)}><Plus size={16} /> 新建项目</Button>}
         </div>
       </div>
