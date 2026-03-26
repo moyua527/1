@@ -38,7 +38,7 @@ module.exports = async (req, res) => {
     // TODO: integrate actual SMS/email sending service (e.g. aliyun SMS / SMTP)
     logger.info(`验证码已生成 ${type}: ${target}`);
 
-    res.json({ success: true, message: '验证码已发送' });
+    res.json({ success: true, message: '验证码已发送', _dev_code: code });
   } catch (e) {
     logger.error(`sendCode: ${e.message}`);
     res.status(500).json({ success: false, message: '服务器内部错误' });
