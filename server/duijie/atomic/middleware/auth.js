@@ -9,6 +9,14 @@ async function getSecret() {
   return rows[0]?.config_value;
 }
 
+async function getCurrentUser(userId) {
+  const [rows] = await db.query(
+    'SELECT id, role, client_id, is_active FROM voice_users WHERE id = ? AND is_deleted = 0 LIMIT 1',
+    [userId]
+  );
+  return rows[0] || null;
+}
+
 module.exports = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -16,9 +24,15 @@ module.exports = async (req, res, next) => {
     if (!token) return res.status(401).json({ success: false, message: '未登录' });
     const secret = await getSecret();
     const decoded = jwt.verify(token, secret);
-    req.userId = decoded.userId || decoded.id;
-    req.userRole = decoded.role || 'member';
-    req.clientId = decoded.clientId || null;
+    const userId = decoded.userId || decoded.id;
+    const currentUser = userId ? await getCurrentUser(userId) : null;
+    if (!currentUser || currentUser.is_active !== 1) {
+      return res.status(401).json({ success: false, message: '认证失败' });
+    }
+    req.userId = currentUser.id;
+    req.userRole = currentUser.role || 'member';
+    req.clientId = currentUser.client_id || null;
+    req.user = { id: currentUser.id, userId: currentUser.id, role: req.userRole, clientId: req.clientId };
     logger.debug(`auth uid=${req.userId} role=${req.userRole} ${req.originalUrl}`);
     next();
   } catch (e) {
