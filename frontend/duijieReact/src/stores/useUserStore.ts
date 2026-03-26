@@ -70,13 +70,28 @@ const useUserStore = create<UserState>((set, get) => ({
   setUser: (user) => {
     writeCache(user)
     set({ user })
+    if (user) {
+      setTimeout(() => get().checkEnterprise(), 0)
+    }
   },
 
   setHasEnterprise: (v) => set({ hasEnterprise: v }),
   setEnterprisePerms: (perms) => set({ enterprisePerms: perms }),
 
   checkEnterprise: async () => {
-    set({ hasEnterprise: true })
+    const u = get().user
+    if (!u || u.role === 'admin') { set({ hasEnterprise: true }); return }
+    try {
+      const r = await fetchApi('/api/my-enterprise')
+      if (r.success && r.data) {
+        set({ hasEnterprise: true })
+        if (r.data.enterprisePerms) set({ enterprisePerms: r.data.enterprisePerms })
+      } else {
+        set({ hasEnterprise: false })
+      }
+    } catch {
+      set({ hasEnterprise: true })
+    }
   },
 
   init: async () => {
@@ -89,12 +104,17 @@ const useUserStore = create<UserState>((set, get) => ({
       const r = await authApi.me()
       if (r.success) {
         writeCache(r.data)
-        set({ user: r.data, hasEnterprise: true, checking: false })
-        fetchApi('/api/my-enterprise').then(er => {
-          if (er.success && er.data?.enterprisePerms) {
-            set({ enterprisePerms: er.data.enterprisePerms })
-          }
-        }).catch(() => {})
+        if (r.data.role === 'admin') {
+          set({ user: r.data, hasEnterprise: true, checking: false })
+          fetchApi('/api/my-enterprise').then(er => {
+            if (er.success && er.data?.enterprisePerms) set({ enterprisePerms: er.data.enterprisePerms })
+          }).catch(() => {})
+        } else {
+          const er = await fetchApi('/api/my-enterprise')
+          const has = !!(er.success && er.data)
+          set({ user: r.data, hasEnterprise: has, checking: false })
+          if (has && er.data?.enterprisePerms) set({ enterprisePerms: er.data.enterprisePerms })
+        }
       } else {
         writeCache(null)
         set({ user: null, checking: false, hasEnterprise: true })
