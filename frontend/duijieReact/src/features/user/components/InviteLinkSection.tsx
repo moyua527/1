@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link2, Copy, Trash2, Shield, Code2, Briefcase, User } from 'lucide-react'
+import { Link2, Copy, Trash2, User } from 'lucide-react'
 import { fetchApi } from '../../../bootstrap'
 import Button from '../../ui/Button'
 import Modal from '../../ui/Modal'
@@ -7,9 +7,6 @@ import Input from '../../ui/Input'
 import { toast } from '../../ui/Toast'
 
 const roleMap: Record<string, { label: string; color: string; bg: string; icon: any }> = {
-  admin: { label: '管理员', color: '#dc2626', bg: '#fef2f2', icon: Shield },
-  tech: { label: '技术员', color: '#7c3aed', bg: '#f5f3ff', icon: Code2 },
-  business: { label: '业务员', color: '#0891b2', bg: '#ecfeff', icon: Briefcase },
   member: { label: '成员', color: '#2563eb', bg: '#eff6ff', icon: User },
 }
 
@@ -20,7 +17,7 @@ interface InviteLinkSectionProps {
 
 export default function InviteLinkSection({ open, onClose }: InviteLinkSectionProps) {
   const [inviteLinks, setInviteLinks] = useState<any[]>([])
-  const [inviteForm, setInviteForm] = useState({ preset_role: 'member', expires_hours: '72', note: '' })
+  const [inviteForm, setInviteForm] = useState({ expires_hours: '72', note: '' })
 
   const loadLinks = async () => {
     const r = await fetchApi('/api/invite-links')
@@ -36,10 +33,8 @@ export default function InviteLinkSection({ open, onClose }: InviteLinkSectionPr
           <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>生成新邀请链接</div>
           <div style={{ display: 'flex', gap: 8 }}>
             <div style={{ flex: 1 }}>
-              <label style={{ fontSize: 12, color: '#64748b' }}>预设角色</label>
-              <select value={inviteForm.preset_role} onChange={e => setInviteForm({ ...inviteForm, preset_role: e.target.value })} style={{ width: '100%', padding: '6px 8px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13 }}>
-                {Object.entries(roleMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-              </select>
+              <label style={{ fontSize: 12, color: '#64748b' }}>平台身份</label>
+              <div style={{ width: '100%', padding: '6px 8px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13, background: '#fff', color: '#0f172a' }}>成员</div>
             </div>
             <div style={{ flex: 1 }}>
               <label style={{ fontSize: 12, color: '#64748b' }}>有效期</label>
@@ -54,7 +49,7 @@ export default function InviteLinkSection({ open, onClose }: InviteLinkSectionPr
           </div>
           <Input label="备注" placeholder="可选" value={inviteForm.note} onChange={e => setInviteForm({ ...inviteForm, note: e.target.value })} />
           <Button onClick={async () => {
-            const r2 = await fetchApi('/api/invite-links', { method: 'POST', body: JSON.stringify({ preset_role: inviteForm.preset_role, expires_hours: inviteForm.expires_hours ? Number(inviteForm.expires_hours) : null, note: inviteForm.note }) })
+            const r2 = await fetchApi('/api/invite-links', { method: 'POST', body: JSON.stringify({ expires_hours: inviteForm.expires_hours ? Number(inviteForm.expires_hours) : null, note: inviteForm.note }) })
             if (r2.success) {
               const url = `${window.location.origin}/?invite=${r2.data.token}`
               navigator.clipboard.writeText(url).then(() => toast('链接已复制到剪贴板', 'success')).catch(() => toast('生成成功，请手动复制', 'success'))
@@ -76,7 +71,7 @@ export default function InviteLinkSection({ open, onClose }: InviteLinkSectionPr
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 12, display: 'flex', gap: 6, alignItems: 'center' }}>
                         <span style={{ color: statusColor, fontWeight: 600, fontSize: 11, padding: '1px 6px', borderRadius: 4, background: used ? '#f0fdf4' : expired ? '#fef2f2' : '#eff6ff' }}>{status}</span>
-                        <span style={{ color: '#64748b' }}>角色: {roleMap[link.preset_role]?.label || link.preset_role}</span>
+                        <span style={{ color: '#64748b' }}>平台身份: {roleMap[link.preset_role]?.label || '成员'}</span>
                         {link.note && <span style={{ color: '#94a3b8' }}>· {link.note}</span>}
                       </div>
                       {used && <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>使用者: {link.used_by_name || link.used_by_username}</div>}

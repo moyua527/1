@@ -45,7 +45,6 @@ module.exports = async (req, res) => {
         [invite_token.trim()]
       );
       if (linkRows.length > 0) {
-        assignedRole = linkRows[0].preset_role || 'member';
         inviterId = linkRows[0].created_by;
         await db.query('UPDATE duijie_invite_links SET used_by = ?, used_at = NOW() WHERE id = ?', [null, linkRows[0].id]);
       }

@@ -8,7 +8,7 @@ import Input from '../../ui/Input'
 import { projectApi } from '../services/api'
 import { toast } from '../../ui/Toast'
 
-const sysRoleLabel: Record<string, string> = { admin: '管理员', tech: '技术员', business: '业务员', member: '成员' }
+const sysRoleLabel: Record<string, string> = { admin: '管理员', member: '成员' }
 
 /* ── Manage project members modal ── */
 

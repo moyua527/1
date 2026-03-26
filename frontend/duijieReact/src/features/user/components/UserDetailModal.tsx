@@ -1,12 +1,10 @@
-import { User, Shield, Clock, Edit2, Code2, Briefcase } from 'lucide-react'
+import { User, Shield, Clock, Edit2 } from 'lucide-react'
 import Button from '../../ui/Button'
 import Modal from '../../ui/Modal'
 import Avatar from '../../ui/Avatar'
 
 const roleMap: Record<string, { label: string; color: string; bg: string; icon: any }> = {
   admin: { label: '管理员', color: '#dc2626', bg: '#fef2f2', icon: Shield },
-  tech: { label: '技术员', color: '#7c3aed', bg: '#f5f3ff', icon: Code2 },
-  business: { label: '业务员', color: '#0891b2', bg: '#ecfeff', icon: Briefcase },
   member: { label: '成员', color: '#2563eb', bg: '#eff6ff', icon: User },
 }
 

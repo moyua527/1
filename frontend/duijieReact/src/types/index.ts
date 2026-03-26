@@ -57,7 +57,7 @@ export interface User {
   email: string | null
   phone: string | null
   avatar: string | null
-  role: 'admin' | 'sales_manager' | 'business' | 'marketing' | 'tech' | 'support' | 'member' | 'viewer' | 'client'
+  role: 'admin' | 'member'
   gender: number | null
   is_active: number
   manager_id: number | null

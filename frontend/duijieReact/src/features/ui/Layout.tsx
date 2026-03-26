@@ -31,8 +31,7 @@ const ALL_NAV_ITEMS = [
 ]
 
 const roleLabel: Record<string, string> = {
-  admin: '管理员', sales_manager: '销售经理', tech: '技术员', business: '业务员',
-  marketing: '市场', member: '成员', viewer: '观察者',
+  admin: '管理员', member: '成员',
 }
 
 const s = {

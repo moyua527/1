@@ -118,7 +118,7 @@ export default function ClientEditModal({ open, onClose, client, clientId, onSav
           <select value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })}
             style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
             <option value="">暂不分配</option>
-            {staffMembers.map((u: any) => <option key={u.id} value={u.id}>{u.nickname || u.username} ({u.role === 'admin' ? '管理' : u.role === 'business' ? '业务' : '技术'})</option>)}
+            {staffMembers.map((u: any) => <option key={u.id} value={u.id}>{u.nickname || u.username} ({u.role === 'admin' ? '管理员' : '成员'})</option>)}
           </select>
         </div>
         <div>

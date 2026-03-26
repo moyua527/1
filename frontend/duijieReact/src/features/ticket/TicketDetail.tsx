@@ -132,7 +132,7 @@ export default function TicketDetail({ ticket, user, staffMembers, onBack, onRef
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{r.creator_name || r.creator_username}</span>
-                  {isStaff && r.creator_role && ['admin','sales_manager','tech','business','support'].includes(r.creator_role) && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: '#eff6ff', color: '#2563eb' }}>工作人员</span>}
+                  {isStaff && r.creator_role && ['admin', 'member'].includes(r.creator_role) && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: '#eff6ff', color: '#2563eb' }}>工作人员</span>}
                   <span style={{ fontSize: 11, color: '#94a3b8' }}>{new Date(r.created_at).toLocaleString('zh-CN')}</span>
                 </div>
                 <div style={{ fontSize: 13, color: '#334155', marginTop: 4, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{r.content}</div>

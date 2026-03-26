@@ -73,9 +73,9 @@ export default function ClientCreateModal({ open, onClose, onCreated }: Props) {
               const selected = String(u.id) === form.user_id
               const name = u.nickname || u.username
               const initial = name.charAt(0)
-              const roleColors: Record<string, string> = { admin: '#dc2626', tech: '#16a34a', business: '#2563eb', member: '#6b7280' }
+              const roleColors: Record<string, string> = { admin: '#dc2626', member: '#2563eb' }
               const bgColor = roleColors[u.role] || '#6b7280'
-              const roleLabels: Record<string, string> = { admin: '管理员', tech: '技术员', business: '业务员', member: '成员', marketing: '市场', support: '客服' }
+              const roleLabels: Record<string, string> = { admin: '管理员', member: '成员' }
               return (
                 <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', background: selected ? '#f8fafc' : '#fff', transition: 'background 0.1s' }}
                   onMouseEnter={e => { if (!selected) e.currentTarget.style.background = '#f8fafc' }}
@@ -146,7 +146,7 @@ export default function ClientCreateModal({ open, onClose, onCreated }: Props) {
           <select value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })}
             style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
             <option value="">暂不分配</option>
-            {availableMembers.filter(u => can(u.role, 'staff:assignable')).map((u: any) => <option key={u.id} value={u.id}>{u.nickname || u.username} ({u.role === 'admin' ? '管理' : u.role === 'business' ? '业务' : '技术'})</option>)}
+            {availableMembers.filter(u => can(u.role, 'staff:assignable')).map((u: any) => <option key={u.id} value={u.id}>{u.nickname || u.username} ({u.role === 'admin' ? '管理员' : '成员'})</option>)}
           </select>
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>

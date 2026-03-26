@@ -6,7 +6,7 @@ import { onSocket } from '../ui/smartSocket'
 import Avatar from '../ui/Avatar'
 import { toast } from '../ui/Toast'
 
-const roleLabel: Record<string, string> = { admin: '管理', tech: '技术', business: '业务', member: '成员' }
+const roleLabel: Record<string, string> = { admin: '管理员', member: '成员' }
 
 const dmApi = {
   conversations: () => fetchApi('/api/dm/conversations'),
