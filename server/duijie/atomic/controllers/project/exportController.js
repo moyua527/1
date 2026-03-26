@@ -12,13 +12,16 @@ module.exports = async (req, res) => {
 
     const [projects] = await db.query(
       `SELECT p.id, p.name, p.status, p.description, p.created_at, p.updated_at,
-              u.nickname as creator_name, c.name as client_name,
+              u.nickname as creator_name,
+              c.name as client_name,
+              ic.name as internal_client_name,
               (SELECT COUNT(*) FROM duijie_tasks WHERE project_id = p.id AND is_deleted = 0) as task_count,
               (SELECT COUNT(*) FROM duijie_tasks WHERE project_id = p.id AND is_deleted = 0 AND status = 'accepted') as done_count,
               (SELECT COUNT(*) FROM duijie_project_members WHERE project_id = p.id) as member_count
        FROM duijie_projects p
        LEFT JOIN voice_users u ON u.id = p.created_by
        LEFT JOIN duijie_clients c ON c.id = p.client_id
+       LEFT JOIN duijie_clients ic ON ic.id = p.internal_client_id
        WHERE p.is_deleted = 0 ${pf}
        ORDER BY p.created_at DESC`,
       params
@@ -27,10 +30,11 @@ module.exports = async (req, res) => {
     const statusMap = { planning: '规划中', in_progress: '进行中', completed: '已完成', on_hold: '暂停' };
 
     const BOM = '\uFEFF';
-    const header = '项目名称,状态,客户,创建者,任务总数,已完成,成员数,创建时间,更新时间\n';
+    const header = '项目名称,状态,我方企业,客户企业,创建者,任务总数,已完成,成员数,创建时间,更新时间\n';
     const rows = projects.map(p => [
       `"${(p.name || '').replace(/"/g, '""')}"`,
       statusMap[p.status] || p.status,
+      `"${((p.internal_client_name || '-')).replace(/"/g, '""')}"`,
       `"${(p.client_name || '-').replace(/"/g, '""')}"`,
       p.creator_name || '-',
       p.task_count,

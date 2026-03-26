@@ -27,6 +27,10 @@ export interface Project {
   status: 'planning' | 'in_progress' | 'review' | 'completed' | 'on_hold'
   client_id: number | null
   client_name: string | null
+  client_company?: string | null
+  internal_client_id?: number | null
+  internal_client_name?: string | null
+  internal_client_company?: string | null
   start_date: string | null
   end_date: string | null
   budget: number | null

@@ -97,6 +97,7 @@ CREATE TABLE IF NOT EXISTS duijie_projects (
   name VARCHAR(200) NOT NULL COMMENT '项目名称',
   description TEXT COMMENT '项目描述',
   client_id INT NOT NULL COMMENT '关联客户',
+  internal_client_id INT DEFAULT NULL COMMENT '我方企业',
   status ENUM('planning','in_progress','review','completed','on_hold') DEFAULT 'planning' COMMENT '状态',
   progress TINYINT DEFAULT 0 COMMENT '进度百分比',
   start_date DATE COMMENT '开始日期',
@@ -108,6 +109,7 @@ CREATE TABLE IF NOT EXISTS duijie_projects (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   is_deleted TINYINT(1) DEFAULT 0,
   INDEX idx_client_id (client_id),
+  INDEX idx_internal_client_id (internal_client_id),
   INDEX idx_status (status),
   INDEX idx_created_by (created_by),
   INDEX idx_is_deleted (is_deleted)

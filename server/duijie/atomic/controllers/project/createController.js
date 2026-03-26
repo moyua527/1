@@ -6,11 +6,13 @@ module.exports = async (req, res) => {
   try {
     if (!req.body.name || !req.body.name.trim()) return res.status(400).json({ success: false, message: '请输入项目名称' });
     let clientId = req.body.client_id || null;
+    let internalClientId = null;
+    const [userRow] = await db.query('SELECT active_enterprise_id FROM voice_users WHERE id = ?', [req.userId]);
+    internalClientId = userRow[0]?.active_enterprise_id || null;
     if (!clientId) {
-      const [userRow] = await db.query('SELECT active_enterprise_id FROM voice_users WHERE id = ?', [req.userId]);
       clientId = userRow[0]?.active_enterprise_id || null;
     }
-    const id = await createProject({ ...req.body, client_id: clientId, created_by: req.userId });
+    const id = await createProject({ ...req.body, client_id: clientId, internal_client_id: internalClientId, created_by: req.userId });
     await db.query(
       "INSERT IGNORE INTO duijie_project_members (project_id, user_id, role, source) VALUES (?, ?, 'owner', 'internal')",
       [id, req.userId]

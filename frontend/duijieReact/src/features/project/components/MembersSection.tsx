@@ -17,7 +17,7 @@ export default function MembersSection({ project, canEdit, onManageMembers, onMa
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#2563eb' }}>我方团队</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#2563eb' }}>{project.internal_client_name ? `我方团队（${project.internal_client_name}）` : '我方团队'}</span>
             {canEdit && <button onClick={onManageMembers}
               style={{ fontSize: 12, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>管理</button>}
           </div>
@@ -40,7 +40,7 @@ export default function MembersSection({ project, canEdit, onManageMembers, onMa
         </div>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#16a34a' }}>客户企业</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#16a34a' }}>{project.client_name ? `客户企业（${project.client_name}）` : '客户企业'}</span>
             <button onClick={onManageClientMembers}
               style={{ fontSize: 12, color: '#16a34a', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>管理</button>
           </div>

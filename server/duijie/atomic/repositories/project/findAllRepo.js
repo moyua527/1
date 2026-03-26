@@ -2,8 +2,8 @@ const db = require('../../../config/db');
 const logger = require('../../../config/logger');
 
 module.exports = async ({ status, client_id, page = 1, limit = 20 }, auth = {}) => {
-  let sql = 'SELECT p.*, c.name as client_name FROM duijie_projects p LEFT JOIN duijie_clients c ON p.client_id = c.id WHERE p.is_deleted = 0';
-  let countSql = 'SELECT COUNT(*) as total FROM duijie_projects p LEFT JOIN duijie_clients c ON p.client_id = c.id WHERE p.is_deleted = 0';
+  let sql = 'SELECT p.*, c.name as client_name, c.company as client_company, ic.name as internal_client_name, ic.company as internal_client_company FROM duijie_projects p LEFT JOIN duijie_clients c ON p.client_id = c.id LEFT JOIN duijie_clients ic ON p.internal_client_id = ic.id WHERE p.is_deleted = 0';
+  let countSql = 'SELECT COUNT(*) as total FROM duijie_projects p LEFT JOIN duijie_clients c ON p.client_id = c.id LEFT JOIN duijie_clients ic ON p.internal_client_id = ic.id WHERE p.is_deleted = 0';
   const params = [];
   const countParams = [];
 

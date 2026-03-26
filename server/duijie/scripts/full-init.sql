@@ -86,6 +86,7 @@ CREATE TABLE IF NOT EXISTS duijie_projects (
   name VARCHAR(200) NOT NULL,
   description TEXT,
   client_id INT DEFAULT NULL,
+  internal_client_id INT DEFAULT NULL,
   status ENUM('planning','in_progress','review','completed','on_hold') DEFAULT 'planning',
   progress TINYINT DEFAULT 0,
   start_date DATE,
@@ -99,6 +100,7 @@ CREATE TABLE IF NOT EXISTS duijie_projects (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   is_deleted TINYINT(1) DEFAULT 0,
   INDEX idx_client_id (client_id),
+  INDEX idx_internal_client_id (internal_client_id),
   INDEX idx_status (status),
   INDEX idx_created_by (created_by),
   INDEX idx_is_deleted (is_deleted)

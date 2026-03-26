@@ -68,7 +68,10 @@ export default function ProjectList() {
     if (statusFilter && p.status !== statusFilter) return false
     if (search) {
       const s = search.toLowerCase()
-      if (!(p.name || '').toLowerCase().includes(s) && !(p.client_name || '').toLowerCase().includes(s) && !(p.description || '').toLowerCase().includes(s)) return false
+      if (!(p.name || '').toLowerCase().includes(s)
+        && !(p.client_name || '').toLowerCase().includes(s)
+        && !(p.internal_client_name || '').toLowerCase().includes(s)
+        && !(p.description || '').toLowerCase().includes(s)) return false
     }
     return true
   })
@@ -133,7 +136,12 @@ export default function ProjectList() {
                   <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#0f172a' }}>{p.name}</h3>
                   <Badge color={st.color}>{st.label}</Badge>
                 </div>
-                {p.client_name && <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8 }}>企业: {p.client_name}</div>}
+                {(p.internal_client_name || p.client_name) && (
+                  <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <div>我方企业: {p.internal_client_name || '-'}</div>
+                    <div>客户企业: {p.client_name || '-'}</div>
+                  </div>
+                )}
                 {p.description && <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description}</div>}
                 <ProgressBar value={p.progress || 0} />
                 <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>进度 {p.progress || 0}%</div>

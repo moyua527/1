@@ -98,10 +98,13 @@ exports.listProjects = async (req, res) => {
     const ent = await findActiveEnterprise(req.userId);
     if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
     const [projects] = await db.query(
-      `SELECT p.*, u.nickname as creator_name, c.name as client_name
+      `SELECT p.*, u.nickname as creator_name,
+              c.name as client_name, c.company as client_company,
+              ic.name as internal_client_name, ic.company as internal_client_company
        FROM duijie_projects p
        LEFT JOIN voice_users u ON u.id = p.created_by
        LEFT JOIN duijie_clients c ON c.id = p.client_id
+       LEFT JOIN duijie_clients ic ON ic.id = p.internal_client_id
        WHERE p.is_deleted = 0 AND (
          p.client_id = ?
          OR p.created_by IN (

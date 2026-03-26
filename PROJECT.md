@@ -662,6 +662,8 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | GET | `/api/open/projects/:id` | 查询单个项目 | X-API-Key + projects:read |
 | POST | `/api/open/webhook` | 接收 Webhook 事件 | X-API-Key + webhook |
 
+项目列表、详情、导出与企业项目接口均返回双方企业字段：`internal_client_id`、`internal_client_name`、`internal_client_company`、`client_id`、`client_name`、`client_company`。
+
 ---
 
 ## 五、数据库表结构
@@ -677,7 +679,7 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | `duijie_direct_messages` | 站内消息表（sender_id, receiver_id, content, read_at, is_recalled） |
 | `duijie_tickets` | 工单表（title, content, type, priority, status, project_id, assigned_to, rating） |
 | `duijie_ticket_replies` | 工单回复表（ticket_id, content, created_by） |
-| `duijie_projects` | 项目表 |
+| `duijie_projects` | 项目表（internal_client_id, client_id, status, progress, app_name, app_url） |
 | `duijie_tasks` | 任务表 |
 | `duijie_milestones` | 里程碑表 |
 | `duijie_files` | 文件表 |

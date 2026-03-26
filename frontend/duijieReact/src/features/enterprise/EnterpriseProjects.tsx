@@ -51,10 +51,15 @@ export default function EnterpriseProjects() {
                     <span style={{ fontSize: 12, color: '#94a3b8' }}>#{p.id}</span>
                   </div>
                   {p.description && <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8, lineHeight: 1.5 }}>{p.description.length > 100 ? p.description.slice(0, 100) + '...' : p.description}</div>}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 12, color: '#94a3b8', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: '#94a3b8', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                      {p.internal_client_name && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><TrendingUp size={12} /> 我方企业：{p.internal_client_name}</span>}
+                      {p.client_name && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><TrendingUp size={12} /> 客户企业：{p.client_name}</span>}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                     {p.creator_name && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><User size={12} /> {p.creator_name}</span>}
-                    {p.client_name && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><TrendingUp size={12} /> {p.client_name}</span>}
                     {p.start_date && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Calendar size={12} /> {p.start_date.slice(0, 10)}{p.end_date ? ' ~ ' + p.end_date.slice(0, 10) : ''}</span>}
+                    </div>
                   </div>
                   {p.progress > 0 && (
                     <div style={{ marginTop: 8 }}>
