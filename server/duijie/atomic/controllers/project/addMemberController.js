@@ -4,7 +4,7 @@ const { notify } = require('../../utils/notify');
 module.exports = async (req, res) => {
   try {
     const { id } = req.params;
-    const { user_id, role } = req.body;
+    const { user_id, role, enterprise_role_id } = req.body;
     if (!user_id) return res.status(400).json({ success: false, message: '请选择用户' });
     const validRoles = ['owner', 'editor', 'viewer'];
     const memberRole = validRoles.includes(role) ? role : 'editor';
@@ -15,8 +15,8 @@ module.exports = async (req, res) => {
     if (existing) return res.status(400).json({ success: false, message: '该用户已是项目成员' });
 
     await db.query(
-      "INSERT INTO duijie_project_members (project_id, user_id, role, source) VALUES (?, ?, ?, 'internal')",
-      [id, user_id, memberRole]
+      "INSERT INTO duijie_project_members (project_id, user_id, role, source, enterprise_role_id) VALUES (?, ?, ?, 'internal', ?)",
+      [id, user_id, memberRole, enterprise_role_id || null]
     );
     const [[project]] = await db.query('SELECT name FROM duijie_projects WHERE id = ?', [id]);
     if (user_id !== req.userId) {

@@ -18,13 +18,15 @@ interface ManageMembersModalProps {
   projectId: string
   members: any[]
   availableUsers: any[]
+  enterpriseRoles?: any[]
   onRefresh: () => void
   onRefreshAvailable: () => void
 }
 
-export function ManageMembersModal({ open, onClose, projectId, members, availableUsers, onRefresh, onRefreshAvailable }: ManageMembersModalProps) {
+export function ManageMembersModal({ open, onClose, projectId, members, availableUsers, enterpriseRoles = [], onRefresh, onRefreshAvailable }: ManageMembersModalProps) {
   const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set())
   const [memberRole, setMemberRole] = useState('editor')
+  const [selectedEntRoleId, setSelectedEntRoleId] = useState<string>('')
   const [memberSearch, setMemberSearch] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -42,6 +44,18 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
                     <div style={{ fontSize: 14, fontWeight: 500, color: '#0f172a' }}>{m.nickname || m.username}</div>
                     <div style={{ fontSize: 11, color: '#94a3b8' }}>{m.member_role === 'owner' ? '负责人' : m.member_role === 'editor' ? '编辑者' : '查看者'}</div>
                   </div>
+                  {m.member_role !== 'owner' && enterpriseRoles.length > 0 && (
+                    <select value={m.enterprise_role_id || ''}
+                      onChange={async (e) => {
+                        const rid = e.target.value ? Number(e.target.value) : null
+                        const r = await projectApi.updateMemberRole(projectId, String(m.pm_id), { enterprise_role_id: rid })
+                        if (r.success) { toast('角色已更新', 'success'); onRefresh() } else toast(r.message || '更新失败', 'error')
+                      }}
+                      style={{ padding: '3px 8px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 11, background: '#fff', color: '#334155', cursor: 'pointer' }}>
+                      <option value="">无项目角色</option>
+                      {enterpriseRoles.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                    </select>
+                  )}
                   {m.member_role !== 'owner' && (
                     <button onClick={async () => { const r = await projectApi.removeMember(projectId, String(m.id)); if (r.success) { toast('已移除', 'success'); onRefresh(); onRefreshAvailable() } else toast(r.message || '移除失败', 'error') }}
                       style={{ padding: '4px 12px', borderRadius: 6, background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', cursor: 'pointer', fontSize: 12, fontWeight: 500 }}>移除</button>
@@ -83,12 +97,19 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
               <option value="editor">编辑者</option>
               <option value="viewer">查看者</option>
             </select>
+            {enterpriseRoles.length > 0 && (
+              <select value={selectedEntRoleId} onChange={e => setSelectedEntRoleId(e.target.value)}
+                style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
+                <option value="">无项目角色</option>
+                {enterpriseRoles.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
+              </select>
+            )}
             {selectedUserIds.size > 0 && <span style={{ fontSize: 12, color: '#64748b' }}>已选 {selectedUserIds.size} 人</span>}
             <Button disabled={selectedUserIds.size === 0 || submitting} onClick={async () => {
               setSubmitting(true)
               let ok = 0
               for (const uid of selectedUserIds) {
-                const r = await projectApi.addMember(projectId, { user_id: uid, role: memberRole })
+                const r = await projectApi.addMember(projectId, { user_id: uid, role: memberRole, enterprise_role_id: selectedEntRoleId ? Number(selectedEntRoleId) : undefined })
                 if (r.success) ok++
               }
               setSubmitting(false)
@@ -212,6 +233,13 @@ export function MemberInfoModal({ member, onClose }: MemberInfoModalProps) {
                 {member.member_role === 'owner' ? '负责人' : member.member_role === 'editor' ? '编辑者' : '查看者'}
               </Badge>
             </div>
+            {member.enterprise_role_name && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Building2 size={16} color="#64748b" />
+                <span style={{ fontSize: 13, color: '#64748b', minWidth: 70 }}>企业角色</span>
+                <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 4, background: member.enterprise_role_color || '#64748b', color: '#fff', fontWeight: 500 }}>{member.enterprise_role_name}</span>
+              </div>
+            )}
             {member.nickname && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Mail size={16} color="#64748b" />

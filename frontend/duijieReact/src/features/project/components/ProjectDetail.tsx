@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
 import { ArrowLeft, Trash2, AppWindow, ExternalLink } from 'lucide-react'
 import { can } from '../../../stores/permissions'
+import useProjectPerms from '../../../hooks/useProjectPerms'
 import Modal from '../../ui/Modal'
 import { fetchApi } from '../../../bootstrap'
 import { projectApi } from '../services/api'
@@ -34,8 +35,12 @@ export default function ProjectDetail() {
   const nav = useNavigate()
   const { user } = useOutletContext<{ user: any }>()
   const role = user?.role || ''
-  const canEdit = can(role, 'project:edit')
-  const canDelete = can(role, 'project:delete')
+  const platformCanEdit = can(role, 'project:edit')
+  const platformCanDelete = can(role, 'project:delete')
+  const { perms: projectPerms } = useProjectPerms(id)
+  const canEdit = platformCanEdit || !!projectPerms?.can_edit_project
+  const canDelete = platformCanDelete || !!projectPerms?.can_delete_project
+  const canManageTask = can(role, 'task:create') || !!projectPerms?.can_manage_task
   const [project, setProject] = useState<any>(null)
   const [tasks, setTasks] = useState<any[]>([])
   const [milestones, setMilestones] = useState<any[]>([])
@@ -55,6 +60,7 @@ export default function ProjectDetail() {
   const [appForm, setAppForm] = useState({ app_name: '', app_url: '' })
   const [clientModal, setClientModal] = useState(false)
   const [clientData, setClientData] = useState<any>(null)
+  const [enterpriseRoles, setEnterpriseRoles] = useState<any[]>([])
 
   const openClientModal = (clientId: number) => {
     setClientModal(true)
@@ -93,9 +99,14 @@ export default function ProjectDetail() {
   const refreshAvailableUsers = () => { projectApi.availableUsers(id!).then(r => { if (r.success) setAvailableUsers(r.data || []) }) }
   const refreshClientAvailableUsers = () => { projectApi.clientAvailableUsers(id!).then(r => { if (r.success) setClientAvailableUsers(r.data || []) }) }
 
+  const loadEnterpriseRoles = () => {
+    fetchApi('/api/my-enterprise/roles').then(r => { if (r.success) setEnterpriseRoles(r.data || []) }).catch(() => {})
+  }
+
   const openManageMembers = () => {
     setShowAddMember(true)
     refreshAvailableUsers()
+    loadEnterpriseRoles()
   }
 
   const openManageClientMembers = () => {
@@ -201,8 +212,9 @@ export default function ProjectDetail() {
           open={showAddMember}
           onClose={() => setShowAddMember(false)}
           projectId={id!}
-          members={project.members || []}
+          members={(project.members || []).filter((m: any) => m.source !== 'client')}
           availableUsers={availableUsers}
+          enterpriseRoles={enterpriseRoles}
           onRefresh={loadProject}
           onRefreshAvailable={refreshAvailableUsers}
         />

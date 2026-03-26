@@ -17,7 +17,9 @@ router.put('/projects/:id', auth, roleGuard('admin', 'sales_manager', 'tech', 'b
 router.delete('/projects/:id', auth, roleGuard('admin', { soft: true }), enterprisePermGuard('can_delete_project'), require('../controllers/project/deleteController'));
 router.get('/projects/:id/available-users', auth, projectEditors, require('../controllers/project/availableUsersController'));
 router.post('/projects/:id/members', auth, projectEditors, require('../controllers/project/addMemberController'));
+router.put('/projects/:id/members/:memberId', auth, projectEditors, require('../controllers/project/updateMemberRoleController'));
 router.delete('/projects/:id/members/:userId', auth, projectEditors, require('../controllers/project/removeMemberController'));
+router.get('/projects/:id/my-perms', auth, require('../controllers/project/myPermsController'));
 router.get('/projects/:id/client-available-users', auth, require('../controllers/project/clientAvailableUsersController'));
 router.post('/projects/:id/client-members', auth, require('../controllers/project/addClientMemberController'));
 router.delete('/projects/:id/client-members/:userId', auth, require('../controllers/project/removeClientMemberController'));

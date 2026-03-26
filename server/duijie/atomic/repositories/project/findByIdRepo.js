@@ -7,8 +7,12 @@ module.exports = async (id) => {
   );
   if (!rows[0]) return null;
   const [members] = await db.query(
-    `SELECT pm.role as member_role, pm.source, u.id, u.username, u.nickname, u.avatar
-     FROM duijie_project_members pm INNER JOIN voice_users u ON pm.user_id = u.id
+    `SELECT pm.id as pm_id, pm.role as member_role, pm.source, pm.enterprise_role_id,
+            er.name as enterprise_role_name, er.color as enterprise_role_color,
+            u.id, u.username, u.nickname, u.avatar
+     FROM duijie_project_members pm
+     INNER JOIN voice_users u ON pm.user_id = u.id
+     LEFT JOIN enterprise_roles er ON er.id = pm.enterprise_role_id AND er.is_deleted = 0
      WHERE pm.project_id = ? AND u.is_deleted = 0 ORDER BY pm.source ASC, pm.role DESC`,
     [id]
   );

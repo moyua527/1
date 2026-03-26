@@ -26,8 +26,11 @@ export default function MembersSection({ project, canEdit, onManageMembers, onMa
               <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', cursor: 'pointer' }}
                 onClick={() => onSelectMember(m)}>
                 <Avatar name={m.nickname || m.username || '?'} size={28} />
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: '#0f172a' }}>{m.nickname || m.username}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: '#0f172a' }}>{m.nickname || m.username}</span>
+                    {m.enterprise_role_name && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: m.enterprise_role_color || '#e2e8f0', color: '#fff', fontWeight: 500, whiteSpace: 'nowrap' }}>{m.enterprise_role_name}</span>}
+                  </div>
                   <div style={{ fontSize: 11, color: '#94a3b8' }}>{m.member_role === 'owner' ? '负责人' : m.member_role === 'editor' ? '编辑者' : '查看者'}</div>
                 </div>
               </div>
