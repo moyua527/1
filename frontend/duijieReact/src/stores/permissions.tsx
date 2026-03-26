@@ -7,7 +7,7 @@ const PERMISSIONS: Record<string, string[]> = {
   'dashboard:amount':     ['admin', 'tech', 'business', 'member'],
 
   'project:view':         ['admin', 'sales_manager', 'tech', 'business', 'member', 'viewer'],
-  'project:create':       ['admin', 'sales_manager'],
+  'project:create':       ['admin', 'sales_manager', 'tech', 'business', 'marketing', 'member'],
   'project:edit':         ['admin', 'sales_manager', 'tech', 'business'],
   'project:delete':       ['admin', 'sales_manager'],
 

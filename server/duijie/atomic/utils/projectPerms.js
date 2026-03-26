@@ -36,18 +36,19 @@ async function getProjectPerms(userId, projectId) {
     };
   }
 
+  const isOwner = member.role === 'owner';
   return {
     projectRole: member.role,
     source: member.source,
     enterpriseRoleId: null,
-    can_manage_members: false,
-    can_manage_roles: false,
-    can_create_project: false,
-    can_edit_project: member.role === 'owner',
-    can_delete_project: false,
-    can_manage_client: false,
-    can_view_report: false,
-    can_manage_task: member.role === 'owner' || member.role === 'editor',
+    can_manage_members: isOwner,
+    can_manage_roles: isOwner,
+    can_create_project: isOwner,
+    can_edit_project: isOwner,
+    can_delete_project: isOwner,
+    can_manage_client: isOwner,
+    can_view_report: isOwner,
+    can_manage_task: isOwner || member.role === 'editor',
   };
 }
 

@@ -1,6 +1,7 @@
 ﻿const updateProject = require('../../services/project/updateProject');
 const db = require('../../../config/db');
 const { broadcast } = require('../../utils/broadcast');
+const { getProjectPerms } = require('../../utils/projectPerms');
 
 module.exports = async (req, res) => {
   try {
@@ -9,11 +10,8 @@ module.exports = async (req, res) => {
     const pid = req.params.id;
 
     if (role !== 'admin') {
-      const [rows] = await db.query(
-        'SELECT 1 FROM duijie_projects WHERE id = ? AND created_by = ? UNION SELECT 1 FROM duijie_project_members WHERE project_id = ? AND user_id = ?',
-        [pid, uid, pid, uid]
-      );
-      if (rows.length === 0) return res.status(403).json({ success: false, message: '无权编辑此项目' });
+      const perms = await getProjectPerms(uid, pid);
+      if (!perms || !perms.can_edit_project) return res.status(403).json({ success: false, message: '无权编辑此项目' });
     }
 
     await updateProject(pid, req.body);

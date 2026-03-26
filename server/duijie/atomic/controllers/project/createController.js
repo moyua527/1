@@ -11,6 +11,10 @@ module.exports = async (req, res) => {
       clientId = userRow[0]?.active_enterprise_id || null;
     }
     const id = await createProject({ ...req.body, client_id: clientId, created_by: req.userId });
+    await db.query(
+      "INSERT IGNORE INTO duijie_project_members (project_id, user_id, role, source) VALUES (?, ?, 'owner', 'internal')",
+      [id, req.userId]
+    );
     broadcast('project', 'created', { id, userId: req.userId });
     res.json({ success: true, data: { id } });
   } catch (e) {
