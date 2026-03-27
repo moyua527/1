@@ -127,15 +127,9 @@ export function useEnterprise() {
   useEffect(() => {
     if (!joinModalOpen) return
     const keyword = joinSearch.trim()
-    if (!keyword) {
-      joinSearchRequestRef.current += 1
-      setJoinSearching(false)
-      setJoinResults([])
-      return
-    }
     const timer = window.setTimeout(() => {
       handleJoinSearch(keyword)
-    }, 200)
+    }, keyword ? 200 : 0)
     return () => window.clearTimeout(timer)
   }, [joinSearch, joinModalOpen])
 
@@ -251,18 +245,13 @@ export function useEnterprise() {
   // === 加入企业 ===
   const handleJoinSearch = async (keyword?: string) => {
     const searchText = (keyword ?? joinSearch).trim()
-    if (!searchText) {
-      joinSearchRequestRef.current += 1
-      setJoinSearching(false)
-      setJoinResults([])
-      return
-    }
     const requestId = ++joinSearchRequestRef.current
     setJoinSearching(true)
-    const r = await fetchApi(`/api/my-enterprise/search?name=${encodeURIComponent(searchText)}`)
+    const query = searchText ? `?name=${encodeURIComponent(searchText)}` : ''
+    const r = await fetchApi(`/api/my-enterprise/search${query}`)
     if (requestId !== joinSearchRequestRef.current) return
     setJoinSearching(false)
-    if (r.success) setJoinResults((r.data || []).slice(0, 5))
+    if (r.success) setJoinResults(r.data || [])
     else setJoinResults([])
   }
   const handleJoin = async (entId?: number) => {

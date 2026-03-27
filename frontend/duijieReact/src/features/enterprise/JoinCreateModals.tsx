@@ -31,7 +31,10 @@ interface Props {
 export default function JoinCreateModals({ joinModalOpen, setJoinModalOpen, joinSearch, setJoinSearch, joinResults, joinSearching, joining, recommendedEnterprises, selectedJoinEnterpriseId, setSelectedJoinEnterpriseId, joinCode, setJoinCode, myRequests, handleJoinSearch, handleJoin, createModalOpen, setCreateModalOpen, createForm, setCreateForm, creating, handleCreate }: Props) {
   const mergedResults = Array.from(new Map([...recommendedEnterprises, ...joinResults].map((item: any) => [item.id, item])).values())
   const selectedEnterprise = mergedResults.find((item: any) => item.id === selectedJoinEnterpriseId)
-  const showSearchDropdown = !!joinSearch.trim() && joinSearch.trim() !== String(selectedEnterprise?.name || '').trim()
+  const normalizedJoinSearch = joinSearch.trim()
+  const selectedEnterpriseName = String(selectedEnterprise?.name || '').trim()
+  const searchMatchesSelected = !!selectedEnterpriseName && normalizedJoinSearch === selectedEnterpriseName
+  const showSearchDropdown = joinModalOpen && !searchMatchesSelected && (joinSearching || joinResults.length > 0 || !!normalizedJoinSearch)
   const requestStatus = selectedJoinEnterpriseId ? myRequests.find((r: any) => r.client_id === selectedJoinEnterpriseId)?.status : null
   const canDirectJoin = !!joinCode.trim()
   const submitDisabled = joining || !selectedJoinEnterpriseId || (requestStatus === 'pending' && !canDirectJoin)
@@ -135,7 +138,7 @@ export default function JoinCreateModals({ joinModalOpen, setJoinModalOpen, join
             <label style={labelStyle}>搜索企业名称</label>
             <div style={{ position: 'relative' }}>
               <div style={{ display: 'flex', gap: 8 }}>
-                <input value={joinSearch} onChange={e => setJoinSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleJoinSearch()} placeholder="输入企业名称关键字，如：帝 / 帝国"
+                <input value={joinSearch} onChange={e => setJoinSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleJoinSearch()} placeholder="先下拉查看平台企业，或输入 1 个字筛选"
                   style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none' }} />
                 <button onClick={() => handleJoinSearch()} disabled={joinSearching} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 500, opacity: joinSearching ? 0.6 : 1 }}>
                   <Search size={14} /> {joinSearching ? '搜索中...' : '搜索'}
@@ -147,15 +150,15 @@ export default function JoinCreateModals({ joinModalOpen, setJoinModalOpen, join
                     <div style={{ padding: '12px 14px', fontSize: 13, color: '#64748b' }}>正在匹配企业...</div>
                   ) : joinResults.length > 0 ? (
                     <div style={{ maxHeight: 260, overflowY: 'auto' }}>
-                      {joinResults.slice(0, 5).map(renderSearchOption)}
+                      {joinResults.map(renderSearchOption)}
                     </div>
                   ) : (
-                    <div style={{ padding: '12px 14px', fontSize: 13, color: '#94a3b8' }}>未找到匹配的企业</div>
+                    <div style={{ padding: '12px 14px', fontSize: 13, color: '#94a3b8' }}>{normalizedJoinSearch ? '未找到包含该字的企业' : '暂无可加入的企业'}</div>
                   )}
                 </div>
               ) : null}
             </div>
-            <div style={{ marginTop: 8, fontSize: 12, color: '#94a3b8' }}>输入任意关键字即可联想匹配企业，下拉最多显示 5 条。</div>
+            <div style={{ marginTop: 8, fontSize: 12, color: '#94a3b8' }}>默认下拉展示平台可加入企业，输入 1 个字即可按包含关系实时筛选。</div>
           </div>
           <div style={{ padding: '14px 16px', borderRadius: 12, border: '1px solid #dbeafe', background: '#f8fbff' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
