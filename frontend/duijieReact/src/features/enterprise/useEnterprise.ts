@@ -18,7 +18,7 @@ export function useEnterprise() {
   const [creating, setCreating] = useState(false)
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [joinModalOpen, setJoinModalOpen] = useState(false)
-  const [joinSearch, setJoinSearch] = useState('')
+  const [joinSearch, setJoinSearchValue] = useState('')
   const [joinResults, setJoinResults] = useState<any[]>([])
   const [joinSearching, setJoinSearching] = useState(false)
   const [joining, setJoining] = useState(false)
@@ -44,6 +44,7 @@ export function useEnterprise() {
   const [joinCode, setJoinCode] = useState('')
   const [joinCodeRefreshing, setJoinCodeRefreshing] = useState(false)
   const joinSearchRequestRef = useRef(0)
+  const joinSearchTimerRef = useRef<number | null>(null)
 
   const sysRole = useUserStore(s => s.user?.role) || ''
   const isSysAdmin = sysRole === 'admin'
@@ -114,7 +115,9 @@ export function useEnterprise() {
 
   const openJoinModal = () => {
     setJoinModalOpen(true)
-    setJoinSearch('')
+    if (joinSearchTimerRef.current !== null) window.clearTimeout(joinSearchTimerRef.current)
+    joinSearchTimerRef.current = null
+    setJoinSearchValue('')
     setJoinResults([])
     setJoinSearching(false)
     setSelectedJoinEnterpriseId(null)
@@ -124,14 +127,31 @@ export function useEnterprise() {
     loadRecommendedEnterprises()
   }
 
-  useEffect(() => {
+  const clearJoinSearchTimer = () => {
+    if (joinSearchTimerRef.current === null) return
+    window.clearTimeout(joinSearchTimerRef.current)
+    joinSearchTimerRef.current = null
+  }
+
+  const updateJoinSearch = (value: string) => {
+    setJoinSearchValue(value)
     if (!joinModalOpen) return
-    const keyword = joinSearch.trim()
-    const timer = window.setTimeout(() => {
-      handleJoinSearch(keyword)
-    }, keyword ? 200 : 0)
-    return () => window.clearTimeout(timer)
-  }, [joinSearch, joinModalOpen])
+    clearJoinSearchTimer()
+    const normalizedKeyword = value.trim()
+    joinSearchTimerRef.current = window.setTimeout(() => {
+      joinSearchTimerRef.current = null
+      handleJoinSearch(normalizedKeyword)
+    }, normalizedKeyword ? 200 : 0)
+  }
+
+  useEffect(() => {
+    if (!joinModalOpen) {
+      clearJoinSearchTimer()
+      return
+    }
+    updateJoinSearch(joinSearch)
+    return clearJoinSearchTimer
+  }, [joinModalOpen])
 
   const handleRegenerateJoinCode = async () => {
     if (!(await confirm({ message: '重置后旧推荐码将立即失效，确认继续？' }))) return
@@ -266,7 +286,8 @@ export function useEnterprise() {
     if (r.success) {
       toast(r.message || '操作成功', 'success')
       setJoinModalOpen(false)
-      setJoinSearch('')
+      clearJoinSearchTimer()
+      setJoinSearchValue('')
       setJoinResults([])
       setJoinSearching(false)
       setSelectedJoinEnterpriseId(null)
@@ -344,7 +365,7 @@ export function useEnterprise() {
     openEditEnt, handleSaveEnt, handleDeleteEnterprise, handleRegenerateJoinCode, joinCodeRefreshing,
     createModalOpen, setCreateModalOpen, createForm, setCreateForm, creating, handleCreate,
     // 加入
-    joinModalOpen, setJoinModalOpen, openJoinModal, joinSearch, setJoinSearch, joinResults, setJoinResults, joinSearching, joining,
+    joinModalOpen, setJoinModalOpen, openJoinModal, joinSearch, setJoinSearch: updateJoinSearch, joinResults, setJoinResults, joinSearching, joining,
     recommendedEnterprises, selectedJoinEnterpriseId, setSelectedJoinEnterpriseId, joinCode, setJoinCode,
     myRequests, loadMyRequests, handleJoinSearch, handleJoin,
     // 成员
