@@ -42,7 +42,7 @@ export default function ProjectList() {
   const [statusFilter, setStatusFilter] = useState('')
   const nav = useNavigate()
   const location = useLocation()
-  const { user } = useOutletContext<{ user: any }>()
+  const { user, isMobile } = useOutletContext<{ user: any; isMobile?: boolean }>()
   const canCreate = can(user?.role || '', 'project:create')
 
   const load = useCallback(() => {
@@ -87,30 +87,30 @@ export default function ProjectList() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'flex-start', marginBottom: 16, gap: 12 }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>项目管理</h1>
+          <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>项目管理</h1>
           <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>共 {filtered.length} 个项目</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ position: 'relative' }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', gap: 8, width: isMobile ? '100%' : undefined }}>
+          <div style={{ position: 'relative', width: isMobile ? '100%' : undefined }}>
             <Search size={14} color="#94a3b8" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索项目..."
-              style={{ padding: '8px 12px 8px 32px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none', width: 180 }} />
+              style={{ padding: '8px 12px 8px 32px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none', width: isMobile ? '100%' : 180, boxSizing: 'border-box' }} />
           </div>
           <button onClick={() => { window.open('/api/projects/export', '_blank') }}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: 13, fontWeight: 500, cursor: 'pointer', width: isMobile ? '100%' : undefined }}>
             <Download size={14} /> 导出
           </button>
-          {canCreate && <Button onClick={() => setShowCreate(true)}><Plus size={16} /> 新建项目</Button>}
+          {canCreate && <Button onClick={() => setShowCreate(true)} style={isMobile ? { width: '100%', justifyContent: 'center' } : undefined}><Plus size={16} /> 新建项目</Button>}
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 16, flexWrap: isMobile ? 'nowrap' : 'wrap', overflowX: isMobile ? 'auto' : 'visible', paddingBottom: isMobile ? 4 : 0, WebkitOverflowScrolling: 'touch' as any }}>
         {statusTabs.map(t => (
           <button key={t.key} onClick={() => setStatusFilter(t.key)}
             style={{ padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 13, fontWeight: statusFilter === t.key ? 600 : 400,
-              background: statusFilter === t.key ? '#2563eb' : '#f1f5f9', color: statusFilter === t.key ? '#fff' : '#64748b', cursor: 'pointer', transition: 'all 0.15s' }}>
+              background: statusFilter === t.key ? '#2563eb' : '#f1f5f9', color: statusFilter === t.key ? '#fff' : '#64748b', cursor: 'pointer', transition: 'all 0.15s', flex: '0 0 auto', whiteSpace: 'nowrap' }}>
             {t.label}
             {t.key === '' ? ` (${projects.length})` : ` (${projects.filter(p => p.status === t.key).length})`}
           </button>
@@ -125,15 +125,15 @@ export default function ProjectList() {
           <div>{projects.length === 0 ? '暂无项目，点击右上角新建' : '无匹配项目'}</div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))', gap: 16 }}>
           {filtered.map((p: any) => {
             const st = statusMap[p.status] || statusMap.planning
             return (
               <div key={p.id} style={cardStyle} onClick={() => nav(`/projects/${p.id}`)}
                 onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)')}
                 onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)')}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#0f172a' }}>{p.name}</h3>
+                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: isMobile ? 8 : 12, marginBottom: 12 }}>
+                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#0f172a', wordBreak: 'break-word' }}>{p.name}</h3>
                   <Badge color={st.color}>{st.label}</Badge>
                 </div>
                 {(p.internal_client_name || p.client_name) && (
@@ -142,7 +142,7 @@ export default function ProjectList() {
                     <div>客户企业: {p.client_name || '-'}</div>
                   </div>
                 )}
-                {p.description && <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description}</div>}
+                {p.description && <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: isMobile ? 'normal' : 'nowrap', wordBreak: 'break-word' }}>{p.description}</div>}
                 <ProgressBar value={p.progress || 0} />
                 <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>进度 {p.progress || 0}%</div>
               </div>
@@ -160,9 +160,9 @@ export default function ProjectList() {
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
           </div>
           <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>创建后可在项目详情中添加成员、关联应用等</p>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
-            <Button variant="secondary" onClick={() => setShowCreate(false)}>取消</Button>
-            <Button onClick={handleCreate} disabled={submitting}>{submitting ? '创建中...' : '创建'}</Button>
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column-reverse' : 'row', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
+            <Button variant="secondary" onClick={() => setShowCreate(false)} style={isMobile ? { width: '100%', justifyContent: 'center' } : undefined}>取消</Button>
+            <Button onClick={handleCreate} disabled={submitting} style={isMobile ? { width: '100%', justifyContent: 'center' } : undefined}>{submitting ? '创建中...' : '创建'}</Button>
           </div>
         </div>
       </Modal>

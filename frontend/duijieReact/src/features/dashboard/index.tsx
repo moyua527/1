@@ -42,7 +42,7 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState<any>(null)
   const [chartDays, setChartDays] = useState(30)
   const nav = useNavigate()
-  const { user } = useOutletContext<{ user: any }>()
+  const { user, isMobile } = useOutletContext<{ user: any; isMobile?: boolean }>()
   const r = user?.role || ''
   const canClients = can(r, 'dashboard:clients')
   const canTasks = can(r, 'dashboard:tasks')
@@ -85,10 +85,10 @@ export default function Dashboard() {
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>仪表盘</h1>
+        <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>仪表盘</h1>
         <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>项目对接平台概览</p>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
         {items.map(item => (
           <div key={item.label} style={card} onClick={() => nav(item.path)}
             onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)')}
@@ -101,15 +101,15 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
-      <WorkspaceSection />
-      {chartData && <DashboardCharts chartData={chartData} days={chartDays} onDaysChange={setChartDays} canClients={canClients} />}
+      <WorkspaceSection isMobile={!!isMobile} />
+      {chartData && <DashboardCharts chartData={chartData} days={chartDays} onDaysChange={setChartDays} canClients={canClients} isMobile={!!isMobile} />}
       {canClients && stats?.clientStages && (() => {
         const stages = stats.clientStages!
         const total = Object.values(stages).reduce((a, b) => a + b, 0)
         const maxCount = Math.max(...Object.values(stages), 1)
         return (
-          <div style={{ background: '#fff', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginTop: 24 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+          <div style={{ background: '#fff', borderRadius: 12, padding: isMobile ? 16 : 24, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginTop: 24 }}>
+            <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', gap: 8, marginBottom: 20 }}>
               <Users size={20} color="#2563eb" />
               <span style={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>销售漏斗</span>
               <span style={{ fontSize: 13, color: '#94a3b8' }}>客户阶段分布 · 共 {total} 位客户</span>
@@ -120,7 +120,7 @@ export default function Dashboard() {
                 const widthPct = total > 0 ? Math.max(20, ((maxCount - (i * maxCount / 5)) / maxCount) * 100) : 20
                 const barWidth = total > 0 ? Math.max(8, (count / maxCount) * 100) : 8
                 return (
-                  <div key={s.key} style={{ width: `${widthPct}%`, minWidth: 180, cursor: 'pointer' }} onClick={() => nav(`/clients?stage=${s.key}`)}>
+                  <div key={s.key} style={{ width: isMobile ? '100%' : `${widthPct}%`, minWidth: isMobile ? 0 : 180, cursor: 'pointer' }} onClick={() => nav(`/clients?stage=${s.key}`)}>
                     <div style={{ background: s.bg, borderRadius: 8, padding: '10px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
                       <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${barWidth}%`, background: s.color, opacity: 0.12, borderRadius: 8 }} />
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, zIndex: 1 }}>
@@ -137,20 +137,20 @@ export default function Dashboard() {
         )
       })()}
       {canClients && stats?.followUpAlerts && (stats.followUpAlerts.overdue > 0 || stats.followUpAlerts.upcoming > 0) && (
-        <div style={{ background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginTop: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ background: '#fff', borderRadius: 12, padding: isMobile ? 16 : 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginTop: 24, display: 'flex', gap: 16, flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 8 }}>
             <Bell size={20} color="#d97706" />
             <span style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>跟进提醒</span>
           </div>
           {stats.followUpAlerts.overdue > 0 && (
-            <div onClick={() => nav('/clients')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 10, background: '#fef2f2', cursor: 'pointer', border: '1px solid #fecaca' }}>
+            <div onClick={() => nav('/clients')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 10, background: '#fef2f2', cursor: 'pointer', border: '1px solid #fecaca', width: isMobile ? '100%' : undefined }}>
               <AlertTriangle size={16} color="#dc2626" />
               <span style={{ fontSize: 14, color: '#dc2626', fontWeight: 600 }}>{stats.followUpAlerts.overdue} 位客户</span>
               <span style={{ fontSize: 13, color: '#dc2626' }}>跟进已过期</span>
             </div>
           )}
           {stats.followUpAlerts.upcoming > 0 && (
-            <div onClick={() => nav('/clients')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 10, background: '#fffbeb', cursor: 'pointer', border: '1px solid #fde68a' }}>
+            <div onClick={() => nav('/clients')} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', borderRadius: 10, background: '#fffbeb', cursor: 'pointer', border: '1px solid #fde68a', width: isMobile ? '100%' : undefined }}>
               <Clock size={16} color="#d97706" />
               <span style={{ fontSize: 14, color: '#d97706', fontWeight: 600 }}>{stats.followUpAlerts.upcoming} 位客户</span>
               <span style={{ fontSize: 13, color: '#d97706' }}>3天内需跟进</span>
@@ -159,9 +159,9 @@ export default function Dashboard() {
         </div>
       )}
       {canClients && stats && ((stats.recentFollowUps?.length || 0) > 0 || (stats.recentContracts?.length || 0) > 0) && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 16, marginTop: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(360px, 1fr))', gap: 16, marginTop: 24 }}>
           {(stats.recentFollowUps?.length || 0) > 0 && (
-            <div style={{ background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+            <div style={{ background: '#fff', borderRadius: 12, padding: isMobile ? 16 : 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                 <MessageSquare size={18} color="#2563eb" />
                 <span style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>最近跟进</span>
@@ -170,18 +170,18 @@ export default function Dashboard() {
                 <div key={f.id} onClick={() => nav(`/clients/${f.client_id}`)} style={{ display: 'flex', gap: 10, padding: '10px 0', borderTop: '1px solid #f1f5f9', cursor: 'pointer' }}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#2563eb', marginTop: 6, flexShrink: 0 }} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                    <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', gap: 6, marginBottom: 2, flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{f.client_name}</span>
                       <span style={{ fontSize: 11, color: '#94a3b8' }}>{new Date(f.created_at).toLocaleDateString('zh-CN')}</span>
                     </div>
-                    <div style={{ fontSize: 13, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.content}</div>
+                    <div style={{ fontSize: 13, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: isMobile ? 'normal' : 'nowrap', wordBreak: 'break-word' }}>{f.content}</div>
                   </div>
                 </div>
               ))}
             </div>
           )}
           {(stats.recentContracts?.length || 0) > 0 && (
-            <div style={{ background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+            <div style={{ background: '#fff', borderRadius: 12, padding: isMobile ? 16 : 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                 <FileSignature size={18} color="#16a34a" />
                 <span style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>最近合同</span>
@@ -193,12 +193,12 @@ export default function Dashboard() {
                   <div key={c.id} onClick={() => nav(`/clients/${c.client_id}`)} style={{ display: 'flex', gap: 10, padding: '10px 0', borderTop: '1px solid #f1f5f9', cursor: 'pointer' }}>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#16a34a', marginTop: 6, flexShrink: 0 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                      <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', gap: 6, marginBottom: 2, flexWrap: 'wrap' }}>
                         <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{c.client_name}</span>
                         <span style={{ fontSize: 11, padding: '1px 6px', borderRadius: 4, background: st.color + '18', color: st.color }}>{st.label}</span>
                         <span style={{ fontSize: 11, color: '#94a3b8' }}>{new Date(c.created_at).toLocaleDateString('zh-CN')}</span>
                       </div>
-                      <div style={{ fontSize: 13, color: '#64748b' }}>{c.title} · ¥{Number(c.amount || 0).toLocaleString()}</div>
+                      <div style={{ fontSize: 13, color: '#64748b', wordBreak: 'break-word' }}>{c.title} · ¥{Number(c.amount || 0).toLocaleString()}</div>
                     </div>
                   </div>
                 )

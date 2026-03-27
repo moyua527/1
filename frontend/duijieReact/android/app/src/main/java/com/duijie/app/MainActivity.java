@@ -1,5 +1,7 @@
 package com.duijie.app;
 
+import androidx.activity.OnBackPressedCallback;
+import androidx.core.view.WindowCompat;
 import android.os.Bundle;
 import android.webkit.WebView;
 import android.webkit.WebSettings;
@@ -10,9 +12,11 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
 
         WebView webView = getBridge().getWebView();
         if (webView != null) {
+            webView.setFitsSystemWindows(true);
             WebSettings settings = webView.getSettings();
             settings.setDomStorageEnabled(true);
             settings.setAllowFileAccess(true);
@@ -27,6 +31,18 @@ public class MainActivity extends BridgeActivity {
             webView.setVerticalScrollBarEnabled(true);
             webView.setHorizontalScrollBarEnabled(false);
         }
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                WebView activeWebView = getBridge().getWebView();
+                if (activeWebView != null && activeWebView.canGoBack()) {
+                    activeWebView.goBack();
+                    return;
+                }
+                finish();
+            }
+        });
     }
 
     @Override

@@ -1,13 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield, Settings, Copy, TrendingUp, MessageSquare, ScrollText, FileText, Edit2, Building2, Ticket, Plug2 } from 'lucide-react'
+import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield, Settings, TrendingUp, MessageSquare, ScrollText, FileText, Building2, Ticket, Plug2, ArrowLeft } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
 import { can } from '../../stores/permissions'
 import { onSocket } from './smartSocket'
 import Avatar from './Avatar'
-import Button from './Button'
-import { toast } from './Toast'
 import useIsMobile from './useIsMobile'
 import NotificationBell from './NotificationBell'
 import CommandPalette from './CommandPalette'
@@ -49,7 +47,7 @@ const s = {
   content: { flex: 1, overflow: 'auto', minHeight: 0, padding: 24, WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain', touchAction: 'pan-y' as const } as React.CSSProperties,
   userArea: { display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderTop: '1px solid #e2e8f0' } as React.CSSProperties,
   logoutBtn: { background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', padding: 4, marginLeft: 'auto' } as React.CSSProperties,
-}
+ }
 
 export default function Layout() {
   const isMobile = useIsMobile()
@@ -70,6 +68,7 @@ export default function Layout() {
   const role = user?.role || 'member'
   const NAV_ITEMS = ALL_NAV_ITEMS.filter(n => can(role, n.perm))
   const currentNav = NAV_ITEMS.find(n => n.path === '/' ? location.pathname === '/' : location.pathname.startsWith(n.path))
+  const showBackButton = isMobile && !!currentNav && currentNav.path !== location.pathname
 
   useEffect(() => { setCollapsed(isMobile) }, [isMobile])
   useEffect(() => { if (isMobile) setCollapsed(true) }, [location.pathname, isMobile])
@@ -93,6 +92,14 @@ export default function Layout() {
   useEffect(() => { loadDmUnread() }, [location.pathname])
 
   const handleLogout = () => { storeLogout() }
+  const handlePrimaryNavAction = () => {
+    if (showBackButton) {
+      if (window.history.length > 1) navigate(-1)
+      else navigate(currentNav?.path || '/', { replace: true })
+      return
+    }
+    setCollapsed(!collapsed)
+  }
 
   const sidebarOpen = !collapsed
 
@@ -158,6 +165,8 @@ export default function Layout() {
               touchAction: 'manipulation',
               WebkitOverflowScrolling: 'touch' as any,
               overflowY: 'auto',
+              paddingTop: 'env(safe-area-inset-top)',
+              paddingBottom: 'env(safe-area-inset-bottom)',
             }}
           >
             {sidebarContent}
@@ -170,8 +179,8 @@ export default function Layout() {
       )}
       <div style={s.main}>
         <header style={{ ...s.header, padding: isMobile ? '0 12px' : '0 24px' }}>
-          <button style={s.menuBtn} onClick={() => setCollapsed(!collapsed)}>
-            {sidebarOpen && !isMobile ? <X size={20} /> : <Menu size={20} />}
+          <button style={s.menuBtn} onClick={handlePrimaryNavAction}>
+            {showBackButton ? <ArrowLeft size={20} /> : sidebarOpen && !isMobile ? <X size={20} /> : <Menu size={20} />}
           </button>
           <span style={s.headerTitle}>{currentNav?.label || 'DuiJie'}</span>
           {user && <NotificationBell />}

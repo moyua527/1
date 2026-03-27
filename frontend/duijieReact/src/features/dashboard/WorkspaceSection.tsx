@@ -17,7 +17,7 @@ const projStatus: Record<string, { color: string; label: string }> = {
   on_hold: { color: '#d97706', label: '暂停' },
 }
 
-export default function WorkspaceSection() {
+export default function WorkspaceSection({ isMobile = false }: { isMobile?: boolean }) {
   const [data, setData] = useState<any>(null)
   const nav = useNavigate()
 
@@ -33,11 +33,11 @@ export default function WorkspaceSection() {
   if (!hasContent) return null
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16, marginTop: 24 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16, marginTop: 24 }}>
       {/* 我的待办任务 */}
       {myTasks?.length > 0 && (
-        <div style={{ background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div style={{ background: '#fff', borderRadius: 12, padding: isMobile ? 16 : 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <ClipboardList size={18} color="#2563eb" />
               <span style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>我的待办</span>
@@ -50,11 +50,11 @@ export default function WorkspaceSection() {
           {myTasks.map((t: any) => {
             const p = priorityColor[t.priority] || priorityColor.medium
             return (
-              <div key={t.id} onClick={() => nav(`/projects/${t.project_id}`)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderTop: '1px solid #f1f5f9', cursor: 'pointer' }}>
+              <div key={t.id} onClick={() => nav(`/projects/${t.project_id}`)} style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', gap: 10, padding: '8px 0', borderTop: '1px solid #f1f5f9', cursor: 'pointer' }}>
                 <span style={{ fontSize: 11, padding: '2px 6px', borderRadius: 4, background: p.bg, color: p.text, fontWeight: 600, flexShrink: 0 }}>{p.label}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
-                  <div style={{ fontSize: 11, color: '#94a3b8', display: 'flex', gap: 8, marginTop: 2 }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: isMobile ? 'normal' : 'nowrap', wordBreak: 'break-word' }}>{t.title}</div>
+                  <div style={{ fontSize: 11, color: '#94a3b8', display: 'flex', gap: 8, marginTop: 2, flexWrap: 'wrap' }}>
                     <span>{statusLabel[t.status] || t.status}</span>
                     {t.project_name && <span>· {t.project_name}</span>}
                     {t.due_date && <span>· {new Date(t.due_date).toLocaleDateString('zh-CN')}</span>}
@@ -68,7 +68,7 @@ export default function WorkspaceSection() {
 
       {/* 即将到期 */}
       {dueSoon?.length > 0 && (
-        <div style={{ background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+        <div style={{ background: '#fff', borderRadius: 12, padding: isMobile ? 16 : 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
             <AlertTriangle size={18} color="#d97706" />
             <span style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>即将到期</span>
@@ -78,12 +78,12 @@ export default function WorkspaceSection() {
             const daysLeft = Math.ceil((new Date(t.due_date).getTime() - Date.now()) / 86400000)
             const urgent = daysLeft <= 1
             return (
-              <div key={t.id} onClick={() => nav(`/projects/${t.project_id}`)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderTop: '1px solid #f1f5f9', cursor: 'pointer' }}>
+              <div key={t.id} onClick={() => nav(`/projects/${t.project_id}`)} style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', gap: 10, padding: '8px 0', borderTop: '1px solid #f1f5f9', cursor: 'pointer' }}>
                 <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: urgent ? '#fef2f2' : '#fef3c7', color: urgent ? '#dc2626' : '#92400e', fontWeight: 600, flexShrink: 0 }}>
                   {daysLeft <= 0 ? '今天' : `${daysLeft}天后`}
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: isMobile ? 'normal' : 'nowrap', wordBreak: 'break-word' }}>{t.title}</div>
                   {t.project_name && <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>{t.project_name}</div>}
                 </div>
               </div>
@@ -94,8 +94,8 @@ export default function WorkspaceSection() {
 
       {/* 我的项目 */}
       {myProjects?.length > 0 && (
-        <div style={{ background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div style={{ background: '#fff', borderRadius: 12, padding: isMobile ? 16 : 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <FolderKanban size={18} color="#7c3aed" />
               <span style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>我的项目</span>
@@ -110,8 +110,8 @@ export default function WorkspaceSection() {
             const pct = total > 0 ? Math.round((p.done_tasks / total) * 100) : 0
             return (
               <div key={p.id} onClick={() => nav(`/projects/${p.id}`)} style={{ padding: '10px 0', borderTop: '1px solid #f1f5f9', cursor: 'pointer' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{p.name}</div>
+                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: isMobile ? 6 : 8, marginBottom: 6 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#0f172a', wordBreak: 'break-word' }}>{p.name}</div>
                   <span style={{ fontSize: 11, padding: '1px 8px', borderRadius: 4, background: st.color + '18', color: st.color, fontWeight: 500 }}>{st.label}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -131,8 +131,8 @@ export default function WorkspaceSection() {
 
       {/* 待审批 */}
       {pendingApprovals?.length > 0 && (
-        <div style={{ background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div style={{ background: '#fff', borderRadius: 12, padding: isMobile ? 16 : 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <UserCheck size={18} color="#16a34a" />
               <span style={{ fontSize: 16, fontWeight: 700, color: '#0f172a' }}>待审批</span>
@@ -143,13 +143,16 @@ export default function WorkspaceSection() {
             </button>
           </div>
           {pendingApprovals.map((a: any) => (
-            <div key={a.id} onClick={() => nav('/enterprise')} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderTop: '1px solid #f1f5f9', cursor: 'pointer' }}>
+            <div key={a.id} onClick={() => nav('/enterprise')} style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', gap: 10, padding: '8px 0', borderTop: '1px solid #f1f5f9', cursor: 'pointer' }}>
               <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 600, color: '#2563eb', flexShrink: 0 }}>
                 {(a.nickname || a.username || '?')[0]}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 500, color: '#0f172a' }}>{a.nickname || a.username} 申请加入</div>
-                <div style={{ fontSize: 11, color: '#94a3b8' }}>{a.enterprise_name} · {new Date(a.created_at).toLocaleDateString('zh-CN')}</div>
+                <div style={{ fontSize: 13, fontWeight: 500, color: '#0f172a', wordBreak: 'break-word' }}>{a.nickname || a.username} 申请加入</div>
+                <div style={{ fontSize: 11, color: '#94a3b8', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <span>{a.enterprise_name}</span>
+                  <span>· {new Date(a.created_at).toLocaleDateString('zh-CN')}</span>
+                </div>
               </div>
             </div>
           ))}

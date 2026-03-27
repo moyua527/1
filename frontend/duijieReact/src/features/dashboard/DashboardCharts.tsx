@@ -10,28 +10,29 @@ interface DashboardChartsProps {
   days: number
   onDaysChange: (d: number) => void
   canClients: boolean
+  isMobile: boolean
 }
 
-export default function DashboardCharts({ chartData, days, onDaysChange, canClients }: DashboardChartsProps) {
+export default function DashboardCharts({ chartData, days, onDaysChange, canClients, isMobile }: DashboardChartsProps) {
   return (
     <div style={{ marginTop: 24 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Activity size={20} color="#2563eb" />
           <span style={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>数据趋势</span>
         </div>
-        <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 8, padding: 3 }}>
+        <div style={{ display: 'flex', gap: 4, background: '#f1f5f9', borderRadius: 8, padding: 3, width: isMobile ? '100%' : undefined, justifyContent: isMobile ? 'space-between' : 'flex-start' }}>
           {[{ d: 7, l: '7天' }, { d: 30, l: '30天' }, { d: 90, l: '90天' }].map(o => (
             <button key={o.d} onClick={() => onDaysChange(o.d)}
-              style={{ padding: '4px 12px', borderRadius: 6, border: 'none', fontSize: 12, fontWeight: 500, cursor: 'pointer', background: days === o.d ? '#fff' : 'transparent', color: days === o.d ? '#2563eb' : '#64748b', boxShadow: days === o.d ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>
+              style={{ padding: '4px 12px', borderRadius: 6, border: 'none', fontSize: 12, fontWeight: 500, cursor: 'pointer', background: days === o.d ? '#fff' : 'transparent', color: days === o.d ? '#2563eb' : '#64748b', boxShadow: days === o.d ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', flex: isMobile ? 1 : undefined }}>
               {o.l}
             </button>
           ))}
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(360px, 1fr))', gap: 16 }}>
         {chartData.taskTrend?.length > 0 && (
-          <div style={{ background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+          <div style={{ background: '#fff', borderRadius: 12, padding: isMobile ? 16 : 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: '#334155', marginBottom: 12 }}>任务趋势</div>
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={chartData.taskTrend.map((d: any) => ({ ...d, date: d.date?.slice(5) }))}>
@@ -47,7 +48,7 @@ export default function DashboardCharts({ chartData, days, onDaysChange, canClie
           </div>
         )}
         {chartData.taskDist?.length > 0 && (
-          <div style={{ background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+          <div style={{ background: '#fff', borderRadius: 12, padding: isMobile ? 16 : 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: '#334155', marginBottom: 12 }}>任务状态分布</div>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
@@ -60,7 +61,7 @@ export default function DashboardCharts({ chartData, days, onDaysChange, canClie
           </div>
         )}
         {canClients && chartData.clientTrend?.length > 0 && (
-          <div style={{ background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+          <div style={{ background: '#fff', borderRadius: 12, padding: isMobile ? 16 : 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: '#334155', marginBottom: 12 }}>新增客户趋势</div>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={chartData.clientTrend.map((d: any) => ({ ...d, date: d.date?.slice(5) }))}>
@@ -74,7 +75,7 @@ export default function DashboardCharts({ chartData, days, onDaysChange, canClie
           </div>
         )}
         {canClients && chartData.oppDist?.length > 0 && (
-          <div style={{ background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+          <div style={{ background: '#fff', borderRadius: 12, padding: isMobile ? 16 : 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
             <div style={{ fontSize: 14, fontWeight: 600, color: '#334155', marginBottom: 12 }}>商机阶段分布</div>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={chartData.oppDist.map((d: any) => ({ ...d, stage: oppStageLabel[d.stage] || d.stage, amount: Math.round(Number(d.amount) / 10000) }))}>
