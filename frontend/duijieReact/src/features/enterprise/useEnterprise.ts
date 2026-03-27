@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { fetchApi } from '../../bootstrap'
 import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
@@ -43,6 +43,7 @@ export function useEnterprise() {
   const [selectedJoinEnterpriseId, setSelectedJoinEnterpriseId] = useState<number | null>(null)
   const [joinCode, setJoinCode] = useState('')
   const [joinCodeRefreshing, setJoinCodeRefreshing] = useState(false)
+  const joinSearchRequestRef = useRef(0)
 
   const sysRole = useUserStore(s => s.user?.role) || ''
   const isSysAdmin = sysRole === 'admin'
@@ -115,11 +116,28 @@ export function useEnterprise() {
     setJoinModalOpen(true)
     setJoinSearch('')
     setJoinResults([])
+    setJoinSearching(false)
     setSelectedJoinEnterpriseId(null)
     setJoinCode('')
+    joinSearchRequestRef.current += 1
     loadMyRequests()
     loadRecommendedEnterprises()
   }
+
+  useEffect(() => {
+    if (!joinModalOpen) return
+    const keyword = joinSearch.trim()
+    if (!keyword) {
+      joinSearchRequestRef.current += 1
+      setJoinSearching(false)
+      setJoinResults([])
+      return
+    }
+    const timer = window.setTimeout(() => {
+      handleJoinSearch(keyword)
+    }, 200)
+    return () => window.clearTimeout(timer)
+  }, [joinSearch, joinModalOpen])
 
   const handleRegenerateJoinCode = async () => {
     if (!(await confirm({ message: '重置后旧推荐码将立即失效，确认继续？' }))) return
@@ -231,12 +249,21 @@ export function useEnterprise() {
   }
 
   // === 加入企业 ===
-  const handleJoinSearch = async () => {
-    if (!joinSearch.trim()) { setJoinResults([]); return }
+  const handleJoinSearch = async (keyword?: string) => {
+    const searchText = (keyword ?? joinSearch).trim()
+    if (!searchText) {
+      joinSearchRequestRef.current += 1
+      setJoinSearching(false)
+      setJoinResults([])
+      return
+    }
+    const requestId = ++joinSearchRequestRef.current
     setJoinSearching(true)
-    const r = await fetchApi(`/api/my-enterprise/search?name=${encodeURIComponent(joinSearch.trim())}`)
+    const r = await fetchApi(`/api/my-enterprise/search?name=${encodeURIComponent(searchText)}`)
+    if (requestId !== joinSearchRequestRef.current) return
     setJoinSearching(false)
-    if (r.success) setJoinResults(r.data || [])
+    if (r.success) setJoinResults((r.data || []).slice(0, 5))
+    else setJoinResults([])
   }
   const handleJoin = async (entId?: number) => {
     const targetId = entId || selectedJoinEnterpriseId
@@ -252,8 +279,10 @@ export function useEnterprise() {
       setJoinModalOpen(false)
       setJoinSearch('')
       setJoinResults([])
+      setJoinSearching(false)
       setSelectedJoinEnterpriseId(null)
       setJoinCode('')
+      joinSearchRequestRef.current += 1
       loadMyRequests()
       if (r.data?.joinedDirectly) load()
     } else {

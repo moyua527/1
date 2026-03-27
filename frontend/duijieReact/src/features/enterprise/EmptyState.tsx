@@ -25,7 +25,7 @@ interface Props {
   joinCode: string
   setJoinCode: (v: string) => void
   myRequests: any[]
-  handleJoinSearch: () => void
+  handleJoinSearch: (keyword?: string) => void
   handleJoin: (id?: number) => void
   isSysAdmin: boolean
   allEnterprises: any[]

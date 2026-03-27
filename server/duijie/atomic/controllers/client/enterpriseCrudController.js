@@ -130,6 +130,19 @@ exports.searchEnterprise = async (req, res) => {
   try {
     const name = (req.query.name || '').trim();
     if (!name || name.length < 1) return res.json({ success: true, data: [] });
+    const normalizedName = name.replace(/\s+/g, '');
+    const useCharMatch = /[\u4e00-\u9fa5]/.test(normalizedName) && normalizedName.length > 1;
+    const charKeywords = useCharMatch ? Array.from(new Set(normalizedName.split(''))) : [];
+    const searchClauses = ['(c.name LIKE ? OR c.company LIKE ?)'];
+    const searchParams = [req.userId, req.userId, `%${name}%`, `%${name}%`];
+
+    if (charKeywords.length > 1) {
+      searchClauses.push(`(${charKeywords.map(() => '(c.name LIKE ? OR c.company LIKE ?)').join(' AND ')})`);
+      charKeywords.forEach(ch => {
+        searchParams.push(`%${ch}%`, `%${ch}%`);
+      });
+    }
+
     const [rows] = await db.query(
       `SELECT c.id, c.name, c.company, c.industry, c.scale, c.created_at, COUNT(m.id) as member_count
        FROM duijie_clients c
@@ -140,11 +153,11 @@ exports.searchEnterprise = async (req, res) => {
          AND c.id NOT IN (
            SELECT client_id FROM duijie_client_members WHERE user_id = ? AND is_deleted = 0
          )
-         AND (c.name LIKE ? OR c.company LIKE ?)
+         AND (${searchClauses.join(' OR ')})
        GROUP BY c.id, c.name, c.company, c.industry, c.scale, c.created_at
        ORDER BY member_count DESC, c.created_at DESC
-       LIMIT 10`,
-      [req.userId, req.userId, `%${name}%`, `%${name}%`]
+       LIMIT 5`,
+      searchParams
     );
     res.json({ success: true, data: rows });
   } catch (e) {
