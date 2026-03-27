@@ -3,6 +3,7 @@ import { Phone, Mail, Building, Edit3, X, Calendar, GitBranch, UserPlus, Shield,
 import Avatar from '../ui/Avatar'
 import Button from '../ui/Button'
 import Modal from '../ui/Modal'
+import useIsMobile from '../ui/useIsMobile'
 import { section, creatorRoleConfig } from './constants'
 
 interface Props {
@@ -26,18 +27,19 @@ const detailValue: React.CSSProperties = { fontSize: 14, color: '#0f172a', fontW
 
 export default function MemberList({ members, departments, roles = [], isOwner, canAdmin, getDeptName, getRoleName, getRoleColor, openAddMember, openEditMember, handleDeleteMember, handleRoleChange }: Props) {
   const [viewingMember, setViewingMember] = useState<any>(null)
+  const isMobile = useIsMobile()
 
   return (
     <div style={{ ...section, marginTop: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0, borderTop: 'none' }}>
       {canAdmin && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 16 }}>
-          <Button onClick={openAddMember}><UserPlus size={14} /> 添加成员</Button>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'stretch' : 'flex-end', marginBottom: 16 }}>
+          <Button onClick={openAddMember} style={isMobile ? { width: '100%', justifyContent: 'center' } : undefined}><UserPlus size={14} /> 添加成员</Button>
         </div>
       )}
       {members.length === 0 ? (
         <div style={{ textAlign: 'center', padding: 24, color: '#94a3b8', fontSize: 14 }}>暂无组织成员，点击"添加成员"开始</div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
           {members.map((m: any) => {
             const mRole = m.role || 'member'
             const isCreatorMember = mRole === 'creator'
@@ -81,13 +83,13 @@ export default function MemberList({ members, departments, roles = [], isOwner, 
                   )}
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 12px', fontSize: 13, color: '#334155' }}>
-                {m.department_id && <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Building size={12} color="#94a3b8" />{getDeptName(m.department_id)}</div>}
-                {m.department && !m.department_id && <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Building size={12} color="#94a3b8" />{m.department}</div>}
-                {m.phone && <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Phone size={12} color="#94a3b8" />{m.phone}</div>}
-                {m.email && <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Mail size={12} color="#94a3b8" />{m.email}</div>}
-                {m.supervisor && <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><GitBranch size={12} color="#94a3b8" />上级: {m.supervisor}</div>}
-                {m.join_date && <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Calendar size={12} color="#94a3b8" />入职: {m.join_date.slice(0, 10)}</div>}
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '3px 12px', fontSize: 13, color: '#334155' }}>
+                {m.department_id && <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0, wordBreak: 'break-all' }}><Building size={12} color="#94a3b8" />{getDeptName(m.department_id)}</div>}
+                {m.department && !m.department_id && <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0, wordBreak: 'break-all' }}><Building size={12} color="#94a3b8" />{m.department}</div>}
+                {m.phone && <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0, wordBreak: 'break-all' }}><Phone size={12} color="#94a3b8" />{m.phone}</div>}
+                {m.email && <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0, wordBreak: 'break-all' }}><Mail size={12} color="#94a3b8" />{m.email}</div>}
+                {m.supervisor && <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0, wordBreak: 'break-all' }}><GitBranch size={12} color="#94a3b8" />上级: {m.supervisor}</div>}
+                {m.join_date && <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0, wordBreak: 'break-all' }}><Calendar size={12} color="#94a3b8" />入职: {m.join_date.slice(0, 10)}</div>}
               </div>
               {m.notes && <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>{m.notes}</div>}
             </div>
@@ -106,11 +108,11 @@ export default function MemberList({ members, departments, roles = [], isOwner, 
           const deptName = getDeptName(viewingMember.department_id) || viewingMember.department || ''
           return (
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingBottom: 16, borderBottom: '1px solid #e2e8f0', marginBottom: 4 }}>
+              <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', gap: 14, paddingBottom: 16, borderBottom: '1px solid #e2e8f0', marginBottom: 4 }}>
                 <Avatar name={viewingMember.name} size={56} />
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>{viewingMember.name}</span>
+                    <span style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: '#0f172a', wordBreak: 'break-all' }}>{viewingMember.name}</span>
                     {isCreatorM && (
                       <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: creatorRoleConfig.bg, color: creatorRoleConfig.color, fontWeight: 600 }}>
                         <Crown size={10} style={{ marginRight: 3, verticalAlign: -1 }} />{creatorRoleConfig.label}
@@ -181,11 +183,11 @@ export default function MemberList({ members, departments, roles = [], isOwner, 
                 )}
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
+              <div style={{ display: 'flex', flexDirection: isMobile ? 'column-reverse' : 'row', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
                 {canAdmin && !isCreatorM && (
-                  <Button variant="secondary" onClick={() => { setViewingMember(null); openEditMember(viewingMember) }}>编辑</Button>
+                  <Button variant="secondary" onClick={() => { setViewingMember(null); openEditMember(viewingMember) }} style={isMobile ? { width: '100%', justifyContent: 'center' } : undefined}>编辑</Button>
                 )}
-                <Button onClick={() => setViewingMember(null)}>关闭</Button>
+                <Button onClick={() => setViewingMember(null)} style={isMobile ? { width: '100%', justifyContent: 'center' } : undefined}>关闭</Button>
               </div>
             </div>
           )

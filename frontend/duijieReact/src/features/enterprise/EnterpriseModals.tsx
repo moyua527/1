@@ -3,6 +3,7 @@ import { Search, Plus, ChevronDown, ChevronUp, Check, X as XIcon } from 'lucide-
 import Modal from '../ui/Modal'
 import Input from '../ui/Input'
 import Button from '../ui/Button'
+import useIsMobile from '../ui/useIsMobile'
 import { labelStyle, selectStyle, textareaStyle, industryOptions, scaleOptions, companyTypeOptions, ENTERPRISE_PERMISSIONS, ROLE_COLORS, emptyRoleForm } from './constants'
 
 interface Props {
@@ -49,6 +50,10 @@ export default function EnterpriseModals(props: Props) {
   const [showRoleForm, setShowRoleForm] = useState(false)
   const [roleForm, setRoleForm] = useState({ ...emptyRoleForm })
   const [creatingSaving, setCreatingSaving] = useState(false)
+  const isMobile = useIsMobile()
+  const memberGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }
+  const memberActionStyle: React.CSSProperties = { display: 'flex', flexDirection: isMobile ? 'column-reverse' : 'row', justifyContent: 'flex-end', gap: 8 }
+  const memberButtonStyle = isMobile ? { width: '100%', justifyContent: 'center' } : undefined
 
   const handleCreateRoleInline = async () => {
     if (!roleForm.name.trim() || creatingSaving) return
@@ -128,27 +133,27 @@ export default function EnterpriseModals(props: Props) {
 
       {/* 成员 Modal */}
       <Modal open={memberModalOpen} onClose={() => setMemberModalOpen(false)} title={editingMember ? '编辑成员' : '添加成员'}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '70vh', overflowY: 'auto', paddingRight: isMobile ? 0 : 4 }}>
           {!editingMember && (
             <div style={{ background: '#f8fafc', borderRadius: 10, padding: 14, border: '1px solid #e2e8f0' }}>
               <label style={{ ...labelStyle, marginBottom: 8 }}>从已有账号导入</label>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 8 }}>
                 <input value={lookupPhone} onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0, 11); setLookupPhone(v) }} placeholder="输入手机号查找" maxLength={11}
                   style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none' }} />
-                <button onClick={handleLookup} disabled={lookupLoading} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 500, opacity: lookupLoading ? 0.6 : 1 }}>
+                <button onClick={handleLookup} disabled={lookupLoading} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, fontSize: 13, fontWeight: 500, opacity: lookupLoading ? 0.6 : 1, width: isMobile ? '100%' : undefined }}>
                   <Search size={14} /> {lookupLoading ? '查找中...' : '导入'}
                 </button>
               </div>
             </div>
           )}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={memberGridStyle}>
             <Input label="姓名 *" value={memberForm.name} onChange={e => setMemberForm({ ...memberForm, name: e.target.value })} />
             <Input label="工号" placeholder="如：E001" value={memberForm.employee_id} onChange={e => setMemberForm({ ...memberForm, employee_id: e.target.value })} />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={memberGridStyle}>
             <div>
               <label style={labelStyle}>角色 / 职位</label>
-              <div style={{ display: 'flex', gap: 6 }}>
+              <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 6 }}>
                 <select value={memberForm.enterprise_role_id || ''} onChange={e => {
                   const roleId = e.target.value
                   const role = roles.find((r: any) => String(r.id) === roleId)
@@ -158,7 +163,7 @@ export default function EnterpriseModals(props: Props) {
                   {roles.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
                 <button onClick={() => { setShowRoleForm(!showRoleForm); if (!showRoleForm) setRoleForm({ ...emptyRoleForm }) }}
-                  style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0', background: showRoleForm ? '#eff6ff' : '#fff', color: '#2563eb', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0', background: showRoleForm ? '#eff6ff' : '#fff', color: '#2563eb', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, fontSize: 12, whiteSpace: 'nowrap', flexShrink: 0, width: isMobile ? '100%' : undefined }}>
                   <Plus size={13} />新增
                 </button>
               </div>
@@ -180,7 +185,7 @@ export default function EnterpriseModals(props: Props) {
               <Input label="角色名称 *" placeholder="如：项目经理、技术总监" value={roleForm.name} onChange={e => setRoleForm({ ...roleForm, name: e.target.value })} />
               <div style={{ marginTop: 10 }}>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#64748b', marginBottom: 6 }}>角色颜色</label>
-                <div style={{ display: 'flex', gap: 5 }}>
+                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                   {ROLE_COLORS.map(c => (
                     <button key={c} onClick={() => setRoleForm({ ...roleForm, color: c })}
                       style={{ width: 22, height: 22, borderRadius: '50%', background: c, border: roleForm.color === c ? '3px solid #0f172a' : '2px solid #e2e8f0', cursor: 'pointer' }} />
@@ -189,7 +194,7 @@ export default function EnterpriseModals(props: Props) {
               </div>
               <div style={{ marginTop: 10 }}>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#64748b', marginBottom: 6 }}>权限设置</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 4 }}>
                   {ENTERPRISE_PERMISSIONS.map(p => (
                     <label key={p.key} onClick={() => setRoleForm({ ...roleForm, [p.key]: !(roleForm as any)[p.key] })}
                       style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 8px', borderRadius: 6, cursor: 'pointer', fontSize: 12, border: '1px solid #e2e8f0', background: (roleForm as any)[p.key] ? '#f0fdf4' : '#fff' }}>
@@ -201,19 +206,19 @@ export default function EnterpriseModals(props: Props) {
                   ))}
                 </div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
-                <Button variant="secondary" onClick={() => setShowRoleForm(false)}>取消</Button>
-                <Button onClick={handleCreateRoleInline} disabled={creatingSaving || !roleForm.name.trim()}>
+              <div style={{ ...memberActionStyle, marginTop: 12 }}>
+                <Button variant="secondary" onClick={() => setShowRoleForm(false)} style={memberButtonStyle}>取消</Button>
+                <Button onClick={handleCreateRoleInline} disabled={creatingSaving || !roleForm.name.trim()} style={memberButtonStyle}>
                   {creatingSaving ? '创建中...' : '创建并选择'}
                 </Button>
               </div>
             </div>
           )}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={memberGridStyle}>
             <Input label="电话" value={memberForm.phone} maxLength={11} onChange={e => setMemberForm({ ...memberForm, phone: e.target.value.replace(/\D/g, '').slice(0, 11) })} />
             <Input label="邮箱" value={memberForm.email} onChange={e => setMemberForm({ ...memberForm, email: e.target.value })} />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={memberGridStyle}>
             <Input label="直属上级" placeholder="上级姓名" value={memberForm.supervisor} onChange={e => setMemberForm({ ...memberForm, supervisor: e.target.value })} />
             <Input label="入职日期" type="date" value={memberForm.join_date} onChange={e => setMemberForm({ ...memberForm, join_date: e.target.value })} />
           </div>
@@ -221,9 +226,9 @@ export default function EnterpriseModals(props: Props) {
             <label style={labelStyle}>备注</label>
             <textarea value={memberForm.notes} onChange={e => setMemberForm({ ...memberForm, notes: e.target.value })} rows={2} style={textareaStyle} />
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-            <Button variant="secondary" onClick={() => setMemberModalOpen(false)}>取消</Button>
-            <Button onClick={handleSaveMember} disabled={memberSaving}>{memberSaving ? '保存中...' : '保存'}</Button>
+          <div style={memberActionStyle}>
+            <Button variant="secondary" onClick={() => setMemberModalOpen(false)} style={memberButtonStyle}>取消</Button>
+            <Button onClick={handleSaveMember} disabled={memberSaving} style={memberButtonStyle}>{memberSaving ? '保存中...' : '保存'}</Button>
           </div>
         </div>
       </Modal>
