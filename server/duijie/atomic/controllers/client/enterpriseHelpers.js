@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const db = require('../../../config/db');
 
 async function findMyEnterprises(userId) {
@@ -30,10 +31,33 @@ async function findActiveEnterprise(userId) {
 
 async function canManage(ent, userId) {
   if (!ent) return false;
-  if (ent.member_role === 'creator') return true;
+  if (ent.member_role === 'creator' || ent.member_role === 'admin') return true;
   if (!ent.enterprise_role_id) return false;
   const [rows] = await db.query('SELECT can_manage_members FROM enterprise_roles WHERE id = ? AND is_deleted = 0', [ent.enterprise_role_id]);
   return rows[0]?.can_manage_members === 1;
+}
+
+async function generateJoinCode() {
+  for (let i = 0; i < 10; i++) {
+    const code = crypto.randomBytes(5).toString('hex').toUpperCase();
+    const [rows] = await db.query('SELECT id FROM duijie_clients WHERE join_code = ? AND is_deleted = 0 LIMIT 1', [code]);
+    if (!rows[0]) return code;
+  }
+  throw new Error('生成企业推荐码失败');
+}
+
+async function getEnterpriseManagerUserIds(clientId, excludeUserId = null) {
+  const [rows] = await db.query(
+    `SELECT DISTINCT m.user_id
+     FROM duijie_client_members m
+     LEFT JOIN enterprise_roles er ON er.id = m.enterprise_role_id AND er.is_deleted = 0
+     WHERE m.client_id = ?
+       AND m.is_deleted = 0
+       AND m.user_id IS NOT NULL
+       AND (m.role IN ('creator', 'admin') OR er.can_manage_members = 1)`,
+    [clientId]
+  );
+  return rows.map(r => r.user_id).filter(id => id && id !== excludeUserId);
 }
 
 function isCreator(ent) { return ent && ent.member_role === 'creator'; }
@@ -43,6 +67,9 @@ async function getEnterprisePerms(userId) {
   if (!ent) return null;
   if (isCreator(ent)) {
     return { is_creator: true, can_manage_members: true, can_manage_roles: true, can_create_project: true, can_edit_project: true, can_delete_project: true, can_manage_client: true, can_view_report: true, can_manage_task: true };
+  }
+  if (ent.member_role === 'admin') {
+    return { is_creator: false, can_manage_members: true, can_manage_roles: true, can_create_project: true, can_edit_project: true, can_delete_project: true, can_manage_client: true, can_view_report: true, can_manage_task: true };
   }
   if (!ent.enterprise_role_id) {
     return { is_creator: false, can_manage_members: false, can_manage_roles: false, can_create_project: false, can_edit_project: false, can_delete_project: false, can_manage_client: false, can_view_report: false, can_manage_task: false };
@@ -59,4 +86,4 @@ async function getEnterprisePerms(userId) {
   };
 }
 
-module.exports = { findMyEnterprises, findActiveEnterprise, canManage, isCreator, getEnterprisePerms };
+module.exports = { findMyEnterprises, findActiveEnterprise, canManage, isCreator, getEnterprisePerms, generateJoinCode, getEnterpriseManagerUserIds };

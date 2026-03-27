@@ -1,17 +1,27 @@
-import { Building2, Phone, Mail, MapPin, Clock, Briefcase, FileText, Edit3, Trash2, Hash, Calendar, Globe, MoreHorizontal, Shield, Crown, Users } from 'lucide-react'
+import { Building2, Phone, Mail, MapPin, Clock, Briefcase, FileText, Edit3, Trash2, Hash, Calendar, Globe, MoreHorizontal, Shield, Crown, Users, Copy, RotateCw, KeyRound } from 'lucide-react'
 import { section, infoRow, roleConfig } from './constants'
+import { toast } from '../ui/Toast'
 
 interface Props {
   ent: any
   myRole: string
   isOwner: boolean
+  canAdmin: boolean
   entMenuOpen: boolean
   setEntMenuOpen: (v: boolean) => void
   openEditEnt: () => void
   handleDeleteEnterprise: () => void
+  joinCodeRefreshing: boolean
+  handleRegenerateJoinCode: () => void
 }
 
-export default function EnterpriseCard({ ent, myRole, isOwner, entMenuOpen, setEntMenuOpen, openEditEnt, handleDeleteEnterprise }: Props) {
+export default function EnterpriseCard({ ent, myRole, isOwner, canAdmin, entMenuOpen, setEntMenuOpen, openEditEnt, handleDeleteEnterprise, joinCodeRefreshing, handleRegenerateJoinCode }: Props) {
+  const handleCopyJoinCode = async () => {
+    if (!ent?.join_code) return
+    await navigator.clipboard.writeText(ent.join_code)
+    toast('企业推荐码已复制', 'success')
+  }
+
   return (
     <div style={section}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 16 }}>
@@ -56,6 +66,28 @@ export default function EnterpriseCard({ ent, myRole, isOwner, entMenuOpen, setE
           </div>
         )}
       </div>
+      {canAdmin && ent.join_code && (
+        <div style={{ marginBottom: 14, padding: '14px 16px', borderRadius: 12, background: '#eff6ff', border: '1px solid #bfdbfe' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                <KeyRound size={15} color="#2563eb" />
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#1d4ed8' }}>企业推荐码</span>
+              </div>
+              <div style={{ fontSize: 12, color: '#64748b' }}>分享给待加入成员，填写后可直接加入企业并触发后台通知。</div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <div style={{ padding: '8px 12px', borderRadius: 10, background: '#fff', border: '1px solid #dbeafe', fontSize: 18, fontWeight: 800, letterSpacing: 2, color: '#0f172a', fontFamily: 'monospace' }}>{ent.join_code}</div>
+              <button onClick={handleCopyJoinCode} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', background: '#fff', cursor: 'pointer', color: '#334155', fontSize: 13, fontWeight: 600 }}>
+                <Copy size={14} /> 复制
+              </button>
+              <button onClick={handleRegenerateJoinCode} disabled={joinCodeRefreshing} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, border: 'none', background: '#2563eb', cursor: 'pointer', color: '#fff', fontSize: 13, fontWeight: 600, opacity: joinCodeRefreshing ? 0.6 : 1 }}>
+                <RotateCw size={14} /> {joinCodeRefreshing ? '重置中...' : '重置推荐码'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 12, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '4px 24px' }}>
         {ent.credit_code && <div style={infoRow}><Hash size={16} color="#64748b" /> <span style={{ color: '#94a3b8', fontSize: 12 }}>统一社会信用代码</span> <span style={{ fontFamily: 'monospace', fontSize: 13 }}>{ent.credit_code}</span></div>}
         {ent.legal_person && <div style={infoRow}><Users size={16} color="#64748b" /> <span style={{ color: '#94a3b8', fontSize: 12 }}>法定代表人</span> {ent.legal_person}</div>}

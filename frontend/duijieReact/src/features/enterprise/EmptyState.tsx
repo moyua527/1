@@ -13,16 +13,20 @@ interface Props {
   handleCreate: () => void
   joinModalOpen: boolean
   setJoinModalOpen: (v: boolean) => void
+  openJoinModal: () => void
   joinSearch: string
   setJoinSearch: (v: string) => void
   joinResults: any[]
-  setJoinResults: (v: any[]) => void
   joinSearching: boolean
   joining: boolean
+  recommendedEnterprises: any[]
+  selectedJoinEnterpriseId: number | null
+  setSelectedJoinEnterpriseId: (v: number | null) => void
+  joinCode: string
+  setJoinCode: (v: string) => void
   myRequests: any[]
-  loadMyRequests: () => void
   handleJoinSearch: () => void
-  handleJoin: (id: number) => void
+  handleJoin: (id?: number) => void
   isSysAdmin: boolean
   allEnterprises: any[]
   expandedEntId: number | null
@@ -31,8 +35,9 @@ interface Props {
 
 export default function EmptyState(props: Props) {
   const { createModalOpen, setCreateModalOpen, createForm, setCreateForm, creating, handleCreate,
-    joinModalOpen, setJoinModalOpen, joinSearch, setJoinSearch, joinResults, setJoinResults, joinSearching, joining,
-    myRequests, loadMyRequests, handleJoinSearch, handleJoin,
+    joinModalOpen, setJoinModalOpen, openJoinModal, joinSearch, setJoinSearch, joinResults, joinSearching, joining,
+    recommendedEnterprises, selectedJoinEnterpriseId, setSelectedJoinEnterpriseId, joinCode, setJoinCode,
+    myRequests, handleJoinSearch, handleJoin,
     isSysAdmin, allEnterprises, expandedEntId, setExpandedEntId } = props
 
   return (
@@ -47,7 +52,7 @@ export default function EmptyState(props: Props) {
         <div style={{ fontSize: 14, color: '#94a3b8', marginBottom: 24 }}>创建新企业或加入已有企业</div>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
           <Button onClick={() => setCreateModalOpen(true)}><Plus size={15} /> 创建企业</Button>
-          <Button variant="secondary" onClick={() => { setJoinModalOpen(true); setJoinSearch(''); setJoinResults([]); loadMyRequests() }}><LogIn size={15} /> 加入企业</Button>
+          <Button variant="secondary" onClick={openJoinModal}><LogIn size={15} /> 加入企业</Button>
         </div>
       </div>
 
@@ -55,6 +60,9 @@ export default function EmptyState(props: Props) {
         joinModalOpen={joinModalOpen} setJoinModalOpen={setJoinModalOpen}
         joinSearch={joinSearch} setJoinSearch={setJoinSearch}
         joinResults={joinResults} joinSearching={joinSearching} joining={joining}
+        recommendedEnterprises={recommendedEnterprises}
+        selectedJoinEnterpriseId={selectedJoinEnterpriseId} setSelectedJoinEnterpriseId={setSelectedJoinEnterpriseId}
+        joinCode={joinCode} setJoinCode={setJoinCode}
         myRequests={myRequests} handleJoinSearch={handleJoinSearch} handleJoin={handleJoin}
         createModalOpen={createModalOpen} setCreateModalOpen={setCreateModalOpen}
         createForm={createForm} setCreateForm={setCreateForm}

@@ -12,6 +12,8 @@ module.exports = {
   update: crud.update,
   remove: crud.remove,
   searchEnterprise: crud.searchEnterprise,
+  recommendedEnterprises: crud.recommendedEnterprises,
+  regenerateJoinCode: crud.regenerateJoinCode,
   listProjects: crud.listProjects,
   lookupUser: crud.lookupUser,
   switchEnterprise: crud.switchEnterprise,

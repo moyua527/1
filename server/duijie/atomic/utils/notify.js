@@ -6,7 +6,7 @@ const { sendMobilePush } = require('./mobilePush');
 const TYPE_TO_CATEGORY = {
   project_member: 'project', project_update: 'project',
   task_assigned: 'task', task_status: 'task', task_comment: 'task',
-  join_request: 'approval', join_approved: 'approval', join_rejected: 'approval',
+  join_request: 'approval', join_approved: 'approval', join_rejected: 'approval', join_via_code: 'approval',
   ticket_reply: 'system', follow_reminder: 'system',
 };
 

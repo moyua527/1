@@ -104,6 +104,7 @@ exports.sendMessage = [
 // === Join enterprise ===
 exports.joinEnterprise = [
   body('enterprise_id').isInt({ min: 1 }).withMessage('无效的企业ID'),
+  body('join_code').optional({ values: 'falsy' }).trim().isLength({ min: 6, max: 20 }).withMessage('推荐码长度应为6到20位'),
 ];
 
 exports.searchEnterprise = [

@@ -1,4 +1,4 @@
-import { Building2, Search } from 'lucide-react'
+import { Building2, CheckCircle2, KeyRound, Search } from 'lucide-react'
 import Modal from '../ui/Modal'
 import Input from '../ui/Input'
 import Button from '../ui/Button'
@@ -12,9 +12,14 @@ interface Props {
   joinResults: any[]
   joinSearching: boolean
   joining: boolean
+  recommendedEnterprises: any[]
+  selectedJoinEnterpriseId: number | null
+  setSelectedJoinEnterpriseId: (v: number | null) => void
+  joinCode: string
+  setJoinCode: (v: string) => void
   myRequests: any[]
   handleJoinSearch: () => void
-  handleJoin: (id: number) => void
+  handleJoin: (id?: number) => void
   createModalOpen: boolean
   setCreateModalOpen: (v: boolean) => void
   createForm: any
@@ -23,11 +28,76 @@ interface Props {
   handleCreate: () => void
 }
 
-export default function JoinCreateModals({ joinModalOpen, setJoinModalOpen, joinSearch, setJoinSearch, joinResults, joinSearching, joining, myRequests, handleJoinSearch, handleJoin, createModalOpen, setCreateModalOpen, createForm, setCreateForm, creating, handleCreate }: Props) {
+export default function JoinCreateModals({ joinModalOpen, setJoinModalOpen, joinSearch, setJoinSearch, joinResults, joinSearching, joining, recommendedEnterprises, selectedJoinEnterpriseId, setSelectedJoinEnterpriseId, joinCode, setJoinCode, myRequests, handleJoinSearch, handleJoin, createModalOpen, setCreateModalOpen, createForm, setCreateForm, creating, handleCreate }: Props) {
+  const searchResults = joinResults.filter((item: any) => !recommendedEnterprises.some((rec: any) => rec.id === item.id))
+  const mergedResults = [...recommendedEnterprises, ...searchResults]
+  const selectedEnterprise = mergedResults.find((item: any) => item.id === selectedJoinEnterpriseId)
+  const requestStatus = selectedJoinEnterpriseId ? myRequests.find((r: any) => r.client_id === selectedJoinEnterpriseId)?.status : null
+  const canDirectJoin = !!joinCode.trim()
+  const submitDisabled = joining || !selectedJoinEnterpriseId || (requestStatus === 'pending' && !canDirectJoin)
+  const submitText = canDirectJoin
+    ? '验证推荐码并加入'
+    : requestStatus === 'pending'
+      ? '该企业审批中'
+      : requestStatus === 'rejected'
+        ? '重新提交申请'
+        : '提交加入申请'
+
+  const renderEnterpriseCard = (enterprise: any) => {
+    const isSelected = selectedJoinEnterpriseId === enterprise.id
+    const status = myRequests.find((r: any) => r.client_id === enterprise.id)?.status
+    return (
+      <button
+        key={enterprise.id}
+        onClick={() => setSelectedJoinEnterpriseId(enterprise.id)}
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 12,
+          width: '100%',
+          textAlign: 'left',
+          padding: '14px 16px',
+          borderRadius: 12,
+          border: isSelected ? '1.5px solid #2563eb' : '1px solid #e2e8f0',
+          background: isSelected ? '#eff6ff' : '#fff',
+          cursor: 'pointer',
+        }}
+      >
+        <div style={{ width: 42, height: 42, borderRadius: 12, background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Building2 size={20} color="#fff" />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+            <span style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{enterprise.name}</span>
+            {status === 'pending' && <span style={{ padding: '2px 8px', borderRadius: 999, background: '#fef3c7', color: '#92400e', fontSize: 11, fontWeight: 600 }}>审批中</span>}
+            {status === 'rejected' && <span style={{ padding: '2px 8px', borderRadius: 999, background: '#ffedd5', color: '#c2410c', fontSize: 11, fontWeight: 600 }}>可重新申请</span>}
+            {isSelected && <span style={{ padding: '2px 8px', borderRadius: 999, background: '#dbeafe', color: '#1d4ed8', fontSize: 11, fontWeight: 600 }}>已选中</span>}
+          </div>
+          <div style={{ fontSize: 13, color: '#64748b', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {enterprise.industry && <span>{enterprise.industry}</span>}
+            {enterprise.scale && <span>{enterprise.scale}</span>}
+            {enterprise.member_count ? <span>{enterprise.member_count}人</span> : null}
+          </div>
+          {enterprise.company && <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{enterprise.company}</div>}
+        </div>
+      </button>
+    )
+  }
+
   return (
     <>
       <Modal open={joinModalOpen} onClose={() => setJoinModalOpen(false)} title="加入企业">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <label style={labelStyle}>推荐企业</label>
+            {recommendedEnterprises.length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10 }}>
+                {recommendedEnterprises.map(renderEnterpriseCard)}
+              </div>
+            ) : (
+              <div style={{ padding: '16px 14px', borderRadius: 10, border: '1px dashed #cbd5e1', color: '#94a3b8', fontSize: 13 }}>暂时没有可推荐的企业，您也可以直接搜索。</div>
+            )}
+          </div>
           <div>
             <label style={labelStyle}>搜索企业名称</label>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -38,37 +108,42 @@ export default function JoinCreateModals({ joinModalOpen, setJoinModalOpen, join
               </button>
             </div>
           </div>
-          {joinResults.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 300, overflowY: 'auto' }}>
-              {joinResults.map((e: any) => (
-                <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', border: '1px solid #e2e8f0', borderRadius: 10, background: '#fafbfc' }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 10, background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Building2 size={20} color="#fff" />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>{e.name}</div>
-                    <div style={{ fontSize: 12, color: '#94a3b8', display: 'flex', gap: 8 }}>
-                      {e.industry && <span>{e.industry}</span>}
-                      {e.scale && <span>{e.scale}</span>}
-                    </div>
-                  </div>
-                  {myRequests.some((r: any) => r.client_id === e.id && r.status === 'pending') ? (
-                    <span style={{ padding: '6px 14px', borderRadius: 8, background: '#fef3c7', color: '#92400e', fontSize: 13, fontWeight: 500 }}>审批中</span>
-                  ) : myRequests.some((r: any) => r.client_id === e.id && r.status === 'rejected') ? (
-                    <button onClick={() => handleJoin(e.id)} disabled={joining} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#f97316', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500, opacity: joining ? 0.6 : 1 }}>
-                      重新申请
-                    </button>
-                  ) : (
-                    <button onClick={() => handleJoin(e.id)} disabled={joining} style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 500, opacity: joining ? 0.6 : 1 }}>
-                      申请加入
-                    </button>
-                  )}
-                </div>
-              ))}
+          {searchResults.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 260, overflowY: 'auto' }}>
+              {searchResults.map(renderEnterpriseCard)}
             </div>
           ) : joinSearch.trim() && !joinSearching ? (
             <div style={{ textAlign: 'center', padding: 20, color: '#94a3b8', fontSize: 14 }}>未找到匹配的企业</div>
           ) : null}
+          <div style={{ padding: '14px 16px', borderRadius: 12, border: '1px solid #dbeafe', background: '#f8fbff' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <CheckCircle2 size={16} color="#2563eb" />
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#1e3a8a' }}>已选企业</span>
+            </div>
+            {selectedEnterprise ? (
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{selectedEnterprise.name}</div>
+                <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+                  {selectedEnterprise.company || '未填写公司全称'}
+                </div>
+              </div>
+            ) : (
+              <div style={{ fontSize: 13, color: '#94a3b8' }}>请先从推荐企业或搜索结果中选择一个企业</div>
+            )}
+          </div>
+          <div>
+            <label style={labelStyle}>推荐码（选填）</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                value={joinCode}
+                onChange={e => setJoinCode(e.target.value.toUpperCase().replace(/\s/g, '').slice(0, 20))}
+                placeholder="有推荐码就填写，填写后可直接加入企业"
+                style={{ width: '100%', padding: '10px 12px 10px 40px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+              />
+              <KeyRound size={16} color="#94a3b8" style={{ position: 'absolute', left: 12, top: 11 }} />
+            </div>
+            <div style={{ marginTop: 6, fontSize: 12, color: '#64748b' }}>不填写则提交审批；填写正确推荐码则直接加入，企业后台会同步收到通知。</div>
+          </div>
           {myRequests.filter((r: any) => r.status === 'pending').length > 0 && (
             <div>
               <label style={labelStyle}>待审批的申请</label>
@@ -83,8 +158,9 @@ export default function JoinCreateModals({ joinModalOpen, setJoinModalOpen, join
               </div>
             </div>
           )}
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
             <Button variant="secondary" onClick={() => setJoinModalOpen(false)}>关闭</Button>
+            <Button onClick={() => handleJoin()} disabled={submitDisabled}>{joining ? '处理中...' : submitText}</Button>
           </div>
         </div>
       </Modal>

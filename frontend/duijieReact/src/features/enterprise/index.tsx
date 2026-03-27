@@ -23,11 +23,14 @@ export default function Enterprise() {
       createModalOpen={h.createModalOpen} setCreateModalOpen={h.setCreateModalOpen}
       createForm={h.createForm} setCreateForm={h.setCreateForm}
       creating={h.creating} handleCreate={h.handleCreate}
-      joinModalOpen={h.joinModalOpen} setJoinModalOpen={h.setJoinModalOpen}
+      joinModalOpen={h.joinModalOpen} setJoinModalOpen={h.setJoinModalOpen} openJoinModal={h.openJoinModal}
       joinSearch={h.joinSearch} setJoinSearch={h.setJoinSearch}
-      joinResults={h.joinResults} setJoinResults={h.setJoinResults}
+      joinResults={h.joinResults}
       joinSearching={h.joinSearching} joining={h.joining}
-      myRequests={h.myRequests} loadMyRequests={h.loadMyRequests}
+      recommendedEnterprises={h.recommendedEnterprises}
+      selectedJoinEnterpriseId={h.selectedJoinEnterpriseId} setSelectedJoinEnterpriseId={h.setSelectedJoinEnterpriseId}
+      joinCode={h.joinCode} setJoinCode={h.setJoinCode}
+      myRequests={h.myRequests}
       handleJoinSearch={h.handleJoinSearch} handleJoin={h.handleJoin}
       isSysAdmin={h.isSysAdmin} allEnterprises={h.allEnterprises}
       expandedEntId={h.expandedEntId} setExpandedEntId={h.setExpandedEntId}
@@ -71,7 +74,7 @@ export default function Enterprise() {
               </button>
             )
           })}
-          <button onClick={() => { h.setJoinModalOpen(true); h.setJoinSearch(''); h.setJoinResults([]); h.loadMyRequests() }}
+          <button onClick={h.openJoinModal}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 14px', borderRadius: 7, fontSize: 13,
               border: '1px dashed #94a3b8', background: '#fff', color: '#64748b', cursor: 'pointer', transition: 'all 0.15s' }}>
             <LogIn size={13} /> 加入企业
@@ -87,9 +90,10 @@ export default function Enterprise() {
       </div>
 
       <EnterpriseCard
-        ent={h.ent} myRole={h.myRole} isOwner={h.isOwner}
+        ent={h.ent} myRole={h.myRole} isOwner={h.isOwner} canAdmin={h.canAdmin}
         entMenuOpen={h.entMenuOpen} setEntMenuOpen={h.setEntMenuOpen}
         openEditEnt={h.openEditEnt} handleDeleteEnterprise={h.handleDeleteEnterprise}
+        joinCodeRefreshing={h.joinCodeRefreshing} handleRegenerateJoinCode={h.handleRegenerateJoinCode}
       />
 
       {/* Tab 栏 */}
@@ -147,6 +151,9 @@ export default function Enterprise() {
         joinModalOpen={h.joinModalOpen} setJoinModalOpen={h.setJoinModalOpen}
         joinSearch={h.joinSearch} setJoinSearch={h.setJoinSearch}
         joinResults={h.joinResults} joinSearching={h.joinSearching} joining={h.joining}
+        recommendedEnterprises={h.recommendedEnterprises}
+        selectedJoinEnterpriseId={h.selectedJoinEnterpriseId} setSelectedJoinEnterpriseId={h.setSelectedJoinEnterpriseId}
+        joinCode={h.joinCode} setJoinCode={h.setJoinCode}
         myRequests={h.myRequests} handleJoinSearch={h.handleJoinSearch} handleJoin={h.handleJoin}
         createModalOpen={h.createModalOpen} setCreateModalOpen={h.setCreateModalOpen}
         createForm={h.createForm} setCreateForm={h.setCreateForm}

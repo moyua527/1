@@ -50,7 +50,7 @@ export default function EnterpriseOnboarding() {
         </div>
 
         <div style={{ width: 260, padding: '32px 24px', background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', textAlign: 'center', boxShadow: '0 4px 24px rgba(0,0,0,0.06)', cursor: 'pointer', transition: 'all 0.2s' }}
-          onClick={() => { h.setJoinModalOpen(true); h.setJoinSearch(''); h.setJoinResults([]); h.loadMyRequests() }}
+          onClick={h.openJoinModal}
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 8px 32px rgba(0,0,0,0.1)' }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 24px rgba(0,0,0,0.06)' }}>
           <div style={{ width: 56, height: 56, borderRadius: 14, background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
@@ -82,6 +82,9 @@ export default function EnterpriseOnboarding() {
         joinModalOpen={h.joinModalOpen} setJoinModalOpen={h.setJoinModalOpen}
         joinSearch={h.joinSearch} setJoinSearch={h.setJoinSearch}
         joinResults={h.joinResults} joinSearching={h.joinSearching} joining={h.joining}
+        recommendedEnterprises={h.recommendedEnterprises}
+        selectedJoinEnterpriseId={h.selectedJoinEnterpriseId} setSelectedJoinEnterpriseId={h.setSelectedJoinEnterpriseId}
+        joinCode={h.joinCode} setJoinCode={h.setJoinCode}
         myRequests={h.myRequests} handleJoinSearch={h.handleJoinSearch} handleJoin={h.handleJoin}
         createModalOpen={h.createModalOpen} setCreateModalOpen={h.setCreateModalOpen}
         createForm={h.createForm} setCreateForm={h.setCreateForm}

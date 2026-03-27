@@ -39,6 +39,10 @@ export function useEnterprise() {
   const [expandedEntId, setExpandedEntId] = useState<number | null>(null)
   const [myRequests, setMyRequests] = useState<any[]>([])
   const [joinRequests, setJoinRequests] = useState<any[]>([])
+  const [recommendedEnterprises, setRecommendedEnterprises] = useState<any[]>([])
+  const [selectedJoinEnterpriseId, setSelectedJoinEnterpriseId] = useState<number | null>(null)
+  const [joinCode, setJoinCode] = useState('')
+  const [joinCodeRefreshing, setJoinCodeRefreshing] = useState(false)
 
   const sysRole = useUserStore(s => s.user?.role) || ''
   const isSysAdmin = sysRole === 'admin'
@@ -65,9 +69,17 @@ export function useEnterprise() {
     const r = await fetchApi('/api/my-enterprise/my-requests')
     if (r.success) setMyRequests(r.data || [])
   }
+  const loadRecommendedEnterprises = async () => {
+    const r = await fetchApi('/api/my-enterprise/recommended')
+    if (r.success) setRecommendedEnterprises(r.data || [])
+  }
 
-  useEffect(() => { load(); loadAllEnterprises() }, [])
-  useEffect(() => { const r = data?.enterprise?.member_role; if (r === 'creator' || r === 'admin') loadJoinRequests() }, [data])
+  useEffect(() => { load(); loadAllEnterprises(); loadMyRequests() }, [])
+  useEffect(() => {
+    const role = data?.enterprise?.member_role
+    const canManageMembers = !!data?.enterprisePerms?.can_manage_members
+    if (role === 'creator' || role === 'admin' || canManageMembers) loadJoinRequests()
+  }, [data])
 
   // === 企业操作 ===
   const openEditEnt = () => {
@@ -97,6 +109,29 @@ export function useEnterprise() {
     setCreating(false)
     if (r.success) { toast('企业创建成功', 'success'); load() }
     else toast(r.message || '创建失败', 'error')
+  }
+
+  const openJoinModal = () => {
+    setJoinModalOpen(true)
+    setJoinSearch('')
+    setJoinResults([])
+    setSelectedJoinEnterpriseId(null)
+    setJoinCode('')
+    loadMyRequests()
+    loadRecommendedEnterprises()
+  }
+
+  const handleRegenerateJoinCode = async () => {
+    if (!(await confirm({ message: '重置后旧推荐码将立即失效，确认继续？' }))) return
+    setJoinCodeRefreshing(true)
+    const r = await fetchApi('/api/my-enterprise/join-code/regenerate', { method: 'POST' })
+    setJoinCodeRefreshing(false)
+    if (r.success) {
+      toast('企业推荐码已重置', 'success')
+      load()
+    } else {
+      toast(r.message || '重置失败', 'error')
+    }
   }
 
   // === 成员操作 ===
@@ -197,18 +232,33 @@ export function useEnterprise() {
 
   // === 加入企业 ===
   const handleJoinSearch = async () => {
-    if (!joinSearch.trim()) return
+    if (!joinSearch.trim()) { setJoinResults([]); return }
     setJoinSearching(true)
     const r = await fetchApi(`/api/my-enterprise/search?name=${encodeURIComponent(joinSearch.trim())}`)
     setJoinSearching(false)
     if (r.success) setJoinResults(r.data || [])
   }
-  const handleJoin = async (entId: number) => {
+  const handleJoin = async (entId?: number) => {
+    const targetId = entId || selectedJoinEnterpriseId
+    if (!targetId) { toast('请先选择企业', 'error'); return }
     setJoining(true)
-    const r = await fetchApi('/api/my-enterprise/join', { method: 'POST', body: JSON.stringify({ enterprise_id: entId }) })
+    const payload: Record<string, any> = { enterprise_id: targetId }
+    const normalizedCode = joinCode.trim().toUpperCase()
+    if (normalizedCode) payload.join_code = normalizedCode
+    const r = await fetchApi('/api/my-enterprise/join', { method: 'POST', body: JSON.stringify(payload) })
     setJoining(false)
-    if (r.success) { toast(r.message || '已提交申请', 'success'); loadMyRequests() }
-    else toast(r.message || '申请失败', 'error')
+    if (r.success) {
+      toast(r.message || '操作成功', 'success')
+      setJoinModalOpen(false)
+      setJoinSearch('')
+      setJoinResults([])
+      setSelectedJoinEnterpriseId(null)
+      setJoinCode('')
+      loadMyRequests()
+      if (r.data?.joinedDirectly) load()
+    } else {
+      toast(r.message || '申请失败', 'error')
+    }
   }
 
   // === 审批 ===
@@ -273,10 +323,11 @@ export function useEnterprise() {
     ent, members, departments, roles, enterprisePerms, myRole, isOwner, canAdmin, canManageRoles, getDeptName, getRoleName, getRoleColor,
     // 企业
     editEntOpen, setEditEntOpen, entForm, setEntForm, entSaving, entMenuOpen, setEntMenuOpen,
-    openEditEnt, handleSaveEnt, handleDeleteEnterprise,
+    openEditEnt, handleSaveEnt, handleDeleteEnterprise, handleRegenerateJoinCode, joinCodeRefreshing,
     createModalOpen, setCreateModalOpen, createForm, setCreateForm, creating, handleCreate,
     // 加入
-    joinModalOpen, setJoinModalOpen, joinSearch, setJoinSearch, joinResults, setJoinResults, joinSearching, joining,
+    joinModalOpen, setJoinModalOpen, openJoinModal, joinSearch, setJoinSearch, joinResults, setJoinResults, joinSearching, joining,
+    recommendedEnterprises, selectedJoinEnterpriseId, setSelectedJoinEnterpriseId, joinCode, setJoinCode,
     myRequests, loadMyRequests, handleJoinSearch, handleJoin,
     // 成员
     memberModalOpen, setMemberModalOpen, editingMember, memberForm, setMemberForm, memberSaving,

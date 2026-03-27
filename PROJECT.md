@@ -293,7 +293,9 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 - **完整工商信息**：统一社会信用代码、18位）、法定代表人、注册资本、成立日期、经营范围、企业类型（11种）、官网、行业、规模、联系方式
 - **成员角色徽章**：成员卡片显示角色标签（紫色创建者/蓝色管理员/灰色成员）+ 左侧色条
 - **角色管理**：创建者可通过下拉菜单切换成员角色（admin/member）
-- **加入企业**：搜索企业名称后提交加入申请，管理者审批后成为普通成员
+- **加入企业双通道**：加入企业弹窗支持先选择企业，再决定是否填写推荐码；不填推荐码时保持原有申请→审批流程
+- **推荐码直入**：企业创建者/管理员可查看并重置企业推荐码；用户填写正确推荐码后可直接加入企业，同时后台生成通知与审计日志
+- **推荐企业卡片**：加入企业弹窗内展示推荐企业列表，支持直接选中后申请或输入推荐码直入
 - **部门管理**：CRUD + 子部门、组织架构树展示
 - **成员管理**：添加/编辑/删除成员、手机号导入已注册账号、工号/职位/部门/入职日期
 - **系统管理员视角**：系统admin可查看所有企业信息（只读），展开查看企业详情和成员列表，不可移除企业人员
@@ -674,7 +676,7 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 |------|------|
 | `voice_users` | 用户表（id, username, password, nickname, email, phone, avatar, role, client_id, manager_id, last_login_at, totp_secret, totp_enabled） |
 | `system_config` | 系统配置（JWT_SECRET, INVITE_CODE） |
-| `duijie_clients` | 客户/企业表（assigned_to, credit_code, legal_person, registered_capital, established_date, business_scope, company_type, website） |
+| `duijie_clients` | 客户/企业表（assigned_to, credit_code, legal_person, registered_capital, established_date, business_scope, company_type, website, join_code） |
 | `duijie_opportunities` | 商机表（title, client_id, amount, probability, stage, assigned_to） |
 | `duijie_direct_messages` | 站内消息表（sender_id, receiver_id, content, read_at, is_recalled） |
 | `duijie_tickets` | 工单表（title, content, type, priority, status, project_id, assigned_to, rating） |

@@ -102,4 +102,4 @@
 | v1.1.37 | 2026-03-26 | 平台角色精简：一级身份从9种(admin/sales_manager/business/tech/marketing/support/member/viewer/client)精简为2种(admin/member)；后端routes/repositories/controllers移除旧角色分支，数据隔离统一为admin全量/member按项目关联过滤；前端permissions.tsx/用户管理页同步精简；文档(PROJECT.md/ARCHITECTURE_GUIDE.md)同步更新 |
 | v1.1.38 | 2026-03-26 | 权限模型收口：管理员生成的邀请链接注册统一创建平台 member，不再通过邀请码发放 admin；文档明确平台角色→企业角色→项目内企业角色绑定三层关系；清理前端残留旧平台角色标签与类型定义，邀请链接界面固定显示“平台身份：成员” |
 | v1.1.39 | 2026-03-27 | 角色修改即时生效：修复鉴权中间件长期信任JWT旧角色导致“管理员把 business/tech 改成 member 后仍权限不足”的问题；现在每次请求都读取数据库中的当前平台角色与 client_id，管理员修改后无需用户重新登录即可立即生效；补充PROJECT文档说明；后端测试 115/115 通过 |
-
+| v1.1.40 | 2026-03-27 | 企业加入双通道：加入企业弹窗支持“选企业 + 可选推荐码”，填推荐码可直接加入、不填继续走审批；新增推荐企业卡片；企业管理者可查看/重置企业推荐码；后端新增企业推荐码字段、推荐企业接口、直加入企通知与审计日志；后端定向测试 enterprise.test.js 24/24 通过 |

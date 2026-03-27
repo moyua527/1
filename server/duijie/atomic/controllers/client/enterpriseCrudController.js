@@ -1,6 +1,7 @@
 const db = require('../../../config/db');
-const { findMyEnterprises, findActiveEnterprise, isCreator, getEnterprisePerms } = require('./enterpriseHelpers');
+const { findMyEnterprises, findActiveEnterprise, isCreator, getEnterprisePerms, canManage, generateJoinCode } = require('./enterpriseHelpers');
 const { createDefaultRoles } = require('./enterpriseRoleController');
+const { auditLog } = require('../../utils/auditLog');
 
 exports.getAll = async (req, res) => {
   try {
@@ -26,9 +27,10 @@ exports.create = async (req, res) => {
     if (owned[0]) return res.status(400).json({ success: false, message: '每个用户只能创建一个企业' });
     const { name, company, email, phone, notes, industry, scale, address, credit_code, legal_person, registered_capital, established_date, business_scope, company_type, website } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ success: false, message: '请输入企业名称' });
+    const joinCode = await generateJoinCode();
     const [result] = await db.query(
-      `INSERT INTO duijie_clients (user_id, client_type, name, company, email, phone, notes, industry, scale, address, credit_code, legal_person, registered_capital, established_date, business_scope, company_type, website, created_by, stage) VALUES (?, 'company', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'signed')`,
-      [req.userId, name.trim(), company || null, email || null, phone || null, notes || null, industry || null, scale || null, address || null, credit_code || null, legal_person || null, registered_capital || null, established_date || null, business_scope || null, company_type || null, website || null, req.userId]
+      `INSERT INTO duijie_clients (user_id, client_type, name, company, email, phone, notes, industry, scale, address, credit_code, legal_person, registered_capital, established_date, business_scope, company_type, website, created_by, stage, join_code) VALUES (?, 'company', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'signed', ?)`,
+      [req.userId, name.trim(), company || null, email || null, phone || null, notes || null, industry || null, scale || null, address || null, credit_code || null, legal_person || null, registered_capital || null, established_date || null, business_scope || null, company_type || null, website || null, req.userId, joinCode]
     );
     const [user] = await db.query('SELECT nickname, username, phone, email FROM voice_users WHERE id = ?', [req.userId]);
     const u = user[0] || {};
@@ -53,9 +55,12 @@ exports.get = async (req, res) => {
     const [departments] = await db.query('SELECT * FROM duijie_departments WHERE client_id = ? AND is_deleted = 0 ORDER BY sort_order ASC, id ASC', [active.id]);
     const [roles] = await db.query('SELECT * FROM enterprise_roles WHERE enterprise_id = ? AND is_deleted = 0 ORDER BY sort_order ASC, id ASC', [active.id]);
     const perms = await getEnterprisePerms(req.userId);
+    const enterprise = active.member_role === 'creator' || !!perms?.can_manage_members
+      ? active
+      : { ...active, join_code: null };
     res.json({ success: true, data: {
       enterprises: enterprises.map(e => ({ id: e.id, name: e.name, company: e.company, member_role: e.member_role })),
-      activeId: active.id, enterprise: active, members, departments, roles, enterprisePerms: perms
+      activeId: active.id, enterprise, members, departments, roles, enterprisePerms: perms
     }});
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });
@@ -126,10 +131,59 @@ exports.searchEnterprise = async (req, res) => {
     const name = (req.query.name || '').trim();
     if (!name || name.length < 1) return res.json({ success: true, data: [] });
     const [rows] = await db.query(
-      "SELECT id, name, company, industry, scale FROM duijie_clients WHERE client_type = 'company' AND is_deleted = 0 AND (name LIKE ? OR company LIKE ?) LIMIT 10",
-      [`%${name}%`, `%${name}%`]
+      `SELECT c.id, c.name, c.company, c.industry, c.scale, c.created_at, COUNT(m.id) as member_count
+       FROM duijie_clients c
+       LEFT JOIN duijie_client_members m ON m.client_id = c.id AND m.is_deleted = 0
+       WHERE c.client_type = 'company'
+         AND c.is_deleted = 0
+         AND c.user_id <> ?
+         AND c.id NOT IN (
+           SELECT client_id FROM duijie_client_members WHERE user_id = ? AND is_deleted = 0
+         )
+         AND (c.name LIKE ? OR c.company LIKE ?)
+       GROUP BY c.id, c.name, c.company, c.industry, c.scale, c.created_at
+       ORDER BY member_count DESC, c.created_at DESC
+       LIMIT 10`,
+      [req.userId, req.userId, `%${name}%`, `%${name}%`]
     );
     res.json({ success: true, data: rows });
+  } catch (e) {
+    res.status(500).json({ success: false, message: '服务器内部错误' });
+  }
+};
+
+exports.recommendedEnterprises = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT c.id, c.name, c.company, c.industry, c.scale, c.created_at, COUNT(m.id) as member_count
+       FROM duijie_clients c
+       LEFT JOIN duijie_client_members m ON m.client_id = c.id AND m.is_deleted = 0
+       WHERE c.client_type = 'company'
+         AND c.is_deleted = 0
+         AND c.user_id <> ?
+         AND c.id NOT IN (
+           SELECT client_id FROM duijie_client_members WHERE user_id = ? AND is_deleted = 0
+         )
+       GROUP BY c.id, c.name, c.company, c.industry, c.scale, c.created_at
+       ORDER BY member_count DESC, c.created_at DESC
+       LIMIT 6`,
+      [req.userId, req.userId]
+    );
+    res.json({ success: true, data: rows });
+  } catch (e) {
+    res.status(500).json({ success: false, message: '服务器内部错误' });
+  }
+};
+
+exports.regenerateJoinCode = async (req, res) => {
+  try {
+    const ent = await findActiveEnterprise(req.userId);
+    if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
+    if (!(await canManage(ent, req.userId))) return res.status(403).json({ success: false, message: '无权操作' });
+    const joinCode = await generateJoinCode();
+    await db.query('UPDATE duijie_clients SET join_code = ? WHERE id = ?', [joinCode, ent.id]);
+    await auditLog({ userId: req.userId, action: 'regenerate_join_code', entityType: 'enterprise', entityId: ent.id, detail: `企业推荐码已重置为 ${joinCode}`, ip: req.ip });
+    res.json({ success: true, data: { join_code: joinCode } });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });
   }

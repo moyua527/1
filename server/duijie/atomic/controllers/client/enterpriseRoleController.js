@@ -8,7 +8,7 @@ const PERM_FIELDS = [
 ];
 
 async function canManageRoles(ent, userId) {
-  if (isCreator(ent)) return true;
+  if (isCreator(ent) || ent?.member_role === 'admin') return true;
   const [rows] = await db.query(
     `SELECT er.can_manage_roles FROM duijie_client_members m
      JOIN enterprise_roles er ON er.id = m.enterprise_role_id AND er.is_deleted = 0

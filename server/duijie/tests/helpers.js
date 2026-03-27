@@ -2,7 +2,7 @@ const request = require('supertest');
 const app = require('../app');
 const db = require('../config/db');
 
-let cachedToken = null;
+let cachedTokens = new Map();
 let cachedAdminToken = null;
 
 async function getJwtSecret() {
@@ -11,14 +11,14 @@ async function getJwtSecret() {
 }
 
 async function loginAsUser(phone) {
-  if (cachedToken) return cachedToken;
+  if (cachedTokens.has(phone)) return cachedTokens.get(phone);
   // 查找测试用户或使用已有用户
   const [users] = await db.query("SELECT id, username FROM voice_users WHERE phone = ? AND is_deleted = 0 LIMIT 1", [phone]);
   if (!users[0]) throw new Error(`Test user with phone ${phone} not found`);
   const secret = await getJwtSecret();
   const jwt = require('jsonwebtoken');
   const token = jwt.sign({ userId: users[0].id, role: 'member', clientId: null }, secret, { expiresIn: '1h' });
-  cachedToken = token;
+  cachedTokens.set(phone, token);
   return token;
 }
 
@@ -57,7 +57,7 @@ function publicReq(method, path) {
 }
 
 function resetTokenCache() {
-  cachedToken = null;
+  cachedTokens = new Map();
   cachedAdminToken = null;
 }
 
