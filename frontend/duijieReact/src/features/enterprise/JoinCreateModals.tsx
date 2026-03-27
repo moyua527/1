@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Building2, CheckCircle2, KeyRound, Search } from 'lucide-react'
 import Modal from '../ui/Modal'
 import Input from '../ui/Input'
@@ -12,7 +13,6 @@ interface Props {
   joinResults: any[]
   joinSearching: boolean
   joining: boolean
-  recommendedEnterprises: any[]
   selectedJoinEnterpriseId: number | null
   setSelectedJoinEnterpriseId: (v: number | null) => void
   joinCode: string
@@ -28,9 +28,9 @@ interface Props {
   handleCreate: () => void
 }
 
-export default function JoinCreateModals({ joinModalOpen, setJoinModalOpen, joinSearch, setJoinSearch, joinResults, joinSearching, joining, recommendedEnterprises, selectedJoinEnterpriseId, setSelectedJoinEnterpriseId, joinCode, setJoinCode, myRequests, handleJoinSearch, handleJoin, createModalOpen, setCreateModalOpen, createForm, setCreateForm, creating, handleCreate }: Props) {
-  const mergedResults = Array.from(new Map([...recommendedEnterprises, ...joinResults].map((item: any) => [item.id, item])).values())
-  const selectedEnterprise = mergedResults.find((item: any) => item.id === selectedJoinEnterpriseId)
+export default function JoinCreateModals({ joinModalOpen, setJoinModalOpen, joinSearch, setJoinSearch, joinResults, joinSearching, joining, selectedJoinEnterpriseId, setSelectedJoinEnterpriseId, joinCode, setJoinCode, myRequests, handleJoinSearch, handleJoin, createModalOpen, setCreateModalOpen, createForm, setCreateForm, creating, handleCreate }: Props) {
+  const [selectedEnterpriseSnapshot, setSelectedEnterpriseSnapshot] = useState<any | null>(null)
+  const selectedEnterprise = joinResults.find((item: any) => item.id === selectedJoinEnterpriseId) || selectedEnterpriseSnapshot
   const normalizedJoinSearch = joinSearch.trim()
   const selectedEnterpriseName = String(selectedEnterprise?.name || '').trim()
   const searchMatchesSelected = !!selectedEnterpriseName && normalizedJoinSearch === selectedEnterpriseName
@@ -46,46 +46,11 @@ export default function JoinCreateModals({ joinModalOpen, setJoinModalOpen, join
         ? '重新提交申请'
         : '提交加入申请'
 
-  const renderEnterpriseCard = (enterprise: any) => {
-    const isSelected = selectedJoinEnterpriseId === enterprise.id
-    const status = myRequests.find((r: any) => r.client_id === enterprise.id)?.status
-    return (
-      <button
-        key={enterprise.id}
-        onClick={() => setSelectedJoinEnterpriseId(enterprise.id)}
-        style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: 12,
-          width: '100%',
-          textAlign: 'left',
-          padding: '14px 16px',
-          borderRadius: 12,
-          border: isSelected ? '1.5px solid #2563eb' : '1px solid #e2e8f0',
-          background: isSelected ? '#eff6ff' : '#fff',
-          cursor: 'pointer',
-        }}
-      >
-        <div style={{ width: 42, height: 42, borderRadius: 12, background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Building2 size={20} color="#fff" />
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: '#0f172a' }}>{enterprise.name}</span>
-            {status === 'pending' && <span style={{ padding: '2px 8px', borderRadius: 999, background: '#fef3c7', color: '#92400e', fontSize: 11, fontWeight: 600 }}>审批中</span>}
-            {status === 'rejected' && <span style={{ padding: '2px 8px', borderRadius: 999, background: '#ffedd5', color: '#c2410c', fontSize: 11, fontWeight: 600 }}>可重新申请</span>}
-            {isSelected && <span style={{ padding: '2px 8px', borderRadius: 999, background: '#dbeafe', color: '#1d4ed8', fontSize: 11, fontWeight: 600 }}>已选中</span>}
-          </div>
-          <div style={{ fontSize: 13, color: '#64748b', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {enterprise.industry && <span>{enterprise.industry}</span>}
-            {enterprise.scale && <span>{enterprise.scale}</span>}
-            {enterprise.member_count ? <span>{enterprise.member_count}人</span> : null}
-          </div>
-          {enterprise.company && <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{enterprise.company}</div>}
-        </div>
-      </button>
-    )
-  }
+  useEffect(() => {
+    if (!joinModalOpen || !selectedJoinEnterpriseId) {
+      setSelectedEnterpriseSnapshot(null)
+    }
+  }, [joinModalOpen, selectedJoinEnterpriseId])
 
   const renderSearchOption = (enterprise: any) => {
     const isSelected = selectedJoinEnterpriseId === enterprise.id
@@ -94,6 +59,7 @@ export default function JoinCreateModals({ joinModalOpen, setJoinModalOpen, join
         key={enterprise.id}
         onClick={() => {
           setSelectedJoinEnterpriseId(enterprise.id)
+          setSelectedEnterpriseSnapshot(enterprise)
           setJoinSearch(enterprise.name || '')
         }}
         style={{
@@ -124,16 +90,6 @@ export default function JoinCreateModals({ joinModalOpen, setJoinModalOpen, join
     <>
       <Modal open={joinModalOpen} onClose={() => setJoinModalOpen(false)} title="加入企业">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div>
-            <label style={labelStyle}>推荐企业</label>
-            {recommendedEnterprises.length > 0 ? (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10 }}>
-                {recommendedEnterprises.map(renderEnterpriseCard)}
-              </div>
-            ) : (
-              <div style={{ padding: '16px 14px', borderRadius: 10, border: '1px dashed #cbd5e1', color: '#94a3b8', fontSize: 13 }}>暂时没有可推荐的企业，您也可以直接搜索。</div>
-            )}
-          </div>
           <div>
             <label style={labelStyle}>搜索企业名称</label>
             <div style={{ position: 'relative' }}>
@@ -173,7 +129,7 @@ export default function JoinCreateModals({ joinModalOpen, setJoinModalOpen, join
                 </div>
               </div>
             ) : (
-              <div style={{ fontSize: 13, color: '#94a3b8' }}>请先从推荐企业或搜索结果中选择一个企业</div>
+              <div style={{ fontSize: 13, color: '#94a3b8' }}>请先从搜索结果中选择一个企业</div>
             )}
           </div>
           <div>

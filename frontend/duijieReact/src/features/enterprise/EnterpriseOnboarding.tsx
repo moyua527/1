@@ -82,7 +82,6 @@ export default function EnterpriseOnboarding() {
         joinModalOpen={h.joinModalOpen} setJoinModalOpen={h.setJoinModalOpen}
         joinSearch={h.joinSearch} setJoinSearch={h.setJoinSearch}
         joinResults={h.joinResults} joinSearching={h.joinSearching} joining={h.joining}
-        recommendedEnterprises={h.recommendedEnterprises}
         selectedJoinEnterpriseId={h.selectedJoinEnterpriseId} setSelectedJoinEnterpriseId={h.setSelectedJoinEnterpriseId}
         joinCode={h.joinCode} setJoinCode={h.setJoinCode}
         myRequests={h.myRequests} handleJoinSearch={h.handleJoinSearch} handleJoin={h.handleJoin}

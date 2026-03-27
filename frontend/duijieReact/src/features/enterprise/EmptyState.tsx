@@ -19,7 +19,6 @@ interface Props {
   joinResults: any[]
   joinSearching: boolean
   joining: boolean
-  recommendedEnterprises: any[]
   selectedJoinEnterpriseId: number | null
   setSelectedJoinEnterpriseId: (v: number | null) => void
   joinCode: string
@@ -36,7 +35,7 @@ interface Props {
 export default function EmptyState(props: Props) {
   const { createModalOpen, setCreateModalOpen, createForm, setCreateForm, creating, handleCreate,
     joinModalOpen, setJoinModalOpen, openJoinModal, joinSearch, setJoinSearch, joinResults, joinSearching, joining,
-    recommendedEnterprises, selectedJoinEnterpriseId, setSelectedJoinEnterpriseId, joinCode, setJoinCode,
+    selectedJoinEnterpriseId, setSelectedJoinEnterpriseId, joinCode, setJoinCode,
     myRequests, handleJoinSearch, handleJoin,
     isSysAdmin, allEnterprises, expandedEntId, setExpandedEntId } = props
 
@@ -60,7 +59,6 @@ export default function EmptyState(props: Props) {
         joinModalOpen={joinModalOpen} setJoinModalOpen={setJoinModalOpen}
         joinSearch={joinSearch} setJoinSearch={setJoinSearch}
         joinResults={joinResults} joinSearching={joinSearching} joining={joining}
-        recommendedEnterprises={recommendedEnterprises}
         selectedJoinEnterpriseId={selectedJoinEnterpriseId} setSelectedJoinEnterpriseId={setSelectedJoinEnterpriseId}
         joinCode={joinCode} setJoinCode={setJoinCode}
         myRequests={myRequests} handleJoinSearch={handleJoinSearch} handleJoin={handleJoin}

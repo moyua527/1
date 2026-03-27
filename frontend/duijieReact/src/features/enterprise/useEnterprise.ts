@@ -39,7 +39,6 @@ export function useEnterprise() {
   const [expandedEntId, setExpandedEntId] = useState<number | null>(null)
   const [myRequests, setMyRequests] = useState<any[]>([])
   const [joinRequests, setJoinRequests] = useState<any[]>([])
-  const [recommendedEnterprises, setRecommendedEnterprises] = useState<any[]>([])
   const [selectedJoinEnterpriseId, setSelectedJoinEnterpriseId] = useState<number | null>(null)
   const [joinCode, setJoinCode] = useState('')
   const [joinCodeRefreshing, setJoinCodeRefreshing] = useState(false)
@@ -70,10 +69,6 @@ export function useEnterprise() {
   const loadMyRequests = async () => {
     const r = await fetchApi('/api/my-enterprise/my-requests')
     if (r.success) setMyRequests(r.data || [])
-  }
-  const loadRecommendedEnterprises = async () => {
-    const r = await fetchApi('/api/my-enterprise/recommended')
-    if (r.success) setRecommendedEnterprises(r.data || [])
   }
 
   useEffect(() => { load(); loadAllEnterprises(); loadMyRequests() }, [])
@@ -124,7 +119,6 @@ export function useEnterprise() {
     setJoinCode('')
     joinSearchRequestRef.current += 1
     loadMyRequests()
-    loadRecommendedEnterprises()
   }
 
   const clearJoinSearchTimer = () => {
@@ -366,7 +360,7 @@ export function useEnterprise() {
     createModalOpen, setCreateModalOpen, createForm, setCreateForm, creating, handleCreate,
     // 加入
     joinModalOpen, setJoinModalOpen, openJoinModal, joinSearch, setJoinSearch: updateJoinSearch, joinResults, setJoinResults, joinSearching, joining,
-    recommendedEnterprises, selectedJoinEnterpriseId, setSelectedJoinEnterpriseId, joinCode, setJoinCode,
+    selectedJoinEnterpriseId, setSelectedJoinEnterpriseId, joinCode, setJoinCode,
     myRequests, loadMyRequests, handleJoinSearch, handleJoin,
     // 成员
     memberModalOpen, setMemberModalOpen, editingMember, memberForm, setMemberForm, memberSaving,
