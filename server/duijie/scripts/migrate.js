@@ -17,8 +17,18 @@ async function ensureMigrationsTable() {
 }
 
 async function getAppliedMigrations() {
-  const [rows] = await db.query('SELECT version FROM schema_migrations ORDER BY version');
-  return new Set(rows.map(r => r.version));
+  const [rows] = await db.query('SELECT version, name FROM schema_migrations ORDER BY id');
+  const applied = new Set();
+  for (const row of rows) {
+    if (row.name) {
+      applied.add(row.name);
+      applied.add(row.name.replace(/\.sql$/i, ''));
+    }
+    if (row.version && String(row.version).includes('_')) {
+      applied.add(row.version);
+    }
+  }
+  return applied;
 }
 
 async function getMigrationFiles() {
@@ -32,6 +42,25 @@ async function getMigrationFiles() {
   return files;
 }
 
+function isIgnorableMigrationError(error) {
+  const ignorableCodes = new Set([
+    'ER_DUP_FIELDNAME',
+    'ER_DUP_KEYNAME',
+    'ER_CANT_DROP_FIELD_OR_KEY',
+    'ER_TABLE_EXISTS_ERROR',
+  ]);
+  const ignorableErrnos = new Set([1060, 1061, 1091, 1050]);
+  if (ignorableCodes.has(error?.code) || ignorableErrnos.has(error?.errno)) return true;
+  const message = String(error?.message || '').toLowerCase();
+  return (
+    message.includes('duplicate column name')
+    || message.includes('duplicate key name')
+    || message.includes("can't drop")
+    || message.includes('check that column/key exists')
+    || message.includes('table already exists')
+  );
+}
+
 async function run() {
   console.log('[migrate] Starting database migrations...');
   await ensureMigrationsTable();
@@ -41,7 +70,7 @@ async function run() {
   let count = 0;
 
   for (const file of files) {
-    const version = file.replace('.sql', '').split('_')[0];
+    const version = file.replace(/\.sql$/i, '');
     if (applied.has(version)) continue;
 
     const sql = fs.readFileSync(path.join(MIGRATIONS_DIR, file), 'utf8').trim();
@@ -53,12 +82,22 @@ async function run() {
     const conn = await db.getConnection();
     try {
       for (const stmt of statements) {
-        await conn.query(stmt);
+        try {
+          await conn.query(stmt);
+        } catch (stmtError) {
+          if (isIgnorableMigrationError(stmtError)) {
+            console.log(`    [skip] ${stmtError.message}`);
+            continue;
+          }
+          throw stmtError;
+        }
       }
       await conn.query(
         'INSERT INTO schema_migrations (version, name) VALUES (?, ?)',
         [version, file]
       );
+      applied.add(file);
+      applied.add(version);
       count++;
     } catch (e) {
       console.error(`  [FAIL] ${file}: ${e.message}`);
@@ -68,7 +107,7 @@ async function run() {
     conn.release();
   }
 
-  console.log(`[migrate] Done. ${count} new migration(s) applied, ${applied.size} already applied.`);
+  console.log(`[migrate] Done. ${count} new migration(s) applied.`);
   await db.end();
 }
 
