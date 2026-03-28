@@ -61,6 +61,10 @@ function writeCache(u: User | null) {
   } catch {}
 }
 
+function isHardAuthFailure(r: any) {
+  return r?.status === 401 || r?.status === 403 || r?.status === 404
+}
+
 const useUserStore = create<UserState>((set, get) => ({
   user: readCache(),
   checking: true,
@@ -69,7 +73,7 @@ const useUserStore = create<UserState>((set, get) => ({
 
   setUser: (user) => {
     writeCache(user)
-    set({ user })
+    set({ user, hasEnterprise: true, enterprisePerms: {} })
     if (user) {
       setTimeout(() => get().checkEnterprise(), 0)
     }
@@ -86,39 +90,51 @@ const useUserStore = create<UserState>((set, get) => ({
       if (r.success && r.data) {
         set({ hasEnterprise: true })
         if (r.data.enterprisePerms) set({ enterprisePerms: r.data.enterprisePerms })
-      } else {
+        else set({ enterprisePerms: {} })
+      } else if (r.success) {
         set({ hasEnterprise: false })
+        set({ enterprisePerms: {} })
       }
-    } catch {
-      set({ hasEnterprise: true })
-    }
+    } catch {}
   },
 
   init: async () => {
+    const cachedUser = get().user
     try {
       const r = await authApi.me()
       if (r.success) {
         writeCache(r.data)
         if (r.data.role === 'admin') {
-          set({ user: r.data, hasEnterprise: true, checking: false })
+          set({ user: r.data, hasEnterprise: true, checking: false, enterprisePerms: {} })
           fetchApi('/api/my-enterprise').then(er => {
             if (er.success && er.data?.enterprisePerms) set({ enterprisePerms: er.data.enterprisePerms })
           }).catch(() => {})
         } else {
-          const er = await fetchApi('/api/my-enterprise')
-          const has = !!(er.success && er.data)
-          set({ user: r.data, hasEnterprise: has, checking: false })
-          if (has && er.data?.enterprisePerms) set({ enterprisePerms: er.data.enterprisePerms })
+          set({ user: r.data, hasEnterprise: true, checking: true, enterprisePerms: {} })
+          await get().checkEnterprise()
+          set({ checking: false })
         }
-      } else {
+      } else if (isHardAuthFailure(r)) {
         clearToken()
         writeCache(null)
         set({ user: null, checking: false, hasEnterprise: true, enterprisePerms: {} })
+      } else if (cachedUser) {
+        set({ user: cachedUser, checking: false, hasEnterprise: true, enterprisePerms: {} })
+        if (cachedUser.role !== 'admin') {
+          get().checkEnterprise().catch(() => {})
+        }
+      } else {
+        set({ user: null, checking: false, hasEnterprise: true, enterprisePerms: {} })
       }
     } catch {
-      clearToken()
-      writeCache(null)
-      set({ user: null, checking: false, hasEnterprise: true, enterprisePerms: {} })
+      if (cachedUser) {
+        set({ user: cachedUser, checking: false, hasEnterprise: true, enterprisePerms: {} })
+        if (cachedUser.role !== 'admin') {
+          get().checkEnterprise().catch(() => {})
+        }
+      } else {
+        set({ user: null, checking: false, hasEnterprise: true, enterprisePerms: {} })
+      }
     }
   },
 
