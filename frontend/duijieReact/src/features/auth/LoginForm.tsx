@@ -24,9 +24,6 @@ export default function LoginForm({ onLogin, onSwitchToForgot }: LoginFormProps)
   const [countdown, setCountdown] = useState(0)
   const [agreed, setAgreed] = useState(false)
   const [showTerms, setShowTerms] = useState(false)
-  const [show2FA, setShow2FA] = useState(false)
-  const [totpCode, setTotpCode] = useState('')
-  const [challengeToken, setChallengeToken] = useState('')
 
   useEffect(() => {
     if (countdown <= 0) return
@@ -36,13 +33,14 @@ export default function LoginForm({ onLogin, onSwitchToForgot }: LoginFormProps)
 
   const handleSendCode = async () => {
     setError('')
+    setSuccess('')
     const type = loginMethod === 'phone' ? 'phone' as const : 'email' as const
     const target = loginMethod === 'phone' ? phone : email
     if (loginMethod === 'phone' && !/^\d{11}$/.test(target)) { setError('请输入正确的11位手机号'); return }
     if (loginMethod === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)) { setError('请输入正确的邮箱'); return }
     const res = await authApi.sendCode(type, target)
     if (res.success) { setCountdown(60); setSuccess(res._dev_code ? `验证码: ${res._dev_code}（测试模式）` : '验证码已发送'); if (res._dev_code) setVerifyCode(res._dev_code); setTimeout(() => setSuccess(''), 8000) }
-    else setError(res.message || '发送失败')
+    else { setSuccess(''); setError(res.message || '发送失败') }
   }
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -52,26 +50,11 @@ export default function LoginForm({ onLogin, onSwitchToForgot }: LoginFormProps)
       if (!ok) return
       setAgreed(true)
     }
-    setError(''); setLoading(true)
+    setError(''); setSuccess(''); setLoading(true)
     try {
-      if (show2FA) {
-        if (!totpCode) { setError('请输入动态验证码'); setLoading(false); return }
-        const res = await authApi.verifyLogin2FA(challengeToken, totpCode)
-        if (res.success) { if (res.token) setToken(res.token); onLogin(res.data) }
-        else setError(res.message || '两步验证失败')
-        setLoading(false)
-        return
-      }
-
       if (loginMethod === 'password') {
         const res = await authApi.login(username, password)
-        if (res.success && res.require_2fa) {
-          setShow2FA(true)
-          setChallengeToken(res.challenge_token || '')
-          setTotpCode('')
-          setSuccess('账号密码已验证，请输入动态验证码')
-        }
-        else if (res.success) { if (res.token) setToken(res.token); onLogin(res.data) }
+        if (res.success) { if (res.token) setToken(res.token); onLogin(res.data) }
         else setError(res.message || '登录失败')
       } else {
         const type = loginMethod === 'phone' ? 'phone' as const : 'email' as const
@@ -79,13 +62,7 @@ export default function LoginForm({ onLogin, onSwitchToForgot }: LoginFormProps)
         if (!target) { setError(loginMethod === 'phone' ? '请输入手机号' : '请输入邮箱'); setLoading(false); return }
         if (!verifyCode) { setError('请输入验证码'); setLoading(false); return }
         const res = await authApi.loginByCode(type, target, verifyCode)
-        if (res.success && res.require_2fa) {
-          setShow2FA(true)
-          setChallengeToken(res.challenge_token || '')
-          setTotpCode('')
-          setSuccess('验证码已验证，请输入动态验证码')
-        }
-        else if (res.success) { if (res.token) setToken(res.token); onLogin(res.data) }
+        if (res.success) { if (res.token) setToken(res.token); onLogin(res.data) }
         else setError(res.message || '登录失败')
       }
     } catch { setError('网络错误') }
@@ -103,7 +80,7 @@ export default function LoginForm({ onLogin, onSwitchToForgot }: LoginFormProps)
       <form onSubmit={handleLogin}>
         <div style={{ display: 'flex', gap: 0, marginBottom: 16, borderBottom: '1px solid #e2e8f0' }}>
           {loginMethods.map(m => (
-            <button key={m.key} type="button" onClick={() => { setLoginMethod(m.key); setError(''); setVerifyCode(''); setShow2FA(false); setChallengeToken(''); setTotpCode('') }}
+            <button key={m.key} type="button" onClick={() => { setLoginMethod(m.key); setError(''); setSuccess(''); setVerifyCode('') }}
               style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '8px 0', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500,
                 color: loginMethod === m.key ? '#2563eb' : '#94a3b8', background: 'transparent',
                 borderBottom: loginMethod === m.key ? '2px solid #2563eb' : '2px solid transparent', transition: 'all 0.15s' }}>
@@ -113,25 +90,7 @@ export default function LoginForm({ onLogin, onSwitchToForgot }: LoginFormProps)
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {show2FA && (
-            <>
-              <div style={{ padding: '10px 12px', borderRadius: 10, background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1d4ed8', fontSize: 13, lineHeight: 1.6 }}>
-                该账号已启用两步验证，请打开验证器输入 6 位动态码完成登录。
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#475569', marginBottom: 4 }}>动态验证码</label>
-                <input placeholder="输入6位动态码" value={totpCode} onChange={e => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))} maxLength={6}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
-                  onFocus={e => (e.currentTarget.style.borderColor = '#2563eb')} onBlur={e => (e.currentTarget.style.borderColor = '#cbd5e1')} />
-              </div>
-              <button type="button" onClick={() => { setShow2FA(false); setChallengeToken(''); setTotpCode(''); setSuccess(''); setError('') }}
-                style={{ alignSelf: 'flex-end', border: 'none', background: 'none', color: '#64748b', fontSize: 12, cursor: 'pointer', padding: 0 }}>
-                返回上一步
-              </button>
-            </>
-          )}
-
-          {!show2FA && loginMethod === 'password' && (
+          {loginMethod === 'password' && (
             <>
               <Input label="账号" placeholder="输入手机号或账号ID" value={username} onChange={e => setUsername(e.target.value)} />
               <Input label="密码" type="password" placeholder="输入密码" value={password} onChange={e => setPassword(e.target.value)} />
@@ -141,7 +100,7 @@ export default function LoginForm({ onLogin, onSwitchToForgot }: LoginFormProps)
             </>
           )}
 
-          {!show2FA && loginMethod === 'phone' && (
+          {loginMethod === 'phone' && (
             <>
               <Input label="手机号" placeholder="输入11位手机号" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))} maxLength={11} />
               <div>
@@ -159,7 +118,7 @@ export default function LoginForm({ onLogin, onSwitchToForgot }: LoginFormProps)
             </>
           )}
 
-          {!show2FA && loginMethod === 'email' && (
+          {loginMethod === 'email' && (
             <>
               <Input label="邮箱" placeholder="输入邮箱地址" value={email} onChange={e => setEmail(e.target.value)} />
               <div>
@@ -192,7 +151,7 @@ export default function LoginForm({ onLogin, onSwitchToForgot }: LoginFormProps)
           </label>
 
           <Button type="submit" style={{ width: '100%', justifyContent: 'center', padding: '10px 0', marginTop: 4 }} disabled={loading}>
-            {loading ? (show2FA ? '验证中...' : '登录中...') : (show2FA ? '验证并登录' : '登 录')}
+            {loading ? '登录中...' : '登 录'}
           </Button>
         </div>
       </form>

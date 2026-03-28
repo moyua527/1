@@ -1,10 +1,6 @@
 import { useState, useEffect } from 'react'
 import { BarChart3, TrendingUp, PieChart, Loader2, FileSignature, Users, Calendar, Activity, Target, DollarSign, Printer } from 'lucide-react'
-
-const fetchApi = async (url: string) => {
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
-  return res.json()
-}
+import { fetchApi } from '../../bootstrap'
 
 const section: React.CSSProperties = { background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }
 const stageLabel: Record<string, string> = { potential: '潜在', intent: '意向', signed: '签约', active: '合作中', lost: '流失' }

@@ -1,4 +1,5 @@
 ﻿const db = require('../../../config/db');
+const logger = require('../../../config/logger');
 const bcrypt = require('bcryptjs');
 const generateDisplayId = require('../../utils/generateDisplayId');
 const generateInviteCode = require('../../utils/generateInviteCode');
@@ -66,7 +67,9 @@ module.exports = async (req, res) => {
     const getJwtSecret = require('../../repositories/auth/getJwtSecretRepo');
     const secret = await getJwtSecret();
     const token = jwt.sign({ userId: newUserId, role: assignedRole, clientId: null }, secret, { expiresIn: '7d' });
-    await db.query('UPDATE voice_users SET last_login_at = NOW() WHERE id = ?', [newUserId]);
+    db.query('UPDATE voice_users SET last_login_at = NOW() WHERE id = ?', [newUserId]).catch((err) => {
+      logger.error(`register.lastLogin: ${err.message}`);
+    });
 
     res.json({
       success: true,

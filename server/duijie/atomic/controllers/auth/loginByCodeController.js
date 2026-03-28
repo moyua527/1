@@ -1,6 +1,6 @@
 ﻿const db = require('../../../config/db');
 const logger = require('../../../config/logger');
-const { buildUserPayload, signAccessToken, signTwoFactorChallenge } = require('../../utils/authToken');
+const { buildUserPayload, signAccessToken } = require('../../utils/authToken');
 
 module.exports = async (req, res) => {
   try {
@@ -22,7 +22,7 @@ module.exports = async (req, res) => {
     // Find user by phone or email
     const field = type === 'phone' ? 'phone' : 'email';
     const [users] = await db.query(
-      `SELECT id, username, nickname, avatar, role, client_id, is_active, totp_enabled, totp_secret FROM voice_users WHERE ${field} = ? AND is_deleted = 0`,
+      `SELECT id, username, nickname, avatar, role, client_id, is_active FROM voice_users WHERE ${field} = ? AND is_deleted = 0`,
       [target]
     );
     if (users.length === 0) {
@@ -33,13 +33,10 @@ module.exports = async (req, res) => {
       return res.json({ success: false, message: '账号已被禁用' });
     }
 
-    if (user.totp_enabled === 1 && user.totp_secret) {
-      const challengeToken = await signTwoFactorChallenge(user);
-      return res.json({ success: true, require_2fa: true, challenge_token: challengeToken, data: buildUserPayload(user) });
-    }
-
     const token = await signAccessToken(user);
-    await db.query('UPDATE voice_users SET last_login_at = NOW() WHERE id = ?', [user.id]);
+    db.query('UPDATE voice_users SET last_login_at = NOW() WHERE id = ?', [user.id]).catch((err) => {
+      logger.error(`loginByCode.lastLogin: ${err.message}`);
+    });
     res.cookie('token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
 
     res.json({

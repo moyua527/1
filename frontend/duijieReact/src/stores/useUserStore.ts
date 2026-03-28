@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { authApi } from '../features/auth/services/api'
-import { fetchApi, getToken, clearToken } from '../bootstrap'
+import { fetchApi, clearToken } from '../bootstrap'
 
 interface User {
   id: number
@@ -8,7 +8,6 @@ interface User {
   nickname?: string
   avatar?: string
   role: string
-  totp_enabled?: boolean
   email?: string
   phone?: string
   client_id?: number | null
@@ -96,11 +95,6 @@ const useUserStore = create<UserState>((set, get) => ({
   },
 
   init: async () => {
-    if (!getToken()) {
-      writeCache(null)
-      set({ user: null, checking: false, hasEnterprise: true, enterprisePerms: {} })
-      return
-    }
     try {
       const r = await authApi.me()
       if (r.success) {
@@ -117,12 +111,14 @@ const useUserStore = create<UserState>((set, get) => ({
           if (has && er.data?.enterprisePerms) set({ enterprisePerms: er.data.enterprisePerms })
         }
       } else {
+        clearToken()
         writeCache(null)
-        set({ user: null, checking: false, hasEnterprise: true })
+        set({ user: null, checking: false, hasEnterprise: true, enterprisePerms: {} })
       }
     } catch {
+      clearToken()
       writeCache(null)
-      set({ user: null, checking: false, hasEnterprise: true })
+      set({ user: null, checking: false, hasEnterprise: true, enterprisePerms: {} })
     }
   },
 
@@ -132,12 +128,12 @@ const useUserStore = create<UserState>((set, get) => ({
       if (deviceToken) {
         await fetchApi('/api/notifications/devices/unregister', { method: 'POST', body: JSON.stringify({ device_token: deviceToken }) })
       }
-      await fetch('/api/auth/logout', { method: 'POST' })
+      await fetchApi('/api/auth/logout', { method: 'POST' })
     } catch {}
     clearToken()
     localStorage.removeItem('push_device_token')
     writeCache(null)
-    set({ user: null })
+    set({ user: null, hasEnterprise: true, enterprisePerms: {} })
     window.location.href = '/'
   },
 

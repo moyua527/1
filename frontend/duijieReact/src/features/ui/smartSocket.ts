@@ -1,4 +1,5 @@
 import { io, Socket } from 'socket.io-client'
+import { getToken } from '../../bootstrap'
 import { isCapacitor, SERVER_URL } from '../../utils/capacitor'
 
 type Listener = (payload?: any) => void
@@ -22,7 +23,7 @@ function getSocket(): Socket {
   })
 
   socket.on('connect', () => {
-    const token = localStorage.getItem('token')
+    const token = getToken()
     if (token) socket!.emit('auth', token)
     startSmartHeartbeat()
     emit('reconnect')

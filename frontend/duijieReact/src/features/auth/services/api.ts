@@ -16,12 +16,6 @@ export const authApi = {
   resetPassword: (type: 'phone' | 'email', target: string, code: string, new_password: string) =>
     fetchApi('/api/auth/reset-password', { method: 'POST', body: JSON.stringify({ type, target, code, new_password }) }),
   registerConfig: () => fetchApi('/api/auth/register-config'),
-  verifyLogin2FA: (challenge_token: string, totp_code: string) =>
-    fetchApi('/api/auth/2fa/login/verify', { method: 'POST', body: JSON.stringify({ challenge_token, totp_code }) }),
   logout: () => fetchApi('/api/auth/logout', { method: 'POST' }),
   me: () => fetchApi('/api/auth/me'),
-  twoFactorStatus: () => fetchApi('/api/auth/2fa/status'),
-  twoFactorSetup: () => fetchApi('/api/auth/2fa/setup', { method: 'POST' }),
-  twoFactorEnable: (totp_code: string) => fetchApi('/api/auth/2fa/enable', { method: 'POST', body: JSON.stringify({ totp_code }) }),
-  twoFactorDisable: (totp_code: string) => fetchApi('/api/auth/2fa/disable', { method: 'POST', body: JSON.stringify({ totp_code }) }),
 }

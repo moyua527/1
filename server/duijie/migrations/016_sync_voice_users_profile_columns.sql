@@ -1,0 +1,11 @@
+ALTER TABLE voice_users ADD COLUMN manager_id INT DEFAULT NULL COMMENT '上级经理ID' AFTER client_id;
+ALTER TABLE voice_users ADD COLUMN display_id VARCHAR(30) DEFAULT NULL COMMENT '展示用唯一ID(86+地区码+日期+序号+校验位)' AFTER active_enterprise_id;
+ALTER TABLE voice_users ADD COLUMN gender TINYINT DEFAULT NULL COMMENT '1=男 2=女' AFTER display_id;
+ALTER TABLE voice_users ADD COLUMN area_code VARCHAR(6) DEFAULT NULL COMMENT '6位行政区划代码' AFTER gender;
+ALTER TABLE voice_users ADD COLUMN user_type VARCHAR(20) DEFAULT 'individual' COMMENT '用户类型: individual/company' AFTER area_code;
+ALTER TABLE voice_users ADD COLUMN province VARCHAR(50) DEFAULT NULL COMMENT '省份' AFTER user_type;
+ALTER TABLE voice_users ADD COLUMN city VARCHAR(50) DEFAULT NULL COMMENT '城市' AFTER province;
+ALTER TABLE voice_users ADD COLUMN position VARCHAR(100) DEFAULT NULL COMMENT '职位(企业用户)' AFTER city;
+ALTER TABLE voice_users ADD COLUMN personal_invite_code VARCHAR(8) DEFAULT NULL COMMENT '专属邀请码' AFTER position;
+ALTER TABLE voice_users ADD COLUMN invited_by INT DEFAULT NULL COMMENT '邀请人用户ID' AFTER personal_invite_code;
+ALTER TABLE voice_users ADD UNIQUE KEY uk_voice_users_personal_invite_code (personal_invite_code);
