@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield, Settings, TrendingUp, MessageSquare, ScrollText, FileText, Building2, Ticket, Plug2, ArrowLeft } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
@@ -14,7 +14,7 @@ import ProfileModal from './ProfileModal'
 const ALL_NAV_ITEMS = [
   { path: '/', label: '仪表盘', icon: LayoutDashboard, perm: 'dashboard:view' },
   { path: '/projects', label: '项目管理', icon: FolderKanban, perm: 'project:view' },
-  { path: '/clients', label: '客户管理', icon: Users, perm: 'client:manage' },
+  { path: '/clients', label: '客户管理', icon: Users, perm: 'client:view' },
   { path: '/opportunities', label: '商机管理', icon: TrendingUp, perm: 'opportunity:view' },
   { path: '/tasks', label: '任务看板', icon: ListTodo, perm: 'task:view' },
   { path: '/enterprise', label: '企业管理', icon: Building2, perm: 'enterprise:view' },
@@ -73,7 +73,11 @@ export default function Layout() {
   useEffect(() => { setCollapsed(isMobile) }, [isMobile])
   useEffect(() => { if (isMobile) setCollapsed(true) }, [location.pathname, isMobile])
 
+  const dmLastFetch = useRef(0)
   const loadDmUnread = () => {
+    const now = Date.now()
+    if (now - dmLastFetch.current < 10000) return
+    dmLastFetch.current = now
     fetchApi('/api/dm/conversations').then(r => {
       if (r.success) setDmUnread((r.data || []).reduce((s: number, c: any) => s + (c.unread_count || 0), 0))
     })
@@ -83,13 +87,11 @@ export default function Layout() {
     loadDmUnread()
     const offDm = onSocket('new_dm', () => loadDmUnread())
     const offReconnect = onSocket('reconnect', () => loadDmUnread())
-    const t = setInterval(loadDmUnread, 15000)
+    const t = setInterval(loadDmUnread, 30000)
     const onDmRead = () => loadDmUnread()
     window.addEventListener('dm-read', onDmRead)
     return () => { clearInterval(t); window.removeEventListener('dm-read', onDmRead); offDm(); offReconnect() }
   }, [])
-
-  useEffect(() => { loadDmUnread() }, [location.pathname])
 
   const handleLogout = () => { storeLogout() }
   const handlePrimaryNavAction = () => {

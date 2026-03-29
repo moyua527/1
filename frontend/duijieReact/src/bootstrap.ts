@@ -13,11 +13,19 @@ export function setToken(token: string) { sessionStorage.setItem('token', token)
 export function clearToken() { sessionStorage.removeItem('token') }
 export function getToken() { return sessionStorage.getItem('token') }
 
+const HTTP_STATUS_MSG: Record<number, string> = {
+  429: '请求过于频繁，请稍后再试',
+  502: '服务暂时不可用，请稍后重试',
+  503: '服务暂时不可用，请稍后重试',
+  504: '网关超时，请稍后重试',
+}
+
 async function parseApiResponse(res: Response) {
   const contentType = res.headers.get('content-type') || ''
   if (!contentType.includes('application/json')) {
-    const text = await res.text()
-    return { success: res.ok, message: text || res.statusText, status: res.status }
+    await res.text()
+    const message = HTTP_STATUS_MSG[res.status] || `请求失败（${res.status}）`
+    return { success: false, message, status: res.status }
   }
   const data = await res.json()
   if (data && typeof data === 'object' && !Array.isArray(data)) {
