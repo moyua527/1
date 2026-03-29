@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
 import { ArrowLeft, Trash2, AppWindow, ExternalLink } from 'lucide-react'
 import { can } from '../../../stores/permissions'
@@ -30,6 +30,8 @@ const statusMap: Record<string, { label: string; color: string }> = {
 
 const section: React.CSSProperties = { background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16 }
 
+const PROJECT_DETAIL_TIMEOUT_MS = 8000
+
 export default function ProjectDetail() {
   const { id } = useParams()
   const nav = useNavigate()
@@ -42,6 +44,8 @@ export default function ProjectDetail() {
   const canDelete = platformCanDelete || !!projectPerms?.can_delete_project
   const canManageTask = can(role, 'task:create') || !!projectPerms?.can_manage_task
   const [project, setProject] = useState<any>(null)
+  const [projectLoading, setProjectLoading] = useState(true)
+  const [projectError, setProjectError] = useState('')
   const [tasks, setTasks] = useState<any[]>([])
   const [milestones, setMilestones] = useState<any[]>([])
   const [selectedMember, setSelectedMember] = useState<any>(null)
@@ -69,10 +73,40 @@ export default function ProjectDetail() {
     fetchApi(`/api/clients/${clientId}`).then(r => { if (r.success) setClientData(r.data) })
   }
 
-  const loadProject = () => {
+  const loadProject = useCallback(async () => {
     if (!id) return
-    projectApi.detail(id).then(r => { if (r.success) setProject(r.data) })
-  }
+    setProjectLoading(true)
+    setProjectError('')
+
+    let message = '项目加载失败，请稍后重试'
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const r = await Promise.race([
+          projectApi.detail(id),
+          new Promise<any>(resolve => setTimeout(() => resolve({ success: false, status: 408, message: '项目加载超时，请重试' }), PROJECT_DETAIL_TIMEOUT_MS)),
+        ])
+        if (r.success && r.data) {
+          setProject(r.data)
+          setProjectError('')
+          setProjectLoading(false)
+          return
+        }
+
+        message = r.message || (r.status === 404 ? '项目不存在' : r.status === 403 ? '无权访问此项目' : '项目加载失败，请稍后重试')
+        if (r.status === 401 || r.status === 403 || r.status === 404) break
+      } catch {
+        message = '项目加载失败，请稍后重试'
+      }
+
+      if (attempt === 0) {
+        await new Promise(resolve => setTimeout(resolve, 400))
+      }
+    }
+
+    setProject(null)
+    setProjectError(message)
+    setProjectLoading(false)
+  }, [id])
 
   const loadTasks = () => {
     if (!id) return
@@ -82,15 +116,23 @@ export default function ProjectDetail() {
 
   useEffect(() => {
     if (!id) return
-    projectApi.detail(id).then(r => { if (r.success) setProject(r.data) })
+    setProject(null)
+    loadProject()
     loadTasks()
     fetchApi('/api/my-enterprise').then(r => {
       if (r.success && r.data?.activeId) setActiveEnterpriseId(Number(r.data.activeId))
       else setActiveEnterpriseId(null)
     }).catch(() => setActiveEnterpriseId(null))
-  }, [id])
+  }, [id, loadProject])
 
-  if (!project) return <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}>加载中...</div>
+  if (projectLoading) return <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}>加载中...</div>
+  if (projectError) return (
+    <div style={{ textAlign: 'center', padding: 60, color: '#64748b', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+      <div>{projectError}</div>
+      <Button variant="secondary" onClick={() => loadProject()}>重试</Button>
+    </div>
+  )
+  if (!project) return <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}>项目不存在</div>
 
   const st = statusMap[project.status] || statusMap.planning
   const internalMembers = (project.members || []).filter((m: any) => m.source !== 'client')
