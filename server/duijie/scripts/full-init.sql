@@ -264,6 +264,43 @@ CREATE TABLE IF NOT EXISTS duijie_client_logs (
   INDEX idx_client_id (client_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 项目关联客户企业审批请求表
+CREATE TABLE IF NOT EXISTS duijie_project_client_requests (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  project_id INT NOT NULL COMMENT '项目ID',
+  from_enterprise_id INT NOT NULL COMMENT '发起方企业ID',
+  to_enterprise_id INT NOT NULL COMMENT '目标企业ID',
+  requested_by INT NOT NULL COMMENT '发起人用户ID',
+  status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+  handled_by INT DEFAULT NULL,
+  handled_at DATETIME DEFAULT NULL,
+  message VARCHAR(500) DEFAULT NULL,
+  reject_reason VARCHAR(500) DEFAULT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_project (project_id),
+  INDEX idx_to_enterprise (to_enterprise_id, status),
+  INDEX idx_from_enterprise (from_enterprise_id),
+  UNIQUE KEY uk_pending (project_id, to_enterprise_id, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 通用客户添加审批请求表
+CREATE TABLE IF NOT EXISTS duijie_client_requests (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  from_enterprise_id INT NOT NULL COMMENT '发起方企业ID',
+  to_enterprise_id INT NOT NULL COMMENT '目标企业ID',
+  project_id INT DEFAULT NULL COMMENT '关联项目ID',
+  status ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+  message VARCHAR(500) DEFAULT NULL,
+  created_by INT NOT NULL,
+  handled_by INT DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  handled_at TIMESTAMP NULL DEFAULT NULL,
+  KEY idx_to_status (to_enterprise_id, status),
+  KEY idx_from (from_enterprise_id),
+  KEY idx_project (project_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- ========== 种子数据 ==========
 
 -- JWT密钥
