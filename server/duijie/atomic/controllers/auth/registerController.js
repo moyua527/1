@@ -31,7 +31,8 @@ module.exports = async (req, res) => {
     // 自动生成用户信息
     const username = phone || email.split('@')[0] + '_' + Date.now().toString(36);
     const nickname = phone ? '用户' + phone.slice(-4) : email.split('@')[0];
-    const defaultPwd = '123456';
+    // 生成随机密码，强制用户通过验证码登录或在设置中修改密码
+    const randomPwd = require('crypto').randomBytes(24).toString('base64url');
     const displayId = await generateDisplayId('000000', 0);
     const personalCode = await generateInviteCode();
 
@@ -54,7 +55,7 @@ module.exports = async (req, res) => {
       await conn.query('UPDATE verification_codes SET used = 1 WHERE id = ?', [vcRows[0].id]);
       const [result] = await conn.query(
         'INSERT INTO voice_users (username, password, nickname, email, phone, role, display_id, personal_invite_code, invited_by, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [username, await bcrypt.hash(defaultPwd, 10), nickname, email || null, phone || null, assignedRole, displayId, personalCode, inviterId, isActive]
+        [username, await bcrypt.hash(randomPwd, 10), nickname, email || null, phone || null, assignedRole, displayId, personalCode, inviterId, isActive]
       );
       if (invite_token) {
         await conn.query('UPDATE duijie_invite_links SET used_by = ? WHERE token = ? AND used_by IS NULL', [result.insertId, invite_token.trim()]);

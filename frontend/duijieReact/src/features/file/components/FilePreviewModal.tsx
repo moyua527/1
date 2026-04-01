@@ -43,7 +43,7 @@ export default function FilePreviewModal({ file, previewUrl, onDownload, onClose
             <img src={previewUrl} alt={file.original_name} style={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain' }} />
           )}
           {file.mime_type === 'application/pdf' && (
-            <iframe src={previewUrl} style={{ width: '100%', height: '80vh', border: 'none' }} title={file.original_name} />
+            <iframe src={previewUrl} style={{ width: '100%', height: '80vh', border: 'none' }} title={file.original_name} sandbox="" />
           )}
           {file.mime_type?.startsWith('video/') && (
             <video src={previewUrl} controls style={{ maxWidth: '100%', maxHeight: '80vh' }} />
@@ -52,7 +52,7 @@ export default function FilePreviewModal({ file, previewUrl, onDownload, onClose
             <audio src={previewUrl} controls style={{ margin: 40 }} />
           )}
           {(file.mime_type?.startsWith('text/') || file.mime_type === 'application/json') && (
-            <iframe src={previewUrl} style={{ width: '100%', height: '80vh', border: 'none', background: 'var(--bg-card)' }} title={file.original_name} />
+            <iframe src={previewUrl} style={{ width: '100%', height: '80vh', border: 'none', background: 'var(--bg-card)' }} title={file.original_name} sandbox="" />
           )}
         </div>
       </div>
