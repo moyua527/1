@@ -263,9 +263,8 @@ export default function ProjectDetail() {
           myMembers={myMembers}
           otherMembers={otherMembers}
           showOtherTeam={hasExternalEnterprise}
-          canEdit={canEdit}
+          canEditMyTeam={canEdit}
           onManageMyMembers={isClientPerspective ? openManageClientMembers : openManageMembers}
-          onManageOtherMembers={isClientPerspective ? openManageMembers : openManageClientMembers}
           onSelectMember={setSelectedMember}
         />
 

@@ -8,13 +8,12 @@ interface MembersSectionProps {
   myMembers: any[]
   otherMembers: any[]
   showOtherTeam?: boolean
-  canEdit: boolean
+  canEditMyTeam: boolean
   onManageMyMembers: () => void
-  onManageOtherMembers: () => void
   onSelectMember: (member: any) => void
 }
 
-export default function MembersSection({ myTeamTitle, otherTeamTitle, myMembers, otherMembers, showOtherTeam = true, canEdit, onManageMyMembers, onManageOtherMembers, onSelectMember }: MembersSectionProps) {
+export default function MembersSection({ myTeamTitle, otherTeamTitle, myMembers, otherMembers, showOtherTeam = true, canEditMyTeam, onManageMyMembers, onSelectMember }: MembersSectionProps) {
   return (
     <div style={section}>
       <h3 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>项目成员</h3>
@@ -22,7 +21,7 @@ export default function MembersSection({ myTeamTitle, otherTeamTitle, myMembers,
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
             <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--brand)' }}>{myTeamTitle}</span>
-            {canEdit && <button onClick={onManageMyMembers}
+            {canEditMyTeam && <button onClick={onManageMyMembers}
               style={{ fontSize: 12, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>管理</button>}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -46,8 +45,6 @@ export default function MembersSection({ myTeamTitle, otherTeamTitle, myMembers,
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-success)' }}>{otherTeamTitle}</span>
-              {canEdit && <button onClick={onManageOtherMembers}
-                style={{ fontSize: 12, color: 'var(--color-success)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>管理</button>}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {otherMembers.map((m: any) => (
