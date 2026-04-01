@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { Plus, FolderKanban, Loader2, Search, Download } from 'lucide-react'
+import { Plus, FolderKanban, Loader2, Download } from 'lucide-react'
 import { projectApi } from './services/api'
 import { can } from '../../stores/permissions'
 import { useProjects, useInvalidate } from '../../hooks/useApi'
@@ -10,6 +10,9 @@ import ProgressBar from '../ui/ProgressBar'
 import Modal from '../ui/Modal'
 import Input from '../ui/Input'
 import { toast } from '../ui/Toast'
+import PageHeader from '../ui/PageHeader'
+import FilterBar from '../ui/FilterBar'
+import EmptyState from '../ui/EmptyState'
 
 const statusMap: Record<string, { label: string; color: string }> = {
   planning: { label: '规划中', color: 'blue' },
@@ -69,43 +72,32 @@ export default function ProjectList() {
 
   return (
     <div>
-      <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'flex-start', marginBottom: 16, gap: 12 }}>
-        <div>
-          <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>项目管理</h1>
-          <p style={{ color: 'var(--text-secondary)', margin: '4px 0 0', fontSize: 14 }}>共 {filtered.length} 个项目</p>
-        </div>
-        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', gap: 8, width: isMobile ? '100%' : undefined }}>
-          <div style={{ position: 'relative', width: isMobile ? '100%' : undefined }}>
-            <Search size={14} color="#94a3b8" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索项目..."
-              style={{ padding: '8px 12px 8px 32px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none', width: isMobile ? '100%' : 180, boxSizing: 'border-box' }} />
-          </div>
+      <PageHeader title="项目管理" subtitle={`共 ${filtered.length} 个项目`} actions={
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 8, width: isMobile ? '100%' : undefined }}>
           <button onClick={() => { window.open('/api/projects/export', '_blank') }}
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500, cursor: 'pointer', width: isMobile ? '100%' : undefined }}>
             <Download size={14} /> 导出
           </button>
           {canCreate && <Button onClick={() => setShowCreate(true)} style={isMobile ? { width: '100%', justifyContent: 'center' } : undefined}><Plus size={16} /> 新建项目</Button>}
         </div>
-      </div>
+      } />
 
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16, flexWrap: isMobile ? 'nowrap' : 'wrap', overflowX: isMobile ? 'auto' : 'visible', paddingBottom: isMobile ? 4 : 0, WebkitOverflowScrolling: 'touch' as any }}>
-        {statusTabs.map(t => (
-          <button key={t.key} onClick={() => setStatusFilter(t.key)}
-            style={{ padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 13, fontWeight: statusFilter === t.key ? 600 : 400,
-              background: statusFilter === t.key ? 'var(--brand)' : 'var(--bg-tertiary)', color: statusFilter === t.key ? 'var(--bg-primary)' : 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.15s', flex: '0 0 auto', whiteSpace: 'nowrap' }}>
-            {t.label}
-            {t.key === '' ? ` (${projects.length})` : ` (${projects.filter(p => p.status === t.key).length})`}
-          </button>
-        ))}
-      </div>
+      <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="搜索项目..."
+        filters={[{
+          value: statusFilter, onChange: setStatusFilter, placeholder: '全部状态',
+          options: statusTabs.filter(t => t.key).map(t => ({ value: t.key, label: t.label })),
+        }]}
+        resultCount={filtered.length} hasFilters={!!statusFilter || !!search.trim()}
+        activeFilterCount={(statusFilter ? 1 : 0) + (search.trim() ? 1 : 0)}
+        onClearFilters={() => { setStatusFilter(''); setSearch('') }}
+      />
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}>
-          <FolderKanban size={48} style={{ marginBottom: 12, opacity: 0.5 }} />
-          <div>{projects.length === 0 ? '暂无项目，点击右上角新建' : '无匹配项目'}</div>
-        </div>
+        <EmptyState icon={FolderKanban} title={projects.length === 0 ? '暂无项目' : '无匹配项目'}
+          subtitle={projects.length === 0 ? '点击右上角新建项目' : '调整筛选条件试试'}
+          action={projects.length === 0 && canCreate ? { label: '新建项目', onClick: () => setShowCreate(true) } : undefined} />
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))', gap: 16 }}>
           {filtered.map((p: any) => {

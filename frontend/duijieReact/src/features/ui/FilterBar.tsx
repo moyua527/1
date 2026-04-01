@@ -11,6 +11,7 @@ interface Props {
     value: string
     onChange: (v: string) => void
     options: FilterOption[]
+    placeholder?: string
   }>
   resultCount?: number
   hasFilters?: boolean
@@ -38,6 +39,7 @@ export default function FilterBar({ search, onSearchChange, searchPlaceholder, f
       </div>
       {filters?.map((f, i) => (
         <select key={i} value={f.value} onChange={e => f.onChange(e.target.value)} style={{ padding: '7px 10px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-body)' }}>
+          {f.placeholder && <option value="">{f.placeholder}</option>}
           {f.options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       ))}

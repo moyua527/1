@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
-import { Plus, Users, Loader2, Search, Download, Zap, Upload, Building2, UserCircle } from 'lucide-react'
+import { Plus, Users, Loader2, Download, Upload, Building2, UserCircle } from 'lucide-react'
 import { clientApi } from './services/api'
-import { can } from '../../stores/permissions'
 import useLiveData from '../../hooks/useLiveData'
 import Button from '../ui/Button'
 import Avatar from '../ui/Avatar'
 import { toast } from '../ui/Toast'
+import PageHeader from '../ui/PageHeader'
+import FilterBar from '../ui/FilterBar'
+import EmptyState from '../ui/EmptyState'
 import ClientCreateModal from './components/ClientCreateModal'
 import ClientImportModal from './components/ClientImportModal'
 
@@ -30,8 +32,8 @@ export default function ClientList() {
   const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
-  const stageFilter = searchParams.get('stage') || 'all'
-  const setStageFilter = (s: string) => { if (s === 'all') { searchParams.delete('stage'); setSearchParams(searchParams, { replace: true }) } else { setSearchParams({ stage: s }, { replace: true }) } }
+  const stageFilter = searchParams.get('stage') || ''
+  const setStageFilter = (s: string) => { if (!s) { searchParams.delete('stage'); setSearchParams(searchParams, { replace: true }) } else { setSearchParams({ stage: s }, { replace: true }) } }
   const [search, setSearch] = useState('')
   const [scores, setScores] = useState<Record<string, any>>({})
   const [showImport, setShowImport] = useState(false)
@@ -46,13 +48,18 @@ export default function ClientList() {
   useEffect(load, [])
   useLiveData(['client'], load)
 
+  const filtered = clients.filter(c => {
+    if (stageFilter && (c.stage || 'potential') !== stageFilter) return false
+    if (search.trim()) {
+      const q = search.trim().toLowerCase()
+      return [c.name, c.company, c.phone, c.email, c.channel].some(v => v && String(v).toLowerCase().includes(q))
+    }
+    return true
+  })
+
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>客户管理</h1>
-          <p style={{ color: 'var(--text-secondary)', margin: '4px 0 0', fontSize: 14 }}>管理所有客户信息</p>
-        </div>
+      <PageHeader title="客户管理" subtitle="管理所有客户信息" actions={
         <div style={{ display: 'flex', gap: 8 }}>
           <Button variant="secondary" onClick={() => {
             const headers = ['客户名称', '公司', '渠道', '阶段', '邮箱', '电话', '职位级别', '部门', '工作职能', '标签', '创建时间']
@@ -65,52 +72,34 @@ export default function ClientList() {
             ])
             const csv = '\uFEFF' + [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `客户数据_${new Date().toISOString().slice(0,10)}.csv`; a.click()
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a'); a.href = url; a.download = `客户数据_${new Date().toISOString().slice(0,10)}.csv`; a.click()
+            URL.revokeObjectURL(url)
           }}><Download size={16} /> 导出</Button>
           <Button variant="secondary" onClick={() => setShowImport(true)}><Upload size={16} /> 导入</Button>
           <Button onClick={() => setShowCreate(true)}><Plus size={16} /> 新增客户</Button>
         </div>
-      </div>
+      } />
 
-      <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative', flex: '1 1 240px', maxWidth: 360 }}>
-          <Search size={16} color="#94a3b8" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索客户名称、公司、电话..."
-            style={{ width: '100%', padding: '8px 12px 8px 36px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }} />
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: 'var(--bg-tertiary)', borderRadius: 8, padding: 3, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        {stageKeys.map(k => {
-          const count = k === 'all' ? clients.length : clients.filter(c => (c.stage || 'potential') === k).length
-          return (
-            <button key={k} onClick={() => setStageFilter(k)}
-              style={{ padding: '6px 14px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500,
-                background: stageFilter === k ? 'var(--bg-primary)' : 'transparent', color: stageFilter === k ? 'var(--text-heading)' : 'var(--text-secondary)',
-                boxShadow: stageFilter === k ? '0 1px 3px rgba(0,0,0,0.08)' : 'none', transition: 'all 0.15s' }}>
-              {stageTabLabel[k]} ({count})
-            </button>
-          )
-        })}
-      </div>
+      <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="搜索客户名称、公司、电话..."
+        filters={[{
+          value: stageFilter, onChange: setStageFilter, placeholder: '全部阶段',
+          options: Object.entries(stageMap).map(([k, v]) => ({ value: k, label: v.label })),
+        }]}
+        resultCount={filtered.length} hasFilters={!!stageFilter || !!search.trim()}
+        activeFilterCount={(stageFilter ? 1 : 0) + (search.trim() ? 1 : 0)}
+        onClearFilters={() => { setStageFilter(''); setSearch('') }}
+      />
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
-      ) : clients.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}>
-          <Users size={48} style={{ marginBottom: 12, opacity: 0.5 }} />
-          <div>暂无客户，点击右上角新增</div>
-        </div>
+      ) : filtered.length === 0 ? (
+        <EmptyState icon={Users} title={clients.length === 0 ? '暂无客户' : '无匹配客户'}
+          subtitle={clients.length === 0 ? '点击右上角新增客户' : '调整筛选条件试试'}
+          action={clients.length === 0 ? { label: '新增客户', onClick: () => setShowCreate(true) } : undefined} />
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '280px' : '340px'}, 1fr))`, gap: isMobile ? 10 : 16 }}>
-          {clients.filter(c => {
-            if (stageFilter !== 'all' && (c.stage || 'potential') !== stageFilter) return false
-            if (search.trim()) {
-              const q = search.trim().toLowerCase()
-              return [c.name, c.company, c.phone, c.email, c.channel].some(v => v && String(v).toLowerCase().includes(q))
-            }
-            return true
-          }).map((c: any) => {
+          {filtered.map((c: any) => {
             const s = stageMap[c.stage || 'potential'] || stageMap.potential
             return (
               <div key={c.id} style={cardStyle} onClick={() => nav(`/clients/${c.id}`)}

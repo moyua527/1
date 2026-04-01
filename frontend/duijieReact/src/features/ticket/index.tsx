@@ -4,6 +4,9 @@ import { Ticket, Plus, Clock, Loader2, CheckCircle, XCircle, Star } from 'lucide
 import { fetchApi } from '../../bootstrap'
 import { can } from '../../stores/permissions'
 import useLiveData from '../../hooks/useLiveData'
+import PageHeader from '../ui/PageHeader'
+import FilterBar from '../ui/FilterBar'
+import EmptyState from '../ui/EmptyState'
 import TicketDetail from './TicketDetail'
 import TicketCreateModal from './TicketCreateModal'
 
@@ -68,35 +71,30 @@ export default function TicketPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>工单</h1>
-          <p style={{ color: 'var(--text-secondary)', margin: '4px 0 0', fontSize: 14 }}>{isStaff ? '管理工单' : '提交需求或问题'}</p>
-        </div>
+      <PageHeader title="工单" subtitle={isStaff ? '管理工单' : '提交需求或问题'} actions={
         <button onClick={() => setCreateOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 10, background: 'var(--brand)', color: 'var(--bg-primary)', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500 }}>
           <Plus size={16} /> 新建工单
         </button>
-      </div>
+      } />
 
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16, overflowX: 'auto', paddingBottom: 4 }}>
-        {statusTabs.map(tab => (
-          <button key={tab.key} onClick={() => setFilter(tab.key)}
-            style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid ' + (filter === tab.key ? 'var(--brand)' : 'var(--border-primary)'),
-              background: filter === tab.key ? 'var(--bg-selected)' : 'var(--bg-primary)', color: filter === tab.key ? 'var(--brand)' : 'var(--text-secondary)',
-              fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
-            {tab.label}
-            {tab.count > 0 && <span style={{ fontSize: 11, padding: '0 6px', borderRadius: 8, background: filter === tab.key ? 'var(--brand)' : 'var(--border-primary)', color: filter === tab.key ? 'var(--bg-primary)' : 'var(--text-secondary)' }}>{tab.count}</span>}
-          </button>
-        ))}
-      </div>
+      <FilterBar search="" onSearchChange={() => {}} searchPlaceholder=""
+        filters={[{
+          value: filter === 'all' ? '' : filter,
+          onChange: (v) => setFilter(v || 'all'),
+          placeholder: '全部状态',
+          options: statusTabs.filter(t => t.key !== 'all').map(t => ({ value: t.key, label: `${t.label} (${t.count})` })),
+        }]}
+        resultCount={filtered.length}
+        hasFilters={filter !== 'all'}
+        activeFilterCount={filter !== 'all' ? 1 : 0}
+        onClearFilters={() => setFilter('all')}
+      />
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}>
-          <Ticket size={48} style={{ marginBottom: 12, opacity: 0.5 }} />
-          <div style={{ fontSize: 15 }}>暂无工单</div>
-        </div>
+        <EmptyState icon={Ticket} title="暂无工单" subtitle={filter === 'all' ? '点击右上角新建工单' : '该状态下暂无工单'}
+          action={filter === 'all' ? { label: '新建工单', onClick: () => setCreateOpen(true) } : undefined} />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtered.map(t => {

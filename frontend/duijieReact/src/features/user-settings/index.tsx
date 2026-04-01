@@ -10,6 +10,7 @@ import Input from '../ui/Input'
 import Button from '../ui/Button'
 import { toast } from '../ui/Toast'
 import useIsMobile from '../ui/useIsMobile'
+import PageHeader from '../ui/PageHeader'
 
 type Tab = 'account' | 'appearance' | 'notification'
 
@@ -118,13 +119,14 @@ export default function UserSettings() {
 
   return (
     <div>
-      {/* 标题 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-        <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', padding: 4 }}>
-          <ArrowLeft size={20} />
-        </button>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>设置</h1>
-      </div>
+      <PageHeader
+        title="设置"
+        actions={
+          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', padding: 4 }}>
+            <ArrowLeft size={20} />
+          </button>
+        }
+      />
 
       <div style={{
         display: 'flex', flexDirection: isMobile ? 'column' : 'row',
