@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Plus, Trash2, Edit2, Shield, Loader2, User, Search, Power, Link2, Clock, CheckCircle2, KeyRound, Download, ChevronLeft, ChevronRight, Users, X, MoreVertical } from 'lucide-react'
+import { Plus, Trash2, Edit2, Shield, Loader2, User, Power, Link2, Clock, CheckCircle2, KeyRound, Download, Users, MoreVertical } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { useUsers, useInvalidate } from '../../hooks/useApi'
 import Button from '../ui/Button'
@@ -7,6 +7,12 @@ import Avatar from '../ui/Avatar'
 import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
 import useIsMobile from '../ui/useIsMobile'
+import PageHeader from '../ui/PageHeader'
+import StatsCards from '../ui/StatsCards'
+import FilterBar from '../ui/FilterBar'
+import BatchActionBar from '../ui/BatchActionBar'
+import EmptyState from '../ui/EmptyState'
+import DataTable from '../ui/DataTable'
 import UserDetailSheet from './components/UserDetailSheet'
 import UserFormModal from './components/UserFormModal'
 import InviteLinkSection from './components/InviteLinkSection'
@@ -178,217 +184,137 @@ export default function UserManagement() {
   const selectedCount = selected.length
   const pageIds = paged.map(u => u.id)
   const hasAllOnPage = pageIds.length > 0 && pageIds.every(id => selected.includes(id))
+  const selectedSet = useMemo(() => new Set(selected), [selected])
+  const someSelected = selectedSet.size > 0 && !hasAllOnPage
+
+  const tableColumns = useMemo(() => [
+    {
+      key: 'user', title: '用户',
+      render: (u: any) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }} onClick={() => setDetailUser(u)}>
+          <Avatar name={u.nickname || u.username} size={34} />
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-heading)', lineHeight: 1.3 }}>{u.nickname || u.username}</div>
+            <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>@{u.username}</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'contact', title: '联系方式',
+      render: (u: any) => (
+        <div>
+          <div style={{ fontSize: 13, color: 'var(--text-body)' }}>{u.phone ? maskPhone(u.phone) : <span style={{ color: 'var(--text-disabled)' }}>—</span>}</div>
+          <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 1 }}>{u.email ? maskEmail(u.email) : <span style={{ color: 'var(--text-disabled)' }}>—</span>}</div>
+        </div>
+      ),
+    },
+    {
+      key: 'role', title: '角色',
+      render: (u: any) => {
+        const ri = roleMap[u.role] || roleMap.member
+        const RIcon = ri.icon
+        return <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, background: ri.bg, color: ri.color, fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 3 }}><RIcon size={10} /> {ri.label}</span>
+      },
+    },
+    {
+      key: 'status', title: '状态',
+      render: (u: any) => {
+        const st = getStatusInfo(u)
+        return <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, background: st.bg, color: st.color, fontWeight: 600 }}>{st.label}</span>
+      },
+    },
+    { key: 'created', title: '注册时间', render: (u: any) => <span style={{ fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{fmtDate(u.created_at)}</span> },
+    { key: 'lastLogin', title: '最近登录', render: (u: any) => <span style={{ fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{fmtDate(u.last_login_at)}</span> },
+    {
+      key: 'actions', title: '', width: 60, headerStyle: { textAlign: 'center' as const },
+      render: (u: any) => (
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <button onClick={e => { e.stopPropagation(); setMenuOpen(menuOpen === u.id ? null : u.id) }} style={{ background: 'none', border: '1px solid var(--border-primary)', borderRadius: 6, padding: '4px 6px', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex' }}>
+              <MoreVertical size={14} />
+            </button>
+            {menuOpen === u.id && (
+              <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'var(--bg-primary)', borderRadius: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.12)', border: '1px solid var(--border-primary)', zIndex: 50, minWidth: 150, padding: '4px 0' }}>
+                <button className="dropdown-item" onClick={() => { setMenuOpen(null); setDetailUser(u) }} style={{ color: 'var(--text-body)' }}><User size={14} /> 查看详情</button>
+                <button className="dropdown-item" onClick={() => { setMenuOpen(null); openEdit(u) }} style={{ color: 'var(--text-body)' }}><Edit2 size={14} /> 编辑</button>
+                <button className="dropdown-item warning" onClick={() => { setMenuOpen(null); handleResetPwd(u) }}><KeyRound size={14} /> 重置密码</button>
+                <div style={{ height: 1, background: 'var(--border-secondary)', margin: '4px 8px' }} />
+                {u.is_active === 0 ? (
+                  <button className="dropdown-item success" onClick={() => { setMenuOpen(null); handleApprove(u) }}><CheckCircle2 size={14} /> 审批激活</button>
+                ) : (
+                  <button className="dropdown-item" onClick={() => { setMenuOpen(null); handleToggleStatus(u) }} style={{ color: u.is_active === 1 ? 'var(--color-warning)' : 'var(--color-success)' }}><Power size={14} /> {u.is_active === 1 ? '禁用' : '启用'}</button>
+                )}
+                <button className="dropdown-item danger" onClick={() => { setMenuOpen(null); handleDelete(u) }}><Trash2 size={14} /> 删除</button>
+              </div>
+            )}
+          </div>
+        </div>
+      ),
+    },
+  ], [menuOpen])
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-heading)', margin: 0, letterSpacing: '-0.02em' }}>
-            用户管理
-          </h1>
-          <p style={{ color: 'var(--text-tertiary)', margin: '4px 0 0', fontSize: 13 }}>管理平台成员账号、角色与启用状态</p>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+      <PageHeader
+        title="用户管理"
+        subtitle="管理平台成员账号、角色与启用状态"
+        actions={<>
           <Button variant="secondary" onClick={handleExport} style={{ fontSize: 13, padding: '7px 14px' }}><Download size={14} /> 导出</Button>
           <Button variant="secondary" onClick={() => setShowInviteModal(true)} style={{ fontSize: 13, padding: '7px 14px' }}><Link2 size={14} /> 邀请链接</Button>
           <Button onClick={() => setShowCreate(true)} style={{ fontSize: 13, padding: '7px 14px' }}><Plus size={14} /> 新增用户</Button>
-        </div>
-      </div>
+        </>}
+      />
 
-      {/* Stats cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
-        {overviewCards.map(s => (
-          <div key={s.label} style={{ background: 'var(--bg-primary)', borderRadius: 10, padding: '14px 16px', border: '1px solid var(--border-primary)', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 8, background: s.tone, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <s.icon size={16} color={s.color} />
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 22, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.value}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>{s.label}</div>
-            </div>
-          </div>
-        ))}
-      </div>
+      <StatsCards cards={overviewCards} columns={isMobile ? 2 : 3} />
 
-      {/* Main card */}
       <div style={{ background: 'var(--bg-primary)', borderRadius: 12, border: '1px solid var(--border-primary)' }}>
-        {/* Toolbar */}
-        <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-secondary)', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-          <div style={{ position: 'relative', flex: '1 1 200px', maxWidth: 280 }}>
-            <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="搜索姓名、账号、手机号..."
-              style={{ width: '100%', padding: '7px 30px 7px 32px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-body)' }}
-            />
-            {search && (
-              <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', padding: 0, display: 'flex' }}>
-                <X size={14} />
-              </button>
-            )}
-          </div>
-          <select value={roleFilter} onChange={e => setRoleFilter(e.target.value)} style={{ padding: '7px 10px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-body)' }}>
-            <option value="all">全部角色</option>
-            {Object.entries(roleMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-          </select>
-          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ padding: '7px 10px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-body)' }}>
-            <option value="all">全部状态</option>
-            <option value="active">启用</option>
-            <option value="pending">待审批</option>
-            <option value="disabled">禁用</option>
-          </select>
-          {hasFilters && (
-            <button onClick={clearFilters} style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
-              <X size={12} /> 清除筛选 ({activeFilterCount})
-            </button>
-          )}
-          <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginLeft: 'auto' }}>
-            {filtered.length} 条结果
-          </div>
-        </div>
+        <FilterBar
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="搜索姓名、账号、手机号..."
+          filters={[
+            { value: roleFilter, onChange: setRoleFilter, options: [{ value: 'all', label: '全部角色' }, ...Object.entries(roleMap).map(([k, v]) => ({ value: k, label: v.label }))] },
+            { value: statusFilter, onChange: setStatusFilter, options: [{ value: 'all', label: '全部状态' }, { value: 'active', label: '启用' }, { value: 'pending', label: '待审批' }, { value: 'disabled', label: '禁用' }] },
+          ]}
+          resultCount={filtered.length}
+          hasFilters={hasFilters}
+          activeFilterCount={activeFilterCount}
+          onClearFilters={clearFilters}
+        />
 
-        {/* Batch action bar */}
-        {selectedCount > 0 && (
-          <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--border-secondary)', display: 'flex', alignItems: 'center', gap: 10, background: 'var(--brand-light)' }}>
-            <span style={{ fontSize: 13, color: 'var(--brand)', fontWeight: 600 }}>已选 {selectedCount} 项</span>
-            <Button style={{ padding: '4px 12px', fontSize: 12 }} onClick={() => handleBatchToggle(true)}>批量启用</Button>
-            <Button variant="danger" style={{ padding: '4px 12px', fontSize: 12 }} onClick={() => handleBatchToggle(false)}>批量禁用</Button>
-            <button onClick={() => setSelected([])} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 12 }}>取消选择</button>
-          </div>
-        )}
+        <BatchActionBar selectedCount={selectedCount} onClear={() => setSelected([])}>
+          <Button style={{ padding: '4px 12px', fontSize: 12 }} onClick={() => handleBatchToggle(true)}>批量启用</Button>
+          <Button variant="danger" style={{ padding: '4px 12px', fontSize: 12 }} onClick={() => handleBatchToggle(false)}>批量禁用</Button>
+        </BatchActionBar>
 
-        {/* Table */}
         {loading ? (
           <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}>
             <Loader2 size={28} style={{ animation: 'spin 1s linear infinite' }} />
           </div>
         ) : filtered.length === 0 ? (
-          <div style={{ padding: 60, textAlign: 'center' }}>
-            <Users size={40} color="var(--text-disabled)" style={{ marginBottom: 12 }} />
-            <div style={{ fontSize: 15, color: 'var(--text-secondary)', marginBottom: 4 }}>暂无用户数据</div>
-            <div style={{ fontSize: 13, color: 'var(--text-tertiary)', marginBottom: 16 }}>
-              {hasFilters ? '没有找到匹配的用户，试试调整筛选条件' : '点击右上角「新增用户」来创建第一个账号'}
-            </div>
-            {!hasFilters && (
-              <Button onClick={() => setShowCreate(true)} style={{ fontSize: 13 }}><Plus size={14} /> 新增用户</Button>
-            )}
-          </div>
+          <EmptyState
+            icon={Users}
+            title="暂无用户数据"
+            subtitle={hasFilters ? '没有找到匹配的用户，试试调整筛选条件' : '点击右上角「新增用户」来创建第一个账号'}
+            action={!hasFilters ? { label: '新增用户', onClick: () => setShowCreate(true), icon: Plus } : undefined}
+          />
         ) : (
-          <>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr>
-                    <th style={{ padding: '10px 16px', fontSize: 12, fontWeight: 500, color: 'var(--text-tertiary)', textAlign: 'left', borderBottom: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', width: 40 }}>
-                      <input type="checkbox" checked={hasAllOnPage} onChange={toggleAll} style={{ cursor: 'pointer' }} />
-                    </th>
-                    {['用户', '联系方式', '角色', '状态', '注册时间', '最近登录'].map(h => (
-                      <th key={h} style={{ padding: '10px 16px', fontSize: 12, fontWeight: 500, color: 'var(--text-tertiary)', textAlign: 'left', borderBottom: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', whiteSpace: 'nowrap' }}>{h}</th>
-                    ))}
-                    <th style={{ padding: '10px 16px', fontSize: 12, fontWeight: 500, color: 'var(--text-tertiary)', textAlign: 'center', borderBottom: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', width: 60 }}></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paged.map((u: any) => {
-                    const ri = roleMap[u.role] || roleMap.member
-                    const RIcon = ri.icon
-                    const st = getStatusInfo(u)
-                    return (
-                      <tr key={u.id} style={{ borderBottom: '1px solid var(--border-secondary)' }}>
-                        <td style={{ padding: '12px 16px' }}>
-                          <input type="checkbox" checked={selected.includes(u.id)} onChange={() => toggleSelect(u.id)} style={{ cursor: 'pointer' }} />
-                        </td>
-                        <td style={{ padding: '12px 16px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }} onClick={() => setDetailUser(u)}>
-                            <Avatar name={u.nickname || u.username} size={34} />
-                            <div>
-                              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-heading)', lineHeight: 1.3 }}>{u.nickname || u.username}</div>
-                              <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>@{u.username}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td style={{ padding: '12px 16px' }}>
-                          <div style={{ fontSize: 13, color: 'var(--text-body)' }}>{u.phone ? maskPhone(u.phone) : <span style={{ color: 'var(--text-disabled)' }}>—</span>}</div>
-                          <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 1 }}>{u.email ? maskEmail(u.email) : <span style={{ color: 'var(--text-disabled)' }}>—</span>}</div>
-                        </td>
-                        <td style={{ padding: '12px 16px' }}>
-                          <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, background: ri.bg, color: ri.color, fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                            <RIcon size={10} /> {ri.label}
-                          </span>
-                        </td>
-                        <td style={{ padding: '12px 16px' }}>
-                          <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, background: st.bg, color: st.color, fontWeight: 600 }}>{st.label}</span>
-                        </td>
-                        <td style={{ padding: '12px 16px', fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{fmtDate(u.created_at)}</td>
-                        <td style={{ padding: '12px 16px', fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{fmtDate(u.last_login_at)}</td>
-                        <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                          <div style={{ position: 'relative', display: 'inline-block' }}>
-                            <button
-                              onClick={e => { e.stopPropagation(); setMenuOpen(menuOpen === u.id ? null : u.id) }}
-                              style={{ background: 'none', border: '1px solid var(--border-primary)', borderRadius: 6, padding: '4px 6px', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex' }}
-                            >
-                              <MoreVertical size={14} />
-                            </button>
-                            {menuOpen === u.id && (
-                              <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'var(--bg-primary)', borderRadius: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.12)', border: '1px solid var(--border-primary)', zIndex: 50, minWidth: 150, padding: '4px 0' }}>
-                                <button className="dropdown-item" onClick={() => { setMenuOpen(null); setDetailUser(u) }} style={{ color: 'var(--text-body)' }}>
-                                  <User size={14} /> 查看详情
-                                </button>
-                                <button className="dropdown-item" onClick={() => { setMenuOpen(null); openEdit(u) }} style={{ color: 'var(--text-body)' }}>
-                                  <Edit2 size={14} /> 编辑
-                                </button>
-                                <button className="dropdown-item warning" onClick={() => { setMenuOpen(null); handleResetPwd(u) }}>
-                                  <KeyRound size={14} /> 重置密码
-                                </button>
-                                <div style={{ height: 1, background: 'var(--border-secondary)', margin: '4px 8px' }} />
-                                {u.is_active === 0 ? (
-                                  <button className="dropdown-item success" onClick={() => { setMenuOpen(null); handleApprove(u) }}>
-                                    <CheckCircle2 size={14} /> 审批激活
-                                  </button>
-                                ) : (
-                                  <button className="dropdown-item" onClick={() => { setMenuOpen(null); handleToggleStatus(u) }} style={{ color: u.is_active === 1 ? 'var(--color-warning)' : 'var(--color-success)' }}>
-                                    <Power size={14} /> {u.is_active === 1 ? '禁用' : '启用'}
-                                  </button>
-                                )}
-                                <button className="dropdown-item danger" onClick={() => { setMenuOpen(null); handleDelete(u) }}>
-                                  <Trash2 size={14} /> 删除
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderTop: '1px solid var(--border-secondary)' }}>
-                <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
-                  {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} / {filtered.length}
-                </div>
-                <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                  <button disabled={page <= 1} onClick={() => setPage(page - 1)} style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', cursor: page <= 1 ? 'not-allowed' : 'pointer', color: page <= 1 ? 'var(--text-disabled)' : 'var(--text-body)', display: 'flex' }}><ChevronLeft size={14} /></button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 2).map((p, idx, arr) => {
-                    const prev = arr[idx - 1]
-                    const showEllipsis = prev && p - prev > 1
-                    return (
-                      <span key={p}>
-                        {showEllipsis && <span style={{ padding: '0 4px', color: 'var(--text-tertiary)', fontSize: 12 }}>…</span>}
-                        <button onClick={() => setPage(p)} style={{ minWidth: 30, padding: '5px 8px', borderRadius: 6, border: p === page ? 'none' : '1px solid var(--border-primary)', background: p === page ? 'var(--brand)' : 'var(--bg-primary)', color: p === page ? '#fff' : 'var(--text-body)', fontSize: 12, fontWeight: p === page ? 600 : 400, cursor: 'pointer' }}>{p}</button>
-                      </span>
-                    )
-                  })}
-                  <button disabled={page >= totalPages} onClick={() => setPage(page + 1)} style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', cursor: page >= totalPages ? 'not-allowed' : 'pointer', color: page >= totalPages ? 'var(--text-disabled)' : 'var(--text-body)', display: 'flex' }}><ChevronRight size={14} /></button>
-                </div>
-              </div>
-            )}
-          </>
+          <DataTable
+            columns={tableColumns}
+            data={paged}
+            rowKey={(u: any) => u.id}
+            selected={selectedSet}
+            onSelect={(id) => toggleSelect(id as number)}
+            onSelectAll={toggleAll}
+            allSelected={hasAllOnPage}
+            indeterminate={someSelected}
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            totalCount={filtered.length}
+            pageSize={PAGE_SIZE}
+          />
         )}
       </div>
 
