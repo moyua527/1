@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Plus, Trash2, Edit2, Shield, Loader2, User, Search, Power, Link2, Clock, CheckCircle2, KeyRound, Download, ChevronLeft, ChevronRight, Users, X, MoreVertical } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
-import { useUsers, useClients, useInvalidate } from '../../hooks/useApi'
+import { useUsers, useInvalidate } from '../../hooks/useApi'
 import Button from '../ui/Button'
 import Avatar from '../ui/Avatar'
 import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
+import useIsMobile from '../ui/useIsMobile'
 import UserDetailSheet from './components/UserDetailSheet'
 import UserFormModal from './components/UserFormModal'
 import InviteLinkSection from './components/InviteLinkSection'
@@ -28,8 +29,8 @@ const maskEmail = (e: string) => e ? e.replace(/(.{2}).+(@.+)/, '$1***$2') : ''
 const fmtDate = (d: string | null) => d ? new Date(d).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'
 
 export default function UserManagement() {
+  const isMobile = useIsMobile()
   const { data: users = [], isLoading: loading } = useUsers()
-  const { data: clients = [] } = useClients()
   const invalidate = useInvalidate()
   const [showCreate, setShowCreate] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
@@ -43,14 +44,14 @@ export default function UserManagement() {
   const [selected, setSelected] = useState<number[]>([])
   const [menuOpen, setMenuOpen] = useState<number | null>(null)
 
-  const load = () => invalidate('users', 'clients')
+  const load = () => invalidate('users')
 
   const filtered = useMemo(() => {
     return users.filter((u: any) => {
       if (roleFilter !== 'all' && u.role !== roleFilter) return false
       if (statusFilter === 'active' && u.is_active !== 1) return false
       if (statusFilter === 'pending' && u.is_active !== 0) return false
-      if (statusFilter === 'disabled' && u.is_active !== 2 && !(u.is_active !== 1 && u.is_active !== 0)) return false
+      if (statusFilter === 'disabled' && u.is_active !== 2) return false
       if (search.trim()) {
         const q = search.trim().toLowerCase()
         return (u.username || '').toLowerCase().includes(q) || (u.nickname || '').toLowerCase().includes(q) || (u.phone || '').includes(q) || (u.email || '').toLowerCase().includes(q)
@@ -98,10 +99,10 @@ export default function UserManagement() {
   const handleBatchToggle = async (activate: boolean) => {
     const label = activate ? '启用' : '禁用'
     if (!(await confirm({ message: `确定批量${label} ${selected.length} 个账号？`, danger: !activate }))) return
-    for (const uid of selected) {
-      await fetchApi(`/api/users/${uid}`, { method: 'PUT', body: JSON.stringify({ is_active: activate ? 1 : 2 }) })
-    }
-    toast(`已批量${label} ${selected.length} 个账号`, 'success')
+    const results = await Promise.all(selected.map(uid => fetchApi(`/api/users/${uid}`, { method: 'PUT', body: JSON.stringify({ is_active: activate ? 1 : 2 }) })))
+    const failedCount = results.filter(r => !r.success).length
+    if (failedCount === 0) toast(`已批量${label} ${selected.length} 个账号`, 'success')
+    else toast(`${failedCount} 个账号${label}失败`, 'error')
     setSelected([])
     load()
   }
@@ -115,14 +116,21 @@ export default function UserManagement() {
     const csv = '\uFEFF' + header.concat(rows).join('\n')
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
     const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
+    const url = URL.createObjectURL(blob)
+    a.href = url
     a.download = `用户列表_${new Date().toISOString().slice(0, 10)}.csv`
     a.click()
+    URL.revokeObjectURL(url)
     toast('导出成功', 'success')
   }
 
   const toggleSelect = (id: number) => setSelected(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
-  const toggleAll = () => setSelected(prev => prev.length === paged.length ? [] : paged.map(u => u.id))
+  const toggleAll = () => setSelected(prev => {
+    const pageIds = paged.map(u => u.id)
+    const hasAll = pageIds.length > 0 && pageIds.every(id => prev.includes(id))
+    if (hasAll) return prev.filter(id => !pageIds.includes(id))
+    return Array.from(new Set([...prev, ...pageIds]))
+  })
 
   useEffect(() => {
     if (!menuOpen) return
@@ -130,6 +138,16 @@ export default function UserManagement() {
     document.addEventListener('click', close)
     return () => document.removeEventListener('click', close)
   }, [menuOpen])
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages)
+  }, [page, totalPages])
+
+  const clearFilters = () => {
+    setSearch('')
+    setRoleFilter('all')
+    setStatusFilter('all')
+  }
 
   const getStatusInfo = (u: any) => {
     if (u.is_active === 0) return statusMap[0]
@@ -142,7 +160,24 @@ export default function UserManagement() {
     active: users.filter(u => u.is_active === 1).length,
     pending: users.filter(u => u.is_active === 0).length,
     admin: users.filter(u => u.role === 'admin').length,
+    disabled: users.filter(u => u.is_active === 2).length,
+    member: users.filter(u => u.role === 'member').length,
   }), [users])
+
+  const overviewCards = [
+    { label: '总账号', value: statCounts.total, hint: '平台内全部账号', color: 'var(--text-heading)', icon: Users, tone: 'rgba(15,23,42,0.05)' },
+    { label: '管理员', value: statCounts.admin, hint: '高权限账号', color: 'var(--color-danger)', icon: Shield, tone: 'rgba(239,68,68,0.12)' },
+    { label: '成员', value: statCounts.member, hint: '普通平台成员', color: 'var(--brand)', icon: User, tone: 'rgba(59,130,246,0.12)' },
+    { label: '已启用', value: statCounts.active, hint: '当前可正常登录', color: 'var(--color-success)', icon: CheckCircle2, tone: 'rgba(34,197,94,0.12)' },
+    { label: '待审批', value: statCounts.pending, hint: '等待管理员处理', color: 'var(--color-warning)', icon: Clock, tone: 'rgba(245,158,11,0.12)' },
+    { label: '已禁用', value: statCounts.disabled, hint: '当前不可登录', color: 'var(--text-secondary)', icon: Power, tone: 'rgba(100,116,139,0.12)' },
+  ]
+
+  const hasFilters = !!search.trim() || roleFilter !== 'all' || statusFilter !== 'all'
+  const activeFilterCount = [search.trim(), roleFilter !== 'all' ? roleFilter : '', statusFilter !== 'all' ? statusFilter : ''].filter(Boolean).length
+  const selectedCount = selected.length
+  const pageIds = paged.map(u => u.id)
+  const hasAllOnPage = pageIds.length > 0 && pageIds.every(id => selected.includes(id))
 
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto' }}>
@@ -162,20 +197,15 @@ export default function UserManagement() {
       </div>
 
       {/* Stats cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
-        {[
-          { label: '总用户', value: statCounts.total, color: 'var(--text-heading)', icon: Users },
-          { label: '已启用', value: statCounts.active, color: 'var(--color-success)', icon: CheckCircle2 },
-          { label: '待审批', value: statCounts.pending, color: 'var(--color-warning)', icon: Clock },
-          { label: '管理员', value: statCounts.admin, color: 'var(--brand)', icon: Shield },
-        ].map(s => (
-          <div key={s.label} style={{ background: 'var(--bg-primary)', borderRadius: 12, padding: '16px 18px', border: '1px solid var(--border-primary)', display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <s.icon size={18} color={s.color} />
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
+        {overviewCards.map(s => (
+          <div key={s.label} style={{ background: 'var(--bg-primary)', borderRadius: 10, padding: '14px 16px', border: '1px solid var(--border-primary)', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 8, background: s.tone, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <s.icon size={16} color={s.color} />
             </div>
-            <div>
-              <div style={{ fontSize: 24, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.value}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{s.label}</div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 22, fontWeight: 700, color: s.color, lineHeight: 1 }}>{s.value}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>{s.label}</div>
             </div>
           </div>
         ))}
@@ -209,15 +239,20 @@ export default function UserManagement() {
             <option value="pending">待审批</option>
             <option value="disabled">禁用</option>
           </select>
+          {hasFilters && (
+            <button onClick={clearFilters} style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <X size={12} /> 清除筛选 ({activeFilterCount})
+            </button>
+          )}
           <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginLeft: 'auto' }}>
             {filtered.length} 条结果
           </div>
         </div>
 
         {/* Batch action bar */}
-        {selected.length > 0 && (
+        {selectedCount > 0 && (
           <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--border-secondary)', display: 'flex', alignItems: 'center', gap: 10, background: 'var(--brand-light)' }}>
-            <span style={{ fontSize: 13, color: 'var(--brand)', fontWeight: 600 }}>已选 {selected.length} 项</span>
+            <span style={{ fontSize: 13, color: 'var(--brand)', fontWeight: 600 }}>已选 {selectedCount} 项</span>
             <Button style={{ padding: '4px 12px', fontSize: 12 }} onClick={() => handleBatchToggle(true)}>批量启用</Button>
             <Button variant="danger" style={{ padding: '4px 12px', fontSize: 12 }} onClick={() => handleBatchToggle(false)}>批量禁用</Button>
             <button onClick={() => setSelected([])} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 12 }}>取消选择</button>
@@ -234,9 +269,9 @@ export default function UserManagement() {
             <Users size={40} color="var(--text-disabled)" style={{ marginBottom: 12 }} />
             <div style={{ fontSize: 15, color: 'var(--text-secondary)', marginBottom: 4 }}>暂无用户数据</div>
             <div style={{ fontSize: 13, color: 'var(--text-tertiary)', marginBottom: 16 }}>
-              {search || roleFilter !== 'all' || statusFilter !== 'all' ? '没有找到匹配的用户，试试调整筛选条件' : '点击右上角「新增用户」来创建第一个账号'}
+              {hasFilters ? '没有找到匹配的用户，试试调整筛选条件' : '点击右上角「新增用户」来创建第一个账号'}
             </div>
-            {!search && roleFilter === 'all' && statusFilter === 'all' && (
+            {!hasFilters && (
               <Button onClick={() => setShowCreate(true)} style={{ fontSize: 13 }}><Plus size={14} /> 新增用户</Button>
             )}
           </div>
@@ -247,7 +282,7 @@ export default function UserManagement() {
                 <thead>
                   <tr>
                     <th style={{ padding: '10px 16px', fontSize: 12, fontWeight: 500, color: 'var(--text-tertiary)', textAlign: 'left', borderBottom: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', width: 40 }}>
-                      <input type="checkbox" checked={selected.length === paged.length && paged.length > 0} onChange={toggleAll} style={{ cursor: 'pointer' }} />
+                      <input type="checkbox" checked={hasAllOnPage} onChange={toggleAll} style={{ cursor: 'pointer' }} />
                     </th>
                     {['用户', '联系方式', '角色', '状态', '注册时间', '最近登录'].map(h => (
                       <th key={h} style={{ padding: '10px 16px', fontSize: 12, fontWeight: 500, color: 'var(--text-tertiary)', textAlign: 'left', borderBottom: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', whiteSpace: 'nowrap' }}>{h}</th>
