@@ -4,6 +4,7 @@ import Button from '../ui/Button'
 import { useEnterprise } from './useEnterprise'
 import JoinCreateModals from './JoinCreateModals'
 import useUserStore from '../../stores/useUserStore'
+import useEnterpriseStore from '../../stores/useEnterpriseStore'
 
 export default function EnterpriseOnboarding() {
   const h = useEnterprise()
@@ -11,7 +12,7 @@ export default function EnterpriseOnboarding() {
   const logout = useUserStore(s => s.logout)
 
   useEffect(() => {
-    if (h.data) useUserStore.getState().setHasEnterprise(true)
+    if (h.data) useEnterpriseStore.getState().setHasEnterprise(true)
   }, [h.data])
 
   return (

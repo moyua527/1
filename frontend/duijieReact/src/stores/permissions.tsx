@@ -1,4 +1,5 @@
 import useUserStore from './useUserStore'
+import useEnterpriseStore from './useEnterpriseStore'
 
 const PERMISSIONS: Record<string, string[]> = {
   'dashboard:view':       ['admin', 'member'],
@@ -55,7 +56,7 @@ export function can(role: string, permission: string): boolean {
   if (allowed && allowed.includes(role)) return true
   const entKey = PERM_TO_ENTERPRISE[permission]
   if (entKey) {
-    const perms = useUserStore.getState().enterprisePerms as any
+    const perms = useEnterpriseStore.getState().enterprisePerms as any
     if (perms?.is_creator || perms?.[entKey]) return true
   }
   return false
@@ -63,7 +64,7 @@ export function can(role: string, permission: string): boolean {
 
 export function usePermission(permission: string): boolean {
   const role = useUserStore(s => s.user?.role) || ''
-  const enterprisePerms = useUserStore(s => s.enterprisePerms)
+  const enterprisePerms = useEnterpriseStore(s => s.enterprisePerms)
   const allowed = PERMISSIONS[permission]
   if (allowed && allowed.includes(role)) return true
   const entKey = PERM_TO_ENTERPRISE[permission]

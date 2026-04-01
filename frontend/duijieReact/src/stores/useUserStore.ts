@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { authApi } from '../features/auth/services/api'
 import { fetchApi, clearToken } from '../bootstrap'
+import useEnterpriseStore from './useEnterpriseStore'
 
 interface User {
   id: number
@@ -17,28 +18,11 @@ interface User {
   personal_invite_code?: string
 }
 
-interface EnterprisePerms {
-  is_creator?: boolean
-  can_manage_members?: boolean
-  can_manage_roles?: boolean
-  can_create_project?: boolean
-  can_edit_project?: boolean
-  can_delete_project?: boolean
-  can_manage_client?: boolean
-  can_view_report?: boolean
-  can_manage_task?: boolean
-}
-
 interface UserState {
   user: User | null
   checking: boolean
-  hasEnterprise: boolean
-  enterprisePerms: EnterprisePerms
   setUser: (user: User | null) => void
-  setHasEnterprise: (v: boolean) => void
-  setEnterprisePerms: (perms: EnterprisePerms) => void
   init: () => Promise<void>
-  checkEnterprise: () => Promise<void>
   logout: () => Promise<void>
   updateProfile: (data: Partial<User>) => void
 }
@@ -68,34 +52,13 @@ function isHardAuthFailure(r: any) {
 const useUserStore = create<UserState>((set, get) => ({
   user: readCache(),
   checking: true,
-  hasEnterprise: true,
-  enterprisePerms: {},
 
   setUser: (user) => {
     writeCache(user)
-    set({ user, hasEnterprise: true, enterprisePerms: {} })
+    set({ user })
     if (user) {
-      setTimeout(() => get().checkEnterprise(), 0)
+      setTimeout(() => useEnterpriseStore.getState().init(user.role), 0)
     }
-  },
-
-  setHasEnterprise: (v) => set({ hasEnterprise: v }),
-  setEnterprisePerms: (perms) => set({ enterprisePerms: perms }),
-
-  checkEnterprise: async () => {
-    const u = get().user
-    if (!u || u.role === 'admin') { set({ hasEnterprise: true }); return }
-    try {
-      const r = await fetchApi('/api/my-enterprise')
-      if (r.success && r.data) {
-        set({ hasEnterprise: true })
-        if (r.data.enterprisePerms) set({ enterprisePerms: r.data.enterprisePerms })
-        else set({ enterprisePerms: {} })
-      } else if (r.success) {
-        set({ hasEnterprise: false })
-        set({ enterprisePerms: {} })
-      }
-    } catch {}
   },
 
   init: async () => {
@@ -104,36 +67,34 @@ const useUserStore = create<UserState>((set, get) => ({
       const r = await authApi.me()
       if (r.success) {
         writeCache(r.data)
+        set({ user: r.data })
         if (r.data.role === 'admin') {
-          set({ user: r.data, hasEnterprise: true, checking: false, enterprisePerms: {} })
-          fetchApi('/api/my-enterprise').then(er => {
-            if (er.success && er.data?.enterprisePerms) set({ enterprisePerms: er.data.enterprisePerms })
-          }).catch(() => {})
+          set({ checking: false })
+          useEnterpriseStore.getState().init(r.data.role)
         } else {
-          set({ user: r.data, hasEnterprise: true, checking: true, enterprisePerms: {} })
-          await get().checkEnterprise()
+          await useEnterpriseStore.getState().init(r.data.role)
           set({ checking: false })
         }
       } else if (isHardAuthFailure(r)) {
         clearToken()
         writeCache(null)
-        set({ user: null, checking: false, hasEnterprise: true, enterprisePerms: {} })
+        set({ user: null, checking: false })
       } else if (cachedUser) {
-        set({ user: cachedUser, checking: false, hasEnterprise: true, enterprisePerms: {} })
+        set({ user: cachedUser, checking: false })
         if (cachedUser.role !== 'admin') {
-          get().checkEnterprise().catch(() => {})
+          useEnterpriseStore.getState().init(cachedUser.role).catch(() => {})
         }
       } else {
-        set({ user: null, checking: false, hasEnterprise: true, enterprisePerms: {} })
+        set({ user: null, checking: false })
       }
     } catch {
       if (cachedUser) {
-        set({ user: cachedUser, checking: false, hasEnterprise: true, enterprisePerms: {} })
+        set({ user: cachedUser, checking: false })
         if (cachedUser.role !== 'admin') {
-          get().checkEnterprise().catch(() => {})
+          useEnterpriseStore.getState().init(cachedUser.role).catch(() => {})
         }
       } else {
-        set({ user: null, checking: false, hasEnterprise: true, enterprisePerms: {} })
+        set({ user: null, checking: false })
       }
     }
   },
@@ -149,7 +110,8 @@ const useUserStore = create<UserState>((set, get) => ({
     clearToken()
     localStorage.removeItem('push_device_token')
     writeCache(null)
-    set({ user: null, hasEnterprise: true, enterprisePerms: {} })
+    useEnterpriseStore.getState().reset()
+    set({ user: null })
     window.location.href = '/'
   },
 

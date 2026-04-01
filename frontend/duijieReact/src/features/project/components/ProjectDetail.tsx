@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
 import { ArrowLeft, Trash2, AppWindow, ExternalLink } from 'lucide-react'
 import { can } from '../../../stores/permissions'
+import useEnterpriseStore from '../../../stores/useEnterpriseStore'
 import useProjectPerms from '../../../hooks/useProjectPerms'
 import Modal from '../../ui/Modal'
 import { fetchApi } from '../../../bootstrap'
@@ -64,7 +65,7 @@ export default function ProjectDetail() {
   const [clientModal, setClientModal] = useState(false)
   const [clientData, setClientData] = useState<any>(null)
   const [enterpriseRoles, setEnterpriseRoles] = useState<any[]>([])
-  const [activeEnterpriseId, setActiveEnterpriseId] = useState<number | null>(null)
+  const activeEnterpriseId = useEnterpriseStore(s => s.activeEnterpriseId)
 
   const openClientModal = (clientId: number) => {
     setClientModal(true)
@@ -118,10 +119,6 @@ export default function ProjectDetail() {
     setProject(null)
     loadProject()
     loadTasks()
-    fetchApi('/api/my-enterprise').then(r => {
-      if (r.success && r.data?.activeId) setActiveEnterpriseId(Number(r.data.activeId))
-      else setActiveEnterpriseId(null)
-    }).catch(() => setActiveEnterpriseId(null))
   }, [id, loadProject])
 
   if (projectLoading) return <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}>加载中...</div>

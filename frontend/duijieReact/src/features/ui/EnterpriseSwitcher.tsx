@@ -1,40 +1,27 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Building2, Crown, Shield, Check, ChevronDown } from 'lucide-react'
-import { fetchApi } from '../../bootstrap'
+import useEnterpriseStore from '../../stores/useEnterpriseStore'
 
 export default function EnterpriseSwitcher() {
   const location = useLocation()
-  const [myEnterprises, setMyEnterprises] = useState<any[]>([])
-  const [activeEntId, setActiveEntId] = useState<number | null>(null)
+  const { myEnterprises, activeEnterpriseId, switchEnterprise: storeSwitchEnterprise, refresh } = useEnterpriseStore()
   const [entDropdownOpen, setEntDropdownOpen] = useState(false)
 
-  const loadMyEnterprises = () => {
-    fetchApi('/api/my-enterprise').then(r => {
-      if (r.success && r.data) {
-        setMyEnterprises(r.data.enterprises || [])
-        setActiveEntId(r.data.activeId || null)
-      }
-    })
-  }
-
-  useEffect(() => { loadMyEnterprises() }, [])
-  useEffect(() => { if (location.pathname === '/enterprise') loadMyEnterprises() }, [location.pathname])
+  useEffect(() => { if (location.pathname === '/enterprise') refresh() }, [location.pathname])
   useEffect(() => { setEntDropdownOpen(false) }, [location.pathname])
 
-  const switchEnterprise = (id: number) => {
-    fetchApi('/api/my-enterprise/switch', { method: 'PUT', body: JSON.stringify({ enterprise_id: id }) }).then(r => {
-      if (r.success) {
-        setActiveEntId(id)
-        setEntDropdownOpen(false)
-        if (location.pathname === '/enterprise') window.location.reload()
-      }
-    })
+  const handleSwitch = async (id: number) => {
+    const ok = await storeSwitchEnterprise(id)
+    if (ok) {
+      setEntDropdownOpen(false)
+      if (location.pathname === '/enterprise') window.location.reload()
+    }
   }
 
   if (myEnterprises.length === 0) return null
 
-  const activeEnt = myEnterprises.find((e: any) => e.id === activeEntId)
+  const activeEnt = myEnterprises.find((e: any) => e.id === activeEnterpriseId)
 
   return (
     <div style={{ padding: '6px 16px', borderBottom: '1px solid var(--border-secondary)' }}>
@@ -71,9 +58,9 @@ export default function EnterpriseSwitcher() {
             zIndex: 10, maxHeight: 200, overflowY: 'auto',
           }}>
             {myEnterprises.map((ent: any) => {
-              const isActive = ent.id === activeEntId
+              const isActive = ent.id === activeEnterpriseId
               return (
-                <div key={ent.id} onClick={() => { if (!isActive) switchEnterprise(ent.id) }}
+                <div key={ent.id} onClick={() => { if (!isActive) handleSwitch(ent.id) }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px',
                     cursor: isActive ? 'default' : 'pointer', fontSize: 12,

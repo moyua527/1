@@ -7,6 +7,7 @@ import ToastContainer from './features/ui/Toast'
 import AppUpdateChecker from './features/ui/AppUpdateChecker'
 import ErrorBoundary from './features/ui/ErrorBoundary'
 import useUserStore from './stores/useUserStore'
+import useEnterpriseStore from './stores/useEnterpriseStore'
 import { can } from './stores/permissions'
 import EnterpriseOnboarding from './features/enterprise/EnterpriseOnboarding'
 import { flatRoutes, prefetchPages } from './data/routeManifest'
@@ -29,7 +30,8 @@ function prefetchHighFreq() {
 }
 
 export default function App() {
-  const { user, checking, hasEnterprise, setUser, init } = useUserStore()
+  const { user, checking, setUser, init } = useUserStore()
+  const hasEnterprise = useEnterpriseStore(s => s.hasEnterprise)
 
   useEffect(() => { init() }, [init])
 
