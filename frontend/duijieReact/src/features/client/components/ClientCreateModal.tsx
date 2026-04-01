@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Building2, UserCircle } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Building2, UserCircle, Search } from 'lucide-react'
 import { clientApi } from '../services/api'
 import Modal from '../../ui/Modal'
 import Input from '../../ui/Input'
@@ -25,12 +25,51 @@ export default function ClientCreateModal({ open, onClose, onCreated }: Props) {
   const [form, setForm] = useState({ client_type: 'company', name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', assigned_to: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [enterpriseMembers, setEnterpriseMembers] = useState<any[]>([])
+  const [existingClients, setExistingClients] = useState<any[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showDropdown, setShowDropdown] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (open) {
       clientApi.availableMembers().then(r => { if (r.success) setEnterpriseMembers(r.data || []) })
+      clientApi.list().then(r => { if (r.success) setExistingClients((r.data || []).filter((c: any) => c.client_type === 'company')) })
+      setSearchQuery('')
+      setShowDropdown(false)
     }
   }, [open])
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setShowDropdown(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const filteredClients = searchQuery.trim()
+    ? existingClients.filter((c: any) =>
+        (c.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (c.company || '').toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : []
+
+  const handleSelectExisting = (client: any) => {
+    setForm({
+      ...form,
+      client_type: client.client_type || 'company',
+      name: client.name || '',
+      company: client.company || '',
+      email: client.email || '',
+      phone: client.phone || '',
+      channel: client.channel || form.channel,
+      stage: client.stage || form.stage,
+    })
+    setSearchQuery('')
+    setShowDropdown(false)
+    setErrors({})
+    toast('已填入已有企业信息，请检查后提交', 'success')
+  }
 
   const handleCreate = async () => {
     const e: Record<string, string> = {}
@@ -69,6 +108,40 @@ export default function ClientCreateModal({ open, onClose, onCreated }: Props) {
             ))}
           </div>
         </div>
+        {form.client_type === 'company' && (
+          <div ref={searchRef} style={{ position: 'relative' }}>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>搜索已有企业（选填）</label>
+            <div style={{ position: 'relative' }}>
+              <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)', pointerEvents: 'none' }} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => { setSearchQuery(e.target.value); setShowDropdown(true) }}
+                onFocus={() => { if (searchQuery.trim()) setShowDropdown(true) }}
+                placeholder="输入企业名称搜索已有客户..."
+                style={{ width: '100%', padding: '8px 12px 8px 30px', borderRadius: 8, border: '1px solid var(--text-disabled)', fontSize: 13, outline: 'none', background: 'var(--bg-secondary)', boxSizing: 'border-box' }}
+              />
+            </div>
+            {showDropdown && filteredClients.length > 0 && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', maxHeight: 200, overflowY: 'auto', marginTop: 4 }}>
+                {filteredClients.map((c: any) => (
+                  <div key={c.id} onClick={() => handleSelectExisting(c)}
+                    style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border-secondary)', transition: 'background 0.1s' }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-primary)'}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)' }}>{c.name}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{c.company || '未填写公司'}{c.email ? ` · ${c.email}` : ''}{c.phone ? ` · ${c.phone}` : ''}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {showDropdown && searchQuery.trim() && filteredClients.length === 0 && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', padding: '12px 14px', marginTop: 4 }}>
+                <div style={{ fontSize: 13, color: 'var(--text-tertiary)', textAlign: 'center' }}>未找到匹配企业，请手动填写</div>
+              </div>
+            )}
+          </div>
+        )}
         <div>
           <Input label="客户名称 *" placeholder="输入客户名称" value={form.name} onChange={e => { setForm({ ...form, name: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.name; return n }) }} />
           {errors.name && <div style={errStyle}>{errors.name}</div>}

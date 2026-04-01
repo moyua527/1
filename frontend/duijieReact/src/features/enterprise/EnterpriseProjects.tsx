@@ -4,6 +4,7 @@ import { fetchApi } from '../../bootstrap'
 import { section } from './constants'
 import Badge from '../ui/Badge'
 import ProgressBar from '../ui/ProgressBar'
+import useEnterpriseStore from '../../stores/useEnterpriseStore'
 
 const statusMap: Record<string, { label: string; color: string }> = {
   planning: { label: '规划中', color: 'var(--text-secondary)' },
@@ -16,6 +17,7 @@ const statusMap: Record<string, { label: string; color: string }> = {
 export default function EnterpriseProjects() {
   const [projects, setProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const { activeEnterpriseId } = useEnterpriseStore()
 
   useEffect(() => {
     fetchApi('/api/my-enterprise/projects').then(r => {
@@ -53,8 +55,15 @@ export default function EnterpriseProjects() {
                   {p.description && <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.5 }}>{p.description.length > 100 ? p.description.slice(0, 100) + '...' : p.description}</div>}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--text-tertiary)', flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-                      {p.internal_client_name && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><TrendingUp size={12} /> 我方企业：{p.internal_client_name}</span>}
-                      {p.client_name && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><TrendingUp size={12} /> 客户企业：{p.client_name}</span>}
+                      {(() => {
+                        const isClientSide = activeEnterpriseId && p.client_id === activeEnterpriseId && p.internal_client_id !== activeEnterpriseId
+                        const myName = isClientSide ? p.client_name : p.internal_client_name
+                        const otherName = isClientSide ? p.internal_client_name : p.client_name
+                        return <>
+                          {myName && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><TrendingUp size={12} /> 我方企业：{myName}</span>}
+                          {otherName && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><TrendingUp size={12} /> 客户企业：{otherName}</span>}
+                        </>
+                      })()}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                     {p.creator_name && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><User size={12} /> {p.creator_name}</span>}

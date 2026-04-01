@@ -4,6 +4,7 @@ import { Plus, FolderKanban, Loader2, Download } from 'lucide-react'
 import { projectApi } from './services/api'
 import { can } from '../../stores/permissions'
 import { useProjects, useInvalidate } from '../../hooks/useApi'
+import useEnterpriseStore from '../../stores/useEnterpriseStore'
 import Button from '../ui/Button'
 import Badge from '../ui/Badge'
 import ProgressBar from '../ui/ProgressBar'
@@ -38,6 +39,7 @@ const cardStyle: React.CSSProperties = {
 export default function ProjectList() {
   const { data: projects = [], isLoading: loading } = useProjects()
   const invalidate = useInvalidate()
+  const { activeEnterpriseId } = useEnterpriseStore()
   const [showCreate, setShowCreate] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({ name: '', description: '' })
@@ -112,8 +114,16 @@ export default function ProjectList() {
                 </div>
                 {(p.internal_client_name || p.client_name) && (
                   <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <div>我方企业: {p.internal_client_name || '-'}</div>
-                    <div>客户企业: {p.client_name || '-'}</div>
+                    {(() => {
+                      // 根据活跃企业视角动态显示我方/客户
+                      const isClientSide = activeEnterpriseId && p.client_id === activeEnterpriseId && p.internal_client_id !== activeEnterpriseId
+                      const myName = isClientSide ? (p.client_name || '-') : (p.internal_client_name || '-')
+                      const otherName = isClientSide ? (p.internal_client_name || '-') : (p.client_name || '-')
+                      return <>
+                        <div>我方企业: {myName}</div>
+                        <div>客户企业: {otherName}</div>
+                      </>
+                    })()}
                   </div>
                 )}
                 {p.description && <div style={{ fontSize: 13, color: 'var(--text-tertiary)', marginBottom: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: isMobile ? 'normal' : 'nowrap', wordBreak: 'break-word' }}>{p.description}</div>}
