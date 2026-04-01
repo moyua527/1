@@ -9,29 +9,7 @@ import ErrorBoundary from './features/ui/ErrorBoundary'
 import useUserStore from './stores/useUserStore'
 import { can } from './stores/permissions'
 import EnterpriseOnboarding from './features/enterprise/EnterpriseOnboarding'
-
-const importFns = {
-  dashboard:    () => import('./features/dashboard/index'),
-  projectList:  () => import('./features/project/index'),
-  projectDetail:() => import('./features/project/components/ProjectDetail'),
-  clientList:   () => import('./features/client/index'),
-  clientDetail: () => import('./features/client/components/ClientDetail'),
-  taskBoard:    () => import('./features/task/index'),
-  report:       () => import('./features/dashboard/Report'),
-  userMgmt:     () => import('./features/user/index'),
-  opportunity:  () => import('./features/opportunity/index'),
-  messaging:    () => import('./features/messaging/index'),
-  auditLog:     () => import('./features/audit/index'),
-  fileManager:  () => import('./features/file/index'),
-  settings:     () => import('./features/settings/index'),
-  enterprise:   () => import('./features/enterprise/index'),
-  ticket:       () => import('./features/ticket/index'),
-  partner:      () => import('./features/partner/index'),
-  userSettings: () => import('./features/user-settings/index'),
-  contact:      () => import('./features/contact/index'),
-  calendar:     () => import('./features/calendar/index'),
-  notification: () => import('./features/notification/index'),
-}
+import { flatRoutes, prefetchPages } from './data/routeManifest'
 
 function lazyLoad(importFn: () => Promise<{ default: ComponentType<any> }>) {
   return lazy(() => importFn().catch(() => {
@@ -40,31 +18,14 @@ function lazyLoad(importFn: () => Promise<{ default: ComponentType<any> }>) {
   }))
 }
 
-const Dashboard = lazyLoad(importFns.dashboard)
-const ProjectList = lazyLoad(importFns.projectList)
-const ProjectDetail = lazyLoad(importFns.projectDetail)
-const ClientList = lazyLoad(importFns.clientList)
-const ClientDetail = lazyLoad(importFns.clientDetail)
-const TaskBoard = lazyLoad(importFns.taskBoard)
-const Report = lazyLoad(importFns.report)
-const UserManagement = lazyLoad(importFns.userMgmt)
-const OpportunityList = lazyLoad(importFns.opportunity)
-const Messaging = lazyLoad(importFns.messaging)
-const AuditLog = lazyLoad(importFns.auditLog)
-const FileManager = lazyLoad(importFns.fileManager)
-const SystemSettings = lazyLoad(importFns.settings)
-const Enterprise = lazyLoad(importFns.enterprise)
-const TicketPage = lazyLoad(importFns.ticket)
-const PartnerManagement = lazyLoad(importFns.partner)
-const UserSettingsPage = lazyLoad(importFns.userSettings)
-const ContactList = lazyLoad(importFns.contact)
-const CalendarPage = lazyLoad(importFns.calendar)
-const NotificationCenter = lazyLoad(importFns.notification)
+// Build lazy components from manifest (once at module level)
+const routeComponents = new Map<string, ComponentType<any>>()
+for (const r of flatRoutes()) {
+  routeComponents.set(r.path, lazyLoad(r.importFn))
+}
 
-// Only prefetch high-frequency pages instead of all routes
-const HIGH_FREQ_PAGES = ['dashboard', 'projectList', 'clientList', 'taskBoard', 'messaging'] as const
 function prefetchHighFreq() {
-  HIGH_FREQ_PAGES.forEach(key => importFns[key]().catch(() => {}))
+  prefetchPages().forEach(fn => fn().catch(() => {}))
 }
 
 export default function App() {
@@ -84,16 +45,7 @@ export default function App() {
   if (!hasEnterprise) return <><ToastContainer /><EnterpriseOnboarding /></>
 
   const r = user.role
-  const canProjects = can(r, 'project:view')
-  const canClients = can(r, 'client:manage')
-  const canViewClient = can(r, 'client:view')
-  const canOpportunities = can(r, 'opportunity:view')
-  const canTasks = can(r, 'task:view')
-  const canReport = can(r, 'report:view')
-  const canUsers = can(r, 'user:manage')
-  const canAudit = can(r, 'audit:view')
-  const canSettings = can(r, 'settings:manage')
-  const canTickets = can(r, 'ticket:view')
+  const allowed = flatRoutes().filter(rt => !rt.perm || can(r, rt.perm))
 
   return (
     <ErrorBoundary>
@@ -103,26 +55,10 @@ export default function App() {
       <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)', padding: 40 }}>加载中...</div>}>
         <Routes>
           <Route element={<Layout />}>
-            <Route path="/" element={<Dashboard />} />
-            {canProjects && <Route path="/projects" element={<ProjectList />} />}
-            {canProjects && <Route path="/projects/:id" element={<ProjectDetail />} />}
-            {canClients && <Route path="/clients" element={<ClientList />} />}
-            {canViewClient && <Route path="/clients/:id" element={<ClientDetail />} />}
-            {canOpportunities && <Route path="/opportunities" element={<OpportunityList />} />}
-            {canTasks && <Route path="/tasks" element={<TaskBoard />} />}
-            <Route path="/enterprise" element={<Enterprise />} />
-            <Route path="/contacts" element={<ContactList />} />
-            <Route path="/messaging" element={<Messaging />} />
-            {canTickets && <Route path="/tickets" element={<TicketPage />} />}
-            {canReport && <Route path="/report" element={<Report />} />}
-            {canUsers && <Route path="/users" element={<UserManagement />} />}
-            <Route path="/files" element={<FileManager />} />
-            <Route path="/calendar" element={<CalendarPage />} />
-            <Route path="/notifications" element={<NotificationCenter />} />
-            <Route path="/user-settings" element={<UserSettingsPage />} />
-            {canAudit && <Route path="/audit" element={<AuditLog />} />}
-            {canSettings && <Route path="/settings" element={<SystemSettings />} />}
-            {canSettings && <Route path="/partners" element={<PartnerManagement />} />}
+            {allowed.map(rt => {
+              const Comp = routeComponents.get(rt.path)!
+              return <Route key={rt.path} path={rt.path} element={<Comp />} />
+            })}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FolderKanban, Users, ListTodo, Menu, X, LogOut, BarChart3, Shield, Settings, TrendingUp, MessageSquare, ScrollText, FileText, Building2, Ticket, Plug2, User, ChevronRight, Palette, Bell, CalendarDays, BellRing } from 'lucide-react'
+import { Menu, X, LogOut, User, ChevronRight, Palette, Bell, Settings } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
 import { can } from '../../stores/permissions'
@@ -13,25 +13,7 @@ import ProfileModal from './ProfileModal'
 import ThemeToggle from './ThemeToggle'
 import SettingsPanel from './SettingsPanel'
 import EnterpriseSwitcher from './EnterpriseSwitcher'
-
-const ALL_NAV_ITEMS = [
-  { path: '/', label: '仪表盘', icon: LayoutDashboard, perm: 'dashboard:view' },
-  { path: '/projects', label: '项目管理', icon: FolderKanban, perm: 'project:view' },
-  { path: '/clients', label: '客户管理', icon: Users, perm: 'client:view' },
-  { path: '/opportunities', label: '商机管理', icon: TrendingUp, perm: 'opportunity:view' },
-  { path: '/tasks', label: '任务看板', icon: ListTodo, perm: 'task:view' },
-  { path: '/enterprise', label: '企业管理', icon: Building2, perm: 'enterprise:view' },
-  { path: '/messaging', label: '消息', icon: MessageSquare, perm: 'messaging:view' },
-  { path: '/tickets', label: '工单系统', icon: Ticket, perm: 'ticket:view' },
-  { path: '/calendar', label: '日历日程', icon: CalendarDays, perm: 'dashboard:view' },
-  { path: '/report', label: '数据报表', icon: BarChart3, perm: 'report:view' },
-  { path: '/files', label: '文件管理', icon: FileText, perm: 'file:view' },
-  { path: '/notifications', label: '通知中心', icon: BellRing, perm: 'dashboard:view' },
-  { path: '/users', label: '用户管理', icon: Shield, perm: 'user:manage' },
-  { path: '/audit', label: '审计日志', icon: ScrollText, perm: 'audit:view' },
-  { path: '/partners', label: '合作方管理', icon: Plug2, perm: 'partner:manage' },
-  { path: '/settings', label: '系统配置', icon: Settings, perm: 'settings:manage' },
-]
+import { navItems } from '../../data/routeManifest'
 
 export default function Layout() {
   const isMobile = useIsMobile()
@@ -45,7 +27,7 @@ export default function Layout() {
   const navigate = useNavigate()
   const location = useLocation()
   const role = user?.role || 'member'
-  const NAV_ITEMS = ALL_NAV_ITEMS.filter(n => can(role, n.perm))
+  const NAV_ITEMS = navItems().filter(n => !n.perm || can(role, n.perm))
   const currentNav = NAV_ITEMS.find(n => n.path === '/' ? location.pathname === '/' : location.pathname.startsWith(n.path))
 
   useEffect(() => { if (isMobile) setMobileMenuOpen(false) }, [location.pathname, isMobile])
