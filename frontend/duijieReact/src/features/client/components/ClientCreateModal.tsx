@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import { Building2, UserCircle, Search } from 'lucide-react'
+import { Building2, UserCircle, Search, Send, Users } from 'lucide-react'
 import { clientApi } from '../services/api'
+import enterpriseApi from '../../enterprise/services/api'
 import Modal from '../../ui/Modal'
 import Input from '../../ui/Input'
 import Button from '../../ui/Button'
@@ -25,17 +26,25 @@ export default function ClientCreateModal({ open, onClose, onCreated }: Props) {
   const [form, setForm] = useState({ client_type: 'company', name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', assigned_to: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [enterpriseMembers, setEnterpriseMembers] = useState<any[]>([])
-  const [existingClients, setExistingClients] = useState<any[]>([])
+  // 企业搜索
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<any[]>([])
   const [showDropdown, setShowDropdown] = useState(false)
+  const [searching, setSearching] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // 添加模式: 'search' 搜索平台企业 | 'manual' 手动填写
+  const [addMode, setAddMode] = useState<'search' | 'manual'>('search')
 
   useEffect(() => {
     if (open) {
       clientApi.availableMembers().then(r => { if (r.success) setEnterpriseMembers(r.data || []) })
-      clientApi.list().then(r => { if (r.success) setExistingClients((r.data || []).filter((c: any) => c.client_type === 'company')) })
       setSearchQuery('')
+      setSearchResults([])
       setShowDropdown(false)
+      setAddMode('search')
+      setForm({ client_type: 'company', name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', assigned_to: '' })
+      setErrors({})
     }
   }, [open])
 
@@ -47,28 +56,29 @@ export default function ClientCreateModal({ open, onClose, onCreated }: Props) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const filteredClients = searchQuery.trim()
-    ? existingClients.filter((c: any) =>
-        (c.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (c.company || '').toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : []
+  const doSearch = (q: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (!q.trim()) { setSearchResults([]); setShowDropdown(false); return }
+    debounceRef.current = setTimeout(async () => {
+      setSearching(true)
+      const r = await enterpriseApi.searchEnterprises(q.trim())
+      setSearching(false)
+      if (r.success) { setSearchResults(r.data || []); setShowDropdown(true) }
+    }, 300)
+  }
 
-  const handleSelectExisting = (client: any) => {
-    setForm({
-      ...form,
-      client_type: client.client_type || 'company',
-      name: client.name || '',
-      company: client.company || '',
-      email: client.email || '',
-      phone: client.phone || '',
-      channel: client.channel || form.channel,
-      stage: client.stage || form.stage,
-    })
-    setSearchQuery('')
-    setShowDropdown(false)
-    setErrors({})
-    toast('已填入已有企业信息，请检查后提交', 'success')
+  const handleSendRequest = async (enterprise: any) => {
+    setSubmitting(true)
+    const r = await clientApi.sendClientRequest({ to_enterprise_id: enterprise.id })
+    setSubmitting(false)
+    if (r.success) {
+      toast(`已向「${enterprise.name}」发送添加请求，等待对方审批`, 'success')
+      setSearchQuery('')
+      setSearchResults([])
+      setShowDropdown(false)
+      onClose()
+      onCreated()
+    } else toast(r.message || '发送失败', 'error')
   }
 
   const handleCreate = async () => {
@@ -91,15 +101,16 @@ export default function ClientCreateModal({ open, onClose, onCreated }: Props) {
   }
 
   const errStyle: React.CSSProperties = { fontSize: 12, color: 'var(--color-danger)', marginTop: 4 }
+  const labelStyle: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }
 
   return (
     <Modal open={open} onClose={onClose} title="新增客户">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>客户类型</label>
+          <label style={labelStyle}>客户类型</label>
           <div style={{ display: 'flex', gap: 0, background: 'var(--bg-tertiary)', borderRadius: 8, padding: 3 }}>
             {[{ key: 'company', label: '企业客户', icon: Building2 }, { key: 'individual', label: '个人客户', icon: UserCircle }].map(t => (
-              <button key={t.key} type="button" onClick={() => setForm({ ...form, client_type: t.key, company: t.key === 'individual' ? '' : form.company })}
+              <button key={t.key} type="button" onClick={() => { setForm({ ...form, client_type: t.key, company: t.key === 'individual' ? '' : form.company }); setAddMode(t.key === 'company' ? 'search' : 'manual') }}
                 style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500,
                   background: form.client_type === t.key ? 'var(--bg-primary)' : 'transparent', color: form.client_type === t.key ? 'var(--text-heading)' : 'var(--text-secondary)',
                   boxShadow: form.client_type === t.key ? '0 1px 3px rgba(0,0,0,0.08)' : 'none', transition: 'all 0.15s' }}>
@@ -108,89 +119,125 @@ export default function ClientCreateModal({ open, onClose, onCreated }: Props) {
             ))}
           </div>
         </div>
-        {form.client_type === 'company' && (
-          <div ref={searchRef} style={{ position: 'relative' }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>搜索已有企业（选填）</label>
-            <div style={{ position: 'relative' }}>
-              <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)', pointerEvents: 'none' }} />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => { setSearchQuery(e.target.value); setShowDropdown(true) }}
-                onFocus={() => { if (searchQuery.trim()) setShowDropdown(true) }}
-                placeholder="输入企业名称搜索已有客户..."
-                style={{ width: '100%', padding: '8px 12px 8px 30px', borderRadius: 8, border: '1px solid var(--text-disabled)', fontSize: 13, outline: 'none', background: 'var(--bg-secondary)', boxSizing: 'border-box' }}
-              />
-            </div>
-            {showDropdown && filteredClients.length > 0 && (
-              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', maxHeight: 200, overflowY: 'auto', marginTop: 4 }}>
-                {filteredClients.map((c: any) => (
-                  <div key={c.id} onClick={() => handleSelectExisting(c)}
-                    style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border-secondary)', transition: 'background 0.1s' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-primary)'}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)' }}>{c.name}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{c.company || '未填写公司'}{c.email ? ` · ${c.email}` : ''}{c.phone ? ` · ${c.phone}` : ''}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-            {showDropdown && searchQuery.trim() && filteredClients.length === 0 && (
-              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', padding: '12px 14px', marginTop: 4 }}>
-                <div style={{ fontSize: 13, color: 'var(--text-tertiary)', textAlign: 'center' }}>未找到匹配企业，请手动填写</div>
-              </div>
-            )}
-          </div>
-        )}
-        <div>
-          <Input label="客户名称 *" placeholder="输入客户名称" value={form.name} onChange={e => { setForm({ ...form, name: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.name; return n }) }} />
-          {errors.name && <div style={errStyle}>{errors.name}</div>}
-        </div>
+
         {form.client_type === 'company' && (
           <div>
-            <Input label="公司名称 *" placeholder="输入对方公司名称" value={form.company} onChange={e => { setForm({ ...form, company: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.company; return n }) }} />
-            {errors.company && <div style={errStyle}>{errors.company}</div>}
+            <div style={{ display: 'flex', gap: 0, background: 'var(--bg-tertiary)', borderRadius: 8, padding: 3 }}>
+              {[{ key: 'search' as const, label: '搜索平台企业', icon: Search }, { key: 'manual' as const, label: '手动填写', icon: Building2 }].map(t => (
+                <button key={t.key} type="button" onClick={() => setAddMode(t.key)}
+                  style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '7px 0', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 500,
+                    background: addMode === t.key ? 'var(--bg-primary)' : 'transparent', color: addMode === t.key ? 'var(--brand)' : 'var(--text-tertiary)',
+                    boxShadow: addMode === t.key ? '0 1px 3px rgba(0,0,0,0.08)' : 'none', transition: 'all 0.15s' }}>
+                  <t.icon size={12} /> {t.label}
+                </button>
+              ))}
+            </div>
           </div>
         )}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <Input label="邮箱" placeholder="name@example.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-          <Input label="电话" placeholder="13800138000" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
-        </div>
-        <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>渠道 <span style={{ color: 'var(--color-danger)' }}>*</span></label>
-          <select value={form.channel} onChange={e => { setForm({ ...form, channel: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.channel; return n }) }}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${errors.channel ? 'var(--color-danger)' : 'var(--text-disabled)'}`, fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
-            <option value="">请选择渠道</option>
-            <option value="Boss直聘">Boss直聘</option>
-            <option value="微信">微信</option>
-            <option value="抖音">抖音</option>
-            <option value="小红书">小红书</option>
-            <option value="淘宝">淘宝</option>
-            <option value="拼多多">拼多多</option>
-            <option value="线下推荐">线下推荐</option>
-            <option value="其他">其他</option>
-          </select>
-          {errors.channel && <div style={errStyle}>{errors.channel}</div>}
-        </div>
-        <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>客户阶段</label>
-          <select value={form.stage} onChange={e => setForm({ ...form, stage: e.target.value })}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
-            {Object.entries(stageMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-          </select>
-        </div>
-        <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>对接人（选填）</label>
-          <select value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
-            <option value="">暂不分配</option>
-            {enterpriseMembers.map((u: any) => <option key={u.id} value={u.id}>{u.nickname || u.username} ({u.role === 'admin' ? '管理员' : '成员'})</option>)}
-          </select>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-          <Button variant="secondary" onClick={onClose}>取消</Button>
-          <Button onClick={handleCreate} disabled={submitting}>{submitting ? '添加中...' : '添加'}</Button>
-        </div>
+
+        {form.client_type === 'company' && addMode === 'search' && (
+          <>
+            <div ref={searchRef} style={{ position: 'relative' }}>
+              <label style={labelStyle}>搜索企业名称</label>
+              <div style={{ position: 'relative' }}>
+                <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)', pointerEvents: 'none' }} />
+                <input type="text" value={searchQuery}
+                  onChange={e => { setSearchQuery(e.target.value); doSearch(e.target.value) }}
+                  onFocus={() => { if (searchResults.length) setShowDropdown(true) }}
+                  placeholder="输入企业名称或关键字搜索..."
+                  style={{ width: '100%', padding: '10px 12px 10px 32px', borderRadius: 8, border: '1px solid var(--text-disabled)', fontSize: 14, outline: 'none', background: 'var(--bg-primary)', boxSizing: 'border-box' }}
+                />
+              </div>
+              {showDropdown && (
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', maxHeight: 260, overflowY: 'auto', marginTop: 4 }}>
+                  {searching && <div style={{ padding: 14, textAlign: 'center', fontSize: 13, color: 'var(--text-tertiary)' }}>搜索中...</div>}
+                  {!searching && searchResults.length > 0 && searchResults.map((ent: any) => (
+                    <div key={ent.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--border-secondary)', transition: 'background 0.1s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-primary)'}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)' }}>{ent.name}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
+                          {ent.company || ''}{ent.industry ? ` · ${ent.industry}` : ''}{ent.member_count ? ` · ${ent.member_count}人` : ''}
+                        </div>
+                      </div>
+                      <button onClick={() => handleSendRequest(ent)} disabled={submitting}
+                        style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 500, background: 'var(--brand)', color: '#fff', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                        <Send size={12} /> 发送请求
+                      </button>
+                    </div>
+                  ))}
+                  {!searching && searchResults.length === 0 && searchQuery.trim() && (
+                    <div style={{ padding: 14, textAlign: 'center', fontSize: 13, color: 'var(--text-tertiary)' }}>未找到匹配的平台企业</div>
+                  )}
+                </div>
+              )}
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', background: 'var(--bg-secondary)', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Users size={14} /> 搜索并选择平台已注册的企业，发送添加请求后需对方企业管理员审批同意
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
+              <Button variant="secondary" onClick={onClose}>取消</Button>
+            </div>
+          </>
+        )}
+
+        {(form.client_type === 'individual' || addMode === 'manual') && (<>
+          <div>
+            <Input label="客户名称 *" placeholder="输入客户名称" value={form.name} onChange={e => { setForm({ ...form, name: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.name; return n }) }} />
+            {errors.name && <div style={errStyle}>{errors.name}</div>}
+          </div>
+          {form.client_type === 'company' && (
+            <div>
+              <Input label="公司名称 *" placeholder="输入对方公司名称" value={form.company} onChange={e => { setForm({ ...form, company: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.company; return n }) }} />
+              {errors.company && <div style={errStyle}>{errors.company}</div>}
+            </div>
+          )}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <Input label="邮箱" placeholder="name@example.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+            <Input label="电话" placeholder="13800138000" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+          </div>
+          <div>
+            <label style={{ ...labelStyle }}>渠道 <span style={{ color: 'var(--color-danger)' }}>*</span></label>
+            <select value={form.channel} onChange={e => { setForm({ ...form, channel: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.channel; return n }) }}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${errors.channel ? 'var(--color-danger)' : 'var(--text-disabled)'}`, fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
+              <option value="">请选择渠道</option>
+              <option value="Boss直聘">Boss直聘</option>
+              <option value="微信">微信</option>
+              <option value="抖音">抖音</option>
+              <option value="小红书">小红书</option>
+              <option value="淘宝">淘宝</option>
+              <option value="拼多多">拼多多</option>
+              <option value="线下推荐">线下推荐</option>
+              <option value="其他">其他</option>
+            </select>
+            {errors.channel && <div style={errStyle}>{errors.channel}</div>}
+          </div>
+          <div>
+            <label style={labelStyle}>客户阶段</label>
+            <select value={form.stage} onChange={e => setForm({ ...form, stage: e.target.value })}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
+              {Object.entries(stageMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>对接人（选填）</label>
+            <select value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
+              <option value="">暂不分配</option>
+              {enterpriseMembers.map((u: any) => <option key={u.id} value={u.id}>{u.nickname || u.username} ({u.role === 'admin' ? '管理员' : '成员'})</option>)}
+            </select>
+          </div>
+          {form.client_type === 'company' && (
+            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', background: 'var(--bg-secondary)', borderRadius: 8, padding: '10px 14px' }}>
+              手动添加仅创建客户记录，不会通知对方企业。如对方已注册平台，建议使用"搜索平台企业"发送请求。
+            </div>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
+            <Button variant="secondary" onClick={onClose}>取消</Button>
+            <Button onClick={handleCreate} disabled={submitting}>{submitting ? '添加中...' : '添加'}</Button>
+          </div>
+        </>)}
       </div>
     </Modal>
   )

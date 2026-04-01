@@ -20,6 +20,14 @@ router.get('/clients/:id/logs', auth, staff, require('../controllers/client/logs
 router.get('/clients/:id/score', auth, staff, require('../controllers/client/scoreController'));
 router.get('/client-scores', auth, staff, require('../controllers/client/scoresController'));
 
+// Client Requests (添加客户审批)
+const clientReqCtrl = require('../controllers/client/clientRequestController');
+router.post('/client-requests', auth, staff, clientReqCtrl.send);
+router.get('/client-requests/incoming', auth, staff, clientReqCtrl.incoming);
+router.get('/client-requests/outgoing', auth, staff, clientReqCtrl.outgoing);
+router.post('/client-requests/:id/approve', auth, staff, clientReqCtrl.approve);
+router.post('/client-requests/:id/reject', auth, staff, clientReqCtrl.reject);
+
 // AI
 router.get('/clients/:clientId/ai-suggestion', auth, staff, require('../controllers/ai/suggestionController'));
 

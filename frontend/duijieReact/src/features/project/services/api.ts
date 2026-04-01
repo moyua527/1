@@ -18,4 +18,10 @@ export const projectApi = {
   clientAvailableUsers: (id: string) => fetchApi(`/api/projects/${id}/client-available-users`),
   addClientMember: (id: string, data: { user_id: number }) => fetchApi(`/api/projects/${id}/client-members`, { method: 'POST', body: JSON.stringify(data) }),
   removeClientMember: (id: string, userId: string) => fetchApi(`/api/projects/${id}/client-members/${userId}`, { method: 'DELETE' }),
+  // 客户企业关联审批
+  sendClientRequest: (id: string, data: { to_enterprise_id: number; message?: string }) => fetchApi(`/api/projects/${id}/client-request`, { method: 'POST', body: JSON.stringify(data) }),
+  getClientRequests: () => fetchApi('/api/projects/client-requests'),
+  getSentClientRequests: () => fetchApi('/api/projects/client-requests/sent'),
+  approveClientRequest: (requestId: number) => fetchApi(`/api/projects/client-requests/${requestId}/approve`, { method: 'POST' }),
+  rejectClientRequest: (requestId: number, reason?: string) => fetchApi(`/api/projects/client-requests/${requestId}/reject`, { method: 'POST', body: JSON.stringify({ reason }) }),
 }

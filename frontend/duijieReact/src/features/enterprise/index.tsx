@@ -1,4 +1,4 @@
-import { Users, Building, FolderTree, LogIn, KeyRound, FolderKanban } from 'lucide-react'
+import { Users, Building, FolderTree, LogIn, KeyRound, FolderKanban, UserPlus } from 'lucide-react'
 import { useEnterprise } from './useEnterprise'
 import { section } from './constants'
 import EmptyState from './EmptyState'
@@ -9,6 +9,7 @@ import OrgTree from './OrgTree'
 import JoinRequests from './JoinRequests'
 import RoleList from './RoleList'
 import EnterpriseProjects from './EnterpriseProjects'
+import ClientRequests from './ClientRequests'
 import AdminAllEnterprises from './AdminAllEnterprises'
 import EnterpriseModals from './EnterpriseModals'
 import JoinCreateModals from './JoinCreateModals'
@@ -42,6 +43,7 @@ export default function Enterprise() {
     { key: 'tree' as const, label: '组织架构', icon: <FolderTree size={15} /> },
     { key: 'projects' as const, label: '企业项目', icon: <FolderKanban size={15} /> },
     ...((h.isOwner || h.canManageRoles) ? [{ key: 'roles' as const, label: '角色管理', icon: <KeyRound size={15} />, count: h.roles.length }] : []),
+    { key: 'client-requests' as const, label: '客户请求', icon: <UserPlus size={15} /> },
     ...(h.canAdmin && h.joinRequests.length > 0 ? [{ key: 'requests' as const, label: '加入申请', icon: <LogIn size={15} />, count: h.joinRequests.length }] : []),
   ]
 
@@ -100,6 +102,10 @@ export default function Enterprise() {
         <div style={{ ...section, marginTop: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0, borderTop: 'none' }}>
           <OrgTree ent={h.ent} members={h.members} departments={h.departments} expandedDepts={h.expandedDepts} toggleDept={h.toggleDept} />
         </div>
+      )}
+
+      {h.tab === 'client-requests' && (
+        <ClientRequests canAdmin={h.canAdmin} onRefresh={() => {}} />
       )}
 
       {h.tab === 'requests' && h.canAdmin && (

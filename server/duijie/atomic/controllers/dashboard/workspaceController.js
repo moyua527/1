@@ -48,7 +48,8 @@ module.exports = async (req, res) => {
       const [approvals] = await db.query(
         `SELECT r.id, r.user_id, r.created_at, r.client_id,
                 u.nickname, u.username, u.avatar,
-                c.name as enterprise_name
+                c.name as enterprise_name,
+                'join' as request_type
          FROM duijie_join_requests r
          LEFT JOIN voice_users u ON u.id = r.user_id
          LEFT JOIN duijie_clients c ON c.id = r.client_id
@@ -57,6 +58,26 @@ module.exports = async (req, res) => {
         [entIds]
       );
       pendingApprovals = approvals;
+    }
+
+    // 项目关联客户企业审批请求
+    let pendingClientRequests = [];
+    if (entId) {
+      const [clientReqs] = await db.query(
+        `SELECT r.id, r.project_id, r.message, r.created_at,
+                p.name as project_name,
+                fe.name as from_enterprise_name,
+                u.nickname as requested_by_name,
+                'project_client' as request_type
+         FROM duijie_project_client_requests r
+         LEFT JOIN duijie_projects p ON p.id = r.project_id
+         LEFT JOIN duijie_clients fe ON fe.id = r.from_enterprise_id
+         LEFT JOIN voice_users u ON u.id = r.requested_by
+         WHERE r.to_enterprise_id = ? AND r.status = 'pending'
+         ORDER BY r.created_at DESC LIMIT 10`,
+        [entId]
+      );
+      pendingClientRequests = clientReqs;
     }
 
     // 即将到期的任务（3天内）
@@ -83,6 +104,7 @@ module.exports = async (req, res) => {
         myTasks,
         myProjects,
         pendingApprovals,
+        pendingClientRequests,
         dueSoon,
         unreadNotifs,
       }

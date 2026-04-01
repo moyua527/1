@@ -39,6 +39,12 @@ export const clientApi = {
   createMember: (id: string, data: any) => fetchApi(`/api/clients/${id}/members`, { method: 'POST', body: JSON.stringify(data) }),
   updateMember: (memberId: number, data: any) => fetchApi(`/api/client-members/${memberId}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteMember: (memberId: number) => fetchApi(`/api/client-members/${memberId}`, { method: 'DELETE' }),
+  // Client Requests (添加客户审批)
+  sendClientRequest: (data: { to_enterprise_id: number; message?: string }) => fetchApi('/api/client-requests', { method: 'POST', body: JSON.stringify(data) }),
+  incomingRequests: () => fetchApi('/api/client-requests/incoming'),
+  outgoingRequests: () => fetchApi('/api/client-requests/outgoing'),
+  approveRequest: (id: number) => fetchApi(`/api/client-requests/${id}/approve`, { method: 'POST' }),
+  rejectRequest: (id: number) => fetchApi(`/api/client-requests/${id}/reject`, { method: 'POST' }),
   // Opportunities
   opportunities: () => fetchApi('/api/opportunities'),
   createOpportunity: (data: any) => fetchApi('/api/opportunities', { method: 'POST', body: JSON.stringify(data) }),

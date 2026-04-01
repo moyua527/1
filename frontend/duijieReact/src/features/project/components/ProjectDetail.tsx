@@ -7,7 +7,6 @@ import useProjectPerms from '../../../hooks/useProjectPerms'
 import Modal from '../../ui/Modal'
 import { fetchApi } from '../../../bootstrap'
 import { projectApi } from '../services/api'
-import { clientApi } from '../../client/services/api'
 import { taskApi } from '../../task/services/api'
 import { milestoneApi } from '../../milestone/services/api'
 import Button from '../../ui/Button'
@@ -159,21 +158,25 @@ export default function ProjectDetail() {
   const openSetClient = () => {
     setSelectedClientId('')
     setShowSetClient(true)
-    clientApi.list().then(r => {
-      if (r.success) setAvailableClients((r.data || []).filter((c: any) => c.client_type === 'company'))
+    // 获取平台上所有企业（排除本企业），用于选择要关联的客户企业
+    fetchApi('/api/clients').then(r => {
+      if (r.success) {
+        const companies = (r.data || []).filter((c: any) => c.client_type === 'company')
+        setAvailableClients(companies)
+      }
     })
   }
 
   const handleSetClient = async () => {
     if (!selectedClientId) { toast('请选择客户企业', 'error'); return }
     setSettingClient(true)
-    const r = await projectApi.update(id!, { client_id: Number(selectedClientId) })
+    // 发送关联请求而非直接设置
+    const r = await projectApi.sendClientRequest(id!, { to_enterprise_id: Number(selectedClientId) })
     setSettingClient(false)
     if (r.success) {
-      toast('客户企业已关联', 'success')
+      toast('关联请求已发送，等待对方审批', 'success')
       setShowSetClient(false)
-      loadProject()
-    } else toast(r.message || '关联失败', 'error')
+    } else toast(r.message || '发送失败', 'error')
   }
 
   const handleRemoveClient = async () => {
@@ -352,7 +355,7 @@ export default function ProjectDetail() {
         </div>
       )}
 
-      <Modal open={showSetClient} onClose={() => setShowSetClient(false)} title={hasExternalEnterprise ? '更换客户企业' : '设置客户企业'}>
+      <Modal open={showSetClient} onClose={() => setShowSetClient(false)} title={hasExternalEnterprise ? '更换客户企业' : '关联客户企业'}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 6 }}>选择客户企业</label>
@@ -364,8 +367,9 @@ export default function ProjectDetail() {
               ))}
             </select>
             {availableClients.length === 0 && (
-              <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 6 }}>暂无可关联的企业客户，请先在客户管理中添加</div>
+              <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 6 }}>暂无可关联的企业</div>
             )}
+            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 8 }}>发送关联请求后，需要对方企业管理员审批同意才可完成关联</div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
             {hasExternalEnterprise && (
@@ -373,7 +377,7 @@ export default function ProjectDetail() {
             )}
             <Button variant="secondary" onClick={() => setShowSetClient(false)}>取消</Button>
             <Button onClick={handleSetClient} disabled={settingClient || !selectedClientId}>
-              {settingClient ? '保存中...' : '确定'}
+              {settingClient ? '发送中...' : '发送关联请求'}
             </Button>
           </div>
         </div>

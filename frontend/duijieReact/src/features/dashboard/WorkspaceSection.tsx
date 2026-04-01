@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ClipboardList, FolderKanban, UserCheck, AlertTriangle, ChevronRight } from 'lucide-react'
+import { ClipboardList, FolderKanban, UserCheck, AlertTriangle, ChevronRight, Building2 } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 
 const priorityColor: Record<string, { bg: string; text: string; label: string }> = {
@@ -28,8 +28,8 @@ export default function WorkspaceSection({ isMobile = false }: { isMobile?: bool
 
   if (!data) return null
 
-  const { myTasks, myProjects, pendingApprovals, dueSoon } = data
-  const hasContent = myTasks?.length || myProjects?.length || pendingApprovals?.length || dueSoon?.length
+  const { myTasks, myProjects, pendingApprovals, pendingClientRequests, dueSoon } = data
+  const hasContent = myTasks?.length || myProjects?.length || pendingApprovals?.length || pendingClientRequests?.length || dueSoon?.length
   if (!hasContent) return null
 
   return (
@@ -153,6 +153,38 @@ export default function WorkspaceSection({ isMobile = false }: { isMobile?: bool
                   <span>{a.enterprise_name}</span>
                   <span>· {new Date(a.created_at).toLocaleDateString('zh-CN')}</span>
                 </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 项目关联审批 */}
+      {pendingClientRequests?.length > 0 && (
+        <div style={{ background: 'var(--bg-primary)', borderRadius: 12, padding: isMobile ? 16 : 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+            <Building2 size={18} color="var(--brand)" />
+            <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-heading)' }}>企业关联请求</span>
+            <span style={{ fontSize: 12, color: 'var(--color-danger)', background: '#fee2e2', padding: '1px 8px', borderRadius: 10, fontWeight: 600 }}>{pendingClientRequests.length}</span>
+          </div>
+          {pendingClientRequests.map((r: any) => (
+            <div key={r.id} style={{ padding: '10px 0', borderTop: '1px solid var(--border-secondary)' }}>
+              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)', marginBottom: 4 }}>
+                {r.from_enterprise_name} 邀请加入项目「{r.project_name}」
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 8 }}>
+                发起人: {r.requested_by_name} · {new Date(r.created_at).toLocaleDateString('zh-CN')}
+                {r.message && <span> · 留言: {r.message}</span>}
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={async (e) => { e.stopPropagation(); const result = await fetchApi(`/api/projects/client-requests/${r.id}/approve`, { method: 'POST' }); if (result.success) { load() } }}
+                  style={{ fontSize: 12, padding: '4px 12px', borderRadius: 6, background: 'var(--brand)', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 500 }}>
+                  同意
+                </button>
+                <button onClick={async (e) => { e.stopPropagation(); const result = await fetchApi(`/api/projects/client-requests/${r.id}/reject`, { method: 'POST', body: JSON.stringify({}) }); if (result.success) { load() } }}
+                  style={{ fontSize: 12, padding: '4px 12px', borderRadius: 6, background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)', cursor: 'pointer', fontWeight: 500 }}>
+                  拒绝
+                </button>
               </div>
             </div>
           ))}

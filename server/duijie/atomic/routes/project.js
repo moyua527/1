@@ -14,6 +14,11 @@ const pag = projectAccessGuard();
 router.post('/projects', auth, V.createProject, validate, require('../controllers/project/createController'));
 router.get('/projects/team-users', auth, require('../controllers/project/teamUsersController'));
 router.get('/projects/export', auth, require('../controllers/project/exportController'));
+// 项目关联客户企业审批流程 (放在 :id 路由之前)
+router.get('/projects/client-requests', auth, require('../controllers/project/clientRequestListController'));
+router.get('/projects/client-requests/sent', auth, require('../controllers/project/clientRequestSentController'));
+router.post('/projects/client-requests/:id/approve', auth, require('../controllers/project/clientRequestApproveController'));
+router.post('/projects/client-requests/:id/reject', auth, require('../controllers/project/clientRequestRejectController'));
 router.get('/projects', auth, projectStaff, require('../controllers/project/listController'));
 router.get('/projects/:id', auth, projectStaff, require('../controllers/project/detailController'));
 router.put('/projects/:id', auth, pag, projectPermGuard('can_edit_project'), require('../controllers/project/updateController'));
@@ -26,5 +31,6 @@ router.get('/projects/:id/my-perms', auth, require('../controllers/project/myPer
 router.get('/projects/:id/client-available-users', auth, pag, require('../controllers/project/clientAvailableUsersController'));
 router.post('/projects/:id/client-members', auth, pag, projectPermGuard('can_manage_members'), require('../controllers/project/addClientMemberController'));
 router.delete('/projects/:id/client-members/:userId', auth, pag, projectPermGuard('can_manage_members'), require('../controllers/project/removeClientMemberController'));
+router.post('/projects/:id/client-request', auth, pag, require('../controllers/project/clientRequestController'));
 
 module.exports = router;

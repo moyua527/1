@@ -22,7 +22,7 @@ export function useEnterprise() {
   const activeId = data?.activeId || null
 
   // --- UI state ---
-  const [tab, setTab] = useState<'members' | 'departments' | 'tree' | 'projects' | 'roles' | 'requests'>('members')
+  const [tab, setTab] = useState<'members' | 'departments' | 'tree' | 'projects' | 'roles' | 'requests' | 'client-requests'>('members')
   const [editEntOpen, setEditEntOpen] = useState(false)
   const [entForm, setEntForm] = useState({ ...emptyEntForm })
   const [entSaving, setEntSaving] = useState(false)
