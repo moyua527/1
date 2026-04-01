@@ -35,6 +35,11 @@ module.exports = async (req, res) => {
     }
 
     // 更新请求状态
+    // 先删除旧的 approved/rejected 记录（避免唯一约束冲突）
+    await db.query(
+      'DELETE FROM duijie_project_client_requests WHERE project_id = ? AND to_enterprise_id = ? AND status IN (?, ?) AND id != ?',
+      [request.project_id, request.to_enterprise_id, 'approved', 'rejected', requestId]
+    );
     await db.query(
       'UPDATE duijie_project_client_requests SET status = ?, handled_by = ?, handled_at = NOW() WHERE id = ?',
       ['approved', userId, requestId]

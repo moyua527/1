@@ -12,7 +12,7 @@ module.exports = async (auth = {}) => {
     params.push(auth.activeEnterpriseId, auth.activeEnterpriseId, auth.activeEnterpriseId, auth.activeEnterpriseId);
   }
   const [rows] = await db.query(
-    `SELECT c.*, cl.company_name as client_name
+    `SELECT c.*, cl.name as client_name
      FROM duijie_contacts c
      LEFT JOIN duijie_clients cl ON c.client_id = cl.id
      WHERE 1=1 ${filter}

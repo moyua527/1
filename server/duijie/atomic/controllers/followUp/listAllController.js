@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
       params.push(req.activeEnterpriseId, req.activeEnterpriseId, req.activeEnterpriseId, req.activeEnterpriseId);
     }
     const [rows] = await db.query(
-      `SELECT f.*, c.company_name as client_name
+      `SELECT f.*, c.name as client_name
        FROM duijie_follow_ups f
        LEFT JOIN duijie_clients c ON f.client_id = c.id
        WHERE f.next_follow_date IS NOT NULL ${filter}
