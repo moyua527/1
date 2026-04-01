@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
-import { fetchApi } from '../../bootstrap'
 import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
 import { emptyEntForm, emptyMemberForm, emptyDeptForm } from './constants'
 import useUserStore from '../../stores/useUserStore'
 import { useEnterpriseData, useJoinRequests, useMyJoinRequests, useAllEnterprises, useInvalidate } from '../../hooks/useApi'
 import useEnterpriseStore from '../../stores/useEnterpriseStore'
+import enterpriseApi from './services/api'
 
 export function useEnterprise() {
   const sysRole = useUserStore(s => s.user?.role) || ''
@@ -70,21 +70,21 @@ export function useEnterprise() {
   const handleSaveEnt = async () => {
     if (!entForm.name.trim()) { toast('请输入企业名称', 'error'); return }
     setEntSaving(true)
-    const r = await fetchApi('/api/my-enterprise', { method: 'PUT', body: JSON.stringify(entForm) })
+    const r = await enterpriseApi.update(entForm)
     setEntSaving(false)
     if (r.success) { toast('企业信息已更新', 'success'); setEditEntOpen(false); refresh() }
     else toast(r.message || '保存失败', 'error')
   }
   const handleDeleteEnterprise = async () => {
     if (!(await confirm({ message: '确定删除该企业？删除后可重新创建。', danger: true }))) return
-    const r = await fetchApi('/api/my-enterprise', { method: 'DELETE' })
+    const r = await enterpriseApi.remove()
     if (r.success) { toast('企业已删除', 'success'); refresh() }
     else toast(r.message || '删除失败', 'error')
   }
   const handleCreate = async () => {
     if (!createForm.name.trim()) { toast('请输入企业名称', 'error'); return }
     setCreating(true)
-    const r = await fetchApi('/api/my-enterprise', { method: 'POST', body: JSON.stringify(createForm) })
+    const r = await enterpriseApi.create(createForm)
     setCreating(false)
     if (r.success) { toast('企业创建成功', 'success'); refresh() }
     else toast(r.message || '创建失败', 'error')
@@ -132,7 +132,7 @@ export function useEnterprise() {
   const handleRegenerateJoinCode = async () => {
     if (!(await confirm({ message: '重置后旧推荐码将立即失效，确认继续？' }))) return
     setJoinCodeRefreshing(true)
-    const r = await fetchApi('/api/my-enterprise/join-code/regenerate', { method: 'POST' })
+    const r = await enterpriseApi.regenerateJoinCode()
     setJoinCodeRefreshing(false)
     if (r.success) {
       toast('企业推荐码已重置', 'success')
@@ -146,7 +146,7 @@ export function useEnterprise() {
   const handleLookup = async () => {
     if (!/^\d{11}$/.test(lookupPhone)) { toast('请输入11位手机号', 'error'); return }
     setLookupLoading(true)
-    const r = await fetchApi(`/api/my-enterprise/lookup-user?phone=${lookupPhone}`)
+    const r = await enterpriseApi.lookupUser(lookupPhone)
     setLookupLoading(false)
     if (r.success && r.data) {
       setMemberForm(f => ({ ...f, name: r.data.nickname || r.data.username || f.name, phone: r.data.phone || f.phone, email: r.data.email || f.email }))
@@ -171,20 +171,20 @@ export function useEnterprise() {
     setMemberSaving(true)
     const payload = { ...memberForm, department_id: memberForm.department_id ? Number(memberForm.department_id) : null, enterprise_role_id: memberForm.enterprise_role_id ? Number(memberForm.enterprise_role_id) : null }
     const r = editingMember
-      ? await fetchApi(`/api/my-enterprise/members/${editingMember.id}`, { method: 'PUT', body: JSON.stringify(payload) })
-      : await fetchApi('/api/my-enterprise/members', { method: 'POST', body: JSON.stringify(payload) })
+      ? await enterpriseApi.updateMember(editingMember.id, payload)
+      : await enterpriseApi.addMember(payload)
     setMemberSaving(false)
     if (r.success) { toast(editingMember ? '成员已更新' : '成员已添加', 'success'); setMemberModalOpen(false); refresh() }
     else toast(r.message || '保存失败', 'error')
   }
   const handleDeleteMember = async (mid: number) => {
     if (!(await confirm({ message: '确定删除此成员？', danger: true }))) return
-    const r = await fetchApi(`/api/my-enterprise/members/${mid}`, { method: 'DELETE' })
+    const r = await enterpriseApi.removeMember(mid)
     if (r.success) { toast('成员已删除', 'success'); refresh() }
     else toast(r.message || '删除失败', 'error')
   }
   const handleRoleChange = async (memberId: number, role: string) => {
-    const r = await fetchApi(`/api/my-enterprise/members/${memberId}/role`, { method: 'PUT', body: JSON.stringify({ role }) })
+    const r = await enterpriseApi.changeMemberRole(memberId, role)
     if (r.success) { toast('角色已更新', 'success'); refresh() }
     else toast(r.message || '操作失败', 'error')
   }
@@ -205,15 +205,15 @@ export function useEnterprise() {
     setDeptSaving(true)
     const payload = { ...deptForm, parent_id: deptForm.parent_id ? Number(deptForm.parent_id) : null }
     const r = editingDept
-      ? await fetchApi(`/api/my-enterprise/departments/${editingDept.id}`, { method: 'PUT', body: JSON.stringify(payload) })
-      : await fetchApi('/api/my-enterprise/departments', { method: 'POST', body: JSON.stringify(payload) })
+      ? await enterpriseApi.updateDepartment(editingDept.id, payload)
+      : await enterpriseApi.addDepartment(payload)
     setDeptSaving(false)
     if (r.success) { toast(editingDept ? '部门已更新' : '部门已添加', 'success'); setDeptModalOpen(false); refresh() }
     else toast(r.message || '保存失败', 'error')
   }
   const handleDeleteDept = async (did: number) => {
     if (!(await confirm({ message: '删除部门后，该部门下的成员将变为"未分配"状态', danger: true }))) return
-    const r = await fetchApi(`/api/my-enterprise/departments/${did}`, { method: 'DELETE' })
+    const r = await enterpriseApi.removeDepartment(did)
     if (r.success) { toast('部门已删除', 'success'); refresh() }
     else toast(r.message || '删除失败', 'error')
   }
@@ -241,8 +241,7 @@ export function useEnterprise() {
     const searchText = (keyword ?? joinSearch).trim()
     const requestId = ++joinSearchRequestRef.current
     setJoinSearching(true)
-    const query = searchText ? `?name=${encodeURIComponent(searchText)}` : ''
-    const r = await fetchApi(`/api/my-enterprise/search${query}`)
+    const r = await enterpriseApi.searchEnterprises(searchText || undefined)
     if (requestId !== joinSearchRequestRef.current) return
     setJoinSearching(false)
     if (r.success) setJoinResults(r.data || [])
@@ -252,10 +251,8 @@ export function useEnterprise() {
     const targetId = entId || selectedJoinEnterpriseId
     if (!targetId) { toast('请先选择企业', 'error'); return }
     setJoining(true)
-    const payload: Record<string, any> = { enterprise_id: targetId }
     const normalizedCode = joinCode.trim().toUpperCase()
-    if (normalizedCode) payload.join_code = normalizedCode
-    const r = await fetchApi('/api/my-enterprise/join', { method: 'POST', body: JSON.stringify(payload) })
+    const r = await enterpriseApi.join(targetId, normalizedCode || undefined)
     setJoining(false)
     if (r.success) {
       toast(r.message || '操作成功', 'success')
@@ -276,40 +273,40 @@ export function useEnterprise() {
 
   // === 审批 ===
   const handleApprove = async (id: number) => {
-    const r = await fetchApi(`/api/my-enterprise/join-requests/${id}/approve`, { method: 'POST' })
+    const r = await enterpriseApi.approveJoinRequest(id)
     if (r.success) { toast('已批准', 'success'); invalidate('enterprise', 'join-requests'); refresh() }
     else toast(r.message || '操作失败', 'error')
   }
   const handleReject = async (id: number) => {
-    const r = await fetchApi(`/api/my-enterprise/join-requests/${id}/reject`, { method: 'POST' })
+    const r = await enterpriseApi.rejectJoinRequest(id)
     if (r.success) { toast('已拒绝', 'success'); invalidate('enterprise', 'join-requests') }
     else toast(r.message || '操作失败', 'error')
   }
 
   // === 角色操作 ===
   const handleCreateRole = async (form: any) => {
-    const r = await fetchApi('/api/my-enterprise/roles', { method: 'POST', body: JSON.stringify(form) })
+    const r = await enterpriseApi.createRole(form)
     if (r.success) { toast('角色已创建', 'success'); refresh() }
     else toast(r.message || '创建失败', 'error')
   }
   const handleUpdateRole = async (id: number, form: any) => {
-    const r = await fetchApi(`/api/my-enterprise/roles/${id}`, { method: 'PUT', body: JSON.stringify(form) })
+    const r = await enterpriseApi.updateRole(id, form)
     if (r.success) { toast('角色已更新', 'success'); refresh() }
     else toast(r.message || '更新失败', 'error')
   }
   const handleDeleteRole = async (id: number) => {
     if (!(await confirm({ message: '确定删除该角色？', danger: true }))) return
-    const r = await fetchApi(`/api/my-enterprise/roles/${id}`, { method: 'DELETE' })
+    const r = await enterpriseApi.removeRole(id)
     if (r.success) { toast('角色已删除', 'success'); refresh() }
     else toast(r.message || '删除失败', 'error')
   }
   const handleAssignRole = async (memberId: number, roleId: number | null) => {
-    const r = await fetchApi(`/api/my-enterprise/members/${memberId}/assign-role`, { method: 'PUT', body: JSON.stringify({ enterprise_role_id: roleId }) })
+    const r = await enterpriseApi.assignRole(memberId, roleId)
     if (r.success) { toast('角色已分配', 'success'); refresh() }
     else toast(r.message || '操作失败', 'error')
   }
   const inlineCreateRole = async (form: any): Promise<number | null> => {
-    const r = await fetchApi('/api/my-enterprise/roles', { method: 'POST', body: JSON.stringify(form) })
+    const r = await enterpriseApi.createRole(form)
     if (r.success) { toast(`角色「${form.name}」已创建`, 'success'); refresh(); return r.data?.id || null }
     else { toast(r.message || '创建失败', 'error'); return null }
   }
