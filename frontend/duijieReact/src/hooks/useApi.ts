@@ -133,3 +133,25 @@ export function useInvalidate() {
   const qc = useQueryClient()
   return (...keys: string[]) => qc.invalidateQueries({ queryKey: keys })
 }
+
+export function useContacts() {
+  return useQuery<any[]>({
+    queryKey: ['contacts'],
+    queryFn: async () => {
+      const r: ApiResponse = await fetchApi('/api/contacts')
+      if (!r.success) throw new Error(r.message)
+      return r.data || []
+    },
+  })
+}
+
+export function useFiles() {
+  return useQuery<any[]>({
+    queryKey: ['files'],
+    queryFn: async () => {
+      const r: ApiResponse = await fetchApi('/api/files/all')
+      if (!r.success) throw new Error(r.message)
+      return r.data || []
+    },
+  })
+}

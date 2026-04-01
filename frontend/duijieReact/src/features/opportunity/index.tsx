@@ -5,6 +5,9 @@ import { clientApi } from '../client/services/api'
 import { can } from '../../stores/permissions'
 import useLiveData from '../../hooks/useLiveData'
 import Button from '../ui/Button'
+import PageHeader from '../ui/PageHeader'
+import StatsCards from '../ui/StatsCards'
+import EmptyState from '../ui/EmptyState'
 import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
 import OpportunityFormModal from './OpportunityFormModal'
@@ -70,38 +73,24 @@ export default function OpportunityList() {
   const totalAmount = items.filter(i => i.stage !== 'lost').reduce((s, i) => s + Number(i.amount || 0), 0)
   const wonAmount = items.filter(i => i.stage === 'won').reduce((s, i) => s + Number(i.amount || 0), 0)
 
+  const closedItems = items.filter(i => i.stage === 'won' || i.stage === 'lost')
+  const winRate = closedItems.length > 0 ? ((items.filter(i => i.stage === 'won').length / closedItems.length) * 100).toFixed(0) : '0'
+
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>商机管理</h1>
-          <p style={{ color: 'var(--text-secondary)', margin: '4px 0 0', fontSize: 14 }}>销售管道 · 共 {items.length} 个商机</p>
-        </div>
-        <Button onClick={openCreate}><Plus size={16} /> 新建商机</Button>
-      </div>
+      <PageHeader title="商机管理" subtitle={`销售管道 · 共 ${items.length} 个商机`}
+        actions={<Button onClick={openCreate}><Plus size={16} /> 新建商机</Button>} />
 
-      <div style={{ display: 'flex', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
-        <div style={{ background: 'var(--bg-primary)', borderRadius: 10, padding: '12px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <DollarSign size={20} color="var(--color-purple)" />
-          <div><div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>管道总额</div><div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-heading)' }}>¥{(totalAmount / 10000).toFixed(1)}万</div></div>
-        </div>
-        <div style={{ background: 'var(--bg-primary)', borderRadius: 10, padding: '12px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <TrendingUp size={20} color="var(--color-success)" />
-          <div><div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>赢单金额</div><div style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-success)' }}>¥{(wonAmount / 10000).toFixed(1)}万</div></div>
-        </div>
-        <div style={{ background: 'var(--bg-primary)', borderRadius: 10, padding: '12px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <TrendingUp size={20} color="var(--color-warning)" />
-          <div><div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>赢单率</div><div style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-warning)' }}>{items.filter(i => i.stage === 'won' || i.stage === 'lost').length > 0 ? ((items.filter(i => i.stage === 'won').length / items.filter(i => i.stage === 'won' || i.stage === 'lost').length) * 100).toFixed(0) : 0}%</div></div>
-        </div>
-      </div>
+      <StatsCards cards={[
+        { label: '管道总额', value: `¥${(totalAmount / 10000).toFixed(1)}万`, icon: DollarSign, color: 'var(--color-purple)', tone: 'rgba(124,58,237,0.12)' },
+        { label: '赢单金额', value: `¥${(wonAmount / 10000).toFixed(1)}万`, icon: TrendingUp, color: 'var(--color-success)', tone: 'rgba(34,197,94,0.12)' },
+        { label: '赢单率', value: `${winRate}%`, icon: TrendingUp, color: 'var(--color-warning)', tone: 'rgba(245,158,11,0.12)' },
+      ]} />
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
       ) : items.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}>
-          <TrendingUp size={48} style={{ marginBottom: 12, opacity: 0.5 }} />
-          <div>暂无商机，点击右上角新建</div>
-        </div>
+        <EmptyState icon={TrendingUp} title="暂无商机" subtitle="点击右上角新建商机" />
       ) : (
         <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8, WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin' }}>
           {stageKeys.map(stageKey => {

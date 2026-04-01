@@ -1,9 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { FileText, Search, Upload, Loader2, Trash2 } from 'lucide-react'
+import { FileText, Upload, Loader2, Trash2 } from 'lucide-react'
 import { fetchApi, uploadFile, BACKEND_URL } from '../../bootstrap'
 import useLiveData from '../../hooks/useLiveData'
 import Button from '../ui/Button'
+import PageHeader from '../ui/PageHeader'
+import FilterBar from '../ui/FilterBar'
+import EmptyState from '../ui/EmptyState'
 import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
 import FileTable from './components/FileTable'
@@ -30,10 +33,6 @@ const categoryTabs = [
   { key: 'media', label: '音视频' },
   { key: 'other', label: '其他' },
 ]
-const tabStyle = (active: boolean): React.CSSProperties => ({
-  padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 13, fontWeight: 500, cursor: 'pointer',
-  background: active ? 'var(--brand)' : 'transparent', color: active ? 'var(--bg-primary)' : 'var(--text-secondary)', transition: 'all 0.15s',
-})
 
 export default function FileManager() {
   const [files, setFiles] = useState<any[]>([])
@@ -118,46 +117,33 @@ export default function FileManager() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>文件管理</h1>
-          <p style={{ color: 'var(--text-secondary)', margin: '4px 0 0', fontSize: 14 }}>共 {files.length} 个文件 · {formatSize(totalSize)}</p>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <div style={{ position: 'relative' }}>
-            <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索文件..."
-              style={{ padding: '8px 12px 8px 32px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', width: 200 }} />
-          </div>
+      <PageHeader title="文件管理" subtitle={`共 ${files.length} 个文件 · ${formatSize(totalSize)}`}
+        actions={<>
           <Button disabled={uploading} onClick={() => fileInputRef.current?.click()}><Upload size={14} /> {uploading ? '上传中...' : '上传文件'}</Button>
           <input ref={fileInputRef} type="file" multiple onChange={handleUpload} style={{ display: 'none' }} />
-        </div>
-      </div>
+        </>} />
 
-      {/* 分类Tab */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-        {categoryTabs.map(t => {
-          const cnt = t.key ? files.filter(f => getCategory(f.mime_type) === t.key).length : files.length
-          return (
-            <button key={t.key} onClick={() => { setCategory(t.key); setSelected(new Set()) }} style={tabStyle(category === t.key)}>
-              {t.label} {cnt > 0 && <span style={{ opacity: 0.7, marginLeft: 2 }}>({cnt})</span>}
-            </button>
-          )
-        })}
-        {selected.size > 0 && (
-          <button onClick={handleBatchDelete} style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 8, border: 'none', background: '#fee2e2', color: 'var(--color-danger)', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
+      <FilterBar
+        search={search} onSearchChange={setSearch} searchPlaceholder="搜索文件..."
+        filters={[{
+          value: category, onChange: (v: string) => { setCategory(v); setSelected(new Set()) },
+          options: categoryTabs.map(t => ({ value: t.key, label: `${t.label}${t.key ? ` (${files.filter(f => getCategory(f.mime_type) === t.key).length})` : ''}` })),
+          placeholder: `全部 (${files.length})`,
+        }]}
+        resultCount={filtered.length}
+        hasFilters={!!(search.trim() || category)} activeFilterCount={(search.trim() ? 1 : 0) + (category ? 1 : 0)}
+        onClearFilters={() => { setSearch(''); setCategory(''); setSelected(new Set()) }}
+        extra={selected.size > 0 ? (
+          <button onClick={handleBatchDelete} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 8, border: 'none', background: 'var(--bg-danger-hover)', color: 'var(--color-danger)', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
             <Trash2 size={14} /> 删除选中 ({selected.size})
           </button>
-        )}
-      </div>
+        ) : undefined}
+      />
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}>
-          <FileText size={48} style={{ marginBottom: 12, opacity: 0.5 }} />
-          <div>{search || category ? '未找到匹配文件' : '暂无文件'}</div>
-        </div>
+        <EmptyState icon={FileText} title={search || category ? '未找到匹配文件' : '暂无文件'} subtitle={search || category ? undefined : '上传文件开始管理'} />
       ) : (
         <FileTable
           files={filtered}

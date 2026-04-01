@@ -1,14 +1,9 @@
 const db = require('../../../config/db');
 const { notify } = require('../../utils/notify');
-const { getProjectPerms } = require('../../utils/projectPerms');
 
 module.exports = async (req, res) => {
   try {
     const { id } = req.params;
-    if (req.userRole !== 'admin') {
-      const perms = await getProjectPerms(req.userId, id);
-      if (!perms || !perms.can_manage_members) return res.status(403).json({ success: false, message: '无权管理项目成员' });
-    }
     const { user_id, role, enterprise_role_id } = req.body;
     if (!user_id) return res.status(400).json({ success: false, message: '请选择用户' });
     const validRoles = ['owner', 'editor', 'viewer'];

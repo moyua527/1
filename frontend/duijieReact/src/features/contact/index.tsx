@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { UserCheck, Phone, Mail, MessageCircle, Building2, Search, Plus, Edit3, Trash2, Star, Loader2 } from 'lucide-react'
+import { UserCheck, Phone, Mail, MessageCircle, Building2, Plus, Edit3, Trash2, Star, Loader2 } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
+import PageHeader from '../ui/PageHeader'
+import FilterBar from '../ui/FilterBar'
+import EmptyState from '../ui/EmptyState'
 
 export default function ContactList() {
   const [contacts, setContacts] = useState<any[]>([])
@@ -82,31 +85,20 @@ export default function ContactList() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>联系人管理</h1>
-          <p style={{ color: 'var(--text-secondary)', margin: '4px 0 0', fontSize: 14 }}>共 {contacts.length} 位联系人</p>
-        </div>
-        <Button onClick={openCreate}><Plus size={16} /> 新建联系人</Button>
-      </div>
+      <PageHeader title="联系人管理" subtitle={`共 ${contacts.length} 位联系人`}
+        actions={<Button onClick={openCreate}><Plus size={16} /> 新建联系人</Button>} />
 
-      {/* 搜索栏 */}
-      <div style={{ marginBottom: 16, position: 'relative', maxWidth: 400 }}>
-        <Search size={16} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
-        <input
-          value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="搜索姓名、电话、邮箱、公司..."
-          style={{ width: '100%', padding: '8px 12px 8px 36px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', fontSize: 13, color: 'var(--text-body)', outline: 'none' }}
-        />
-      </div>
+      <FilterBar
+        search={search} onSearchChange={setSearch} searchPlaceholder="搜索姓名、电话、邮箱、公司..."
+        filters={[]} resultCount={filtered.length}
+        hasFilters={!!search.trim()} activeFilterCount={search.trim() ? 1 : 0}
+        onClearFilters={() => setSearch('')}
+      />
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}>
-          <UserCheck size={48} style={{ marginBottom: 12, opacity: 0.5 }} />
-          <div>{search ? '无匹配联系人' : '暂无联系人，点击右上角新建'}</div>
-        </div>
+        <EmptyState icon={UserCheck} title={search ? '无匹配联系人' : '暂无联系人'} subtitle={search ? undefined : '点击右上角新建联系人'} />
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(320px, 1fr))', gap: 12 }}>
           {filtered.map(c => (

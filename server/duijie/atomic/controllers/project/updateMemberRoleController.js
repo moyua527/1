@@ -1,13 +1,8 @@
 const db = require('../../../config/db');
-const { getProjectPerms } = require('../../utils/projectPerms');
 
 module.exports = async (req, res) => {
   try {
     const { id, memberId } = req.params;
-    if (req.userRole !== 'admin') {
-      const perms = await getProjectPerms(req.userId, id);
-      if (!perms || !perms.can_manage_members) return res.status(403).json({ success: false, message: '无权管理项目成员' });
-    }
     const { role, enterprise_role_id } = req.body;
 
     const [[member]] = await db.query(
