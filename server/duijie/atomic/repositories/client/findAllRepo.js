@@ -8,14 +8,20 @@ module.exports = async (auth = {}) => {
     params.push(auth.excludeEnterpriseId);
   }
   if (auth.role !== 'admin' && auth.userId) {
-    // 企业数据隔离：只显示当前活跃企业关联的项目中的客户
+    // 企业数据隔离：只显示关联的客户
     if (auth.activeEnterpriseId) {
-      filter += ` AND c.id IN (
-        SELECT DISTINCT CASE WHEN p.client_id = ? THEN p.internal_client_id ELSE p.client_id END
-        FROM duijie_projects p
-        WHERE p.is_deleted = 0 AND (p.internal_client_id = ? OR p.client_id = ?)
+      filter += ` AND (
+        c.id IN (
+          SELECT DISTINCT CASE WHEN p.client_id = ? THEN p.internal_client_id ELSE p.client_id END
+          FROM duijie_projects p
+          WHERE p.is_deleted = 0 AND (p.internal_client_id = ? OR p.client_id = ?)
+        )
+        OR c.id IN (
+          SELECT to_enterprise_id FROM duijie_client_requests WHERE from_enterprise_id = ? AND status = 'approved'
+          UNION SELECT from_enterprise_id FROM duijie_client_requests WHERE to_enterprise_id = ? AND status = 'approved'
+        )
       )`;
-      params.push(auth.activeEnterpriseId, auth.activeEnterpriseId, auth.activeEnterpriseId);
+      params.push(auth.activeEnterpriseId, auth.activeEnterpriseId, auth.activeEnterpriseId, auth.activeEnterpriseId, auth.activeEnterpriseId);
     } else {
       filter += ` AND c.id IN (
         SELECT DISTINCT p.client_id FROM duijie_projects p

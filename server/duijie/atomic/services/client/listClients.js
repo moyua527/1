@@ -3,5 +3,5 @@ const { getUserActiveEnterpriseId } = require('../accessScope');
 
 module.exports = async (auth) => {
   const enterpriseId = await getUserActiveEnterpriseId(auth.userId);
-  return await findAllRepo({ ...auth, excludeEnterpriseId: enterpriseId });
+  return await findAllRepo({ ...auth, excludeEnterpriseId: enterpriseId, activeEnterpriseId: enterpriseId });
 };
