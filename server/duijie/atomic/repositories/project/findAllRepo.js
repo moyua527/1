@@ -18,6 +18,12 @@ module.exports = async ({ status, client_id, page = 1, limit = 20 }, auth = {}) 
       sql += filter; countSql += filter;
       params.push(auth.clientId, auth.userId, auth.userId);
       countParams.push(auth.clientId, auth.userId, auth.userId);
+    } else if (auth.activeEnterpriseId) {
+      // 企业成员：可见本企业所有项目 + 自己参与的项目
+      const filter = ` AND (p.internal_client_id = ? OR p.client_id = ? OR ${isMember})`;
+      sql += filter; countSql += filter;
+      params.push(auth.activeEnterpriseId, auth.activeEnterpriseId, auth.userId, auth.userId);
+      countParams.push(auth.activeEnterpriseId, auth.activeEnterpriseId, auth.userId, auth.userId);
     } else {
       sql += ` AND ${isMember}`; countSql += ` AND ${isMember}`;
       params.push(auth.userId, auth.userId);
