@@ -116,9 +116,10 @@ export default function ProjectList() {
                   <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {(() => {
                       // 根据活跃企业视角动态显示我方/客户
-                      const isClientSide = activeEnterpriseId && p.client_id === activeEnterpriseId && p.internal_client_id !== activeEnterpriseId
+                      const isSameEnterprise = p.internal_client_id && p.client_id && p.internal_client_id === p.client_id
+                      const isClientSide = !isSameEnterprise && activeEnterpriseId && p.client_id === activeEnterpriseId && p.internal_client_id !== activeEnterpriseId
                       const myName = isClientSide ? (p.client_name || '-') : (p.internal_client_name || '-')
-                      const otherName = isClientSide ? (p.internal_client_name || '-') : (p.client_name || '-')
+                      const otherName = isSameEnterprise ? '无' : (isClientSide ? (p.internal_client_name || '无') : (p.client_name || '无'))
                       return <>
                         <div>我方企业: {myName}</div>
                         <div>客户企业: {otherName}</div>

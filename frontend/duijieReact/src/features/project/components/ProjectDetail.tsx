@@ -140,7 +140,7 @@ export default function ProjectDetail() {
   const clientMembers = (project.members || []).filter((m: any) => m.source === 'client')
   const hasExternalEnterprise = !!project.has_external_enterprise
   const isClientPerspective = hasExternalEnterprise && !!activeEnterpriseId && !!project.client_id && Number(activeEnterpriseId) === Number(project.client_id)
-  const internalEnterpriseName = project.internal_client_name || project.client_name || '-'
+  const internalEnterpriseName = project.internal_client_name || '-'
   const clientEnterpriseName = project.client_name || '无'
   const myEnterpriseName = isClientPerspective ? clientEnterpriseName : internalEnterpriseName
   const otherEnterpriseName = hasExternalEnterprise ? (isClientPerspective ? internalEnterpriseName : clientEnterpriseName) : '无'

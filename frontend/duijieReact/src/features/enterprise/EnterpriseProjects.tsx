@@ -56,12 +56,13 @@ export default function EnterpriseProjects() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--text-tertiary)', flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                       {(() => {
-                        const isClientSide = activeEnterpriseId && p.client_id === activeEnterpriseId && p.internal_client_id !== activeEnterpriseId
+                        const isSameEnterprise = p.internal_client_id && p.client_id && p.internal_client_id === p.client_id
+                        const isClientSide = !isSameEnterprise && activeEnterpriseId && p.client_id === activeEnterpriseId && p.internal_client_id !== activeEnterpriseId
                         const myName = isClientSide ? p.client_name : p.internal_client_name
-                        const otherName = isClientSide ? p.internal_client_name : p.client_name
+                        const otherName = isSameEnterprise ? null : (isClientSide ? p.internal_client_name : p.client_name)
                         return <>
                           {myName && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><TrendingUp size={12} /> 我方企业：{myName}</span>}
-                          {otherName && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><TrendingUp size={12} /> 客户企业：{otherName}</span>}
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><TrendingUp size={12} /> 客户企业：{otherName || '无'}</span>
                         </>
                       })()}
                     </div>
