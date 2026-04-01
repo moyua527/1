@@ -175,6 +175,17 @@ export function useAuditLogs(page: number, filters?: { action?: string; entity?:
   })
 }
 
+export function usePartners() {
+  return useQuery<any[]>({
+    queryKey: ['partners'],
+    queryFn: async () => {
+      const r: ApiResponse = await fetchApi('/api/partners')
+      if (!r.success) throw new Error(r.message)
+      return r.data || []
+    },
+  })
+}
+
 export function useCalendarEvents(year: number, month: number) {
   const m = month + 1
   const start = `${year}-${String(m).padStart(2, '0')}-01`

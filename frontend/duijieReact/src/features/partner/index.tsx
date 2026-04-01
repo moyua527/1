@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { fetchApi } from '../../bootstrap'
+import { usePartners, useInvalidate } from '../../hooks/useApi'
 import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
 import Modal from '../ui/Modal'
@@ -113,8 +114,8 @@ function AppViewer({ partner, onBack }: { partner: Partner; onBack: () => void }
 }
 
 export default function PartnerManagement() {
-  const [partners, setPartners] = useState<Partner[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: partners = [], isLoading: loading } = usePartners()
+  const invalidate = useInvalidate()
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Partner | null>(null)
   const [form, setForm] = useState({ partner_name: '', partner_url: '', partner_key: '', permissions: [] as string[], notes: '' })
@@ -122,14 +123,7 @@ export default function PartnerManagement() {
   const [visibleKeys, setVisibleKeys] = useState<Set<number>>(new Set())
   const [viewing, setViewing] = useState<Partner | null>(null)
 
-  const load = async () => {
-    setLoading(true)
-    const r = await fetchApi('/api/partners')
-    if (r.success) setPartners(r.data)
-    setLoading(false)
-  }
-
-  useEffect(() => { load() }, [])
+  const refresh = () => invalidate('partners')
 
   const openCreate = () => {
     setEditing(null)
@@ -162,7 +156,7 @@ export default function PartnerManagement() {
         toast('API Key 已复制到剪贴板', 'success')
       }
       setModalOpen(false)
-      load()
+      refresh()
     } else toast(r.message || '保存失败', 'error')
   }
 
@@ -178,7 +172,7 @@ export default function PartnerManagement() {
     if (r.success) {
       toast('已重置', 'success')
       await navigator.clipboard?.writeText(r.data.api_key).catch(() => {})
-      load()
+      refresh()
     }
   }
 
@@ -186,7 +180,7 @@ export default function PartnerManagement() {
     const ok = await confirm({ message: `确定删除合作方 [${p.partner_name}]？`, danger: true })
     if (!ok) return
     const r = await fetchApi(`/api/partners/${p.id}`, { method: 'DELETE' })
-    if (r.success) { toast('已删除', 'success'); load() }
+    if (r.success) { toast('已删除', 'success'); refresh() }
   }
 
   const toggleKeyVisible = (id: number) => {
