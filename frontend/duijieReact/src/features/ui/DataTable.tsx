@@ -1,5 +1,5 @@
 import { type ReactNode, type CSSProperties, useRef, useEffect } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import Pagination from './Pagination'
 
 interface Column<T> {
   key: string
@@ -55,7 +55,10 @@ export default function DataTable<T>({ columns, data, rowKey, selected, onSelect
             {data.map((row, idx) => {
               const key = rowKey(row)
               return (
-                <tr key={key} style={{ borderBottom: '1px solid var(--border-secondary)', cursor: onRowClick ? 'pointer' : undefined }} onClick={() => onRowClick?.(row)}>
+                <tr key={key} style={{ borderBottom: '1px solid var(--border-secondary)', cursor: onRowClick ? 'pointer' : undefined, transition: 'background 0.15s' }} onClick={() => onRowClick?.(row)}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = '')}
+                >
                   {onSelect && (
                     <td style={tdStyle}>
                       <input type="checkbox" checked={selected?.has(key)} onChange={e => { e.stopPropagation(); onSelect(key) }} style={{ cursor: 'pointer' }} />
@@ -72,25 +75,7 @@ export default function DataTable<T>({ columns, data, rowKey, selected, onSelect
       </div>
 
       {page && totalPages && totalPages > 1 && onPageChange && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderTop: '1px solid var(--border-secondary)' }}>
-          <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
-            {((page - 1) * (pageSize || 10)) + 1}–{Math.min(page * (pageSize || 10), totalCount || 0)} / {totalCount}
-          </div>
-          <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-            <button disabled={page <= 1} onClick={() => onPageChange(page - 1)} style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', cursor: page <= 1 ? 'not-allowed' : 'pointer', color: page <= 1 ? 'var(--text-disabled)' : 'var(--text-body)', display: 'flex' }}><ChevronLeft size={14} /></button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 2).map((p, idx, arr) => {
-              const prev = arr[idx - 1]
-              const showEllipsis = prev && p - prev > 1
-              return (
-                <span key={p}>
-                  {showEllipsis && <span style={{ padding: '0 4px', color: 'var(--text-tertiary)', fontSize: 12 }}>…</span>}
-                  <button onClick={() => onPageChange(p)} style={{ minWidth: 30, padding: '5px 8px', borderRadius: 6, border: p === page ? 'none' : '1px solid var(--border-primary)', background: p === page ? 'var(--brand)' : 'var(--bg-primary)', color: p === page ? '#fff' : 'var(--text-body)', fontSize: 12, fontWeight: p === page ? 600 : 400, cursor: 'pointer' }}>{p}</button>
-                </span>
-              )
-            })}
-            <button disabled={page >= totalPages} onClick={() => onPageChange(page + 1)} style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', cursor: page >= totalPages ? 'not-allowed' : 'pointer', color: page >= totalPages ? 'var(--text-disabled)' : 'var(--text-body)', display: 'flex' }}><ChevronRight size={14} /></button>
-          </div>
-        </div>
+        <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange} totalCount={totalCount} pageSize={pageSize} />
       )}
     </>
   )
