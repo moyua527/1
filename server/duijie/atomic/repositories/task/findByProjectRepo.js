@@ -21,6 +21,11 @@ module.exports = async (project_id, auth = {}) => {
     filter = 'AND t.project_id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ? UNION SELECT id FROM duijie_projects WHERE created_by = ? AND is_deleted = 0)';
     params.push(auth.userId, auth.userId);
   }
+  // 企业数据隔离
+  if (auth.activeEnterpriseId) {
+    filter += ' AND t.project_id IN (SELECT id FROM duijie_projects WHERE is_deleted = 0 AND (internal_client_id = ? OR client_id = ?))';
+    params.push(auth.activeEnterpriseId, auth.activeEnterpriseId);
+  }
   const [rows] = await db.query(
     `${base} WHERE t.is_deleted = 0 ${filter} ORDER BY t.sort_order ASC, t.created_at DESC`,
     params

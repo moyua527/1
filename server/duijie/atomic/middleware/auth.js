@@ -5,7 +5,7 @@ const getJwtSecret = require('../repositories/auth/getJwtSecretRepo');
 
 async function getCurrentUser(userId) {
   const [rows] = await db.query(
-    'SELECT id, role, client_id, is_active FROM voice_users WHERE id = ? AND is_deleted = 0 LIMIT 1',
+    'SELECT id, role, client_id, is_active, active_enterprise_id FROM voice_users WHERE id = ? AND is_deleted = 0 LIMIT 1',
     [userId]
   );
   return rows[0] || null;
@@ -26,8 +26,9 @@ module.exports = async (req, res, next) => {
     req.userId = currentUser.id;
     req.userRole = currentUser.role || 'member';
     req.clientId = currentUser.client_id || null;
-    req.user = { id: currentUser.id, userId: currentUser.id, role: req.userRole, clientId: req.clientId };
-    logger.debug(`auth uid=${req.userId} role=${req.userRole} ${req.originalUrl}`);
+    req.activeEnterpriseId = currentUser.active_enterprise_id ? Number(currentUser.active_enterprise_id) : null;
+    req.user = { id: currentUser.id, userId: currentUser.id, role: req.userRole, clientId: req.clientId, activeEnterpriseId: req.activeEnterpriseId };
+    logger.debug(`auth uid=${req.userId} role=${req.userRole} ent=${req.activeEnterpriseId} ${req.originalUrl}`);
     next();
   } catch (e) {
     res.status(401).json({ success: false, message: '认证失败' });

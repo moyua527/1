@@ -3,12 +3,26 @@ const db = require('../../../config/db');
 module.exports = async (auth = {}) => {
   let filter = '';
   const params = [];
+  if (auth.excludeEnterpriseId) {
+    filter += ' AND c.id != ?';
+    params.push(auth.excludeEnterpriseId);
+  }
   if (auth.role !== 'admin' && auth.userId) {
-    filter = `AND c.id IN (
-      SELECT DISTINCT p.client_id FROM duijie_projects p
-      WHERE p.is_deleted = 0 AND (p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?))
-    )`;
-    params.push(auth.userId, auth.userId);
+    // 企业数据隔离：只显示当前活跃企业关联的项目中的客户
+    if (auth.activeEnterpriseId) {
+      filter += ` AND c.id IN (
+        SELECT DISTINCT CASE WHEN p.client_id = ? THEN p.internal_client_id ELSE p.client_id END
+        FROM duijie_projects p
+        WHERE p.is_deleted = 0 AND (p.internal_client_id = ? OR p.client_id = ?)
+      )`;
+      params.push(auth.activeEnterpriseId, auth.activeEnterpriseId, auth.activeEnterpriseId);
+    } else {
+      filter += ` AND c.id IN (
+        SELECT DISTINCT p.client_id FROM duijie_projects p
+        WHERE p.is_deleted = 0 AND (p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?))
+      )`;
+      params.push(auth.userId, auth.userId);
+    }
   }
   const [rows] = await db.query(
     `SELECT c.*,

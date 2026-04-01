@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Building2, UserCircle } from 'lucide-react'
 import { clientApi } from '../services/api'
-import { can } from '../../../stores/permissions'
 import Modal from '../../ui/Modal'
 import Input from '../../ui/Input'
 import Button from '../../ui/Button'
@@ -23,39 +22,30 @@ interface Props {
 
 export default function ClientCreateModal({ open, onClose, onCreated }: Props) {
   const [submitting, setSubmitting] = useState(false)
-  const [form, setForm] = useState({ user_id: '', client_type: 'company', name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', position_level: '', department: '', job_function: '', assigned_to: '' })
+  const [form, setForm] = useState({ client_type: 'company', name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', assigned_to: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [availableMembers, setAvailableMembers] = useState<any[]>([])
+  const [enterpriseMembers, setEnterpriseMembers] = useState<any[]>([])
 
   useEffect(() => {
     if (open) {
-      clientApi.availableMembers().then(r => { if (r.success) setAvailableMembers(r.data || []) })
+      clientApi.availableMembers().then(r => { if (r.success) setEnterpriseMembers(r.data || []) })
     }
   }, [open])
 
-  const handleSelectMember = (userId: string) => {
-    const m = availableMembers.find((u: any) => String(u.id) === userId)
-    if (m) {
-      setForm(prev => ({ ...prev, user_id: userId, name: m.nickname || m.username, email: m.email || '', phone: m.phone || '' }))
-    } else {
-      setForm(prev => ({ ...prev, user_id: '', name: '', email: '', phone: '' }))
-    }
-  }
-
   const handleCreate = async () => {
     const e: Record<string, string> = {}
-    if (!form.user_id) e.user_id = '请选择成员用户'
-    if (!form.channel) e.channel = '请选择渠道'
     if (!form.name.trim()) e.name = '请输入客户名称'
+    if (!form.channel) e.channel = '请选择渠道'
+    if (form.client_type === 'company' && !form.company.trim()) e.company = '请输入公司名称'
     setErrors(e)
     if (Object.keys(e).length > 0) return
     setSubmitting(true)
-    const r = await clientApi.create({ ...form, user_id: Number(form.user_id) })
+    const r = await clientApi.create(form)
     setSubmitting(false)
     if (r.success) {
       toast('客户添加成功', 'success')
       onClose()
-      setForm({ user_id: '', client_type: 'company', name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', position_level: '', department: '', job_function: '', assigned_to: '' })
+      setForm({ client_type: 'company', name: '', company: '', email: '', phone: '', channel: '', stage: 'potential', assigned_to: '' })
       setErrors({})
       onCreated()
     } else toast(r.message || '添加失败', 'error')
@@ -66,44 +56,6 @@ export default function ClientCreateModal({ open, onClose, onCreated }: Props) {
   return (
     <Modal open={open} onClose={onClose} title="新增客户">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>选择成员用户 <span style={{ color: 'var(--color-danger)' }}>*</span></label>
-          <div style={{ border: `1px solid ${errors.user_id ? 'var(--color-danger)' : 'var(--border-primary)'}`, borderRadius: 8, maxHeight: 200, overflowY: 'auto' }}>
-            {availableMembers.map((u: any) => {
-              const selected = String(u.id) === form.user_id
-              const name = u.nickname || u.username
-              const initial = name.charAt(0)
-              const roleColors: Record<string, string> = { admin: 'var(--color-danger)', member: 'var(--brand)' }
-              const bgColor = roleColors[u.role] || '#6b7280'
-              const roleLabels: Record<string, string> = { admin: '管理员', member: '成员' }
-              return (
-                <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-secondary)', background: selected ? 'var(--bg-secondary)' : 'var(--bg-primary)', transition: 'background 0.1s' }}
-                  onMouseEnter={e => { if (!selected) e.currentTarget.style.background = 'var(--bg-secondary)' }}
-                  onMouseLeave={e => { if (!selected) e.currentTarget.style.background = 'var(--bg-primary)' }}>
-                  <input type="radio" name="client_member" checked={selected} onChange={() => { handleSelectMember(String(u.id)); setErrors(prev => { const n = { ...prev }; delete n.user_id; return n }) }}
-                    style={{ width: 16, height: 16, accentColor: 'var(--brand)', cursor: 'pointer', flexShrink: 0 }} />
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: bgColor, color: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600, flexShrink: 0 }}>
-                    {initial}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)' }}>{name}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>@{u.username} · {roleLabels[u.role] || u.role}</div>
-                  </div>
-                </label>
-              )
-            })}
-            {availableMembers.length === 0 && <div style={{ padding: 16, textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 13 }}>暂无可关联的成员用户</div>}
-          </div>
-          {errors.user_id && <div style={errStyle}>{errors.user_id}</div>}
-        </div>
-        <div>
-          <Input label="客户名称 *" placeholder="自动填充" value={form.name} onChange={e => { setForm({ ...form, name: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.name; return n }) }} />
-          {errors.name && <div style={errStyle}>{errors.name}</div>}
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <Input label="邮箱" placeholder="自动填充" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-          <Input label="电话" placeholder="自动填充" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
-        </div>
         <div>
           <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>客户类型</label>
           <div style={{ display: 'flex', gap: 0, background: 'var(--bg-tertiary)', borderRadius: 8, padding: 3 }}>
@@ -117,7 +69,20 @@ export default function ClientCreateModal({ open, onClose, onCreated }: Props) {
             ))}
           </div>
         </div>
-        {form.client_type === 'company' && <Input label="公司名称" placeholder="输入公司名称" value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} />}
+        <div>
+          <Input label="客户名称 *" placeholder="输入客户名称" value={form.name} onChange={e => { setForm({ ...form, name: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.name; return n }) }} />
+          {errors.name && <div style={errStyle}>{errors.name}</div>}
+        </div>
+        {form.client_type === 'company' && (
+          <div>
+            <Input label="公司名称 *" placeholder="输入对方公司名称" value={form.company} onChange={e => { setForm({ ...form, company: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.company; return n }) }} />
+            {errors.company && <div style={errStyle}>{errors.company}</div>}
+          </div>
+        )}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <Input label="邮箱" placeholder="name@example.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+          <Input label="电话" placeholder="13800138000" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+        </div>
         <div>
           <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>渠道 <span style={{ color: 'var(--color-danger)' }}>*</span></label>
           <select value={form.channel} onChange={e => { setForm({ ...form, channel: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.channel; return n }) }}
@@ -146,7 +111,7 @@ export default function ClientCreateModal({ open, onClose, onCreated }: Props) {
           <select value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })}
             style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
             <option value="">暂不分配</option>
-            {availableMembers.filter(u => can(u.role, 'staff:assignable')).map((u: any) => <option key={u.id} value={u.id}>{u.nickname || u.username} ({u.role === 'admin' ? '管理员' : '成员'})</option>)}
+            {enterpriseMembers.map((u: any) => <option key={u.id} value={u.id}>{u.nickname || u.username} ({u.role === 'admin' ? '管理员' : '成员'})</option>)}
           </select>
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>

@@ -33,7 +33,7 @@ export default function MilestoneTab({ milestones, projectId, canEdit, onRefresh
                 style={{ width: '100%', padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
             </div>
             <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>截止日期</label>
+              <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>达到日期</label>
               <input type="date" value={msForm.due_date} onChange={e => setMsForm({ ...msForm, due_date: e.target.value })}
                 style={{ width: '100%', padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
             </div>
@@ -66,7 +66,7 @@ export default function MilestoneTab({ milestones, projectId, canEdit, onRefresh
                 <div style={{ fontSize: 14, fontWeight: 500, color: m.is_completed ? 'var(--text-tertiary)' : 'var(--text-heading)', textDecoration: m.is_completed ? 'line-through' : 'none' }}>{m.title}</div>
                 {m.description && <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>{m.description}</div>}
                 <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                  {m.due_date && <span style={{ fontSize: 11, color: new Date(m.due_date) < new Date() && !m.is_completed ? 'var(--color-danger)' : 'var(--text-tertiary)' }}>截止: {m.due_date.slice(0, 10)}</span>}
+                  {m.due_date && <span style={{ fontSize: 11, color: new Date(m.due_date) < new Date() && !m.is_completed ? 'var(--color-danger)' : 'var(--text-tertiary)' }}>达到日期: {m.due_date.slice(0, 10)}</span>}
                   {m.completed_at && <span style={{ fontSize: 11, color: 'var(--color-success)' }}>已完成</span>}
                 </div>
               </div>

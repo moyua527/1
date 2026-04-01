@@ -3,6 +3,13 @@ const db = require('../../../config/db');
 module.exports = async (req, res) => {
   try {
     const uid = req.userId;
+    const entId = req.activeEnterpriseId;
+
+    // 企业项目过滤条件
+    const entProjFilter = entId ? 'AND p.id IN (SELECT id FROM duijie_projects WHERE is_deleted = 0 AND (internal_client_id = ? OR client_id = ?))' : '';
+    const entProjParams = entId ? [entId, entId] : [];
+    const entTaskProjFilter = entId ? 'AND t.project_id IN (SELECT id FROM duijie_projects WHERE is_deleted = 0 AND (internal_client_id = ? OR client_id = ?))' : '';
+    const entTaskParams = entId ? [entId, entId] : [];
 
     // 我的待办任务（未完成，分配给我或我创建的）
     const [myTasks] = await db.query(
@@ -11,9 +18,10 @@ module.exports = async (req, res) => {
        FROM duijie_tasks t
        LEFT JOIN duijie_projects p ON p.id = t.project_id
        WHERE t.is_deleted = 0 AND t.assignee_id = ? AND t.status IN ('todo', 'in_progress', 'pending_review')
+         ${entTaskProjFilter}
        ORDER BY FIELD(t.priority, 'urgent', 'high', 'medium', 'low'), t.due_date ASC
        LIMIT 10`,
-      [uid]
+      [uid, ...entTaskParams]
     );
 
     // 我参与的项目最近动态（最近更新的项目）
@@ -23,10 +31,10 @@ module.exports = async (req, res) => {
               (SELECT COUNT(*) FROM duijie_tasks WHERE project_id = p.id AND is_deleted = 0 AND status = 'accepted') as done_tasks
        FROM duijie_projects p
        INNER JOIN duijie_project_members pm ON pm.project_id = p.id AND pm.user_id = ?
-       WHERE p.is_deleted = 0
+       WHERE p.is_deleted = 0 ${entProjFilter}
        ORDER BY p.updated_at DESC
        LIMIT 5`,
-      [uid]
+      [uid, ...entProjParams]
     );
 
     // 待审批事项（企业加入申请 - 仅管理员/创建者可见）
@@ -58,8 +66,9 @@ module.exports = async (req, res) => {
        LEFT JOIN duijie_projects p ON p.id = t.project_id
        WHERE t.is_deleted = 0 AND t.assignee_id = ? AND t.status IN ('todo', 'in_progress')
          AND t.due_date IS NOT NULL AND t.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 3 DAY)
+         ${entTaskProjFilter}
        ORDER BY t.due_date ASC LIMIT 5`,
-      [uid]
+      [uid, ...entTaskParams]
     );
 
     // 未读通知数

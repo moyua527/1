@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { Plus, Loader2, DollarSign, Calendar, User, Trash2, Edit3, TrendingUp } from 'lucide-react'
 import { clientApi } from '../client/services/api'
-import { can } from '../../stores/permissions'
 import { useOpportunities, useInvalidate } from '../../hooks/useApi'
 import useLiveData from '../../hooks/useLiveData'
 import Button from '../ui/Button'
@@ -38,7 +37,7 @@ export default function OpportunityList() {
 
   const loadFormData = () => {
     clientApi.list().then(r => { if (r.success) setClients(r.data || []) })
-    clientApi.availableMembers().then(r => { if (r.success) setStaffMembers((r.data || []).filter((u: any) => can(u.role, 'staff:assignable'))) })
+    clientApi.availableMembers().then(r => { if (r.success) setStaffMembers(r.data || []) })
   }
 
   const openCreate = () => {

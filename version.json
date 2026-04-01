@@ -1,6 +1,6 @@
 {
-  "version": "1.1.53",
-  "versionCode": 53,
+  "version": "1.1.54",
+  "versionCode": 54,
   "minVersion": "1.0.0",
-  "changelog": "工单系统企业级数据隔离：修复跨企业工单可见安全漏洞"
+  "changelog": "客户管理企业隔离+项目关联客户企业功能"
 }

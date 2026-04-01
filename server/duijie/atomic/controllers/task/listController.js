@@ -3,7 +3,7 @@ const db = require('../../../config/db');
 
 module.exports = async (req, res) => {
   try {
-    const data = await listTasks(req.query.project_id, { role: req.userRole, userId: req.userId });
+    const data = await listTasks(req.query.project_id, { role: req.userRole, userId: req.userId, activeEnterpriseId: req.activeEnterpriseId });
     if (data.length > 0) {
       const ids = data.map(t => t.id);
       const [attachments] = await db.query(

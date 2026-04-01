@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Building2, UserCircle } from 'lucide-react'
 import { clientApi } from '../services/api'
-import { can } from '../../../stores/permissions'
 import Button from '../../ui/Button'
 import Input from '../../ui/Input'
 import Modal from '../../ui/Modal'
@@ -20,7 +19,7 @@ export default function ClientEditModal({ open, onClose, client, clientId, onSav
   if (open && !inited) {
     setForm({ client_type: client.client_type || 'company', name: client.name || '', company: client.company || '', email: client.email || '', phone: client.phone || '', channel: client.channel || '', stage: client.stage || 'potential', notes: client.notes || '', position_level: client.position_level || '', department: client.department || '', job_function: client.job_function || '', assigned_to: client.assigned_to ? String(client.assigned_to) : '' })
     setErrors({})
-    clientApi.availableMembers().then(r => { if (r.success) setStaffMembers((r.data || []).filter((u: any) => can(u.role, 'staff:assignable'))) })
+    clientApi.availableMembers().then(r => { if (r.success) setStaffMembers(r.data || []) })
     setInited(true)
   }
   if (!open && inited) setInited(false)

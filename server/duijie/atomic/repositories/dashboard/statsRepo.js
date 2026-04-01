@@ -3,9 +3,15 @@ const db = require('../../../config/db');
 function buildProjectFilter(auth) {
   const isMember = '(p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?))';
   if (auth.role === 'admin') {
+    if (auth.activeEnterpriseId) {
+      return { where: 'AND (p.internal_client_id = ? OR p.client_id = ?)', params: [auth.activeEnterpriseId, auth.activeEnterpriseId] };
+    }
     return { where: '', params: [] };
   }
   if (auth.userId) {
+    if (auth.activeEnterpriseId) {
+      return { where: `AND ${isMember} AND (p.internal_client_id = ? OR p.client_id = ?)`, params: [auth.userId, auth.userId, auth.activeEnterpriseId, auth.activeEnterpriseId] };
+    }
     return { where: `AND ${isMember}`, params: [auth.userId, auth.userId] };
   }
   return { where: '', params: [] };
@@ -25,7 +31,10 @@ module.exports = async (auth = {}) => {
 
   if (showClientData) {
     let cf = '', cfParams = [];
-    if (auth.role !== 'admin' && auth.userId) {
+    if (auth.activeEnterpriseId) {
+      cf = `AND c.id IN (SELECT DISTINCT CASE WHEN p.client_id = ? THEN p.internal_client_id ELSE p.client_id END FROM duijie_projects p WHERE p.is_deleted = 0 AND (p.internal_client_id = ? OR p.client_id = ?)) AND c.id != ?`;
+      cfParams = [auth.activeEnterpriseId, auth.activeEnterpriseId, auth.activeEnterpriseId, auth.activeEnterpriseId];
+    } else if (auth.role !== 'admin' && auth.userId) {
       cf = `AND c.id IN (SELECT DISTINCT p.client_id FROM duijie_projects p WHERE p.is_deleted = 0 AND (p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?)))`;
       cfParams = [auth.userId, auth.userId];
     }
@@ -70,15 +79,19 @@ module.exports = async (auth = {}) => {
   }
 
   let taskWhere = '', taskParams = [];
+  const entProjectFilter = auth.activeEnterpriseId
+    ? 'AND t.project_id IN (SELECT id FROM duijie_projects WHERE is_deleted = 0 AND (internal_client_id = ? OR client_id = ?))'
+    : '';
+  const entTaskParams = auth.activeEnterpriseId ? [auth.activeEnterpriseId, auth.activeEnterpriseId] : [];
   if (auth.role === 'admin') {
-    taskWhere = '';
-    taskParams = [];
+    taskWhere = entProjectFilter;
+    taskParams = [...entTaskParams];
   } else if (auth.role === 'member' && auth.userId) {
-    taskWhere = 'AND (t.assignee_id = ? OR t.project_id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?) OR t.project_id IN (SELECT id FROM duijie_projects WHERE created_by = ?))';
-    taskParams = [auth.userId, auth.userId, auth.userId];
+    taskWhere = `AND (t.assignee_id = ? OR t.project_id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?) OR t.project_id IN (SELECT id FROM duijie_projects WHERE created_by = ?)) ${entProjectFilter}`;
+    taskParams = [auth.userId, auth.userId, auth.userId, ...entTaskParams];
   } else if (auth.userId) {
-    taskWhere = 'AND (t.assignee_id = ? OR t.project_id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?) OR t.project_id IN (SELECT id FROM duijie_projects WHERE created_by = ?))';
-    taskParams = [auth.userId, auth.userId, auth.userId];
+    taskWhere = `AND (t.assignee_id = ? OR t.project_id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?) OR t.project_id IN (SELECT id FROM duijie_projects WHERE created_by = ?)) ${entProjectFilter}`;
+    taskParams = [auth.userId, auth.userId, auth.userId, ...entTaskParams];
   }
   const [[tasks]] = await db.query(
     `SELECT COUNT(*) as total, SUM(t.status = 'todo') as pending, SUM(t.status = 'accepted') as done

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { Building2, Crown, Shield, Check, ChevronDown } from 'lucide-react'
 import useEnterpriseStore from '../../stores/useEnterpriseStore'
 
 export default function EnterpriseSwitcher() {
   const location = useLocation()
+  const queryClient = useQueryClient()
   const { myEnterprises, activeEnterpriseId, switchEnterprise: storeSwitchEnterprise, refresh } = useEnterpriseStore()
   const [entDropdownOpen, setEntDropdownOpen] = useState(false)
 
@@ -15,7 +17,8 @@ export default function EnterpriseSwitcher() {
     const ok = await storeSwitchEnterprise(id)
     if (ok) {
       setEntDropdownOpen(false)
-      if (location.pathname === '/enterprise') window.location.reload()
+      // 切换企业后清空所有缓存数据，确保企业数据隔离
+      queryClient.invalidateQueries()
     }
   }
 

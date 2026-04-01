@@ -5,12 +5,20 @@ module.exports = async (req, res) => {
     const days = Number(req.query.days) || 30;
     const role = req.userRole;
     const uid = req.userId;
+    const entId = req.activeEnterpriseId;
+
+    // Enterprise project filter
+    const entPF = entId ? 'AND t.project_id IN (SELECT id FROM duijie_projects WHERE is_deleted = 0 AND (internal_client_id = ? OR client_id = ?))' : '';
+    const entPP = entId ? [entId, entId] : [];
 
     // Task filter for non-admin
     let tf = '', tp = [];
     if (role !== 'admin' && uid) {
-      tf = 'AND (t.assignee_id = ? OR t.project_id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?) OR t.project_id IN (SELECT id FROM duijie_projects WHERE created_by = ? AND is_deleted = 0))';
-      tp = [uid, uid, uid];
+      tf = `AND (t.assignee_id = ? OR t.project_id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?) OR t.project_id IN (SELECT id FROM duijie_projects WHERE created_by = ? AND is_deleted = 0)) ${entPF}`;
+      tp = [uid, uid, uid, ...entPP];
+    } else if (entId) {
+      tf = entPF;
+      tp = [...entPP];
     }
 
     // Task trend: tasks created per day
@@ -26,7 +34,10 @@ module.exports = async (req, res) => {
     let clientTrend = [];
     {
       let cf = '', cfp = [];
-      if (role !== 'admin' && uid) {
+      if (entId) {
+        cf = 'AND id IN (SELECT DISTINCT CASE WHEN p.client_id = ? THEN p.internal_client_id ELSE p.client_id END FROM duijie_projects p WHERE p.is_deleted = 0 AND (p.internal_client_id = ? OR p.client_id = ?)) AND id != ?';
+        cfp = [entId, entId, entId, entId];
+      } else if (role !== 'admin' && uid) {
         cf = 'AND id IN (SELECT DISTINCT p.client_id FROM duijie_projects p WHERE p.is_deleted = 0 AND (p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?)))';
         cfp = [uid, uid];
       }
@@ -47,7 +58,13 @@ module.exports = async (req, res) => {
     let oppDist = [];
     {
       let of = '', ofp = [];
-      if (role !== 'admin' && uid) { of = 'AND (assigned_to = ? OR created_by = ?)'; ofp = [uid, uid]; }
+      if (entId) {
+        of = 'AND client_id IN (SELECT DISTINCT CASE WHEN p.client_id = ? THEN p.internal_client_id ELSE p.client_id END FROM duijie_projects p WHERE p.is_deleted = 0 AND (p.internal_client_id = ? OR p.client_id = ?))';
+        ofp = [entId, entId, entId];
+      } else if (role !== 'admin' && uid) {
+        of = 'AND (assigned_to = ? OR created_by = ?)';
+        ofp = [uid, uid];
+      }
       const [rows] = await db.query(
         `SELECT stage, COUNT(*) as count, COALESCE(SUM(amount),0) as amount FROM duijie_opportunities
          WHERE is_deleted = 0 ${of} GROUP BY stage`, ofp

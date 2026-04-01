@@ -27,6 +27,15 @@ module.exports = async ({ status, client_id, page = 1, limit = 20 }, auth = {}) 
 
   if (status) { sql += ' AND p.status = ?'; countSql += ' AND p.status = ?'; params.push(status); countParams.push(status); }
   if (client_id) { sql += ' AND p.client_id = ?'; countSql += ' AND p.client_id = ?'; params.push(client_id); countParams.push(client_id); }
+
+  // 企业数据隔离：只显示当前活跃企业关联的项目
+  if (auth.activeEnterpriseId) {
+    const entFilter = ' AND (p.internal_client_id = ? OR p.client_id = ?)';
+    sql += entFilter; countSql += entFilter;
+    params.push(auth.activeEnterpriseId, auth.activeEnterpriseId);
+    countParams.push(auth.activeEnterpriseId, auth.activeEnterpriseId);
+  }
+
   sql += ' ORDER BY p.created_at DESC LIMIT ? OFFSET ?';
   params.push(Number(limit), (Number(page) - 1) * Number(limit));
   logger.debug(`findAllRepo SQL: ${sql} params=${JSON.stringify(params)}`);

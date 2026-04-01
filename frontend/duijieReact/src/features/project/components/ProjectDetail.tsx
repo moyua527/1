@@ -7,6 +7,7 @@ import useProjectPerms from '../../../hooks/useProjectPerms'
 import Modal from '../../ui/Modal'
 import { fetchApi } from '../../../bootstrap'
 import { projectApi } from '../services/api'
+import { clientApi } from '../../client/services/api'
 import { taskApi } from '../../task/services/api'
 import { milestoneApi } from '../../milestone/services/api'
 import Button from '../../ui/Button'
@@ -66,6 +67,10 @@ export default function ProjectDetail() {
   const [clientData, setClientData] = useState<any>(null)
   const [enterpriseRoles, setEnterpriseRoles] = useState<any[]>([])
   const activeEnterpriseId = useEnterpriseStore(s => s.activeEnterpriseId)
+  const [showSetClient, setShowSetClient] = useState(false)
+  const [availableClients, setAvailableClients] = useState<any[]>([])
+  const [selectedClientId, setSelectedClientId] = useState('')
+  const [settingClient, setSettingClient] = useState(false)
 
   const openClientModal = (clientId: number) => {
     setClientModal(true)
@@ -151,6 +156,37 @@ export default function ProjectDetail() {
     else toast(r.message || '删除失败', 'error')
   }
 
+  const openSetClient = () => {
+    setSelectedClientId('')
+    setShowSetClient(true)
+    clientApi.list().then(r => {
+      if (r.success) setAvailableClients((r.data || []).filter((c: any) => c.client_type === 'company'))
+    })
+  }
+
+  const handleSetClient = async () => {
+    if (!selectedClientId) { toast('请选择客户企业', 'error'); return }
+    setSettingClient(true)
+    const r = await projectApi.update(id!, { client_id: Number(selectedClientId) })
+    setSettingClient(false)
+    if (r.success) {
+      toast('客户企业已关联', 'success')
+      setShowSetClient(false)
+      loadProject()
+    } else toast(r.message || '关联失败', 'error')
+  }
+
+  const handleRemoveClient = async () => {
+    setSettingClient(true)
+    const r = await projectApi.update(id!, { client_id: null })
+    setSettingClient(false)
+    if (r.success) {
+      toast('已取消关联', 'success')
+      setShowSetClient(false)
+      loadProject()
+    } else toast(r.message || '操作失败', 'error')
+  }
+
   const refreshAvailableUsers = () => { projectApi.availableUsers(id!).then(r => { if (r.success) setAvailableUsers(r.data || []) }) }
   const refreshClientAvailableUsers = () => { projectApi.clientAvailableUsers(id!).then(r => { if (r.success) setClientAvailableUsers(r.data || []) }) }
 
@@ -178,7 +214,7 @@ export default function ProjectDetail() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
             <Badge color={st.color}>{st.label}</Badge>
             <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>我方企业: <span style={{ color: 'var(--text-heading)' }}>{myEnterpriseName}</span></span>
-            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{isClientPerspective ? '对方企业' : '客户企业'}: {hasExternalEnterprise ? (isClientPerspective ? <span style={{ color: 'var(--text-heading)' }}>{otherEnterpriseName}</span> : <span onClick={() => project.client_id && openClientModal(project.client_id)} style={{ color: 'var(--brand)', cursor: 'pointer' }}>{otherEnterpriseName}</span>) : <span style={{ color: 'var(--text-heading)' }}>无</span>}</span>
+            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{isClientPerspective ? '对方企业' : '客户企业'}: {hasExternalEnterprise ? (isClientPerspective ? <span style={{ color: 'var(--text-heading)' }}>{otherEnterpriseName}</span> : <span onClick={() => project.client_id && openClientModal(project.client_id)} style={{ color: 'var(--brand)', cursor: 'pointer' }}>{otherEnterpriseName}</span>) : (<>{canEdit && <button onClick={openSetClient} style={{ fontSize: 12, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, textDecoration: 'underline' }}>设置</button>}{!canEdit && <span style={{ color: 'var(--text-heading)' }}>无</span>}</>)}</span>
           </div>
         </div>
         {canDelete && <Button variant="danger" onClick={handleDelete}><Trash2 size={14} /> 删除</Button>}
@@ -206,7 +242,7 @@ export default function ProjectDetail() {
             <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>结束日期</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.end_date || '未设置'}</div></div>
             <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>预算</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.budget > 0 ? `¥${Number(project.budget).toLocaleString()}` : '未设置'}</div></div>
             <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>我方企业</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{myEnterpriseName}</div></div>
-            <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{isClientPerspective ? '对方企业' : '客户企业'}</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{hasExternalEnterprise ? (isClientPerspective ? otherEnterpriseName : (project.client_id ? <span onClick={() => openClientModal(project.client_id)} style={{ color: 'var(--brand)', cursor: 'pointer' }}>{otherEnterpriseName}</span> : otherEnterpriseName)) : '无'}</div></div>
+            <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{isClientPerspective ? '对方企业' : '客户企业'}</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{hasExternalEnterprise ? (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>{isClientPerspective ? otherEnterpriseName : (project.client_id ? <span onClick={() => openClientModal(project.client_id)} style={{ color: 'var(--brand)', cursor: 'pointer' }}>{otherEnterpriseName}</span> : otherEnterpriseName)}{canEdit && !isClientPerspective && <button onClick={openSetClient} style={{ fontSize: 11, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>更换</button>}</span>) : (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>无{canEdit && <button onClick={openSetClient} style={{ fontSize: 11, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>设置</button>}</span>)}</div></div>
             <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>创建时间</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.created_at ? new Date(project.created_at).toLocaleDateString('zh-CN') : '-'}</div></div>
             <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>任务数</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{tasks.length}</div></div>
           </div>
@@ -315,6 +351,33 @@ export default function ProjectDetail() {
           </div>
         </div>
       )}
+
+      <Modal open={showSetClient} onClose={() => setShowSetClient(false)} title={hasExternalEnterprise ? '更换客户企业' : '设置客户企业'}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 6 }}>选择客户企业</label>
+            <select value={selectedClientId} onChange={e => setSelectedClientId(e.target.value)}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--text-disabled)', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
+              <option value="">请选择企业</option>
+              {availableClients.map((c: any) => (
+                <option key={c.id} value={c.id}>{c.name}{c.company ? ` (${c.company})` : ''}</option>
+              ))}
+            </select>
+            {availableClients.length === 0 && (
+              <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 6 }}>暂无可关联的企业客户，请先在客户管理中添加</div>
+            )}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            {hasExternalEnterprise && (
+              <Button variant="secondary" onClick={handleRemoveClient} disabled={settingClient}>取消关联</Button>
+            )}
+            <Button variant="secondary" onClick={() => setShowSetClient(false)}>取消</Button>
+            <Button onClick={handleSetClient} disabled={settingClient || !selectedClientId}>
+              {settingClient ? '保存中...' : '确定'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       <MemberInfoModal member={selectedMember} onClose={() => setSelectedMember(null)} />
       <ClientInfoModal open={clientModal} onClose={() => setClientModal(false)} clientData={clientData} />
