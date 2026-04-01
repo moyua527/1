@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { Plus, Loader2, DollarSign, Calendar, User, Trash2, Edit3, TrendingUp } from 'lucide-react'
 import { clientApi } from '../client/services/api'
 import { can } from '../../stores/permissions'
+import { useOpportunities, useInvalidate } from '../../hooks/useApi'
 import useLiveData from '../../hooks/useLiveData'
 import Button from '../ui/Button'
 import PageHeader from '../ui/PageHeader'
@@ -23,21 +24,17 @@ const stageMap: Record<string, { label: string; color: string; bg: string }> = {
 const stageKeys = ['lead', 'qualify', 'proposal', 'negotiate', 'won', 'lost']
 
 export default function OpportunityList() {
-  const [items, setItems] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: items = [], isLoading: loading } = useOpportunities()
+  const invalidate = useInvalidate()
+  const refresh = () => invalidate('opportunities')
+  useLiveData(['opportunity'], refresh)
+
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<any>(null)
   const [clients, setClients] = useState<any[]>([])
   const [staffMembers, setStaffMembers] = useState<any[]>([])
   const [dragOverStage, setDragOverStage] = useState<string | null>(null)
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
-
-  const load = () => {
-    setLoading(true)
-    clientApi.opportunities().then(r => { if (r.success) setItems(r.data || []) }).finally(() => setLoading(false))
-  }
-  useEffect(load, [])
-  useLiveData(['opportunity'], load)
 
   const loadFormData = () => {
     clientApi.list().then(r => { if (r.success) setClients(r.data || []) })
@@ -59,15 +56,14 @@ export default function OpportunityList() {
   const handleDelete = async (item: any) => {
     if (!(await confirm({ message: `确定删除商机"${item.title}"？`, danger: true }))) return
     const r = await clientApi.deleteOpportunity(item.id)
-    if (r.success) { toast('商机已删除', 'success'); load() }
+    if (r.success) { toast('商机已删除', 'success'); refresh() }
     else toast(r.message || '删除失败', 'error')
   }
 
   const handleStageChange = async (item: any, newStage: string) => {
-    const prev = items
-    setItems(list => list.map(i => i.id === item.id ? { ...i, stage: newStage } : i))
     const r = await clientApi.updateOpportunity(item.id, { stage: newStage })
-    if (!r.success) { setItems(prev); toast(r.message || '移动失败', 'error') }
+    if (r.success) refresh()
+    else toast(r.message || '移动失败', 'error')
   }
 
   const totalAmount = items.filter(i => i.stage !== 'lost').reduce((s, i) => s + Number(i.amount || 0), 0)
@@ -151,7 +147,7 @@ export default function OpportunityList() {
         </div>
       )}
 
-      <OpportunityFormModal open={modalOpen} onClose={() => setModalOpen(false)} editing={editing} clients={clients} staffMembers={staffMembers} onSaved={load} />
+      <OpportunityFormModal open={modalOpen} onClose={() => setModalOpen(false)} editing={editing} clients={clients} staffMembers={staffMembers} onSaved={refresh} />
     </div>
   )
 }

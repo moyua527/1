@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell, CheckCheck, ExternalLink } from 'lucide-react'
-import { fetchApi, getToken } from '../../bootstrap'
-import { io, Socket } from 'socket.io-client'
-import { isCapacitor, SERVER_URL } from '../../utils/capacitor'
+import { fetchApi } from '../../bootstrap'
+import { onSocket } from './smartSocket'
 
 const typeIcon: Record<string, string> = {
   task_assigned: '📋', task_status: '🔄', task_comment: '💬',
@@ -29,7 +28,6 @@ export default function NotificationBell() {
   const [activeTab, setActiveTab] = useState('all')
   const ref = useRef<HTMLDivElement>(null)
   const nav = useNavigate()
-  const socketRef = useRef<Socket | null>(null)
 
   const load = useCallback((cat?: string) => {
     const c = cat || activeTab
@@ -44,19 +42,13 @@ export default function NotificationBell() {
 
   useEffect(() => {
     load()
-    const socket = io(isCapacitor ? SERVER_URL : window.location.origin, { path: '/socket.io', withCredentials: true })
-    socketRef.current = socket
-    socket.on('connect', () => {
-      const token = getToken()
-      if (token) socket.emit('auth', token)
-    })
-    socket.on('new_notification', (data: any) => {
+    const offNotif = onSocket('new_notification', (data: any) => {
       setNotifications(prev => [data, ...prev].slice(0, 30))
       setUnread(prev => prev + 1)
       if (data.category) setUnreadByCat(prev => ({ ...prev, [data.category]: (prev[data.category] || 0) + 1 }))
     })
     const fallback = setInterval(load, 120000)
-    return () => { clearInterval(fallback); socket.disconnect() }
+    return () => { clearInterval(fallback); offNotif() }
   }, [])
 
   useEffect(() => {
