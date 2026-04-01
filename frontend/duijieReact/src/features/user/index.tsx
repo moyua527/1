@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { Plus, Trash2, Edit2, Shield, Loader2, User, Power, Link2, Clock, CheckCircle2, KeyRound, Download, Users, MoreVertical } from 'lucide-react'
+import { Plus, Trash2, Edit2, Shield, User, Power, Link2, Clock, CheckCircle2, KeyRound, Download, Users, MoreVertical } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { useUsers, useInvalidate } from '../../hooks/useApi'
 import Button from '../ui/Button'
@@ -13,6 +13,7 @@ import FilterBar from '../ui/FilterBar'
 import BatchActionBar from '../ui/BatchActionBar'
 import EmptyState from '../ui/EmptyState'
 import DataTable from '../ui/DataTable'
+import { SkeletonTable } from '../ui/Skeleton'
 import UserDetailSheet from './components/UserDetailSheet'
 import UserFormModal from './components/UserFormModal'
 import InviteLinkSection from './components/InviteLinkSection'
@@ -260,9 +261,9 @@ export default function UserManagement() {
         title="用户管理"
         subtitle="管理平台成员账号、角色与启用状态"
         actions={<>
-          <Button variant="secondary" onClick={handleExport} style={{ fontSize: 13, padding: '7px 14px' }}><Download size={14} /> 导出</Button>
-          <Button variant="secondary" onClick={() => setShowInviteModal(true)} style={{ fontSize: 13, padding: '7px 14px' }}><Link2 size={14} /> 邀请链接</Button>
-          <Button onClick={() => setShowCreate(true)} style={{ fontSize: 13, padding: '7px 14px' }}><Plus size={14} /> 新增用户</Button>
+          <Button variant="secondary" size="sm" onClick={handleExport}><Download size={14} /> 导出</Button>
+          <Button variant="secondary" size="sm" onClick={() => setShowInviteModal(true)}><Link2 size={14} /> 邀请链接</Button>
+          <Button size="sm" onClick={() => setShowCreate(true)}><Plus size={14} /> 新增用户</Button>
         </>}
       />
 
@@ -284,14 +285,12 @@ export default function UserManagement() {
         />
 
         <BatchActionBar selectedCount={selectedCount} onClear={() => setSelected([])}>
-          <Button style={{ padding: '4px 12px', fontSize: 12 }} onClick={() => handleBatchToggle(true)}>批量启用</Button>
-          <Button variant="danger" style={{ padding: '4px 12px', fontSize: 12 }} onClick={() => handleBatchToggle(false)}>批量禁用</Button>
+          <Button size="sm" onClick={() => handleBatchToggle(true)}>批量启用</Button>
+          <Button variant="danger" size="sm" onClick={() => handleBatchToggle(false)}>批量禁用</Button>
         </BatchActionBar>
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}>
-            <Loader2 size={28} style={{ animation: 'spin 1s linear infinite' }} />
-          </div>
+          <SkeletonTable rows={6} cols={5} />
         ) : filtered.length === 0 ? (
           <EmptyState
             icon={Users}

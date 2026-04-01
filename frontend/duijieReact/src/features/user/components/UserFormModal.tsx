@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Shield, User } from 'lucide-react'
 import { fetchApi } from '../../../bootstrap'
-import Button from '../../ui/Button'
 import Modal from '../../ui/Modal'
 import Input from '../../ui/Input'
+import Select from '../../ui/Select'
+import { FormSection, FormGrid, FormActions } from '../../ui/Form'
 import { toast } from '../../ui/Toast'
 import { confirm } from '../../ui/ConfirmDialog'
 
@@ -12,11 +13,7 @@ const roleMap: Record<string, { label: string; color: string; bg: string; icon: 
   member: { label: '成员', color: 'var(--brand)', bg: 'var(--bg-selected)', icon: User },
 }
 
-const selectStyle: React.CSSProperties = { width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-body)' }
-
-const labelStyle: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }
-
-const groupTitle = (t: string) => <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' as const, letterSpacing: '0.05em', padding: '12px 0 6px' }}>{t}</div>
+const roleOptions = Object.entries(roleMap).map(([k, v]) => ({ value: k, label: v.label }))
 
 const emptyForm = { username: '', password: '', nickname: '', role: 'member', email: '', phone: '', client_id: '', manager_id: '' }
 
@@ -82,86 +79,56 @@ export default function UserFormModal({ mode, editUser, open, onClose, onSaved, 
   if (mode === 'create') {
     return (
       <Modal open={open} onClose={onClose} title="新增用户">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {groupTitle('基础信息')}
+        <FormSection title="基础信息">
           <Input label="昵称" placeholder="显示名称" value={form.nickname} onChange={e => setForm({ ...form, nickname: e.target.value })} />
-          <div style={{ display: 'flex', gap: 12 }}>
-            <div style={{ flex: 1 }}><Input label="手机号" placeholder="11位手机号" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
-            <div style={{ flex: 1 }}><Input label="邮箱" placeholder="email@example.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
-          </div>
+          <FormGrid>
+            <Input label="手机号" placeholder="11位手机号" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+            <Input label="邮箱" placeholder="email@example.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+          </FormGrid>
+        </FormSection>
 
-          {groupTitle('账号信息')}
-          <div style={{ display: 'flex', gap: 12 }}>
-            <div style={{ flex: 1 }}><Input label="用户名 *" placeholder="登录用户名" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} required /></div>
-            <div style={{ flex: 1 }}><Input label="密码 *" placeholder="登录密码" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required /></div>
-          </div>
+        <FormSection title="账号信息">
+          <FormGrid>
+            <Input label="用户名 *" placeholder="登录用户名" value={form.username} onChange={e => setForm({ ...form, username: e.target.value })} required />
+            <Input label="密码 *" placeholder="登录密码" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required />
+          </FormGrid>
+        </FormSection>
 
-          {groupTitle('权限信息')}
-          <div style={{ display: 'flex', gap: 12 }}>
-            <div style={{ flex: 1 }}>
-              <label style={labelStyle}>角色 <span style={{ color: 'var(--color-danger)' }}>*</span></label>
-              <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} style={selectStyle}>
-                {Object.entries(roleMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-              </select>
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={labelStyle}>上级经理</label>
-              <select value={form.manager_id} onChange={e => setForm({ ...form, manager_id: e.target.value })} style={selectStyle}>
-                <option value="">无</option>
-                {users.filter(u => u.role === 'admin').map(u => (
-                  <option key={u.id} value={u.id}>{u.nickname || u.username} ({roleMap[u.role]?.label})</option>
-                ))}
-              </select>
-            </div>
-          </div>
+        <FormSection title="权限信息">
+          <FormGrid>
+            <Select label="角色 *" value={form.role} onChange={v => setForm({ ...form, role: v })} options={roleOptions} />
+            <Select label="上级经理" value={form.manager_id} onChange={v => setForm({ ...form, manager_id: v })} placeholder="无" options={users.filter(u => u.role === 'admin').map(u => ({ value: String(u.id), label: `${u.nickname || u.username} (${roleMap[u.role]?.label})` }))} />
+          </FormGrid>
+        </FormSection>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
-            <Button variant="secondary" onClick={onClose}>取消</Button>
-            <Button onClick={handleCreate} disabled={submitting}>{submitting ? '创建中...' : '创建'}</Button>
-          </div>
-        </div>
+        <FormActions onCancel={onClose} onSubmit={handleCreate} submitText={submitting ? '创建中...' : '创建'} loading={submitting} />
       </Modal>
     )
   }
 
   return (
     <Modal open={open} onClose={onClose} title="编辑用户">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {groupTitle('基础信息')}
+      <FormSection title="基础信息">
         <div style={{ fontSize: 13, color: 'var(--text-secondary)', padding: '4px 0' }}>用户名: <strong style={{ color: 'var(--text-heading)' }}>{editUser?.username}</strong></div>
         <Input label="昵称" placeholder="显示名称" value={form.nickname} onChange={e => setForm({ ...form, nickname: e.target.value })} />
-        <div style={{ display: 'flex', gap: 12 }}>
-          <div style={{ flex: 1 }}><Input label="手机号" placeholder="11位手机号" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
-          <div style={{ flex: 1 }}><Input label="邮箱" placeholder="email@example.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} /></div>
-        </div>
+        <FormGrid>
+          <Input label="手机号" placeholder="11位手机号" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+          <Input label="邮箱" placeholder="email@example.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+        </FormGrid>
+      </FormSection>
 
-        {groupTitle('账号安全')}
+      <FormSection title="账号安全">
         <Input label="新密码" placeholder="留空则不修改" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
+      </FormSection>
 
-        {groupTitle('权限信息')}
-        <div style={{ display: 'flex', gap: 12 }}>
-          <div style={{ flex: 1 }}>
-            <label style={labelStyle}>角色</label>
-            <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} style={selectStyle}>
-              {Object.entries(roleMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-            </select>
-          </div>
-          <div style={{ flex: 1 }}>
-            <label style={labelStyle}>上级经理</label>
-            <select value={form.manager_id} onChange={e => setForm({ ...form, manager_id: e.target.value })} style={selectStyle}>
-              <option value="">无</option>
-              {users.filter(u => u.role === 'admin' && u.id !== editUser?.id).map(u => (
-                <option key={u.id} value={u.id}>{u.nickname || u.username} ({roleMap[u.role]?.label})</option>
-              ))}
-            </select>
-          </div>
-        </div>
+      <FormSection title="权限信息">
+        <FormGrid>
+          <Select label="角色" value={form.role} onChange={v => setForm({ ...form, role: v })} options={roleOptions} />
+          <Select label="上级经理" value={form.manager_id} onChange={v => setForm({ ...form, manager_id: v })} placeholder="无" options={users.filter(u => u.role === 'admin' && u.id !== editUser?.id).map(u => ({ value: String(u.id), label: `${u.nickname || u.username} (${roleMap[u.role]?.label})` }))} />
+        </FormGrid>
+      </FormSection>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
-          <Button variant="secondary" onClick={onClose}>取消</Button>
-          <Button onClick={handleUpdate} disabled={submitting}>{submitting ? '保存中...' : '保存'}</Button>
-        </div>
-      </div>
+      <FormActions onCancel={onClose} onSubmit={handleUpdate} submitText={submitting ? '保存中...' : '保存'} loading={submitting} />
     </Modal>
   )
 }
