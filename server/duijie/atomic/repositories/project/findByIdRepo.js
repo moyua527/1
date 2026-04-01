@@ -3,8 +3,8 @@ const db = require('../../../config/db');
 module.exports = async (id) => {
   const [rows] = await db.query(
     `SELECT p.*, 
-            c.name as client_name, c.company as client_company,
-            ic.name as internal_client_name, ic.company as internal_client_company
+            c.name as client_name, c.company as client_company, c.user_id as client_owner_user_id,
+            ic.name as internal_client_name, ic.company as internal_client_company, ic.user_id as internal_client_owner_user_id
      FROM duijie_projects p
      LEFT JOIN duijie_clients c ON p.client_id = c.id
      LEFT JOIN duijie_clients ic ON p.internal_client_id = ic.id

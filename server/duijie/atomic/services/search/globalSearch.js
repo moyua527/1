@@ -1,5 +1,6 @@
 const db = require('../../../config/db');
 const logger = require('../../../config/logger');
+const { getUserActiveEnterpriseId, getEnterpriseMemberUserIds, getUserScopedProjectIds } = require('../accessScope');
 
 /**
  * MySQL FULLTEXT 全文搜索（利用 MySQL 8.0 内置全文索引）
@@ -56,7 +57,7 @@ const SEARCHABLE_ENTITIES = {
  * @param {number} limit 每类最大结果数
  * @returns {Array<{type, id, label, matchScore}>}
  */
-async function globalSearch(keyword, entities, limit = 10) {
+async function globalSearch(keyword, entities, limit = 10, userId = null, userRole = null) {
   if (!keyword || keyword.trim().length < 1) return [];
 
   const searchTerm = keyword.trim();
@@ -68,33 +69,47 @@ async function globalSearch(keyword, entities, limit = 10) {
 
   for (const [, config] of targets) {
     try {
-      // 先尝试 FULLTEXT 搜索
-      const ftCols = config.columns.join(', ');
       let sql = `SELECT id, ${config.labelColumn} AS label FROM ${config.table}`;
       const where = [];
+      const extraParams = [];
       if (config.softDelete) where.push(config.softDelete);
 
-      // 使用 LIKE 作为回退（如果 FULLTEXT 索引未创建）
       const likeConditions = config.columns
         .map(col => `${col} LIKE ?`)
         .join(' OR ');
       where.push(`(${likeConditions})`);
 
-      sql += ` WHERE ${where.join(' AND ')}`;
-      sql += ` LIMIT ?`;
+      if (config.type === 'ticket' && userId && userRole !== 'admin') {
+        const activeEnterpriseId = await getUserActiveEnterpriseId(userId);
+        if (activeEnterpriseId) {
+          const memberUserIds = await getEnterpriseMemberUserIds(activeEnterpriseId);
+          const scopedProjectIds = await getUserScopedProjectIds(userId);
+          const ticketConds = [];
+          if (memberUserIds.length > 0) {
+            ticketConds.push(`created_by IN (${memberUserIds.map(() => '?').join(',')})`);
+            extraParams.push(...memberUserIds);
+          }
+          if (scopedProjectIds.length > 0) {
+            ticketConds.push(`project_id IN (${scopedProjectIds.map(() => '?').join(',')})`);
+            extraParams.push(...scopedProjectIds);
+          }
+          where.push(ticketConds.length > 0 ? `(${ticketConds.join(' OR ')})` : '1=0');
+        } else {
+          where.push('created_by = ?');
+          extraParams.push(userId);
+        }
+      }
 
+      sql += ` WHERE ${where.join(' AND ')} LIMIT ?`;
       const params = [
         ...config.columns.map(() => `%${searchTerm}%`),
+        ...extraParams,
         limit,
       ];
 
       const [rows] = await db.query(sql, params);
       rows.forEach(row => {
-        results.push({
-          type: config.type,
-          id: row.id,
-          label: row.label,
-        });
+        results.push({ type: config.type, id: row.id, label: row.label });
       });
     } catch (err) {
       logger.error(`Search error in ${config.table}: ${err.message}`);

@@ -8,7 +8,7 @@ module.exports = async (req, res) => {
     }
     const entityList = entities ? entities.split(',') : undefined;
     const maxLimit = Math.min(parseInt(limit) || 10, 50);
-    const results = await globalSearch(q, entityList, maxLimit);
+    const results = await globalSearch(q, entityList, maxLimit, req.userId, req.userRole);
     res.json({ success: true, data: results });
   } catch (e) {
     res.status(500).json({ success: false, message: '搜索失败' });

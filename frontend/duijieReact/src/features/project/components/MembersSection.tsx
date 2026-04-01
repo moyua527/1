@@ -7,17 +7,18 @@ interface MembersSectionProps {
   otherTeamTitle: string
   myMembers: any[]
   otherMembers: any[]
+  showOtherTeam?: boolean
   canEdit: boolean
   onManageMyMembers: () => void
   onManageOtherMembers: () => void
   onSelectMember: (member: any) => void
 }
 
-export default function MembersSection({ myTeamTitle, otherTeamTitle, myMembers, otherMembers, canEdit, onManageMyMembers, onManageOtherMembers, onSelectMember }: MembersSectionProps) {
+export default function MembersSection({ myTeamTitle, otherTeamTitle, myMembers, otherMembers, showOtherTeam = true, canEdit, onManageMyMembers, onManageOtherMembers, onSelectMember }: MembersSectionProps) {
   return (
     <div style={section}>
       <h3 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>项目成员</h3>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: showOtherTeam ? '1fr 1fr' : '1fr', gap: 16 }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
             <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--brand)' }}>{myTeamTitle}</span>
@@ -41,26 +42,28 @@ export default function MembersSection({ myTeamTitle, otherTeamTitle, myMembers,
             {myMembers.length === 0 && <div style={{ color: 'var(--text-tertiary)', fontSize: 13, padding: 8 }}>暂无</div>}
           </div>
         </div>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-success)' }}>{otherTeamTitle}</span>
-            <button onClick={onManageOtherMembers}
-              style={{ fontSize: 12, color: 'var(--color-success)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>管理</button>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {otherMembers.map((m: any) => (
-              <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f0fdf4', borderRadius: 8, border: '1px solid #dcfce7', cursor: 'pointer' }}
-                onClick={() => onSelectMember(m)}>
-                <Avatar name={m.nickname || m.username || '?'} size={28} />
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)' }}>{m.nickname || m.username}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>查看者</div>
+        {showOtherTeam && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-success)' }}>{otherTeamTitle}</span>
+              {canEdit && <button onClick={onManageOtherMembers}
+                style={{ fontSize: 12, color: 'var(--color-success)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>管理</button>}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {otherMembers.map((m: any) => (
+                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f0fdf4', borderRadius: 8, border: '1px solid #dcfce7', cursor: 'pointer' }}
+                  onClick={() => onSelectMember(m)}>
+                  <Avatar name={m.nickname || m.username || '?'} size={28} />
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)' }}>{m.nickname || m.username}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>查看者</div>
+                  </div>
                 </div>
-              </div>
-            ))}
-            {otherMembers.length === 0 && <div style={{ color: 'var(--text-tertiary)', fontSize: 13, padding: 8 }}>暂无</div>}
+              ))}
+              {otherMembers.length === 0 && <div style={{ color: 'var(--text-tertiary)', fontSize: 13, padding: 8 }}>暂无</div>}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

@@ -248,6 +248,37 @@ async function canAccessClient(userId, userRole, clientId) {
   return (await getClientAccessStatus(userId, userRole, clientId)) === 'allowed';
 }
 
+async function getTicketAccessStatus(userId, userRole, ticketId) {
+  const [[ticket]] = await db.query(
+    'SELECT id, created_by, project_id FROM duijie_tickets WHERE id = ? AND is_deleted = 0 LIMIT 1',
+    [ticketId]
+  );
+  if (!ticket) return 'missing';
+  if (userRole === 'admin') return 'allowed';
+
+  const activeEnterpriseId = await getUserActiveEnterpriseId(userId);
+  if (activeEnterpriseId) {
+    const memberUserIds = await getEnterpriseMemberUserIds(activeEnterpriseId);
+    if (memberUserIds.includes(Number(ticket.created_by))) return 'allowed';
+    if (ticket.project_id) {
+      const projectStatus = await getProjectAccessStatus(userId, userRole, ticket.project_id);
+      if (projectStatus === 'allowed') return 'allowed';
+    }
+    return 'forbidden';
+  }
+
+  if (Number(ticket.created_by) === Number(userId)) return 'allowed';
+  if (ticket.project_id) {
+    const projectStatus = await getProjectAccessStatus(userId, userRole, ticket.project_id);
+    if (projectStatus === 'allowed') return 'allowed';
+  }
+  return 'forbidden';
+}
+
+async function canAccessTicket(userId, userRole, ticketId) {
+  return (await getTicketAccessStatus(userId, userRole, ticketId)) === 'allowed';
+}
+
 async function resolveClientIdFromResource(resourceType, resourceId) {
   const resourceMap = {
     contact: 'SELECT client_id FROM duijie_contacts WHERE id = ? AND is_deleted = 0 LIMIT 1',
@@ -264,10 +295,12 @@ async function resolveClientIdFromResource(resourceType, resourceId) {
 module.exports = {
   canAccessClient,
   canAccessProject,
+  canAccessTicket,
   getClientAccessStatus,
   getEnterpriseMemberUserIds,
   getProjectAccessStatus,
   getProjectScope,
+  getTicketAccessStatus,
   getUserScopedDashboardScope,
   getUserScopedClientIds,
   getUserScopedProjectIds,

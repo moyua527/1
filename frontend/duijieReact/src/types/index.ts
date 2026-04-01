@@ -26,6 +26,7 @@ export interface Project {
   name: string
   description: string | null
   status: 'planning' | 'in_progress' | 'review' | 'completed' | 'on_hold'
+  has_external_enterprise?: boolean
   client_id: number | null
   client_name: string | null
   client_company?: string | null

@@ -133,13 +133,16 @@ export default function ProjectDetail() {
   const st = statusMap[project.status] || statusMap.planning
   const internalMembers = (project.members || []).filter((m: any) => m.source !== 'client')
   const clientMembers = (project.members || []).filter((m: any) => m.source === 'client')
-  const isClientPerspective = !!activeEnterpriseId && !!project.client_id && Number(activeEnterpriseId) === Number(project.client_id)
-  const myEnterpriseName = isClientPerspective ? (project.client_name || '-') : (project.internal_client_name || '-')
-  const otherEnterpriseName = isClientPerspective ? (project.internal_client_name || '-') : (project.client_name || '-')
+  const hasExternalEnterprise = !!project.has_external_enterprise
+  const isClientPerspective = hasExternalEnterprise && !!activeEnterpriseId && !!project.client_id && Number(activeEnterpriseId) === Number(project.client_id)
+  const internalEnterpriseName = project.internal_client_name || project.client_name || '-'
+  const clientEnterpriseName = project.client_name || '无'
+  const myEnterpriseName = isClientPerspective ? clientEnterpriseName : internalEnterpriseName
+  const otherEnterpriseName = hasExternalEnterprise ? (isClientPerspective ? internalEnterpriseName : clientEnterpriseName) : '无'
   const myMembers = isClientPerspective ? clientMembers : internalMembers
-  const otherMembers = isClientPerspective ? internalMembers : clientMembers
+  const otherMembers = hasExternalEnterprise ? (isClientPerspective ? internalMembers : clientMembers) : []
   const myTeamTitle = `我方团队（${myEnterpriseName}）`
-  const otherTeamTitle = `${isClientPerspective ? '对方企业' : '客户企业'}（${otherEnterpriseName}）`
+  const otherTeamTitle = `对方团队（${otherEnterpriseName}）`
 
   const handleDelete = async () => {
     if (!(await confirm({ message: '确定删除此项目？', danger: true }))) return
@@ -175,7 +178,7 @@ export default function ProjectDetail() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
             <Badge color={st.color}>{st.label}</Badge>
             <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>我方企业: <span style={{ color: 'var(--text-heading)' }}>{myEnterpriseName}</span></span>
-            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{isClientPerspective ? '对方企业' : '客户企业'}: {isClientPerspective ? <span style={{ color: 'var(--text-heading)' }}>{otherEnterpriseName}</span> : <span onClick={() => project.client_id && openClientModal(project.client_id)} style={{ color: 'var(--brand)', cursor: 'pointer' }}>{otherEnterpriseName}</span>}</span>
+            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{isClientPerspective ? '对方企业' : '客户企业'}: {hasExternalEnterprise ? (isClientPerspective ? <span style={{ color: 'var(--text-heading)' }}>{otherEnterpriseName}</span> : <span onClick={() => project.client_id && openClientModal(project.client_id)} style={{ color: 'var(--brand)', cursor: 'pointer' }}>{otherEnterpriseName}</span>) : <span style={{ color: 'var(--text-heading)' }}>无</span>}</span>
           </div>
         </div>
         {canDelete && <Button variant="danger" onClick={handleDelete}><Trash2 size={14} /> 删除</Button>}
@@ -203,7 +206,7 @@ export default function ProjectDetail() {
             <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>结束日期</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.end_date || '未设置'}</div></div>
             <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>预算</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.budget > 0 ? `¥${Number(project.budget).toLocaleString()}` : '未设置'}</div></div>
             <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>我方企业</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{myEnterpriseName}</div></div>
-            <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{isClientPerspective ? '对方企业' : '客户企业'}</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{isClientPerspective ? otherEnterpriseName : (project.client_id ? <span onClick={() => openClientModal(project.client_id)} style={{ color: 'var(--brand)', cursor: 'pointer' }}>{otherEnterpriseName}</span> : otherEnterpriseName)}</div></div>
+            <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{isClientPerspective ? '对方企业' : '客户企业'}</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{hasExternalEnterprise ? (isClientPerspective ? otherEnterpriseName : (project.client_id ? <span onClick={() => openClientModal(project.client_id)} style={{ color: 'var(--brand)', cursor: 'pointer' }}>{otherEnterpriseName}</span> : otherEnterpriseName)) : '无'}</div></div>
             <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>创建时间</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.created_at ? new Date(project.created_at).toLocaleDateString('zh-CN') : '-'}</div></div>
             <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>任务数</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{tasks.length}</div></div>
           </div>
@@ -259,6 +262,7 @@ export default function ProjectDetail() {
           otherTeamTitle={otherTeamTitle}
           myMembers={myMembers}
           otherMembers={otherMembers}
+          showOtherTeam={hasExternalEnterprise}
           canEdit={canEdit}
           onManageMyMembers={isClientPerspective ? openManageClientMembers : openManageMembers}
           onManageOtherMembers={isClientPerspective ? openManageMembers : openManageClientMembers}
