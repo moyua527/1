@@ -4,7 +4,7 @@ const validate = require('../middleware/validate');
 const V = require('../middleware/validators');
 const router = express.Router();
 
-const myEntCtrl = require('../controllers/client/myEnterpriseController');
+const myEntCtrl = require('../controllers/enterprise/myEnterpriseController');
 
 // Enterprise CRUD
 router.get('/my-enterprise', auth, myEntCtrl.get);
