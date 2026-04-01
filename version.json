@@ -1,6 +1,6 @@
 {
-  "version": "1.1.51",
-  "versionCode": 51,
+  "version": "1.1.52",
+  "versionCode": 52,
   "minVersion": "1.0.0",
-  "changelog": "消息模块合并联系人，添加好友系统（手机号搜索、好友申请审批）"
+  "changelog": "工程治理：版本统一(version.json)、CI流水线、部署脚本加固、前端数据层React Query迁移"
 }
