@@ -11,16 +11,16 @@ import ClientCreateModal from './components/ClientCreateModal'
 import ClientImportModal from './components/ClientImportModal'
 
 const cardStyle: React.CSSProperties = {
-  background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+  background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
   cursor: 'pointer', transition: 'box-shadow 0.15s', display: 'flex', alignItems: 'center', gap: 16,
 }
 
 const stageMap: Record<string, { label: string; color: string; bg: string }> = {
   potential: { label: '潜在', color: '#6b7280', bg: '#f3f4f6' },
-  intent: { label: '意向', color: '#2563eb', bg: '#eff6ff' },
-  signed: { label: '签约', color: '#7c3aed', bg: '#f5f3ff' },
-  active: { label: '合作中', color: '#16a34a', bg: '#f0fdf4' },
-  lost: { label: '流失', color: '#dc2626', bg: '#fef2f2' },
+  intent: { label: '意向', color: 'var(--brand)', bg: 'var(--bg-selected)' },
+  signed: { label: '签约', color: 'var(--color-purple)', bg: '#f5f3ff' },
+  active: { label: '合作中', color: 'var(--color-success)', bg: '#f0fdf4' },
+  lost: { label: '流失', color: 'var(--color-danger)', bg: '#fef2f2' },
 }
 const stageKeys = ['all', 'potential', 'intent', 'signed', 'active', 'lost']
 const stageTabLabel: Record<string, string> = { all: '全部', potential: '潜在', intent: '意向', signed: '签约', active: '合作中', lost: '流失' }
@@ -50,8 +50,8 @@ export default function ClientList() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>客户管理</h1>
-          <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>管理所有客户信息</p>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>客户管理</h1>
+          <p style={{ color: 'var(--text-secondary)', margin: '4px 0 0', fontSize: 14 }}>管理所有客户信息</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <Button variant="secondary" onClick={() => {
@@ -76,17 +76,17 @@ export default function ClientList() {
         <div style={{ position: 'relative', flex: '1 1 240px', maxWidth: 360 }}>
           <Search size={16} color="#94a3b8" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索客户名称、公司、电话..."
-            style={{ width: '100%', padding: '8px 12px 8px 36px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none', background: '#fff' }} />
+            style={{ width: '100%', padding: '8px 12px 8px 36px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }} />
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: '#f1f5f9', borderRadius: 8, padding: 3, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: 'var(--bg-tertiary)', borderRadius: 8, padding: 3, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         {stageKeys.map(k => {
           const count = k === 'all' ? clients.length : clients.filter(c => (c.stage || 'potential') === k).length
           return (
             <button key={k} onClick={() => setStageFilter(k)}
               style={{ padding: '6px 14px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500,
-                background: stageFilter === k ? '#fff' : 'transparent', color: stageFilter === k ? '#0f172a' : '#64748b',
+                background: stageFilter === k ? 'var(--bg-primary)' : 'transparent', color: stageFilter === k ? 'var(--text-heading)' : 'var(--text-secondary)',
                 boxShadow: stageFilter === k ? '0 1px 3px rgba(0,0,0,0.08)' : 'none', transition: 'all 0.15s' }}>
               {stageTabLabel[k]} ({count})
             </button>
@@ -95,9 +95,9 @@ export default function ClientList() {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 80, color: '#94a3b8' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
+        <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
       ) : clients.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 80, color: '#94a3b8' }}>
+        <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}>
           <Users size={48} style={{ marginBottom: 12, opacity: 0.5 }} />
           <div>暂无客户，点击右上角新增</div>
         </div>
@@ -119,31 +119,31 @@ export default function ClientList() {
                 <Avatar name={c.name} size={44} />
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>#{c.id}</span>
-                    <span style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>{c.name}</span>
-                    <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 8, background: c.client_type === 'individual' ? '#fef3c7' : '#dbeafe', color: c.client_type === 'individual' ? '#92400e' : '#1e40af', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 2 }}>{c.client_type === 'individual' ? '个人' : '企业'}</span>
+                    <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'monospace' }}>#{c.id}</span>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{c.name}</span>
+                    <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 8, background: c.client_type === 'individual' ? '#fef3c7' : 'var(--brand-light-2)', color: c.client_type === 'individual' ? '#92400e' : 'var(--brand)', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 2 }}>{c.client_type === 'individual' ? '个人' : '企业'}</span>
                     <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 10, background: s.bg, color: s.color, fontWeight: 500 }}>{s.label}</span>
                   </div>
-                  {c.company && <div style={{ fontSize: 13, color: '#64748b' }}>{c.company}</div>}
-                  {c.channel && <div style={{ fontSize: 12, color: '#2563eb' }}>渠道: {c.channel}</div>}
-                  {c.assigned_name && <div style={{ fontSize: 12, color: '#7c3aed' }}>对接人: {c.assigned_name}</div>}
+                  {c.company && <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{c.company}</div>}
+                  {c.channel && <div style={{ fontSize: 12, color: 'var(--brand)' }}>渠道: {c.channel}</div>}
+                  {c.assigned_name && <div style={{ fontSize: 12, color: 'var(--color-purple)' }}>对接人: {c.assigned_name}</div>}
                   {c.tags && c.tags.length > 0 && (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
                       {c.tags.slice(0, 4).map((t: any, i: number) => (
                         <span key={i} style={{ fontSize: 10, padding: '1px 6px', borderRadius: 8, background: (t.color || '#6b7280') + '18', color: t.color || '#6b7280', fontWeight: 500 }}>{t.name}</span>
                       ))}
-                      {c.tags.length > 4 && <span style={{ fontSize: 10, color: '#94a3b8' }}>+{c.tags.length - 4}</span>}
+                      {c.tags.length > 4 && <span style={{ fontSize: 10, color: 'var(--text-tertiary)' }}>+{c.tags.length - 4}</span>}
                     </div>
                   )}
                 </div>
                 <div style={{ textAlign: 'right', minWidth: 50 }}>
                   {scores[c.id] && (() => {
                     const sc = scores[c.id]
-                    const colors: Record<string, string> = { A: '#16a34a', B: '#2563eb', C: '#d97706', D: '#f97316', E: '#dc2626' }
+                    const colors: Record<string, string> = { A: 'var(--color-success)', B: 'var(--brand)', C: 'var(--color-warning)', D: '#f97316', E: 'var(--color-danger)' }
                     return (
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                         <span style={{ fontSize: 18, fontWeight: 700, color: colors[sc.label] || '#6b7280' }}>{sc.label}</span>
-                        <span style={{ fontSize: 11, color: '#94a3b8' }}>{sc.total}分</span>
+                        <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{sc.total}分</span>
                       </div>
                     )
                   })()}

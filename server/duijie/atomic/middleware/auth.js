@@ -1,13 +1,7 @@
 const jwt = require('jsonwebtoken');
 const db = require('../../config/db');
 const logger = require('../../config/logger');
-
-async function getSecret() {
-  const [rows] = await db.query(
-    "SELECT config_value FROM system_config WHERE config_key = 'JWT_SECRET'"
-  );
-  return rows[0]?.config_value;
-}
+const getJwtSecret = require('../repositories/auth/getJwtSecretRepo');
 
 async function getCurrentUser(userId) {
   const [rows] = await db.query(
@@ -22,7 +16,7 @@ module.exports = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     const token = (authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null) || req.cookies?.token || req.query?.token;
     if (!token) return res.status(401).json({ success: false, message: '未登录' });
-    const secret = await getSecret();
+    const secret = await getJwtSecret();
     const decoded = jwt.verify(token, secret);
     const userId = decoded.userId || decoded.id;
     const currentUser = userId ? await getCurrentUser(userId) : null;

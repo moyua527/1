@@ -11,11 +11,11 @@ import OpportunityFormModal from './OpportunityFormModal'
 
 const stageMap: Record<string, { label: string; color: string; bg: string }> = {
   lead: { label: '线索', color: '#6b7280', bg: '#f3f4f6' },
-  qualify: { label: '验证', color: '#2563eb', bg: '#dbeafe' },
-  proposal: { label: '方案', color: '#7c3aed', bg: '#ede9fe' },
-  negotiate: { label: '谈判', color: '#d97706', bg: '#fef3c7' },
-  won: { label: '赢单', color: '#16a34a', bg: '#dcfce7' },
-  lost: { label: '丢单', color: '#dc2626', bg: '#fee2e2' },
+  qualify: { label: '验证', color: 'var(--brand)', bg: 'var(--brand-light-2)' },
+  proposal: { label: '方案', color: 'var(--color-purple)', bg: '#ede9fe' },
+  negotiate: { label: '谈判', color: 'var(--color-warning)', bg: '#fef3c7' },
+  won: { label: '赢单', color: 'var(--color-success)', bg: '#dcfce7' },
+  lost: { label: '丢单', color: 'var(--color-danger)', bg: '#fee2e2' },
 }
 const stageKeys = ['lead', 'qualify', 'proposal', 'negotiate', 'won', 'lost']
 
@@ -74,36 +74,36 @@ export default function OpportunityList() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>商机管理</h1>
-          <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>销售管道 · 共 {items.length} 个商机</p>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>商机管理</h1>
+          <p style={{ color: 'var(--text-secondary)', margin: '4px 0 0', fontSize: 14 }}>销售管道 · 共 {items.length} 个商机</p>
         </div>
         <Button onClick={openCreate}><Plus size={16} /> 新建商机</Button>
       </div>
 
       <div style={{ display: 'flex', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
-        <div style={{ background: '#fff', borderRadius: 10, padding: '12px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <DollarSign size={20} color="#7c3aed" />
-          <div><div style={{ fontSize: 12, color: '#94a3b8' }}>管道总额</div><div style={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>¥{(totalAmount / 10000).toFixed(1)}万</div></div>
+        <div style={{ background: 'var(--bg-primary)', borderRadius: 10, padding: '12px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <DollarSign size={20} color="var(--color-purple)" />
+          <div><div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>管道总额</div><div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-heading)' }}>¥{(totalAmount / 10000).toFixed(1)}万</div></div>
         </div>
-        <div style={{ background: '#fff', borderRadius: 10, padding: '12px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <TrendingUp size={20} color="#16a34a" />
-          <div><div style={{ fontSize: 12, color: '#94a3b8' }}>赢单金额</div><div style={{ fontSize: 18, fontWeight: 700, color: '#16a34a' }}>¥{(wonAmount / 10000).toFixed(1)}万</div></div>
+        <div style={{ background: 'var(--bg-primary)', borderRadius: 10, padding: '12px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <TrendingUp size={20} color="var(--color-success)" />
+          <div><div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>赢单金额</div><div style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-success)' }}>¥{(wonAmount / 10000).toFixed(1)}万</div></div>
         </div>
-        <div style={{ background: '#fff', borderRadius: 10, padding: '12px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <TrendingUp size={20} color="#d97706" />
-          <div><div style={{ fontSize: 12, color: '#94a3b8' }}>赢单率</div><div style={{ fontSize: 18, fontWeight: 700, color: '#d97706' }}>{items.filter(i => i.stage === 'won' || i.stage === 'lost').length > 0 ? ((items.filter(i => i.stage === 'won').length / items.filter(i => i.stage === 'won' || i.stage === 'lost').length) * 100).toFixed(0) : 0}%</div></div>
+        <div style={{ background: 'var(--bg-primary)', borderRadius: 10, padding: '12px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <TrendingUp size={20} color="var(--color-warning)" />
+          <div><div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>赢单率</div><div style={{ fontSize: 18, fontWeight: 700, color: 'var(--color-warning)' }}>{items.filter(i => i.stage === 'won' || i.stage === 'lost').length > 0 ? ((items.filter(i => i.stage === 'won').length / items.filter(i => i.stage === 'won' || i.stage === 'lost').length) * 100).toFixed(0) : 0}%</div></div>
         </div>
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 80, color: '#94a3b8' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
+        <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
       ) : items.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 80, color: '#94a3b8' }}>
+        <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}>
           <TrendingUp size={48} style={{ marginBottom: 12, opacity: 0.5 }} />
           <div>暂无商机，点击右上角新建</div>
         </div>
       ) : (
-        <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8, WebkitOverflowScrolling: 'touch' }}>
+        <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8, WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin' }}>
           {stageKeys.map(stageKey => {
             const s = stageMap[stageKey]
             const stageItems = items.filter(i => (i.stage || 'lead') === stageKey)
@@ -113,36 +113,36 @@ export default function OpportunityList() {
                 onDragOver={e => { e.preventDefault(); setDragOverStage(stageKey) }}
                 onDragLeave={() => setDragOverStage(null)}
                 onDrop={e => { e.preventDefault(); setDragOverStage(null); const oid = e.dataTransfer.getData('opportunityId'); if (oid) { const item = items.find(i => String(i.id) === oid); if (item && item.stage !== stageKey) handleStageChange(item, stageKey) } }}
-                style={{ minWidth: isMobile ? 260 : 280, flex: '1 0 auto', background: dragOverStage === stageKey ? '#eff6ff' : '#f8fafc', borderRadius: 12, padding: 12, border: dragOverStage === stageKey ? '2px dashed #2563eb' : '2px solid transparent', transition: 'all 0.15s' }}>
+                style={{ minWidth: isMobile ? 220 : 160, flex: '1 1 0', background: dragOverStage === stageKey ? 'var(--bg-selected)' : 'var(--bg-secondary)', borderRadius: 12, padding: 12, border: dragOverStage === stageKey ? '2px dashed #2563eb' : '2px solid transparent', transition: 'all 0.15s' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, padding: '0 4px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.color }} />
-                    <span style={{ fontSize: 14, fontWeight: 600, color: '#334155' }}>{s.label}</span>
-                    <span style={{ fontSize: 12, color: '#94a3b8', background: '#e2e8f0', padding: '1px 8px', borderRadius: 10 }}>{stageItems.length}</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-body)' }}>{s.label}</span>
+                    <span style={{ fontSize: 12, color: 'var(--text-tertiary)', background: 'var(--border-primary)', padding: '1px 8px', borderRadius: 10 }}>{stageItems.length}</span>
                   </div>
-                  <span style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>¥{(stageTotal / 10000).toFixed(1)}万</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>¥{(stageTotal / 10000).toFixed(1)}万</span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {stageItems.map(item => (
                     <div key={item.id} draggable
                       onDragStart={e => e.dataTransfer.setData('opportunityId', String(item.id))}
-                      style={{ background: '#fff', borderRadius: 10, padding: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid #e2e8f0', cursor: 'grab', transition: 'box-shadow 0.15s' }}
+                      style={{ background: 'var(--bg-primary)', borderRadius: 10, padding: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid var(--border-primary)', cursor: 'grab', transition: 'box-shadow 0.15s' }}
                       onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)')}
                       onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)')}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', flex: 1 }}>{item.title}</span>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)', flex: 1 }}>{item.title}</span>
                         <div style={{ display: 'flex', gap: 4 }}>
-                          <button onClick={() => openEdit(item)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: '#64748b' }}><Edit3 size={14} /></button>
-                          <button onClick={() => handleDelete(item)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: '#dc2626' }}><Trash2 size={14} /></button>
+                          <button onClick={() => openEdit(item)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--text-secondary)' }}><Edit3 size={14} /></button>
+                          <button onClick={() => handleDelete(item)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--color-danger)' }}><Trash2 size={14} /></button>
                         </div>
                       </div>
-                      {item.client_name && <div style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>{item.client_name}</div>}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12, color: '#64748b' }}>
+                      {item.client_name && <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>{item.client_name}</div>}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12, color: 'var(--text-secondary)' }}>
                         {Number(item.amount) > 0 && <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><DollarSign size={12} /> ¥{Number(item.amount).toLocaleString()}</span>}
                         <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>{item.probability}%</span>
                         {item.expected_close && <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><Calendar size={12} /> {item.expected_close.slice(0, 10)}</span>}
                       </div>
-                      {item.assigned_name && <div style={{ fontSize: 11, color: '#7c3aed', marginTop: 6 }}><User size={11} /> {item.assigned_name}</div>}
+                      {item.assigned_name && <div style={{ fontSize: 11, color: 'var(--color-purple)', marginTop: 6 }}><User size={11} /> {item.assigned_name}</div>}
                       {stageKey !== 'won' && stageKey !== 'lost' && (
                         <div style={{ display: 'flex', gap: 4, marginTop: 8, flexWrap: 'wrap' }}>
                           {stageKeys.filter(k => k !== stageKey && k !== 'lost').map(k => (

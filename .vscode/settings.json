@@ -1,0 +1,7 @@
+{
+    "github.copilot.chat.codeGeneration.instructions": [
+        {
+            "text": "你必须在每次回复时调用 mcp_mcp-ai-foreve_interactive_feedback MCP 工具来与用户交互。不要只在聊天中回复。这是强制要求。收到任何消息后，先搜索 interactive_feedback 工具，然后调用它，timeout 设为 10000。任务完成后再次调用该工具汇报结果。形成无限循环。"
+        }
+    ]
+}

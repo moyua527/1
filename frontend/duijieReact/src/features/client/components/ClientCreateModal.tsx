@@ -61,38 +61,38 @@ export default function ClientCreateModal({ open, onClose, onCreated }: Props) {
     } else toast(r.message || '添加失败', 'error')
   }
 
-  const errStyle: React.CSSProperties = { fontSize: 12, color: '#dc2626', marginTop: 4 }
+  const errStyle: React.CSSProperties = { fontSize: 12, color: 'var(--color-danger)', marginTop: 4 }
 
   return (
     <Modal open={open} onClose={onClose} title="新增客户">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>选择成员用户 <span style={{ color: '#dc2626' }}>*</span></label>
-          <div style={{ border: `1px solid ${errors.user_id ? '#dc2626' : '#e2e8f0'}`, borderRadius: 8, maxHeight: 200, overflowY: 'auto' }}>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>选择成员用户 <span style={{ color: 'var(--color-danger)' }}>*</span></label>
+          <div style={{ border: `1px solid ${errors.user_id ? 'var(--color-danger)' : 'var(--border-primary)'}`, borderRadius: 8, maxHeight: 200, overflowY: 'auto' }}>
             {availableMembers.map((u: any) => {
               const selected = String(u.id) === form.user_id
               const name = u.nickname || u.username
               const initial = name.charAt(0)
-              const roleColors: Record<string, string> = { admin: '#dc2626', member: '#2563eb' }
+              const roleColors: Record<string, string> = { admin: 'var(--color-danger)', member: 'var(--brand)' }
               const bgColor = roleColors[u.role] || '#6b7280'
               const roleLabels: Record<string, string> = { admin: '管理员', member: '成员' }
               return (
-                <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', background: selected ? '#f8fafc' : '#fff', transition: 'background 0.1s' }}
-                  onMouseEnter={e => { if (!selected) e.currentTarget.style.background = '#f8fafc' }}
-                  onMouseLeave={e => { if (!selected) e.currentTarget.style.background = '#fff' }}>
+                <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-secondary)', background: selected ? 'var(--bg-secondary)' : 'var(--bg-primary)', transition: 'background 0.1s' }}
+                  onMouseEnter={e => { if (!selected) e.currentTarget.style.background = 'var(--bg-secondary)' }}
+                  onMouseLeave={e => { if (!selected) e.currentTarget.style.background = 'var(--bg-primary)' }}>
                   <input type="radio" name="client_member" checked={selected} onChange={() => { handleSelectMember(String(u.id)); setErrors(prev => { const n = { ...prev }; delete n.user_id; return n }) }}
-                    style={{ width: 16, height: 16, accentColor: '#2563eb', cursor: 'pointer', flexShrink: 0 }} />
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: bgColor, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600, flexShrink: 0 }}>
+                    style={{ width: 16, height: 16, accentColor: 'var(--brand)', cursor: 'pointer', flexShrink: 0 }} />
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: bgColor, color: 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600, flexShrink: 0 }}>
                     {initial}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{name}</div>
-                    <div style={{ fontSize: 12, color: '#94a3b8' }}>@{u.username} · {roleLabels[u.role] || u.role}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)' }}>{name}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>@{u.username} · {roleLabels[u.role] || u.role}</div>
                   </div>
                 </label>
               )
             })}
-            {availableMembers.length === 0 && <div style={{ padding: 16, textAlign: 'center', color: '#94a3b8', fontSize: 13 }}>暂无可关联的成员用户</div>}
+            {availableMembers.length === 0 && <div style={{ padding: 16, textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 13 }}>暂无可关联的成员用户</div>}
           </div>
           {errors.user_id && <div style={errStyle}>{errors.user_id}</div>}
         </div>
@@ -105,12 +105,12 @@ export default function ClientCreateModal({ open, onClose, onCreated }: Props) {
           <Input label="电话" placeholder="自动填充" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>客户类型</label>
-          <div style={{ display: 'flex', gap: 0, background: '#f1f5f9', borderRadius: 8, padding: 3 }}>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>客户类型</label>
+          <div style={{ display: 'flex', gap: 0, background: 'var(--bg-tertiary)', borderRadius: 8, padding: 3 }}>
             {[{ key: 'company', label: '企业客户', icon: Building2 }, { key: 'individual', label: '个人客户', icon: UserCircle }].map(t => (
               <button key={t.key} type="button" onClick={() => setForm({ ...form, client_type: t.key, company: t.key === 'individual' ? '' : form.company })}
                 style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500,
-                  background: form.client_type === t.key ? '#fff' : 'transparent', color: form.client_type === t.key ? '#0f172a' : '#64748b',
+                  background: form.client_type === t.key ? 'var(--bg-primary)' : 'transparent', color: form.client_type === t.key ? 'var(--text-heading)' : 'var(--text-secondary)',
                   boxShadow: form.client_type === t.key ? '0 1px 3px rgba(0,0,0,0.08)' : 'none', transition: 'all 0.15s' }}>
                 <t.icon size={14} /> {t.label}
               </button>
@@ -119,9 +119,9 @@ export default function ClientCreateModal({ open, onClose, onCreated }: Props) {
         </div>
         {form.client_type === 'company' && <Input label="公司名称" placeholder="输入公司名称" value={form.company} onChange={e => setForm({ ...form, company: e.target.value })} />}
         <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>渠道 <span style={{ color: '#dc2626' }}>*</span></label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>渠道 <span style={{ color: 'var(--color-danger)' }}>*</span></label>
           <select value={form.channel} onChange={e => { setForm({ ...form, channel: e.target.value }); setErrors(prev => { const n = { ...prev }; delete n.channel; return n }) }}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${errors.channel ? '#dc2626' : '#cbd5e1'}`, fontSize: 14, outline: 'none', background: '#fff' }}>
+            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${errors.channel ? 'var(--color-danger)' : 'var(--text-disabled)'}`, fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
             <option value="">请选择渠道</option>
             <option value="Boss直聘">Boss直聘</option>
             <option value="微信">微信</option>
@@ -135,16 +135,16 @@ export default function ClientCreateModal({ open, onClose, onCreated }: Props) {
           {errors.channel && <div style={errStyle}>{errors.channel}</div>}
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>客户阶段</label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>客户阶段</label>
           <select value={form.stage} onChange={e => setForm({ ...form, stage: e.target.value })}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
+            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
             {Object.entries(stageMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
           </select>
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>对接人（选填）</label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>对接人（选填）</label>
           <select value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
+            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
             <option value="">暂不分配</option>
             {availableMembers.filter(u => can(u.role, 'staff:assignable')).map((u: any) => <option key={u.id} value={u.id}>{u.nickname || u.username} ({u.role === 'admin' ? '管理员' : '成员'})</option>)}
           </select>

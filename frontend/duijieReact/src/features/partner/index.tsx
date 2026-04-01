@@ -22,8 +22,8 @@ interface Partner {
   created_at: string; notes: string | null
 }
 
-const card: React.CSSProperties = { background: '#fff', borderRadius: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }
-const headerStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid #f1f5f9' }
+const card: React.CSSProperties = { background: 'var(--bg-primary)', borderRadius: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }
+const headerStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid var(--border-secondary)' }
 
 function AppViewer({ partner, onBack }: { partner: Partner; onBack: () => void }) {
   const [fullscreen, setFullscreen] = useState(false)
@@ -42,64 +42,64 @@ function AppViewer({ partner, onBack }: { partner: Partner; onBack: () => void }
   }
 
   const wrapperStyle: React.CSSProperties = fullscreen
-    ? { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, background: '#fff', display: 'flex', flexDirection: 'column' }
+    ? { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999, background: 'var(--bg-primary)', display: 'flex', flexDirection: 'column' }
     : { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)' }
 
   return (
     <div style={wrapperStyle}>
       {/* 顶部工具栏 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: '#fff', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
-        <button onClick={onBack} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', display: 'flex', color: '#64748b' }} title="返回">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--bg-primary)', borderBottom: '1px solid var(--border-primary)', flexShrink: 0 }}>
+        <button onClick={onBack} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', display: 'flex', color: 'var(--text-secondary)' }} title="返回">
           <ArrowLeft size={16} />
         </button>
 
-        <div style={{ width: 28, height: 28, borderRadius: 7, background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Monitor size={15} color="#2563eb" />
+        <div style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--bg-selected)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Monitor size={15} color="var(--brand)" />
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>{partner.partner_name}</div>
-          <div style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace' }}>{appUrl}</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{partner.partner_name}</div>
+          <div style={{ fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'monospace' }}>{appUrl}</div>
         </div>
 
-        <button onClick={handleReload} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', display: 'flex', color: '#64748b' }} title="刷新">
+        <button onClick={handleReload} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', display: 'flex', color: 'var(--text-secondary)' }} title="刷新">
           <RefreshCw size={15} />
         </button>
-        <a href={appUrl} target="_blank" rel="noreferrer" style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', display: 'flex', color: '#64748b', textDecoration: 'none' }} title="新窗口打开">
+        <a href={appUrl} target="_blank" rel="noreferrer" style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', display: 'flex', color: 'var(--text-secondary)', textDecoration: 'none' }} title="新窗口打开">
           <ExternalLink size={15} />
         </a>
-        <button onClick={() => setFullscreen(!fullscreen)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', display: 'flex', color: '#64748b' }} title={fullscreen ? '退出全屏' : '全屏'}>
+        <button onClick={() => setFullscreen(!fullscreen)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', display: 'flex', color: 'var(--text-secondary)' }} title={fullscreen ? '退出全屏' : '全屏'}>
           {fullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
         </button>
       </div>
 
       {/* iframe 区域 */}
-      <div style={{ flex: 1, position: 'relative', background: '#f1f5f9' }}>
+      <div style={{ flex: 1, position: 'relative', background: 'var(--bg-tertiary)' }}>
         {loading && !loadError && (
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1, background: '#fff' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1, background: 'var(--bg-primary)' }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ width: 40, height: 40, border: '3px solid #e2e8f0', borderTop: '3px solid #2563eb', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
-              <div style={{ color: '#64748b', fontSize: 14 }}>正在加载 {partner.partner_name}...</div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>正在加载 {partner.partner_name}...</div>
             </div>
           </div>
         )}
 
         {loadError && (
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2, background: '#fff' }}>
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2, background: 'var(--bg-primary)' }}>
             <div style={{ textAlign: 'center', maxWidth: 420, padding: 40 }}>
               <div style={{ width: 64, height: 64, borderRadius: 16, background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                <Monitor size={32} color="#dc2626" />
+                <Monitor size={32} color="var(--color-danger)" />
               </div>
-              <h3 style={{ margin: '0 0 8px', fontSize: 18, color: '#0f172a' }}>无法在页面内嵌入</h3>
-              <p style={{ margin: '0 0 20px', fontSize: 14, color: '#64748b', lineHeight: 1.6 }}>
+              <h3 style={{ margin: '0 0 8px', fontSize: 18, color: 'var(--text-heading)' }}>无法在页面内嵌入</h3>
+              <p style={{ margin: '0 0 20px', fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                 对方的系统禁止了页面内嵌。你可以在新窗口中打开使用，或联系对方开发者解除限制。
               </p>
               <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
                 <a href={appUrl} target="_blank" rel="noreferrer"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 24px', background: '#2563eb', color: '#fff', borderRadius: 10, fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 24px', background: 'var(--brand)', color: 'var(--bg-primary)', borderRadius: 10, fontSize: 14, textDecoration: 'none', fontWeight: 600 }}>
                   <ExternalLink size={15} /> 新窗口打开 {partner.partner_name}
                 </a>
                 <button onClick={handleReload}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: '#f1f5f9', color: '#334155', borderRadius: 10, fontSize: 14, border: 'none', cursor: 'pointer', fontWeight: 500 }}>
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 20px', background: 'var(--bg-tertiary)', color: 'var(--text-body)', borderRadius: 10, fontSize: 14, border: 'none', cursor: 'pointer', fontWeight: 500 }}>
                   <RefreshCw size={14} /> 重试
                 </button>
               </div>
@@ -228,21 +228,21 @@ export default function PartnerManagement() {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Plug2 size={24} color="#2563eb" /> 合作方管理
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-heading)', margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Plug2 size={24} color="var(--brand)" /> 合作方管理
           </h1>
-          <p style={{ fontSize: 13, color: '#94a3b8', margin: '4px 0 0' }}>管理合作方系统，直接在 DuiJie 中打开使用对方的程序</p>
+          <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: '4px 0 0' }}>管理合作方系统，直接在 DuiJie 中打开使用对方的程序</p>
         </div>
         <Button onClick={openCreate}><Plus size={14} /> 添加合作方</Button>
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}>加载中...</div>
+        <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}>加载中...</div>
       ) : !partners.length ? (
         <div style={{ ...card, padding: '60px 24px', textAlign: 'center' }}>
           <Plug2 size={48} color="#cbd5e1" />
-          <h3 style={{ color: '#64748b', margin: '16px 0 8px' }}>暂无合作方</h3>
-          <p style={{ color: '#94a3b8', fontSize: 14, marginBottom: 20 }}>添加合作方后，可以直接在这里打开对方的程序</p>
+          <h3 style={{ color: 'var(--text-secondary)', margin: '16px 0 8px' }}>暂无合作方</h3>
+          <p style={{ color: 'var(--text-tertiary)', fontSize: 14, marginBottom: 20 }}>添加合作方后，可以直接在这里打开对方的程序</p>
           <Button onClick={openCreate}><Plus size={14} /> 添加第一个合作方</Button>
         </div>
       ) : (
@@ -251,46 +251,46 @@ export default function PartnerManagement() {
             <div key={p.id} style={{ ...card, display: 'flex', flexDirection: 'column' }}>
               <div style={{ padding: '20px 24px', flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 12, background: p.is_active ? '#eff6ff' : '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Monitor size={24} color={p.is_active ? '#2563eb' : '#94a3b8'} />
+                  <div style={{ width: 48, height: 48, borderRadius: 12, background: p.is_active ? 'var(--bg-selected)' : 'var(--bg-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Monitor size={24} color={p.is_active ? 'var(--brand)' : 'var(--text-tertiary)'} />
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 17, fontWeight: 600, color: '#0f172a' }}>{p.partner_name}</div>
-                    <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
+                    <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-heading)' }}>{p.partner_name}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
                       {p.partner_url ? <span style={{ fontFamily: 'monospace' }}>{p.partner_url}</span> : '未配置地址'}
                     </div>
                   </div>
                   <Badge color={p.is_active ? 'green' : 'gray'}>{p.is_active ? '在线' : '离线'}</Badge>
                 </div>
 
-                {p.notes && <div style={{ fontSize: 13, color: '#64748b', marginBottom: 12, padding: '8px 12px', background: '#f8fafc', borderRadius: 8 }}>{p.notes}</div>}
+                {p.notes && <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12, padding: '8px 12px', background: 'var(--bg-secondary)', borderRadius: 8 }}>{p.notes}</div>}
 
                 {/* API Key 小行 */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#94a3b8' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-tertiary)' }}>
                   <span>Key: {visibleKeys.has(p.id) ? p.api_key : maskKey(p.api_key)}</span>
-                  <button onClick={() => toggleKeyVisible(p.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', padding: 0 }}>
+                  <button onClick={() => toggleKeyVisible(p.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', display: 'flex', padding: 0 }}>
                     {visibleKeys.has(p.id) ? <EyeOff size={11} /> : <Eye size={11} />}
                   </button>
-                  <button onClick={() => handleCopyKey(p.api_key)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2563eb', display: 'flex', padding: 0 }}><Copy size={11} /></button>
+                  <button onClick={() => handleCopyKey(p.api_key)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--brand)', display: 'flex', padding: 0 }}><Copy size={11} /></button>
                   <button onClick={() => handleResetKey(p)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#f59e0b', display: 'flex', padding: 0 }}><RotateCcw size={11} /></button>
                 </div>
               </div>
 
               {/* 底部按钮 */}
-              <div style={{ padding: '12px 24px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: 8 }}>
+              <div style={{ padding: '12px 24px', borderTop: '1px solid var(--border-secondary)', display: 'flex', gap: 8 }}>
                 {p.partner_url ? (
                   <button onClick={() => setViewing(p)}
-                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 0', background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
+                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 0', background: 'var(--brand)', color: 'var(--bg-primary)', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
                     <Monitor size={16} /> 打开程序
                   </button>
                 ) : (
                   <button onClick={() => openEdit(p)}
-                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 0', background: '#f1f5f9', color: '#64748b', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 14 }}>
+                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 0', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: 'none', borderRadius: 10, cursor: 'pointer', fontSize: 14 }}>
                     配置地址后可打开
                   </button>
                 )}
-                <button onClick={() => openEdit(p)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 10, padding: '10px 12px', cursor: 'pointer', color: '#64748b', display: 'flex' }} title="编辑"><Edit2 size={15} /></button>
-                <button onClick={() => handleDelete(p)} style={{ background: '#fef2f2', border: 'none', borderRadius: 10, padding: '10px 12px', cursor: 'pointer', color: '#dc2626', display: 'flex' }} title="删除"><Trash2 size={15} /></button>
+                <button onClick={() => openEdit(p)} style={{ background: 'var(--bg-tertiary)', border: 'none', borderRadius: 10, padding: '10px 12px', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex' }} title="编辑"><Edit2 size={15} /></button>
+                <button onClick={() => handleDelete(p)} style={{ background: '#fef2f2', border: 'none', borderRadius: 10, padding: '10px 12px', cursor: 'pointer', color: 'var(--color-danger)', display: 'flex' }} title="删除"><Trash2 size={15} /></button>
               </div>
             </div>
           ))}
@@ -301,10 +301,10 @@ export default function PartnerManagement() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Input label="合作方名称 *" placeholder="如：货联、本地桥" value={form.partner_name} onChange={e => setForm({ ...form, partner_name: e.target.value })} />
           <Input label="程序地址 *" placeholder="如：http://111.170.173.24:1120" value={form.partner_url} onChange={e => setForm({ ...form, partner_url: e.target.value })} />
-          <p style={{ margin: '-8px 0 0', fontSize: 12, color: '#94a3b8' }}>填写对方网页程序的访问地址，添加后可在 DuiJie 中直接打开使用</p>
+          <p style={{ margin: '-8px 0 0', fontSize: 12, color: 'var(--text-tertiary)' }}>填写对方网页程序的访问地址，添加后可在 DuiJie 中直接打开使用</p>
 
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>备注</label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>备注</label>
             <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} placeholder="备注信息，如：货运管理系统、物流调度平台"
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
           </div>

@@ -7,9 +7,159 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#2563eb">
     <link rel="apple-touch-icon" href="/icons/icon-192.svg">
-    <script src="/env-config.js"></script>
+    <script>
+      // Runtime env config (injected by standalone server in production)
+      try { document.write('<scr' + 'ipt src="/env-config.js"><\/scr' + 'ipt>') } catch(e) {}
+    </script>
     <style>
+      :root {
+        --bg-primary: #ffffff;
+        --bg-secondary: #f8fafc;
+        --bg-tertiary: #f1f5f9;
+        --bg-card: #ffffff;
+        --bg-hover: #f1f5f9;
+        --bg-selected: #eff6ff;
+        --bg-success: #f0fdf4;
+        --bg-warning: #fffbeb;
+        --bg-danger: #fef2f2;
+        --bg-danger-hover: #fee2e2;
+        --bg-warning-hover: #fef3c7;
+
+        --text-heading: #0f172a;
+        --text-primary: #1e293b;
+        --text-body: #334155;
+        --text-secondary: #64748b;
+        --text-tertiary: #94a3b8;
+        --text-disabled: #cbd5e1;
+        --text-inverse: #ffffff;
+
+        --border-primary: #e2e8f0;
+        --border-secondary: #f1f5f9;
+        --border-focus: #3b82f6;
+
+        --brand: #2563eb;
+        --brand-hover: #1d4ed8;
+        --brand-light: #eff6ff;
+        --brand-light-2: #dbeafe;
+        --brand-border: #bfdbfe;
+
+        --color-success: #16a34a;
+        --color-warning: #d97706;
+        --color-danger: #dc2626;
+        --color-purple: #7c3aed;
+        --color-orange: #ea580c;
+        --color-amber: #f59e0b;
+      }
+      [data-theme="dark"] {
+        --bg-primary: #0f172a;
+        --bg-secondary: #1e293b;
+        --bg-tertiary: #334155;
+        --bg-card: #1e293b;
+        --bg-hover: #334155;
+        --bg-selected: #1e3a5f;
+        --bg-success: #052e16;
+        --bg-warning: #451a03;
+        --bg-danger: #450a0a;
+        --bg-danger-hover: #7f1d1d;
+        --bg-warning-hover: #78350f;
+
+        --text-heading: #f1f5f9;
+        --text-primary: #e2e8f0;
+        --text-body: #cbd5e1;
+        --text-secondary: #94a3b8;
+        --text-tertiary: #64748b;
+        --text-disabled: #475569;
+        --text-inverse: #0f172a;
+
+        --border-primary: #334155;
+        --border-secondary: #1e293b;
+        --border-focus: #60a5fa;
+
+        --brand: #3b82f6;
+        --brand-hover: #60a5fa;
+        --brand-light: #1e3a5f;
+        --brand-light-2: #1e3a5f;
+        --brand-border: #1e40af;
+
+        --color-success: #4ade80;
+        --color-warning: #fbbf24;
+        --color-danger: #f87171;
+        --color-purple: #a78bfa;
+        --color-orange: #fb923c;
+        --color-amber: #fbbf24;
+      }
+      [data-theme="dark"] body {
+        background: #0f172a;
+        color: #e2e8f0;
+      }
+      [data-theme="dark"] input,
+      [data-theme="dark"] textarea,
+      [data-theme="dark"] select {
+        background: #334155 !important;
+        color: #e2e8f0 !important;
+        border-color: #475569 !important;
+      }
+      [data-theme="dark"] input::placeholder,
+      [data-theme="dark"] textarea::placeholder {
+        color: #64748b !important;
+      }
+      /* 暗色模式全局覆盖 - 覆盖 inline styles 中的硬编码颜色 */
+      [data-theme="dark"] * {
+        border-color: #334155 !important;
+      }
+      [data-theme="dark"] table,
+      [data-theme="dark"] th,
+      [data-theme="dark"] td {
+        border-color: #334155 !important;
+      }
+      [data-theme="dark"] th {
+        background: #1e293b !important;
+        color: #94a3b8 !important;
+      }
+      [data-theme="dark"] tr {
+        border-color: #1e293b !important;
+      }
       * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+      /* 导航按钮 hover 效果 */
+      .nav-link { transition: all 0.15s ease; }
+      .nav-link:hover {
+        background: var(--bg-hover) !important;
+        color: var(--brand) !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transform: translateY(-1px);
+      }
+      .nav-link.active:hover {
+        box-shadow: 0 2px 8px rgba(37,99,235,0.15);
+      }
+      /* 全局可交互元素 hover 效果 */
+      button:not(.nav-link) {
+        transition: all 0.15s ease;
+      }
+      button:not(.nav-link):hover {
+        filter: brightness(1.08);
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      }
+      a:not(.nav-link) {
+        transition: all 0.15s ease;
+      }
+      a:not(.nav-link):hover {
+        filter: brightness(1.08);
+      }
+      /* 带 cursor:pointer 的元素 (React inline style -> DOM attribute) */
+      [style*="cursor: pointer"], [style*="cursor:pointer"] {
+        transition: filter 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+      }
+      [style*="cursor: pointer"]:hover, [style*="cursor:pointer"]:hover {
+        filter: brightness(1.06);
+      }
+      /* 表格行 hover */
+      tr:hover {
+        background: var(--bg-hover) !important;
+        transition: background 0.15s ease;
+      }
+      thead tr:hover {
+        background: inherit !important;
+      }
       html, body, #root {
         height: 100%;
         max-height: 100%;

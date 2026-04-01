@@ -28,7 +28,7 @@ const statusTabs = [
 ]
 
 const cardStyle: React.CSSProperties = {
-  background: '#fff', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+  background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
   cursor: 'pointer', transition: 'box-shadow 0.15s',
 }
 
@@ -89,8 +89,8 @@ export default function ProjectList() {
     <div>
       <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'flex-start', marginBottom: 16, gap: 12 }}>
         <div>
-          <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>项目管理</h1>
-          <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>共 {filtered.length} 个项目</p>
+          <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>项目管理</h1>
+          <p style={{ color: 'var(--text-secondary)', margin: '4px 0 0', fontSize: 14 }}>共 {filtered.length} 个项目</p>
         </div>
         <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'center', gap: 8, width: isMobile ? '100%' : undefined }}>
           <div style={{ position: 'relative', width: isMobile ? '100%' : undefined }}>
@@ -99,7 +99,7 @@ export default function ProjectList() {
               style={{ padding: '8px 12px 8px 32px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none', width: isMobile ? '100%' : 180, boxSizing: 'border-box' }} />
           </div>
           <button onClick={() => { window.open('/api/projects/export', '_blank') }}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: 13, fontWeight: 500, cursor: 'pointer', width: isMobile ? '100%' : undefined }}>
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500, cursor: 'pointer', width: isMobile ? '100%' : undefined }}>
             <Download size={14} /> 导出
           </button>
           {canCreate && <Button onClick={() => setShowCreate(true)} style={isMobile ? { width: '100%', justifyContent: 'center' } : undefined}><Plus size={16} /> 新建项目</Button>}
@@ -110,7 +110,7 @@ export default function ProjectList() {
         {statusTabs.map(t => (
           <button key={t.key} onClick={() => setStatusFilter(t.key)}
             style={{ padding: '6px 14px', borderRadius: 8, border: 'none', fontSize: 13, fontWeight: statusFilter === t.key ? 600 : 400,
-              background: statusFilter === t.key ? '#2563eb' : '#f1f5f9', color: statusFilter === t.key ? '#fff' : '#64748b', cursor: 'pointer', transition: 'all 0.15s', flex: '0 0 auto', whiteSpace: 'nowrap' }}>
+              background: statusFilter === t.key ? 'var(--brand)' : 'var(--bg-tertiary)', color: statusFilter === t.key ? 'var(--bg-primary)' : 'var(--text-secondary)', cursor: 'pointer', transition: 'all 0.15s', flex: '0 0 auto', whiteSpace: 'nowrap' }}>
             {t.label}
             {t.key === '' ? ` (${projects.length})` : ` (${projects.filter(p => p.status === t.key).length})`}
           </button>
@@ -118,9 +118,9 @@ export default function ProjectList() {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 80, color: '#94a3b8' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
+        <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 80, color: '#94a3b8' }}>
+        <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}>
           <FolderKanban size={48} style={{ marginBottom: 12, opacity: 0.5 }} />
           <div>{projects.length === 0 ? '暂无项目，点击右上角新建' : '无匹配项目'}</div>
         </div>
@@ -133,18 +133,18 @@ export default function ProjectList() {
                 onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)')}
                 onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)')}>
                 <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: isMobile ? 8 : 12, marginBottom: 12 }}>
-                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#0f172a', wordBreak: 'break-word' }}>{p.name}</h3>
+                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: 'var(--text-heading)', wordBreak: 'break-word' }}>{p.name}</h3>
                   <Badge color={st.color}>{st.label}</Badge>
                 </div>
                 {(p.internal_client_name || p.client_name) && (
-                  <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
                     <div>我方企业: {p.internal_client_name || '-'}</div>
                     <div>客户企业: {p.client_name || '-'}</div>
                   </div>
                 )}
-                {p.description && <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: isMobile ? 'normal' : 'nowrap', wordBreak: 'break-word' }}>{p.description}</div>}
+                {p.description && <div style={{ fontSize: 13, color: 'var(--text-tertiary)', marginBottom: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: isMobile ? 'normal' : 'nowrap', wordBreak: 'break-word' }}>{p.description}</div>}
                 <ProgressBar value={p.progress || 0} />
-                <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>进度 {p.progress || 0}%</div>
+                <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 6 }}>进度 {p.progress || 0}%</div>
               </div>
             )
           })}
@@ -155,11 +155,11 @@ export default function ProjectList() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Input label="项目名称 *" placeholder="输入项目名称" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>项目描述</label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>项目描述</label>
             <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={3} placeholder="简要描述项目内容"
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
           </div>
-          <p style={{ fontSize: 12, color: '#94a3b8', margin: 0 }}>创建后可在项目详情中添加成员、关联应用等</p>
+          <p style={{ fontSize: 12, color: 'var(--text-tertiary)', margin: 0 }}>创建后可在项目详情中添加成员、关联应用等</p>
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column-reverse' : 'row', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
             <Button variant="secondary" onClick={() => setShowCreate(false)} style={isMobile ? { width: '100%', justifyContent: 'center' } : undefined}>取消</Button>
             <Button onClick={handleCreate} disabled={submitting} style={isMobile ? { width: '100%', justifyContent: 'center' } : undefined}>{submitting ? '创建中...' : '创建'}</Button>

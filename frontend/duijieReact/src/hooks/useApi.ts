@@ -84,7 +84,7 @@ export function useOpportunities() {
 }
 
 export function useDashboardStats() {
-  return useQuery({
+  return useQuery<Record<string, any>>({
     queryKey: ['dashboard', 'stats'],
     queryFn: async () => {
       const r: ApiResponse = await fetchApi('/api/dashboard/stats')
@@ -95,7 +95,7 @@ export function useDashboardStats() {
 }
 
 export function useDashboardChart(days: number) {
-  return useQuery({
+  return useQuery<Record<string, any>>({
     queryKey: ['dashboard', 'chart', days],
     queryFn: async () => {
       const r: ApiResponse = await fetchApi(`/api/dashboard/chart?days=${days}`)

@@ -118,26 +118,26 @@ export default function CommandPalette() {
     <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '15vh' }}>
       <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }} onClick={() => setOpen(false)} />
       <div style={{
-        position: 'relative', width: '100%', maxWidth: 520, background: '#fff', borderRadius: 16,
+        position: 'relative', width: '100%', maxWidth: 520, background: 'var(--bg-primary)', borderRadius: 16,
         boxShadow: '0 25px 50px rgba(0,0,0,0.2)', overflow: 'hidden',
         animation: 'fadeIn 0.15s ease-out',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderBottom: '1px solid #e2e8f0' }}>
-          <Search size={18} style={{ color: '#94a3b8', flexShrink: 0 }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderBottom: '1px solid var(--border-primary)' }}>
+          <Search size={18} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
           <input
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={handleListKey}
             placeholder="搜索页面、操作..."
-            style={{ flex: 1, border: 'none', outline: 'none', fontSize: 15, color: '#0f172a', background: 'transparent' }}
+            style={{ flex: 1, border: 'none', outline: 'none', fontSize: 15, color: 'var(--text-heading)', background: 'transparent' }}
           />
-          <kbd style={{ padding: '2px 6px', borderRadius: 4, border: '1px solid #e2e8f0', fontSize: 11, color: '#94a3b8', fontFamily: 'inherit' }}>ESC</kbd>
+          <kbd style={{ padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border-primary)', fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'inherit' }}>ESC</kbd>
         </div>
 
         <div ref={listRef} style={{ maxHeight: 360, overflowY: 'auto', padding: '8px' }}>
           {filtered.length === 0 && (
-            <div style={{ padding: '24px 16px', textAlign: 'center', color: '#94a3b8', fontSize: 14 }}>
+            <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 14 }}>
               没有匹配的结果
             </div>
           )}
@@ -149,7 +149,7 @@ export default function CommandPalette() {
             return (
               <div key={item.id}>
                 {showSection && (
-                  <div style={{ padding: '8px 12px 4px', fontSize: 11, fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  <div style={{ padding: '8px 12px 4px', fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
                     {item.section}
                   </div>
                 )}
@@ -160,23 +160,23 @@ export default function CommandPalette() {
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8,
                     cursor: 'pointer', transition: 'background 0.1s',
-                    background: isSelected ? '#f1f5f9' : 'transparent',
-                    color: isSelected ? '#0f172a' : '#475569',
+                    background: isSelected ? 'var(--bg-tertiary)' : 'transparent',
+                    color: isSelected ? 'var(--text-heading)' : '#475569',
                   }}
                 >
-                  <Icon size={16} style={{ flexShrink: 0, color: isSelected ? '#2563eb' : '#94a3b8' }} />
+                  <Icon size={16} style={{ flexShrink: 0, color: isSelected ? 'var(--brand)' : 'var(--text-tertiary)' }} />
                   <span style={{ flex: 1, fontSize: 14, fontWeight: isSelected ? 500 : 400 }}>{item.label}</span>
-                  <ArrowRight size={14} style={{ color: '#cbd5e1', opacity: isSelected ? 1 : 0 }} />
+                  <ArrowRight size={14} style={{ color: 'var(--text-disabled)', opacity: isSelected ? 1 : 0 }} />
                 </div>
               </div>
             )
           })}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 16px', borderTop: '1px solid #e2e8f0', fontSize: 11, color: '#94a3b8' }}>
-          <span><kbd style={{ padding: '1px 4px', borderRadius: 3, border: '1px solid #e2e8f0', fontFamily: 'inherit' }}>↑↓</kbd> 导航</span>
-          <span><kbd style={{ padding: '1px 4px', borderRadius: 3, border: '1px solid #e2e8f0', fontFamily: 'inherit' }}>Enter</kbd> 确认</span>
-          <span style={{ marginLeft: 'auto' }}><kbd style={{ padding: '1px 4px', borderRadius: 3, border: '1px solid #e2e8f0', fontFamily: 'inherit' }}>Ctrl+K</kbd> 打开</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 16px', borderTop: '1px solid var(--border-primary)', fontSize: 11, color: 'var(--text-tertiary)' }}>
+          <span><kbd style={{ padding: '1px 4px', borderRadius: 3, border: '1px solid var(--border-primary)', fontFamily: 'inherit' }}>↑↓</kbd> 导航</span>
+          <span><kbd style={{ padding: '1px 4px', borderRadius: 3, border: '1px solid var(--border-primary)', fontFamily: 'inherit' }}>Enter</kbd> 确认</span>
+          <span style={{ marginLeft: 'auto' }}><kbd style={{ padding: '1px 4px', borderRadius: 3, border: '1px solid var(--border-primary)', fontFamily: 'inherit' }}>Ctrl+K</kbd> 打开</span>
         </div>
       </div>
     </div>

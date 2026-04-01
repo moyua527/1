@@ -21,9 +21,9 @@ interface Props {
   handleRoleChange: (memberId: number, role: string) => void
 }
 
-const detailRow: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid #f1f5f9' }
-const detailLabel: React.CSSProperties = { fontSize: 13, color: '#94a3b8', minWidth: 72, flexShrink: 0 }
-const detailValue: React.CSSProperties = { fontSize: 14, color: '#0f172a', fontWeight: 500, wordBreak: 'break-all' }
+const detailRow: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid var(--border-secondary)' }
+const detailLabel: React.CSSProperties = { fontSize: 13, color: 'var(--text-tertiary)', minWidth: 72, flexShrink: 0 }
+const detailValue: React.CSSProperties = { fontSize: 14, color: 'var(--text-heading)', fontWeight: 500, wordBreak: 'break-all' }
 
 export default function MemberList({ members, departments, roles = [], isOwner, canAdmin, getDeptName, getRoleName, getRoleColor, openAddMember, openEditMember, handleDeleteMember, handleRoleChange }: Props) {
   const [viewingMember, setViewingMember] = useState<any>(null)
@@ -37,7 +37,7 @@ export default function MemberList({ members, departments, roles = [], isOwner, 
         </div>
       )}
       {members.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 24, color: '#94a3b8', fontSize: 14 }}>暂无组织成员，点击"添加成员"开始</div>
+        <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-tertiary)', fontSize: 14 }}>暂无组织成员，点击"添加成员"开始</div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
           {members.map((m: any) => {
@@ -45,18 +45,18 @@ export default function MemberList({ members, departments, roles = [], isOwner, 
             const isCreatorMember = mRole === 'creator'
             const customRoleName = getRoleName?.(m.enterprise_role_id)
             const customRoleColor = getRoleColor?.(m.enterprise_role_id)
-            const borderColor = isCreatorMember ? '#9333ea' : customRoleName ? customRoleColor : '#e2e8f0'
+            const borderColor = isCreatorMember ? '#9333ea' : customRoleName ? customRoleColor : 'var(--border-primary)'
             return (
             <div key={m.id} onClick={() => setViewingMember(m)}
-              style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, cursor: 'pointer', transition: 'all 0.15s',
+              style={{ border: '1px solid var(--border-primary)', borderRadius: 10, padding: 14, cursor: 'pointer', transition: 'all 0.15s',
                 borderLeft: `3px solid ${borderColor}` }}
-              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'; (e.currentTarget as HTMLDivElement).style.borderColor = '#cbd5e1' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'; (e.currentTarget as HTMLDivElement).style.borderColor = '#e2e8f0' }}>
+              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'; (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--text-disabled)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'; (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border-primary)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                 <Avatar name={m.name} size={40} />
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>{m.name}</span>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{m.name}</span>
                     {isCreatorMember && (
                       <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: creatorRoleConfig.bg, color: creatorRoleConfig.color, fontWeight: 600 }}>
                         <Crown size={9} style={{ marginRight: 2, verticalAlign: -1 }} />{creatorRoleConfig.label}
@@ -68,22 +68,22 @@ export default function MemberList({ members, departments, roles = [], isOwner, 
                       </span>
                     )}
                     {!isCreatorMember && !customRoleName && (
-                      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: '#f1f5f9', color: '#94a3b8', fontWeight: 600 }}>未分配角色</span>
+                      <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: 'var(--bg-tertiary)', color: 'var(--text-tertiary)', fontWeight: 600 }}>未分配角色</span>
                     )}
-                    {m.employee_id && <span style={{ fontSize: 11, color: '#94a3b8', background: '#f1f5f9', padding: '1px 6px', borderRadius: 4 }}>#{m.employee_id}</span>}
+                    {m.employee_id && <span style={{ fontSize: 11, color: 'var(--text-tertiary)', background: 'var(--bg-tertiary)', padding: '1px 6px', borderRadius: 4 }}>#{m.employee_id}</span>}
                   </div>
-                  {m.position && <div style={{ fontSize: 12, color: '#64748b' }}>{m.position}</div>}
+                  {m.position && <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{m.position}</div>}
                 </div>
                 <div style={{ display: 'flex', gap: 4, alignItems: 'center' }} onClick={e => e.stopPropagation()}>
                   {canAdmin && !isCreatorMember && (
                     <>
-                      <button onClick={() => openEditMember(m)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, display: 'flex' }}><Edit3 size={13} /></button>
-                      <button onClick={() => handleDeleteMember(m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: 2, display: 'flex' }}><X size={13} /></button>
+                      <button onClick={() => openEditMember(m)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 2, display: 'flex' }}><Edit3 size={13} /></button>
+                      <button onClick={() => handleDeleteMember(m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', padding: 2, display: 'flex' }}><X size={13} /></button>
                     </>
                   )}
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '3px 12px', fontSize: 13, color: '#334155' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '3px 12px', fontSize: 13, color: 'var(--text-body)' }}>
                 {m.department_id && <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0, wordBreak: 'break-all' }}><Building size={12} color="#94a3b8" />{getDeptName(m.department_id)}</div>}
                 {m.department && !m.department_id && <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0, wordBreak: 'break-all' }}><Building size={12} color="#94a3b8" />{m.department}</div>}
                 {m.phone && <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0, wordBreak: 'break-all' }}><Phone size={12} color="#94a3b8" />{m.phone}</div>}
@@ -91,7 +91,7 @@ export default function MemberList({ members, departments, roles = [], isOwner, 
                 {m.supervisor && <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0, wordBreak: 'break-all' }}><GitBranch size={12} color="#94a3b8" />上级: {m.supervisor}</div>}
                 {m.join_date && <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0, wordBreak: 'break-all' }}><Calendar size={12} color="#94a3b8" />入职: {m.join_date.slice(0, 10)}</div>}
               </div>
-              {m.notes && <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>{m.notes}</div>}
+              {m.notes && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 6 }}>{m.notes}</div>}
             </div>
             )
           })}
@@ -108,11 +108,11 @@ export default function MemberList({ members, departments, roles = [], isOwner, 
           const deptName = getDeptName(viewingMember.department_id) || viewingMember.department || ''
           return (
             <div>
-              <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', gap: 14, paddingBottom: 16, borderBottom: '1px solid #e2e8f0', marginBottom: 4 }}>
+              <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', gap: 14, paddingBottom: 16, borderBottom: '1px solid var(--border-primary)', marginBottom: 4 }}>
                 <Avatar name={viewingMember.name} size={56} />
                 <div style={{ minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: '#0f172a', wordBreak: 'break-all' }}>{viewingMember.name}</span>
+                    <span style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: 'var(--text-heading)', wordBreak: 'break-all' }}>{viewingMember.name}</span>
                     {isCreatorM && (
                       <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: creatorRoleConfig.bg, color: creatorRoleConfig.color, fontWeight: 600 }}>
                         <Crown size={10} style={{ marginRight: 3, verticalAlign: -1 }} />{creatorRoleConfig.label}
@@ -124,7 +124,7 @@ export default function MemberList({ members, departments, roles = [], isOwner, 
                       </span>
                     )}
                   </div>
-                  {viewingMember.position && <div style={{ fontSize: 14, color: '#64748b' }}>{viewingMember.position}</div>}
+                  {viewingMember.position && <div style={{ fontSize: 14, color: 'var(--text-secondary)' }}>{viewingMember.position}</div>}
                 </div>
               </div>
 
@@ -175,11 +175,11 @@ export default function MemberList({ members, departments, roles = [], isOwner, 
                   <div style={{ ...detailRow, borderBottom: 'none', alignItems: 'flex-start' }}>
                     <FileText size={15} color="#94a3b8" style={{ marginTop: 2 }} />
                     <span style={detailLabel}>备注</span>
-                    <span style={{ ...detailValue, fontWeight: 400, color: '#334155', whiteSpace: 'pre-wrap' }}>{viewingMember.notes}</span>
+                    <span style={{ ...detailValue, fontWeight: 400, color: 'var(--text-body)', whiteSpace: 'pre-wrap' }}>{viewingMember.notes}</span>
                   </div>
                 )}
                 {!viewingMember.employee_id && !deptName && !viewingMember.phone && !viewingMember.email && !viewingMember.supervisor && !viewingMember.join_date && !viewingMember.notes && (
-                  <div style={{ textAlign: 'center', padding: 24, color: '#94a3b8', fontSize: 14 }}>暂无更多信息</div>
+                  <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-tertiary)', fontSize: 14 }}>暂无更多信息</div>
                 )}
               </div>
 

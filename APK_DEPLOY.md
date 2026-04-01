@@ -61,30 +61,29 @@ cd android
 
 ## 三、发版流程
 
-### 1. 修改版本号
+### 1. 修改版本号（单一版本源）
 
-**前端** — `src/utils/capacitor.ts`：
-```typescript
-export const APP_VERSION = '1.1.0'       // 改为新版本号
-export const APP_VERSION_CODE = 2        // 递增
+只需修改项目根目录的 **`version.json`**，前端和后端会自动读取：
+
+```jsonc
+// E:\DuiJie\version.json
+{
+  "version": "1.2.0",         // 版本号
+  "versionCode": 52,          // 递增，与 Android versionCode 一致
+  "minVersion": "1.0.0",      // 最低兼容版本（低于此版本强制更新）
+  "changelog": "新增某某功能"  // 更新说明
+}
 ```
 
-**Android** — `android/app/build.gradle`：
+**同步规则：**
+- **前端** — `capacitor.ts` 的 `APP_VERSION` / `APP_VERSION_CODE` 在 Vite 构建时自动从 `version.json` 注入（通过 `vite.config.ts` 的 `define`）
+- **后端** — `appVersionController.js` 在运行时读取 `version.json`，下载地址可通过 `.env` 的 `APK_DOWNLOAD_URL` 覆盖
+- **部署脚本** — `deploy_update.py` 会自动将 `version.json` 上传到服务器
+
+**Android** — `android/app/build.gradle` 仍需手动同步：
 ```gradle
-versionCode 2          // 递增，和 APP_VERSION_CODE 一致
-versionName "1.1.0"    // 和 APP_VERSION 一致
-```
-
-**后端** — `server/duijie/atomic/controllers/system/appVersionController.js`：
-```javascript
-const APP_CONFIG = {
-  version: '1.1.0',       // 改为新版本号
-  versionCode: 2,          // 递增
-  minVersion: '1.0.0',     // 最低兼容版本（低于此版本强制更新）
-  downloadUrl: 'http://160.202.253.143:8080/downloads/duijie.apk',
-  forceUpdate: false,       // true = 强制更新
-  changelog: '修复了某某问题，新增了某某功能',
-};
+versionCode 52         // 与 version.json 中的 versionCode 一致
+versionName "1.2.0"    // 与 version.json 中的 version 一致
 ```
 
 ### 2. 打包新 APK
@@ -97,14 +96,27 @@ const APP_CONFIG = {
 scp E:\DuiJie\frontend\duijieReact\android\app\build\outputs\apk\debug\app-debug.apk root@160.202.253.143:/opt/duijie/downloads/duijie.apk
 ```
 
-### 4. 部署后端（更新版本接口）
+### 4. 部署前后端
 
-```bash
-ssh root@160.202.253.143
-cd /opt/duijie && git pull origin main
-cd server/duijie && npm install --production
-pm2 restart duijie
+使用统一部署脚本（自动上传后端代码、前端构建产物、version.json，运行迁移，重启服务并健康检查）：
+
+```powershell
+cd E:\DuiJie\frontend\duijieReact
+npm run build
+
+cd E:\DuiJie
+$env:SSH_PASS = "你的SSH密码"
+python deploy_update.py
 ```
+
+部署脚本执行流程：
+1. 上传后端 JS/JSON 文件
+2. `npm install --production`
+3. 运行数据库迁移
+4. 上传前端 dist
+5. 上传 version.json
+6. PM2 restart + API 健康检查（HTTP 200）
+7. 写入 deploy.log
 
 ### 5. 验证
 

@@ -1,6 +1,8 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const roleGuard = require('../middleware/roleGuard');
+const validate = require('../middleware/validate');
+const V = require('../middleware/validators');
 const router = express.Router();
 
 const adminOnly = roleGuard('admin');
@@ -27,6 +29,9 @@ router.put('/system/invite-code', auth, configCtrl.update);
 router.get('/system/config', auth, adminOnly, configCtrl.getAll);
 router.put('/system/config', auth, adminOnly, configCtrl.updateAll);
 
+// Global search
+router.get('/search', auth, require('../controllers/search/searchController'));
+
 // App version check
 router.get('/app/version', require('../controllers/system/appVersionController'));
 
@@ -51,8 +56,8 @@ router.delete('/invite-links/:id', auth, adminOnly, async (req, res) => {
 
 // Users (admin only)
 router.get('/users', auth, adminOnly, require('../controllers/user/listController'));
-router.post('/users', auth, adminOnly, require('../controllers/user/createController'));
-router.put('/users/:id', auth, adminOnly, require('../controllers/user/updateController'));
+router.post('/users', auth, adminOnly, V.createUser, validate, require('../controllers/user/createController'));
+router.put('/users/:id', auth, adminOnly, V.updateUser, validate, require('../controllers/user/updateController'));
 router.delete('/users/:id', auth, adminOnly, require('../controllers/user/deleteController'));
 
 // Audit Logs (admin only)

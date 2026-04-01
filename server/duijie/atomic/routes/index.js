@@ -2,7 +2,7 @@ const express = require('express');
 const logger = require('../../config/logger');
 const router = express.Router();
 
-const modules = ['auth', 'admin', 'project', 'client', 'task', 'communication', 'partner'];
+const modules = ['auth', 'admin', 'project', 'client', 'enterprise', 'crm', 'opportunity', 'task', 'communication', 'partner'];
 
 modules.forEach(mod => {
   try {

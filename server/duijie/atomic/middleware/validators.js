@@ -110,3 +110,93 @@ exports.joinEnterprise = [
 exports.searchEnterprise = [
   query('name').trim().notEmpty().withMessage('请输入搜索关键词'),
 ];
+
+// === Contacts ===
+exports.createContact = [
+  body('client_id').isInt({ min: 1 }).withMessage('无效的客户ID'),
+  body('name').trim().notEmpty().withMessage('请输入联系人姓名').isLength({ max: 100 }).withMessage('姓名不超过100字'),
+  body('phone').optional({ values: 'falsy' }).matches(/^\d{7,15}$/).withMessage('电话格式不正确'),
+  body('email').optional({ values: 'falsy' }).isEmail().withMessage('邮箱格式不正确'),
+];
+
+exports.updateContact = [
+  param('id').isInt({ min: 1 }).withMessage('无效的联系人ID'),
+  body('name').optional().trim().isLength({ max: 100 }).withMessage('姓名不超过100字'),
+  body('phone').optional({ values: 'falsy' }).matches(/^\d{7,15}$/).withMessage('电话格式不正确'),
+  body('email').optional({ values: 'falsy' }).isEmail().withMessage('邮箱格式不正确'),
+];
+
+// === Contracts ===
+exports.createContract = [
+  body('client_id').isInt({ min: 1 }).withMessage('无效的客户ID'),
+  body('title').trim().notEmpty().withMessage('请输入合同标题').isLength({ max: 200 }).withMessage('标题不超过200字'),
+  body('amount').optional().isDecimal({ decimal_digits: '0,2' }).withMessage('金额格式不正确'),
+];
+
+exports.updateContract = [
+  param('id').isInt({ min: 1 }).withMessage('无效的合同ID'),
+  body('title').optional().trim().isLength({ max: 200 }).withMessage('标题不超过200字'),
+  body('amount').optional().isDecimal({ decimal_digits: '0,2' }).withMessage('金额格式不正确'),
+];
+
+// === Follow-ups ===
+exports.createFollowUp = [
+  body('client_id').isInt({ min: 1 }).withMessage('无效的客户ID'),
+  body('content').trim().notEmpty().withMessage('请输入跟进内容').isLength({ max: 5000 }).withMessage('内容不超过5000字'),
+];
+
+exports.updateFollowUp = [
+  param('id').isInt({ min: 1 }).withMessage('无效的跟进ID'),
+  body('content').optional().trim().isLength({ max: 5000 }).withMessage('内容不超过5000字'),
+];
+
+// === Opportunities ===
+exports.createOpportunity = [
+  body('name').trim().notEmpty().withMessage('请输入商机名称').isLength({ max: 200 }).withMessage('名称不超过200字'),
+  body('client_id').optional().isInt({ min: 1 }).withMessage('无效的客户ID'),
+  body('amount').optional().isDecimal({ decimal_digits: '0,2' }).withMessage('金额格式不正确'),
+];
+
+exports.updateOpportunity = [
+  param('id').isInt({ min: 1 }).withMessage('无效的商机ID'),
+  body('name').optional().trim().isLength({ max: 200 }).withMessage('名称不超过200字'),
+  body('amount').optional().isDecimal({ decimal_digits: '0,2' }).withMessage('金额格式不正确'),
+];
+
+// === Milestones ===
+exports.createMilestone = [
+  body('title').trim().notEmpty().withMessage('请输入里程碑标题').isLength({ max: 200 }).withMessage('标题不超过200字'),
+  body('project_id').isInt({ min: 1 }).withMessage('无效的项目ID'),
+];
+
+exports.updateMilestone = [
+  param('id').isInt({ min: 1 }).withMessage('无效的里程碑ID'),
+  body('title').optional().trim().isLength({ max: 200 }).withMessage('标题不超过200字'),
+];
+
+// === Direct Messages ===
+exports.sendDm = [
+  body('to_user_id').isInt({ min: 1 }).withMessage('无效的接收者ID'),
+  body('content').trim().notEmpty().withMessage('消息不能为空').isLength({ max: 5000 }).withMessage('消息不超过5000字'),
+];
+
+// === Users (admin) ===
+exports.createUser = [
+  body('username').trim().notEmpty().withMessage('请输入用户名').isLength({ max: 50 }).withMessage('用户名不超过50字'),
+  body('password').isLength({ min: 6 }).withMessage('密码至少6位'),
+  body('role').optional().isIn(['admin', 'member', 'client']).withMessage('角色无效'),
+];
+
+exports.updateUser = [
+  param('id').isInt({ min: 1 }).withMessage('无效的用户ID'),
+  body('nickname').optional().trim().isLength({ max: 100 }).withMessage('昵称不超过100字'),
+  body('role').optional().isIn(['admin', 'member', 'client']).withMessage('角色无效'),
+];
+
+// === Client update ===
+exports.updateClient = [
+  param('id').isInt({ min: 1 }).withMessage('无效的客户ID'),
+  body('name').optional().trim().isLength({ max: 100 }).withMessage('名称不超过100字'),
+  body('email').optional({ values: 'falsy' }).isEmail().withMessage('邮箱格式不正确'),
+  body('phone').optional({ values: 'falsy' }).matches(/^\d{7,15}$/).withMessage('电话格式不正确'),
+];

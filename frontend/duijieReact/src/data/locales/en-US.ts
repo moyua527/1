@@ -1,0 +1,91 @@
+const enUS: Record<string, string> = {
+  // Common
+  'common.loading': 'Loading...',
+  'common.save': 'Save',
+  'common.cancel': 'Cancel',
+  'common.confirm': 'Confirm',
+  'common.delete': 'Delete',
+  'common.edit': 'Edit',
+  'common.create': 'Create',
+  'common.search': 'Search',
+  'common.reset': 'Reset',
+  'common.export': 'Export',
+  'common.import': 'Import',
+  'common.back': 'Back',
+  'common.close': 'Close',
+  'common.yes': 'Yes',
+  'common.no': 'No',
+  'common.success': 'Success',
+  'common.error': 'Operation failed',
+  'common.noData': 'No data',
+  'common.retry': 'Retry',
+
+  // Navigation
+  'nav.dashboard': 'Dashboard',
+  'nav.projects': 'Projects',
+  'nav.clients': 'Clients',
+  'nav.opportunities': 'Opportunities',
+  'nav.tasks': 'Task Board',
+  'nav.messaging': 'Messages',
+  'nav.tickets': 'Tickets',
+  'nav.files': 'Files',
+  'nav.report': 'Reports',
+  'nav.enterprise': 'Enterprise',
+  'nav.users': 'Users',
+  'nav.audit': 'Audit Log',
+  'nav.settings': 'Settings',
+  'nav.partners': 'Partners',
+
+  // Auth
+  'auth.login': 'Login',
+  'auth.register': 'Register',
+  'auth.logout': 'Logout',
+  'auth.username': 'Username',
+  'auth.password': 'Password',
+  'auth.phone': 'Phone',
+  'auth.email': 'Email',
+  'auth.verifyCode': 'Verification Code',
+  'auth.sendCode': 'Send Code',
+  'auth.forgotPassword': 'Forgot password?',
+  'auth.resetPassword': 'Reset Password',
+  'auth.agreement': 'Terms of Service',
+  'auth.privacy': 'Privacy Policy',
+
+  // Project
+  'project.name': 'Project Name',
+  'project.status': 'Status',
+  'project.progress': 'Progress',
+  'project.client': 'Client',
+  'project.members': 'Members',
+  'project.overview': 'Overview',
+  'project.tasks': 'Tasks',
+  'project.milestones': 'Milestones',
+  'project.files': 'Files',
+  'project.messages': 'Messages',
+  'project.apps': 'Apps',
+
+  // Client
+  'client.name': 'Client Name',
+  'client.company': 'Company',
+  'client.stage': 'Stage',
+  'client.type': 'Type',
+  'client.assignedTo': 'Assigned To',
+
+  // Task
+  'task.title': 'Task Title',
+  'task.status': 'Status',
+  'task.priority': 'Priority',
+  'task.assignee': 'Assignee',
+  'task.dueDate': 'Due Date',
+  'task.todo': 'To Do',
+  'task.inProgress': 'In Progress',
+  'task.review': 'In Review',
+  'task.done': 'Done',
+
+  // Theme
+  'theme.light': 'Light Mode',
+  'theme.dark': 'Dark Mode',
+  'theme.system': 'System',
+}
+
+export default enUS

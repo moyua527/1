@@ -23,10 +23,10 @@ export default function ClientImportModal({ open, onClose, onImported }: Props) 
   return (
     <Modal open={open} onClose={handleClose} title="批量导入客户">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div style={{ background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: 10, padding: 20, textAlign: 'center' }}>
+        <div style={{ background: 'var(--bg-secondary)', border: '1px dashed #cbd5e1', borderRadius: 10, padding: 20, textAlign: 'center' }}>
           <Upload size={32} color="#94a3b8" style={{ marginBottom: 8 }} />
-          <div style={{ fontSize: 14, color: '#64748b', marginBottom: 8 }}>选择 CSV 文件上传</div>
-          <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 12 }}>表头: 客户名称, 公司, 渠道, 阶段, 邮箱, 电话, 职位级别, 部门, 工作职能, 备注</div>
+          <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 8 }}>选择 CSV 文件上传</div>
+          <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 12 }}>表头: 客户名称, 公司, 渠道, 阶段, 邮箱, 电话, 职位级别, 部门, 工作职能, 备注</div>
           <input type="file" accept=".csv" onChange={e => {
             const file = e.target.files?.[0]
             if (!file) return
@@ -56,17 +56,17 @@ export default function ClientImportModal({ open, onClose, onImported }: Props) 
 
         {importData.length > 0 && (
           <>
-            <div style={{ fontSize: 13, color: '#334155', fontWeight: 600 }}>预览 (前10条)</div>
-            <div style={{ maxHeight: 240, overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: 8 }}>
+            <div style={{ fontSize: 13, color: 'var(--text-body)', fontWeight: 600 }}>预览 (前10条)</div>
+            <div style={{ maxHeight: 240, overflowY: 'auto', border: '1px solid var(--border-primary)', borderRadius: 8 }}>
               <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ background: '#f8fafc', position: 'sticky', top: 0 }}>
-                    {['名称', '公司', '渠道', '邮箱', '电话'].map(h => <th key={h} style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '1px solid #e2e8f0', color: '#64748b', fontWeight: 500 }}>{h}</th>)}
+                  <tr style={{ background: 'var(--bg-secondary)', position: 'sticky', top: 0 }}>
+                    {['名称', '公司', '渠道', '邮箱', '电话'].map(h => <th key={h} style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '1px solid var(--border-primary)', color: 'var(--text-secondary)', fontWeight: 500 }}>{h}</th>)}
                   </tr>
                 </thead>
                 <tbody>
                   {importData.slice(0, 10).map((r: any, i: number) => (
-                    <tr key={i} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <tr key={i} style={{ borderBottom: '1px solid var(--border-secondary)' }}>
                       <td style={{ padding: '5px 8px' }}>{r.name}</td>
                       <td style={{ padding: '5px 8px' }}>{r.company}</td>
                       <td style={{ padding: '5px 8px' }}>{r.channel}</td>
@@ -77,7 +77,7 @@ export default function ClientImportModal({ open, onClose, onImported }: Props) 
                 </tbody>
               </table>
             </div>
-            {importData.length > 10 && <div style={{ fontSize: 12, color: '#94a3b8' }}>...还有 {importData.length - 10} 条未显示</div>}
+            {importData.length > 10 && <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>...还有 {importData.length - 10} 条未显示</div>}
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
               <Button variant="secondary" onClick={handleClose}>取消</Button>
               <Button disabled={importing} onClick={async () => {

@@ -5,6 +5,7 @@ import Layout from './features/ui/Layout'
 import MobilePushBridge from './features/ui/MobilePushBridge'
 import ToastContainer from './features/ui/Toast'
 import AppUpdateChecker from './features/ui/AppUpdateChecker'
+import ErrorBoundary from './features/ui/ErrorBoundary'
 import useUserStore from './stores/useUserStore'
 import { can } from './stores/permissions'
 import EnterpriseOnboarding from './features/enterprise/EnterpriseOnboarding'
@@ -26,6 +27,10 @@ const importFns = {
   enterprise:   () => import('./features/enterprise/index'),
   ticket:       () => import('./features/ticket/index'),
   partner:      () => import('./features/partner/index'),
+  userSettings: () => import('./features/user-settings/index'),
+  contact:      () => import('./features/contact/index'),
+  calendar:     () => import('./features/calendar/index'),
+  notification: () => import('./features/notification/index'),
 }
 
 function lazyLoad(importFn: () => Promise<{ default: ComponentType<any> }>) {
@@ -51,9 +56,15 @@ const SystemSettings = lazyLoad(importFns.settings)
 const Enterprise = lazyLoad(importFns.enterprise)
 const TicketPage = lazyLoad(importFns.ticket)
 const PartnerManagement = lazyLoad(importFns.partner)
+const UserSettingsPage = lazyLoad(importFns.userSettings)
+const ContactList = lazyLoad(importFns.contact)
+const CalendarPage = lazyLoad(importFns.calendar)
+const NotificationCenter = lazyLoad(importFns.notification)
 
-function prefetchAll() {
-  Object.values(importFns).forEach(fn => fn().catch(() => {}))
+// Only prefetch high-frequency pages instead of all routes
+const HIGH_FREQ_PAGES = ['dashboard', 'projectList', 'clientList', 'taskBoard', 'messaging'] as const
+function prefetchHighFreq() {
+  HIGH_FREQ_PAGES.forEach(key => importFns[key]().catch(() => {}))
 }
 
 export default function App() {
@@ -63,7 +74,7 @@ export default function App() {
 
   useEffect(() => {
     if (user) {
-      const id = (window.requestIdleCallback || ((cb: any) => setTimeout(cb, 200)))(prefetchAll)
+      const id = (window.requestIdleCallback || ((cb: any) => setTimeout(cb, 200)))(prefetchHighFreq)
       return () => (window.cancelIdleCallback || clearTimeout)(id)
     }
   }, [user])
@@ -85,7 +96,7 @@ export default function App() {
   const canTickets = can(r, 'ticket:view')
 
   return (
-    <>
+    <ErrorBoundary>
       <ToastContainer />
       <MobilePushBridge />
       <AppUpdateChecker />
@@ -100,11 +111,15 @@ export default function App() {
             {canOpportunities && <Route path="/opportunities" element={<OpportunityList />} />}
             {canTasks && <Route path="/tasks" element={<TaskBoard />} />}
             <Route path="/enterprise" element={<Enterprise />} />
+            <Route path="/contacts" element={<ContactList />} />
             <Route path="/messaging" element={<Messaging />} />
             {canTickets && <Route path="/tickets" element={<TicketPage />} />}
             {canReport && <Route path="/report" element={<Report />} />}
             {canUsers && <Route path="/users" element={<UserManagement />} />}
             <Route path="/files" element={<FileManager />} />
+            <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/notifications" element={<NotificationCenter />} />
+            <Route path="/user-settings" element={<UserSettingsPage />} />
             {canAudit && <Route path="/audit" element={<AuditLog />} />}
             {canSettings && <Route path="/settings" element={<SystemSettings />} />}
             {canSettings && <Route path="/partners" element={<PartnerManagement />} />}
@@ -112,6 +127,6 @@ export default function App() {
           </Route>
         </Routes>
       </Suspense>
-    </>
+    </ErrorBoundary>
   )
 }

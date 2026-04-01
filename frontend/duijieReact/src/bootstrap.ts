@@ -6,7 +6,12 @@ export const BACKEND_URL = isCapacitor
 
 function authHeaders(): Record<string, string> {
   const token = sessionStorage.getItem('token')
-  return token ? { Authorization: `Bearer ${token}` } : {}
+  const headers: Record<string, string> = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  // CSRF token from cookie
+  const csrfMatch = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/)
+  if (csrfMatch) headers['X-CSRF-Token'] = csrfMatch[1]
+  return headers
 }
 
 export function setToken(token: string) { sessionStorage.setItem('token', token) }

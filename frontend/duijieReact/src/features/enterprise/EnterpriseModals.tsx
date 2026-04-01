@@ -72,7 +72,7 @@ export default function EnterpriseModals(props: Props) {
       {/* 编辑企业 Modal */}
       <Modal open={editEntOpen} onClose={() => setEditEntOpen(false)} title="编辑企业信息">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '70vh', overflowY: 'auto', paddingRight: 4 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#2563eb', borderBottom: '1px solid #e2e8f0', paddingBottom: 6 }}>基本信息</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--brand)', borderBottom: '1px solid var(--border-primary)', paddingBottom: 6 }}>基本信息</div>
           <Input label="企业名称 *" value={entForm.name} onChange={e => setEntForm({ ...entForm, name: e.target.value })} />
           <Input label="公司全称" placeholder="如：XX科技有限公司" value={entForm.company} onChange={e => setEntForm({ ...entForm, company: e.target.value })} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
@@ -102,7 +102,7 @@ export default function EnterpriseModals(props: Props) {
             <Input label="成立日期" type="date" value={entForm.established_date} onChange={e => setEntForm({ ...entForm, established_date: e.target.value })} />
           </div>
 
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#2563eb', borderBottom: '1px solid #e2e8f0', paddingBottom: 6, marginTop: 4 }}>工商信息</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--brand)', borderBottom: '1px solid var(--border-primary)', paddingBottom: 6, marginTop: 4 }}>工商信息</div>
           <Input label="统一社会信用代码" placeholder="18位信用代码" maxLength={18} value={entForm.credit_code} onChange={e => setEntForm({ ...entForm, credit_code: e.target.value.toUpperCase() })} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             <Input label="法定代表人" placeholder="法人姓名" value={entForm.legal_person} onChange={e => setEntForm({ ...entForm, legal_person: e.target.value })} />
@@ -113,7 +113,7 @@ export default function EnterpriseModals(props: Props) {
             <textarea value={entForm.business_scope} onChange={e => setEntForm({ ...entForm, business_scope: e.target.value })} rows={3} placeholder="主营业务范围" style={textareaStyle} />
           </div>
 
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#2563eb', borderBottom: '1px solid #e2e8f0', paddingBottom: 6, marginTop: 4 }}>联系方式</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--brand)', borderBottom: '1px solid var(--border-primary)', paddingBottom: 6, marginTop: 4 }}>联系方式</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             <Input label="邮箱" value={entForm.email} onChange={e => setEntForm({ ...entForm, email: e.target.value })} />
             <Input label="电话" maxLength={11} value={entForm.phone} onChange={e => setEntForm({ ...entForm, phone: e.target.value.replace(/\D/g, '').slice(0, 11) })} />
@@ -135,12 +135,12 @@ export default function EnterpriseModals(props: Props) {
       <Modal open={memberModalOpen} onClose={() => setMemberModalOpen(false)} title={editingMember ? '编辑成员' : '添加成员'}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '70vh', overflowY: 'auto', paddingRight: isMobile ? 0 : 4 }}>
           {!editingMember && (
-            <div style={{ background: '#f8fafc', borderRadius: 10, padding: 14, border: '1px solid #e2e8f0' }}>
+            <div style={{ background: 'var(--bg-secondary)', borderRadius: 10, padding: 14, border: '1px solid var(--border-primary)' }}>
               <label style={{ ...labelStyle, marginBottom: 8 }}>从已有账号导入</label>
               <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 8 }}>
                 <input value={lookupPhone} onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0, 11); setLookupPhone(v) }} placeholder="输入手机号查找" maxLength={11}
                   style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none' }} />
-                <button onClick={handleLookup} disabled={lookupLoading} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, fontSize: 13, fontWeight: 500, opacity: lookupLoading ? 0.6 : 1, width: isMobile ? '100%' : undefined }}>
+                <button onClick={handleLookup} disabled={lookupLoading} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: 'var(--brand)', color: 'var(--bg-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, fontSize: 13, fontWeight: 500, opacity: lookupLoading ? 0.6 : 1, width: isMobile ? '100%' : undefined }}>
                   <Search size={14} /> {lookupLoading ? '查找中...' : '导入'}
                 </button>
               </div>
@@ -163,7 +163,7 @@ export default function EnterpriseModals(props: Props) {
                   {roles.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
                 <button onClick={() => { setShowRoleForm(!showRoleForm); if (!showRoleForm) setRoleForm({ ...emptyRoleForm }) }}
-                  style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0', background: showRoleForm ? '#eff6ff' : '#fff', color: '#2563eb', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, fontSize: 12, whiteSpace: 'nowrap', flexShrink: 0, width: isMobile ? '100%' : undefined }}>
+                  style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border-primary)', background: showRoleForm ? 'var(--bg-selected)' : 'var(--bg-primary)', color: 'var(--brand)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, fontSize: 12, whiteSpace: 'nowrap', flexShrink: 0, width: isMobile ? '100%' : undefined }}>
                   <Plus size={13} />新增
                 </button>
               </div>
@@ -177,31 +177,31 @@ export default function EnterpriseModals(props: Props) {
             </div>
           </div>
           {showRoleForm && (
-            <div style={{ background: '#f8fafc', borderRadius: 10, padding: 14, border: '1px solid #dbeafe' }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#2563eb', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ background: 'var(--bg-secondary)', borderRadius: 10, padding: 14, border: '1px solid #dbeafe' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--brand)', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span>新建角色</span>
-                <button onClick={() => setShowRoleForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', padding: 2 }}><XIcon size={14} /></button>
+                <button onClick={() => setShowRoleForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', display: 'flex', padding: 2 }}><XIcon size={14} /></button>
               </div>
               <Input label="角色名称 *" placeholder="如：项目经理、技术总监" value={roleForm.name} onChange={e => setRoleForm({ ...roleForm, name: e.target.value })} />
               <div style={{ marginTop: 10 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#64748b', marginBottom: 6 }}>角色颜色</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 6 }}>角色颜色</label>
                 <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                   {ROLE_COLORS.map(c => (
                     <button key={c} onClick={() => setRoleForm({ ...roleForm, color: c })}
-                      style={{ width: 22, height: 22, borderRadius: '50%', background: c, border: roleForm.color === c ? '3px solid #0f172a' : '2px solid #e2e8f0', cursor: 'pointer' }} />
+                      style={{ width: 22, height: 22, borderRadius: '50%', background: c, border: roleForm.color === c ? '3px solid var(--text-heading)' : '2px solid var(--border-primary)', cursor: 'pointer' }} />
                   ))}
                 </div>
               </div>
               <div style={{ marginTop: 10 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: '#64748b', marginBottom: 6 }}>权限设置</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 6 }}>权限设置</label>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 4 }}>
                   {ENTERPRISE_PERMISSIONS.map(p => (
                     <label key={p.key} onClick={() => setRoleForm({ ...roleForm, [p.key]: !(roleForm as any)[p.key] })}
-                      style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 8px', borderRadius: 6, cursor: 'pointer', fontSize: 12, border: '1px solid #e2e8f0', background: (roleForm as any)[p.key] ? '#f0fdf4' : '#fff' }}>
-                      <div style={{ width: 16, height: 16, borderRadius: 4, border: (roleForm as any)[p.key] ? 'none' : '1.5px solid #cbd5e1', background: (roleForm as any)[p.key] ? '#2563eb' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 8px', borderRadius: 6, cursor: 'pointer', fontSize: 12, border: '1px solid var(--border-primary)', background: (roleForm as any)[p.key] ? '#f0fdf4' : 'var(--bg-primary)' }}>
+                      <div style={{ width: 16, height: 16, borderRadius: 4, border: (roleForm as any)[p.key] ? 'none' : '1.5px solid #cbd5e1', background: (roleForm as any)[p.key] ? 'var(--brand)' : 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         {(roleForm as any)[p.key] && <Check size={10} color="#fff" />}
                       </div>
-                      <span style={{ color: '#334155' }}>{p.label}</span>
+                      <span style={{ color: 'var(--text-body)' }}>{p.label}</span>
                     </label>
                   ))}
                 </div>

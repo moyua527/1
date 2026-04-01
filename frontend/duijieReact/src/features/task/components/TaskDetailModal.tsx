@@ -22,8 +22,8 @@ const statusOptions = [
   { value: 'accepted', label: '验收通过' },
 ]
 
-const label: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500, color: '#64748b', marginBottom: 4 }
-const field: React.CSSProperties = { width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none', background: '#fff', boxSizing: 'border-box' as const }
+const label: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }
+const field: React.CSSProperties = { width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-primary)', boxSizing: 'border-box' as const }
 
 interface Props {
   task: any
@@ -162,12 +162,12 @@ export default function TaskDetailModal({ task, projectId, open, onClose, onUpda
           {attachments.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
               {attachments.map((a: any) => (
-                <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 6, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                  <Paperclip size={12} color="#64748b" />
-                  <span style={{ flex: 1, fontSize: 13, color: '#334155' }}>{a.original_name}</span>
-                  <span style={{ fontSize: 11, color: '#94a3b8' }}>{fmtSize(a.file_size || 0)}</span>
+                <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', borderRadius: 6, background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)' }}>
+                  <Paperclip size={12} color="var(--text-secondary)" />
+                  <span style={{ flex: 1, fontSize: 13, color: 'var(--text-body)' }}>{a.original_name}</span>
+                  <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{fmtSize(a.file_size || 0)}</span>
                   <a href={`${BACKEND_URL}/uploads/${a.filename}`} target="_blank" rel="noreferrer"
-                    style={{ display: 'flex', padding: 4, borderRadius: 4, color: '#2563eb' }} title="下载">
+                    style={{ display: 'flex', padding: 4, borderRadius: 4, color: 'var(--brand)' }} title="下载">
                     <Download size={14} />
                   </a>
                   <button onClick={() => handleDeleteAttachment(a.id)} title="删除"
@@ -181,42 +181,42 @@ export default function TaskDetailModal({ task, projectId, open, onClose, onUpda
           {newFiles.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
               {newFiles.map((f, i) => (
-                <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '3px 8px', borderRadius: 4, background: '#eff6ff', border: '1px solid #bfdbfe', fontSize: 12, color: '#1e40af' }}>
+                <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '3px 8px', borderRadius: 4, background: 'var(--bg-selected)', border: '1px solid #bfdbfe', fontSize: 12, color: 'var(--brand)' }}>
                   <Upload size={10} /> {f.name}
                   <button onClick={() => setNewFiles(newFiles.filter((_, j) => j !== i))}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', color: '#94a3b8' }}>×</button>
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', color: 'var(--text-tertiary)' }}>×</button>
                 </span>
               ))}
             </div>
           )}
           <input ref={fileRef} type="file" multiple hidden onChange={e => { if (e.target.files) setNewFiles([...newFiles, ...Array.from(e.target.files)]); e.target.value = '' }} />
           <button onClick={() => fileRef.current?.click()}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 6, border: '1px dashed #cbd5e1', background: '#fff', color: '#64748b', fontSize: 13, cursor: 'pointer' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 6, border: '1px dashed #cbd5e1', background: 'var(--bg-primary)', color: 'var(--text-secondary)', fontSize: 13, cursor: 'pointer' }}>
             <Upload size={14} /> 上传附件
           </button>
         </div>
 
         {/* Meta info */}
         {task.creator_name && (
-          <div style={{ fontSize: 12, color: '#94a3b8', display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+          <div style={{ fontSize: 12, color: 'var(--text-tertiary)', display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <span>创建人: {task.creator_name || task.creator_username}</span>
             {task.created_at && <span>创建时间: {new Date(task.created_at).toLocaleString('zh-CN')}</span>}
           </div>
         )}
 
         {/* Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 8, borderTop: '1px solid #f1f5f9' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 8, borderTop: '1px solid var(--border-secondary)' }}>
           <button onClick={handleDelete} disabled={deleting}
-            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 16px', borderRadius: 8, border: '1px solid #fecaca', background: '#fff', color: '#dc2626', fontSize: 13, cursor: 'pointer' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 16px', borderRadius: 8, border: '1px solid #fecaca', background: 'var(--bg-primary)', color: 'var(--color-danger)', fontSize: 13, cursor: 'pointer' }}>
             {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />} 删除任务
           </button>
           <div style={{ flex: 1 }} />
           <button onClick={onClose}
-            style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#334155', fontSize: 13, cursor: 'pointer' }}>
+            style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', fontSize: 13, cursor: 'pointer' }}>
             取消
           </button>
           <button onClick={handleSave} disabled={saving}
-            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 20px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 20px', borderRadius: 8, border: 'none', background: 'var(--brand)', color: 'var(--bg-primary)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
             {saving && <Loader2 size={14} />} 保存
           </button>
         </div>

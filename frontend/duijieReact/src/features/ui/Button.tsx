@@ -3,10 +3,10 @@ import React from 'react'
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
 
 const variants: Record<Variant, React.CSSProperties> = {
-  primary: { background: '#2563eb', color: '#fff', border: 'none' },
-  secondary: { background: '#fff', color: '#334155', border: '1px solid #cbd5e1' },
-  ghost: { background: 'transparent', color: '#64748b', border: 'none' },
-  danger: { background: '#ef4444', color: '#fff', border: 'none' },
+  primary: { background: 'var(--brand)', color: 'var(--bg-primary)', border: 'none' },
+  secondary: { background: 'var(--bg-primary)', color: 'var(--text-body)', border: '1px solid #cbd5e1' },
+  ghost: { background: 'transparent', color: 'var(--text-secondary)', border: 'none' },
+  danger: { background: '#ef4444', color: 'var(--bg-primary)', border: 'none' },
 }
 
 const base: React.CSSProperties = {

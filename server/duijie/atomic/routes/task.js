@@ -2,6 +2,8 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const roleGuard = require('../middleware/roleGuard');
 const enterprisePermGuard = require('../middleware/enterprisePermGuard');
+const validate = require('../middleware/validate');
+const V = require('../middleware/validators');
 const upload = require('./upload');
 const router = express.Router();
 
@@ -19,9 +21,9 @@ router.delete('/tasks/attachments/:attachmentId', auth, taskStaff, require('../c
 router.get('/tasks/attachments/:attachmentId/download', auth, require('../controllers/task/downloadAttachmentController'));
 
 // Milestones
-router.post('/milestones', auth, require('../controllers/milestone/createController'));
+router.post('/milestones', auth, V.createMilestone, validate, require('../controllers/milestone/createController'));
 router.get('/milestones', auth, require('../controllers/milestone/listController'));
-router.put('/milestones/:id', auth, require('../controllers/milestone/updateController'));
+router.put('/milestones/:id', auth, V.updateMilestone, validate, require('../controllers/milestone/updateController'));
 router.delete('/milestones/:id', auth, require('../controllers/milestone/deleteController'));
 router.patch('/milestones/:id/toggle', auth, require('../controllers/milestone/toggleController'));
 

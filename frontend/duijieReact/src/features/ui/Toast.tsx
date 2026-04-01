@@ -5,7 +5,7 @@ type ToastType = 'success' | 'error' | 'info'
 const colors: Record<ToastType, { bg: string; border: string; text: string }> = {
   success: { bg: '#f0fdf4', border: '#86efac', text: '#166534' },
   error: { bg: '#fef2f2', border: '#fca5a5', text: '#991b1b' },
-  info: { bg: '#eff6ff', border: '#93c5fd', text: '#1e40af' },
+  info: { bg: 'var(--bg-selected)', border: '#93c5fd', text: 'var(--brand)' },
 }
 
 let addToastGlobal: ((message: string, type?: ToastType) => void) | null = null

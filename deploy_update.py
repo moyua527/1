@@ -1,9 +1,17 @@
-import paramiko, os, stat, getpass
+import paramiko, os, stat, getpass, json, sys
+from datetime import datetime
 
 SERVER = '160.202.253.143'
 USER = 'root'
 REMOTE_BASE = '/opt/duijie'
 LOCAL_BASE = os.path.dirname(os.path.abspath(__file__))
+
+def get_version():
+    vf = os.path.join(LOCAL_BASE, 'version.json')
+    if os.path.isfile(vf):
+        with open(vf) as f:
+            return json.load(f).get('version', 'unknown')
+    return 'unknown'
 
 def ssh_connect():
     ssh = paramiko.SSHClient()
@@ -11,13 +19,18 @@ def ssh_connect():
     ssh.connect(SERVER, username=USER, password=os.environ.get('SSH_PASS') or getpass.getpass(f'SSH password for {USER}@{SERVER}: '))
     return ssh
 
-def run_cmd(ssh, cmd, desc=''):
+def run_cmd(ssh, cmd, desc='', fatal=False):
     if desc: print(f'  → {desc}')
     stdin, stdout, stderr = ssh.exec_command(cmd)
+    exit_code = stdout.channel.recv_exit_status()
     out = stdout.read().decode()
     err = stderr.read().decode()
     if out.strip(): print(f'    {out.strip()[:200]}')
     if err.strip() and 'Warning' not in err: print(f'    [ERR] {err.strip()[:200]}')
+    if fatal and exit_code != 0:
+        print(f'\n❌ 部署失败：步骤 "{desc}" 返回退出码 {exit_code}')
+        print('💡 回滚提示：可在服务器执行 pm2 restart duijie 恢复上次运行状态')
+        sys.exit(1)
     return out
 
 def upload_dir(sftp, local_dir, remote_dir):
@@ -33,6 +46,11 @@ def upload_dir(sftp, local_dir, remote_dir):
             upload_dir(sftp, local_path, remote_path)
 
 def main():
+    version = get_version()
+    deploy_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    print(f'\n🚀 开始部署 DuiJie v{version}  ({deploy_time})')
+    print(f'   目标: {USER}@{SERVER}:{REMOTE_BASE}\n')
+
     ssh = ssh_connect()
     sftp = ssh.open_sftp()
 
@@ -88,7 +106,7 @@ def main():
 
     # 2. Install new npm packages
     print('\n[2/5] Installing npm packages...')
-    run_cmd(ssh, f'cd {remote_server} && npm install --production', 'npm install')
+    run_cmd(ssh, f'cd {remote_server} && npm install --production', 'npm install', fatal=True)
 
     # 2.5. Database migrations (versioned)
     print('\n[2.5/5] Running versioned database migrations...')
@@ -103,7 +121,7 @@ def main():
     local_migrate_script = os.path.join(LOCAL_BASE, 'server', 'duijie', 'scripts', 'migrate.js')
     remote_migrate_script = f'{remote_server}/scripts/migrate.js'
     sftp.put(local_migrate_script, remote_migrate_script)
-    run_cmd(ssh, f'cd {remote_server} && node scripts/migrate.js', 'Running migrations')
+    run_cmd(ssh, f'cd {remote_server} && node scripts/migrate.js', 'Running migrations', fatal=True)
 
     # 3. Migrate plaintext passwords to bcrypt hashes
     print('\n[3/5] Migrating plaintext passwords to bcrypt...')
@@ -120,14 +138,36 @@ def main():
     run_cmd(ssh, f'rm -rf {remote_dist}')
     upload_dir(sftp, local_dist, remote_dist)
 
+    # 4.5. Upload version.json
+    print('\n[4.5/5] Uploading version.json...')
+    local_version = os.path.join(LOCAL_BASE, 'version.json')
+    if os.path.isfile(local_version):
+        sftp.put(local_version, f'{REMOTE_BASE}/version.json')
+        print(f'    ↑ {REMOTE_BASE}/version.json')
+
     # 5. Restart
-    print('\n[5/5] Restarting backend...')
+    print('\n[5/6] Restarting backend...')
     run_cmd(ssh, 'pm2 restart duijie', 'PM2 restart')
     run_cmd(ssh, 'pm2 status', 'PM2 status')
 
+    # 6. Health check
+    print('\n[6/6] Health check...')
+    import time
+    time.sleep(2)
+    health_out = run_cmd(ssh, 'curl -s -o /dev/null -w "%{http_code}" http://localhost:1800/api/app/version', 'API health check')
+    status_code = health_out.strip()
+    if status_code == '200':
+        print('    ✅ API 健康检查通过 (HTTP 200)')
+    else:
+        print(f'    ⚠️  API 返回 HTTP {status_code}，请检查服务日志: pm2 logs duijie')
+
+    # Deploy log
+    deploy_log = f'{deploy_time} | v{version} | success'
+    run_cmd(ssh, f'echo "{deploy_log}" >> {REMOTE_BASE}/deploy.log', 'Writing deploy log')
+
     sftp.close()
     ssh.close()
-    print('\n✅ Deploy complete!')
+    print(f'\n✅ Deploy complete! (v{version})')
 
 if __name__ == '__main__':
     main()

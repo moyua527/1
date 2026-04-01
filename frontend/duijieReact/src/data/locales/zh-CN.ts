@@ -1,0 +1,91 @@
+const zhCN: Record<string, string> = {
+  // 通用
+  'common.loading': '加载中...',
+  'common.save': '保存',
+  'common.cancel': '取消',
+  'common.confirm': '确认',
+  'common.delete': '删除',
+  'common.edit': '编辑',
+  'common.create': '创建',
+  'common.search': '搜索',
+  'common.reset': '重置',
+  'common.export': '导出',
+  'common.import': '导入',
+  'common.back': '返回',
+  'common.close': '关闭',
+  'common.yes': '是',
+  'common.no': '否',
+  'common.success': '操作成功',
+  'common.error': '操作失败',
+  'common.noData': '暂无数据',
+  'common.retry': '重试',
+
+  // 导航
+  'nav.dashboard': '仪表盘',
+  'nav.projects': '项目管理',
+  'nav.clients': '客户管理',
+  'nav.opportunities': '商机管理',
+  'nav.tasks': '任务看板',
+  'nav.messaging': '站内消息',
+  'nav.tickets': '工单系统',
+  'nav.files': '文件管理',
+  'nav.report': '数据报表',
+  'nav.enterprise': '企业管理',
+  'nav.users': '用户管理',
+  'nav.audit': '审计日志',
+  'nav.settings': '系统配置',
+  'nav.partners': '合作方管理',
+
+  // 认证
+  'auth.login': '登录',
+  'auth.register': '注册',
+  'auth.logout': '退出登录',
+  'auth.username': '用户名',
+  'auth.password': '密码',
+  'auth.phone': '手机号',
+  'auth.email': '邮箱',
+  'auth.verifyCode': '验证码',
+  'auth.sendCode': '发送验证码',
+  'auth.forgotPassword': '忘记密码？',
+  'auth.resetPassword': '重置密码',
+  'auth.agreement': '用户服务协议',
+  'auth.privacy': '隐私保护政策',
+
+  // 项目
+  'project.name': '项目名称',
+  'project.status': '项目状态',
+  'project.progress': '进度',
+  'project.client': '关联客户',
+  'project.members': '项目成员',
+  'project.overview': '概览',
+  'project.tasks': '任务',
+  'project.milestones': '里程碑',
+  'project.files': '文件',
+  'project.messages': '消息',
+  'project.apps': '应用',
+
+  // 客户
+  'client.name': '客户名称',
+  'client.company': '公司名称',
+  'client.stage': '客户阶段',
+  'client.type': '客户类型',
+  'client.assignedTo': '对接人',
+
+  // 任务
+  'task.title': '任务标题',
+  'task.status': '任务状态',
+  'task.priority': '优先级',
+  'task.assignee': '负责人',
+  'task.dueDate': '截止日期',
+  'task.todo': '待办',
+  'task.inProgress': '进行中',
+  'task.review': '待验收',
+  'task.done': '验收通过',
+
+  // 主题
+  'theme.light': '浅色模式',
+  'theme.dark': '深色模式',
+  'theme.system': '跟随系统',
+}
+
+export default zhCN

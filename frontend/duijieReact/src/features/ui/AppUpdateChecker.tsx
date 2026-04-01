@@ -61,12 +61,12 @@ export default function AppUpdateChecker() {
       display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999,
     }}>
       <div style={{
-        background: '#fff', borderRadius: 16, width: 340, maxWidth: 'calc(100vw - 32px)',
+        background: 'var(--bg-primary)', borderRadius: 16, width: 340, maxWidth: 'calc(100vw - 32px)',
         boxShadow: '0 20px 60px rgba(0,0,0,0.2)', overflow: 'hidden',
       }}>
         <div style={{
           background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', padding: '28px 24px 20px',
-          color: '#fff', textAlign: 'center',
+          color: 'var(--bg-primary)', textAlign: 'center',
         }}>
           <Download size={36} style={{ marginBottom: 8 }} />
           <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>发现新版本</h3>
@@ -78,10 +78,10 @@ export default function AppUpdateChecker() {
         <div style={{ padding: '20px 24px' }}>
           {info.changelog && (
             <div style={{
-              margin: '0 0 16px', padding: 12, background: '#f8fafc',
+              margin: '0 0 16px', padding: 12, background: 'var(--bg-secondary)',
               borderRadius: 8, fontSize: 13, color: '#475569', lineHeight: 1.6,
             }}>
-              <div style={{ fontWeight: 600, marginBottom: 4, color: '#334155' }}>更新内容：</div>
+              <div style={{ fontWeight: 600, marginBottom: 4, color: 'var(--text-body)' }}>更新内容：</div>
               {info.changelog}
             </div>
           )}
@@ -91,7 +91,7 @@ export default function AppUpdateChecker() {
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               width: '100%', padding: '13px 0',
-              background: '#2563eb', color: '#fff', borderRadius: 10, border: 'none',
+              background: 'var(--brand)', color: 'var(--bg-primary)', borderRadius: 10, border: 'none',
               fontSize: 15, fontWeight: 600, cursor: 'pointer',
             }}
           >
@@ -104,7 +104,7 @@ export default function AppUpdateChecker() {
               onClick={handleDismiss}
               style={{
                 display: 'block', width: '100%', marginTop: 10, padding: '10px 0',
-                background: 'none', border: 'none', color: '#94a3b8',
+                background: 'none', border: 'none', color: 'var(--text-tertiary)',
                 fontSize: 13, cursor: 'pointer',
               }}
             >

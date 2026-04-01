@@ -60,9 +60,9 @@ export default function OpportunityFormModal({ open, onClose, editing, clients, 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <Input label="商机标题 *" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
         <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>关联客户</label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>关联客户</label>
           <select value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value })}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
+            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
             <option value="">不关联</option>
             {clients.map((c: any) => <option key={c.id} value={c.id}>#{c.id} {c.name}{c.company ? ` (${c.company})` : ''}</option>)}
           </select>
@@ -73,24 +73,24 @@ export default function OpportunityFormModal({ open, onClose, editing, clients, 
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>商机阶段</label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>商机阶段</label>
             <select value={form.stage} onChange={e => setForm({ ...form, stage: e.target.value })}
-              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
               {stageKeys.map(k => <option key={k} value={k}>{stageLabels[k]}</option>)}
             </select>
           </div>
           <Input label="预计成交日期" type="date" value={form.expected_close} onChange={e => setForm({ ...form, expected_close: e.target.value })} />
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>负责人</label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>负责人</label>
           <select value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
+            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
             <option value="">暂不分配</option>
             {staffMembers.map((u: any) => <option key={u.id} value={u.id}>{u.nickname || u.username}</option>)}
           </select>
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>备注</label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>备注</label>
           <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2}
             style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
         </div>

@@ -1,6 +1,7 @@
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 const logger = require('../config/logger');
+const getJwtSecret = require('../atomic/repositories/auth/getJwtSecretRepo');
 
 let io = null;
 
@@ -13,9 +14,11 @@ function initSocket(httpServer) {
   io.on('connection', (socket) => {
     logger.debug(`socket connected: ${socket.id}`);
 
-    socket.on('auth', (token) => {
+    socket.on('auth', async (token) => {
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'duijie_jwt_secret_2024');
+        const secret = await getJwtSecret();
+        if (!secret) { logger.warn('JWT_SECRET not configured'); return; }
+        const decoded = jwt.verify(token, secret);
         const uid = decoded.userId || decoded.id;
         socket.userId = uid;
         socket.join(`user:${uid}`);

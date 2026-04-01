@@ -1,10 +1,16 @@
+const path = require('path');
+const fs = require('fs');
+
+const versionFile = path.resolve(__dirname, '../../../../../version.json');
+const versionInfo = JSON.parse(fs.readFileSync(versionFile, 'utf-8'));
+
 const APP_CONFIG = {
-  version: '1.1.49',
-  versionCode: 49,
-  minVersion: '1.0.0',
-  downloadUrl: 'http://160.202.253.143:8080/downloads/duijie.apk',
+  version: versionInfo.version,
+  versionCode: versionInfo.versionCode,
+  minVersion: versionInfo.minVersion,
+  downloadUrl: process.env.APK_DOWNLOAD_URL || 'http://160.202.253.143:8080/downloads/duijie.apk',
   forceUpdate: false,
-  changelog: '修复连续刷新触发 Nginx 429 限速导致 HTML 错误内容显示在页面上的问题。',
+  changelog: versionInfo.changelog,
 };
 
 module.exports = (req, res) => {

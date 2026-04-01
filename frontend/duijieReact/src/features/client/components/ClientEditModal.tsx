@@ -27,7 +27,7 @@ export default function ClientEditModal({ open, onClose, client, clientId, onSav
 
   const clr = (k: string) => setErrors(prev => { const n = { ...prev }; delete n[k]; return n })
   const ee = errors
-  const es: React.CSSProperties = { fontSize: 12, color: '#dc2626', marginTop: 4 }
+  const es: React.CSSProperties = { fontSize: 12, color: 'var(--color-danger)', marginTop: 4 }
 
   const handleSave = async () => {
     const e: Record<string, string> = {}
@@ -54,12 +54,12 @@ export default function ClientEditModal({ open, onClose, client, clientId, onSav
     <Modal open={open} onClose={onClose} title="设置客户信息">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>客户类型</label>
-          <div style={{ display: 'flex', gap: 0, background: '#f1f5f9', borderRadius: 8, padding: 3 }}>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>客户类型</label>
+          <div style={{ display: 'flex', gap: 0, background: 'var(--bg-tertiary)', borderRadius: 8, padding: 3 }}>
             {[{ key: 'company', label: '企业客户', icon: Building2 }, { key: 'individual', label: '个人客户', icon: UserCircle }].map(t => (
               <button key={t.key} type="button" onClick={() => setForm({ ...form, client_type: t.key, company: t.key === 'individual' ? '' : form.company })}
                 style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500,
-                  background: form.client_type === t.key ? '#fff' : 'transparent', color: form.client_type === t.key ? '#0f172a' : '#64748b',
+                  background: form.client_type === t.key ? 'var(--bg-primary)' : 'transparent', color: form.client_type === t.key ? 'var(--text-heading)' : 'var(--text-secondary)',
                   boxShadow: form.client_type === t.key ? '0 1px 3px rgba(0,0,0,0.08)' : 'none', transition: 'all 0.15s' }}>
                 <t.icon size={14} /> {t.label}
               </button>
@@ -67,18 +67,18 @@ export default function ClientEditModal({ open, onClose, client, clientId, onSav
           </div>
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>渠道 <span style={{ color: '#dc2626' }}>*</span></label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>渠道 <span style={{ color: 'var(--color-danger)' }}>*</span></label>
           <select value={form.channel} onChange={e => { setForm({ ...form, channel: e.target.value }); clr('channel') }}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${ee.channel ? '#dc2626' : '#cbd5e1'}`, fontSize: 14, outline: 'none', background: '#fff' }}>
+            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${ee.channel ? 'var(--color-danger)' : 'var(--text-disabled)'}`, fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
             <option value="">请选择渠道</option>
             {channels.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
           {ee.channel && <div style={es}>{ee.channel}</div>}
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>客户阶段</label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>客户阶段</label>
           <select value={form.stage} onChange={e => setForm({ ...form, stage: e.target.value })}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
+            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
             {Object.entries(stageMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
           </select>
         </div>
@@ -87,42 +87,42 @@ export default function ClientEditModal({ open, onClose, client, clientId, onSav
         <div><Input label="邮箱 *" placeholder="name@example.com" value={form.email} onChange={e => { setForm({ ...form, email: e.target.value }); clr('email') }} />{ee.email && <div style={es}>{ee.email}</div>}</div>
         <div><Input label="电话 *" placeholder="13800138000" value={form.phone} onChange={e => { setForm({ ...form, phone: e.target.value }); clr('phone') }} />{ee.phone && <div style={es}>{ee.phone}</div>}</div>
         <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>职位级别 <span style={{ color: '#dc2626' }}>*</span></label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>职位级别 <span style={{ color: 'var(--color-danger)' }}>*</span></label>
           <select value={form.position_level} onChange={e => { setForm({ ...form, position_level: e.target.value }); clr('position_level') }}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${ee.position_level ? '#dc2626' : '#cbd5e1'}`, fontSize: 14, outline: 'none', background: '#fff' }}>
+            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${ee.position_level ? 'var(--color-danger)' : 'var(--text-disabled)'}`, fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
             <option value="">请选择职位级别</option>
             {positionLevels.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
           {ee.position_level && <div style={es}>{ee.position_level}</div>}
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>部门 <span style={{ color: '#dc2626' }}>*</span></label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>部门 <span style={{ color: 'var(--color-danger)' }}>*</span></label>
           <select value={form.department} onChange={e => { setForm({ ...form, department: e.target.value }); clr('department') }}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${ee.department ? '#dc2626' : '#cbd5e1'}`, fontSize: 14, outline: 'none', background: '#fff' }}>
+            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${ee.department ? 'var(--color-danger)' : 'var(--text-disabled)'}`, fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
             <option value="">请选择部门</option>
             {departmentOptions.map(d => <option key={d} value={d}>{d}</option>)}
           </select>
           {ee.department && <div style={es}>{ee.department}</div>}
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>工作职能 <span style={{ color: '#dc2626' }}>*</span></label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>工作职能 <span style={{ color: 'var(--color-danger)' }}>*</span></label>
           <select value={form.job_function} onChange={e => { setForm({ ...form, job_function: e.target.value }); clr('job_function') }}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${ee.job_function ? '#dc2626' : '#cbd5e1'}`, fontSize: 14, outline: 'none', background: '#fff' }}>
+            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${ee.job_function ? 'var(--color-danger)' : 'var(--text-disabled)'}`, fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
             <option value="">请选择工作职能</option>
             {jobFunctions.map(j => <option key={j} value={j}>{j}</option>)}
           </select>
           {ee.job_function && <div style={es}>{ee.job_function}</div>}
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>对接人</label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>对接人</label>
           <select value={form.assigned_to} onChange={e => setForm({ ...form, assigned_to: e.target.value })}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
+            style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
             <option value="">暂不分配</option>
             {staffMembers.map((u: any) => <option key={u.id} value={u.id}>{u.nickname || u.username} ({u.role === 'admin' ? '管理员' : '成员'})</option>)}
           </select>
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>备注</label>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>备注</label>
           <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={3}
             style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
         </div>

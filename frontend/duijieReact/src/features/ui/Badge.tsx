@@ -1,11 +1,11 @@
 import React from 'react'
 
 const colorMap: Record<string, { bg: string; color: string }> = {
-  blue: { bg: '#dbeafe', color: '#1e40af' },
+  blue: { bg: 'var(--brand-light-2)', color: 'var(--brand)' },
   green: { bg: '#dcfce7', color: '#166534' },
   yellow: { bg: '#fef3c7', color: '#92400e' },
   red: { bg: '#fee2e2', color: '#991b1b' },
-  gray: { bg: '#f1f5f9', color: '#475569' },
+  gray: { bg: 'var(--bg-tertiary)', color: '#475569' },
 }
 
 interface Props { color?: string; children: React.ReactNode; style?: React.CSSProperties }

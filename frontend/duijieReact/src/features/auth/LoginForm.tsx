@@ -78,11 +78,11 @@ export default function LoginForm({ onLogin, onSwitchToForgot }: LoginFormProps)
   return (
     <>
       <form onSubmit={handleLogin}>
-        <div style={{ display: 'flex', gap: 0, marginBottom: 16, borderBottom: '1px solid #e2e8f0' }}>
+        <div style={{ display: 'flex', gap: 0, marginBottom: 16, borderBottom: '1px solid var(--border-primary)' }}>
           {loginMethods.map(m => (
             <button key={m.key} type="button" onClick={() => { setLoginMethod(m.key); setError(''); setSuccess(''); setVerifyCode('') }}
               style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '8px 0', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500,
-                color: loginMethod === m.key ? '#2563eb' : '#94a3b8', background: 'transparent',
+                color: loginMethod === m.key ? 'var(--brand)' : 'var(--text-tertiary)', background: 'transparent',
                 borderBottom: loginMethod === m.key ? '2px solid #2563eb' : '2px solid transparent', transition: 'all 0.15s' }}>
               {m.icon} {m.label}
             </button>
@@ -95,7 +95,7 @@ export default function LoginForm({ onLogin, onSwitchToForgot }: LoginFormProps)
               <Input label="账号" placeholder="输入手机号或账号ID" value={username} onChange={e => setUsername(e.target.value)} />
               <Input label="密码" type="password" placeholder="输入密码" value={password} onChange={e => setPassword(e.target.value)} />
               <div style={{ textAlign: 'right', marginTop: -4 }}>
-                <span onClick={onSwitchToForgot} style={{ fontSize: 12, color: '#2563eb', cursor: 'pointer' }}>忘记密码？</span>
+                <span onClick={onSwitchToForgot} style={{ fontSize: 12, color: 'var(--brand)', cursor: 'pointer' }}>忘记密码？</span>
               </div>
             </>
           )}
@@ -108,9 +108,9 @@ export default function LoginForm({ onLogin, onSwitchToForgot }: LoginFormProps)
                 <div style={{ display: 'flex', gap: 8 }}>
                   <input placeholder="输入6位验证码" value={verifyCode} onChange={e => setVerifyCode(e.target.value)} maxLength={6}
                     style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
-                    onFocus={e => (e.currentTarget.style.borderColor = '#2563eb')} onBlur={e => (e.currentTarget.style.borderColor = '#cbd5e1')} />
+                    onFocus={e => (e.currentTarget.style.borderColor = 'var(--brand)')} onBlur={e => (e.currentTarget.style.borderColor = 'var(--text-disabled)')} />
                   <button type="button" disabled={countdown > 0} onClick={handleSendCode}
-                    style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: countdown > 0 ? '#e2e8f0' : '#2563eb', color: countdown > 0 ? '#94a3b8' : '#fff', fontSize: 13, fontWeight: 500, cursor: countdown > 0 ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
+                    style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: countdown > 0 ? 'var(--border-primary)' : 'var(--brand)', color: countdown > 0 ? 'var(--text-tertiary)' : 'var(--bg-primary)', fontSize: 13, fontWeight: 500, cursor: countdown > 0 ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
                     {countdown > 0 ? `${countdown}s` : '获取验证码'}
                   </button>
                 </div>
@@ -126,9 +126,9 @@ export default function LoginForm({ onLogin, onSwitchToForgot }: LoginFormProps)
                 <div style={{ display: 'flex', gap: 8 }}>
                   <input placeholder="输入6位验证码" value={verifyCode} onChange={e => setVerifyCode(e.target.value)} maxLength={6}
                     style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
-                    onFocus={e => (e.currentTarget.style.borderColor = '#2563eb')} onBlur={e => (e.currentTarget.style.borderColor = '#cbd5e1')} />
+                    onFocus={e => (e.currentTarget.style.borderColor = 'var(--brand)')} onBlur={e => (e.currentTarget.style.borderColor = 'var(--text-disabled)')} />
                   <button type="button" disabled={countdown > 0} onClick={handleSendCode}
-                    style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: countdown > 0 ? '#e2e8f0' : '#2563eb', color: countdown > 0 ? '#94a3b8' : '#fff', fontSize: 13, fontWeight: 500, cursor: countdown > 0 ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
+                    style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: countdown > 0 ? 'var(--border-primary)' : 'var(--brand)', color: countdown > 0 ? 'var(--text-tertiary)' : 'var(--bg-primary)', fontSize: 13, fontWeight: 500, cursor: countdown > 0 ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
                     {countdown > 0 ? `${countdown}s` : '获取验证码'}
                   </button>
                 </div>
@@ -136,17 +136,17 @@ export default function LoginForm({ onLogin, onSwitchToForgot }: LoginFormProps)
             </>
           )}
 
-          {error && <div style={{ color: '#dc2626', fontSize: 13, textAlign: 'center', padding: '6px 0' }}>{error}</div>}
-          {success && <div style={{ color: '#16a34a', fontSize: 13, textAlign: 'center', padding: '6px 0' }}>{success}</div>}
+          {error && <div style={{ color: 'var(--color-danger)', fontSize: 13, textAlign: 'center', padding: '6px 0' }}>{error}</div>}
+          {success && <div style={{ color: 'var(--color-success)', fontSize: 13, textAlign: 'center', padding: '6px 0' }}>{success}</div>}
 
           <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: 'pointer', marginTop: 4 }}>
             <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}
-              style={{ marginTop: 3, accentColor: '#2563eb', width: 16, height: 16, cursor: 'pointer' }} />
-            <span style={{ fontSize: 12, color: '#64748b', lineHeight: 1.5 }}>
+              style={{ marginTop: 3, accentColor: 'var(--brand)', width: 16, height: 16, cursor: 'pointer' }} />
+            <span style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
               我已阅读并同意{' '}
-              <span onClick={e => { e.preventDefault(); setShowTerms(true) }} style={{ color: '#2563eb', cursor: 'pointer', textDecoration: 'underline' }}>《用户服务协议》</span>
+              <span onClick={e => { e.preventDefault(); setShowTerms(true) }} style={{ color: 'var(--brand)', cursor: 'pointer', textDecoration: 'underline' }}>《用户服务协议》</span>
               {' '}和{' '}
-              <span onClick={e => { e.preventDefault(); setShowTerms(true) }} style={{ color: '#2563eb', cursor: 'pointer', textDecoration: 'underline' }}>《隐私保护政策》</span>
+              <span onClick={e => { e.preventDefault(); setShowTerms(true) }} style={{ color: 'var(--brand)', cursor: 'pointer', textDecoration: 'underline' }}>《隐私保护政策》</span>
             </span>
           </label>
 
@@ -159,17 +159,17 @@ export default function LoginForm({ onLogin, onSwitchToForgot }: LoginFormProps)
       {showTerms && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: 16 }}
           onClick={() => setShowTerms(false)}>
-          <div style={{ background: '#fff', borderRadius: 16, padding: '28px 24px', width: 520, maxWidth: '100%', maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.15)' }}
+          <div style={{ background: 'var(--bg-primary)', borderRadius: 16, padding: '28px 24px', width: 520, maxWidth: '100%', maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.15)' }}
             onClick={e => e.stopPropagation()}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', marginBottom: 16, textAlign: 'center' }}>用户服务协议与隐私保护政策</h2>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-heading)', marginBottom: 16, textAlign: 'center' }}>用户服务协议与隐私保护政策</h2>
             <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.8 }}>
-              <h3 style={{ fontSize: 15, fontWeight: 600, color: '#0f172a', margin: '16px 0 8px' }}>一、服务协议</h3>
+              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)', margin: '16px 0 8px' }}>一、服务协议</h3>
               <p>1. 本平台（DuiJie 对接平台）为用户提供项目管理、客户管理、任务协作、文件交付、即时通讯等服务。</p>
               <p>2. 用户应如实填写注册信息，对账号安全负责，不得将账号转让或借于他人使用。</p>
               <p>3. 用户不得利用本平台从事违法违规活动，不得侵犯他人合法权益。</p>
               <p>4. 本平台有权对违反协议的用户采取限制或禁止使用等措施。</p>
               <p>5. 本平台保留对服务协议的最终解释权和修改权。</p>
-              <h3 style={{ fontSize: 15, fontWeight: 600, color: '#0f172a', margin: '16px 0 8px' }}>二、隐私保护政策</h3>
+              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)', margin: '16px 0 8px' }}>二、隐私保护政策</h3>
               <p>1. 我们收集的信息仅用于提供和改进服务，不会出售或出租您的个人信息。</p>
               <p>2. 您的密码经过加密存储，我们采用行业标准的安全措施保护您的数据。</p>
               <p>3. 您有权查看、修改或删除您的个人信息，可通过个人设置或联系管理员操作。</p>
@@ -178,7 +178,7 @@ export default function LoginForm({ onLogin, onSwitchToForgot }: LoginFormProps)
             </div>
             <div style={{ textAlign: 'center', marginTop: 20 }}>
               <button onClick={() => { setShowTerms(false); setAgreed(true) }}
-                style={{ padding: '10px 40px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                style={{ padding: '10px 40px', borderRadius: 8, border: 'none', background: 'var(--brand)', color: 'var(--bg-primary)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                 我已阅读并同意
               </button>
             </div>

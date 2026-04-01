@@ -1,9 +1,16 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import { readFileSync } from 'fs'
+
+const versionInfo = JSON.parse(readFileSync(path.resolve(__dirname, '../../version.json'), 'utf-8'))
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    __APP_VERSION__: JSON.stringify(versionInfo.version),
+    __APP_VERSION_CODE__: versionInfo.versionCode,
+  },
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
   },
@@ -21,5 +28,11 @@ export default defineConfig({
         ws: true,
       },
     },
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
   },
 })

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Send, MessageSquare, Search, User, Check, CheckCheck, Loader2 } from 'lucide-react'
+import { Send, MessageSquare, Search, Loader2, UserPlus, Users, Phone, X, UserCheck } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { onSocket } from '../ui/smartSocket'
 import Avatar from '../ui/Avatar'
@@ -16,28 +16,43 @@ const dmApi = {
   recall: (id: number) => fetchApi(`/api/dm/${id}/recall`, { method: 'PATCH' }),
 }
 
+const friendApi = {
+  list: () => fetchApi('/api/friends'),
+  search: (phone: string) => fetchApi(`/api/friends/search?phone=${encodeURIComponent(phone)}`),
+  request: (friend_id: number, message: string) => fetchApi('/api/friends/request', { method: 'POST', body: JSON.stringify({ friend_id, message }) }),
+  requests: () => fetchApi('/api/friends/requests'),
+  respond: (id: number, action: string) => fetchApi(`/api/friends/${id}/respond`, { method: 'PATCH', body: JSON.stringify({ action }) }),
+  remove: (id: number) => fetchApi(`/api/friends/${id}`, { method: 'DELETE' }),
+}
+
 export default function Messaging() {
   const [conversations, setConversations] = useState<any[]>([])
-  const [allUsers, setAllUsers] = useState<any[]>([])
+  const [friendRequests, setFriendRequests] = useState<any[]>([])
   const [selectedUser, setSelectedUser] = useState<any>(null)
   const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [searchUser, setSearchUser] = useState('')
-  const [showNewChat, setShowNewChat] = useState(false)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const selectedRef = useRef<any>(null)
   const pollRef = useRef<any>(null)
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
   const [me, setMe] = useState<any>(null)
 
-  useEffect(() => {
-    fetchApi('/api/auth/me').then(r => { if (r.success) setMe(r.data) })
-  }, [])
+  // 添加好友
+  const [showAddFriend, setShowAddFriend] = useState(false)
+  const [phoneSearch, setPhoneSearch] = useState('')
+  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [searching, setSearching] = useState(false)
+  const [requestingId, setRequestingId] = useState<number | null>(null)
+
+  useEffect(() => { fetchApi('/api/auth/me').then(r => { if (r.success) setMe(r.data) }) }, [])
 
   const loadConversations = () => {
     dmApi.conversations().then(r => { if (r.success) setConversations(r.data || []) }).finally(() => setLoading(false))
+  }
+  const loadFriends = () => {
+    friendApi.requests().then(r => { if (r.success) setFriendRequests(r.data || []) })
   }
 
   const pullMessages = () => {
@@ -46,17 +61,13 @@ export default function Messaging() {
       dmApi.history(sel.id).then(r => {
         if (r.success) setMessages(r.data || [])
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
-        loadConversations()
-        window.dispatchEvent(new Event('dm-read'))
+        loadConversations(); window.dispatchEvent(new Event('dm-read'))
       })
-    } else {
-      loadConversations()
-      window.dispatchEvent(new Event('dm-read'))
-    }
+    } else { loadConversations(); window.dispatchEvent(new Event('dm-read')) }
   }
 
   useEffect(() => {
-    loadConversations()
+    loadConversations(); loadFriends()
     const offDm = onSocket('new_dm', pullMessages)
     const offReconnect = onSocket('reconnect', () => { loadConversations(); pullMessages() })
     const t = setInterval(loadConversations, 60000)
@@ -64,21 +75,17 @@ export default function Messaging() {
   }, [])
 
   const selectUser = (user: any) => {
-    setSelectedUser(user)
-    selectedRef.current = user
-    setShowNewChat(false)
+    setSelectedUser(user); selectedRef.current = user
     dmApi.history(user.id).then(r => {
       if (r.success) setMessages(r.data || [])
       setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
-      loadConversations()
-      window.dispatchEvent(new Event('dm-read'))
+      loadConversations(); window.dispatchEvent(new Event('dm-read'))
     })
     if (pollRef.current) clearInterval(pollRef.current)
     pollRef.current = setInterval(() => {
       dmApi.history(user.id).then(r => {
         if (r.success) setMessages(r.data || [])
-        loadConversations()
-        window.dispatchEvent(new Event('dm-read'))
+        loadConversations(); window.dispatchEvent(new Event('dm-read'))
       })
     }, 5000)
   }
@@ -100,78 +107,99 @@ export default function Messaging() {
     } else toast(r.message || '发送失败', 'error')
   }
 
-  const openNewChat = () => {
-    dmApi.users().then(r => { if (r.success) setAllUsers(r.data || []) })
-    setShowNewChat(true)
-    setSearchUser('')
-  }
-
-  const filteredUsers = allUsers.filter(u => {
-    if (!searchUser.trim()) return true
-    const q = searchUser.trim().toLowerCase()
-    return [u.nickname, u.username].some(v => v && v.toLowerCase().includes(q))
-  })
-
   const totalUnread = conversations.reduce((s, c) => s + (c.unread_count || 0), 0)
 
+  const handlePhoneSearch = async () => {
+    if (!phoneSearch.trim() || phoneSearch.trim().length < 3) return
+    setSearching(true)
+    const r = await friendApi.search(phoneSearch.trim())
+    setSearching(false)
+    if (r.success) setSearchResults(r.data || [])
+  }
+
+  const handleSendRequest = async (userId: number) => {
+    setRequestingId(userId)
+    const r = await friendApi.request(userId, '')
+    setRequestingId(null)
+    if (r.success) { toast('好友申请已发送', 'success'); setSearchResults(prev => prev.filter(u => u.id !== userId)) }
+    else toast(r.message || '发送失败', 'error')
+  }
+
+  const handleRespondRequest = async (id: number, action: 'accept' | 'reject') => {
+    const r = await friendApi.respond(id, action)
+    if (r.success) { toast(action === 'accept' ? '已添加好友' : '已拒绝', 'success'); loadFriends() }
+    else toast(r.message || '操作失败', 'error')
+  }
+
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 80px)', background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-      {/* Left: conversation list */}
-      <div style={{ width: isMobile ? (selectedUser ? 0 : '100%') : 320, borderRight: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', flexShrink: 0, overflow: 'hidden', transition: 'width 0.2s' }}>
-        <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid #e2e8f0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <MessageSquare size={20} color="#2563eb" />
-              <span style={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>消息</span>
-              {totalUnread > 0 && <span style={{ fontSize: 11, padding: '1px 8px', borderRadius: 10, background: '#dc2626', color: '#fff', fontWeight: 600 }}>{totalUnread}</span>}
-            </div>
-            <button onClick={openNewChat} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>新消息</button>
+    <div style={{ display: 'flex', height: 'calc(100vh - 80px)', background: 'var(--bg-primary)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+      {/* 左栏 */}
+      <div style={{ width: isMobile ? (selectedUser ? 0 : '100%') : 320, borderRight: '1px solid var(--border-primary)', display: 'flex', flexDirection: 'column', flexShrink: 0, overflow: 'hidden', transition: 'width 0.2s' }}>
+        {/* 标题 + 操作按钮 */}
+        <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--border-primary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-heading)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <MessageSquare size={16} /> 消息
+            {totalUnread > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: 'var(--color-danger)', color: '#fff', fontSize: 10, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px' }}>{totalUnread > 99 ? '99+' : totalUnread}</span>}
+          </span>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button onClick={() => { setShowAddFriend(true); setPhoneSearch(''); setSearchResults([]) }}
+              title="添加联系人"
+              style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>
+              <UserPlus size={14} /> 添加联系人
+            </button>
+            <button title="添加群"
+              style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}
+              onClick={() => toast('群聊功能开发中', 'info')}>
+              <Users size={14} /> 添加群
+            </button>
           </div>
         </div>
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-          {showNewChat && (
-            <div style={{ padding: 12, borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
-              <div style={{ position: 'relative', marginBottom: 8 }}>
-                <Search size={14} color="#94a3b8" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
-                <input value={searchUser} onChange={e => setSearchUser(e.target.value)} placeholder="搜索用户..."
-                  style={{ width: '100%', padding: '8px 12px 8px 32px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none' }} autoFocus />
-              </div>
-              <div style={{ maxHeight: 200, overflowY: 'auto' }}>
-                {filteredUsers.map(u => (
-                  <div key={u.id} onClick={() => selectUser(u)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, cursor: 'pointer' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#f1f5f9')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-                    <Avatar name={u.nickname || u.username} size={32} />
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 500, color: '#0f172a' }}>{u.nickname || u.username}</div>
-                      <div style={{ fontSize: 11, color: '#94a3b8' }}>{roleLabel[u.role] || u.role}</div>
-                    </div>
-                  </div>
-                ))}
-                {filteredUsers.length === 0 && <div style={{ fontSize: 13, color: '#94a3b8', textAlign: 'center', padding: 12 }}>无匹配用户</div>}
-              </div>
+
+        {/* 好友申请提示 */}
+        {friendRequests.length > 0 && (
+          <div style={{ borderBottom: '1px solid var(--border-secondary)' }}>
+            <div style={{ padding: '6px 14px', fontSize: 11, fontWeight: 600, color: 'var(--brand)', background: 'var(--bg-secondary)', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <UserCheck size={12} /> 好友申请 ({friendRequests.length})
             </div>
-          )}
+            {friendRequests.map(req => (
+              <div key={req.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', borderBottom: '1px solid var(--border-secondary)', background: 'var(--bg-secondary)' }}>
+                <Avatar name={req.nickname || req.username} size={32} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-heading)' }}>{req.nickname || req.username}</div>
+                </div>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <button onClick={() => handleRespondRequest(req.id, 'accept')}
+                    style={{ background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 6, padding: '3px 8px', fontSize: 11, cursor: 'pointer' }}>同意</button>
+                  <button onClick={() => handleRespondRequest(req.id, 'reject')}
+                    style={{ background: 'transparent', color: 'var(--text-tertiary)', border: '1px solid var(--border-primary)', borderRadius: 6, padding: '3px 8px', fontSize: 11, cursor: 'pointer' }}>拒绝</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 会话列表 */}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           {loading ? (
-            <div style={{ textAlign: 'center', padding: 40, color: '#94a3b8' }}><Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} /></div>
-          ) : conversations.length === 0 && !showNewChat ? (
-            <div style={{ textAlign: 'center', padding: 40, color: '#94a3b8', fontSize: 13 }}>暂无消息记录<br />点击"新消息"开始聊天</div>
+            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)' }}><Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} /></div>
+          ) : conversations.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)', fontSize: 13 }}>暂无消息记录<br /><span style={{ fontSize: 12 }}>添加联系人后开始聊天</span></div>
           ) : (
             conversations.map(c => (
               <div key={c.id} onClick={() => selectUser(c)}
-                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9',
-                  background: selectedUser?.id === c.id ? '#eff6ff' : '#fff' }}
-                onMouseEnter={e => { if (selectedUser?.id !== c.id) e.currentTarget.style.background = '#f8fafc' }}
-                onMouseLeave={e => { if (selectedUser?.id !== c.id) e.currentTarget.style.background = '#fff' }}>
+                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid var(--border-secondary)',
+                  background: selectedUser?.id === c.id ? 'var(--bg-selected)' : 'transparent' }}
+                onMouseEnter={e => { if (selectedUser?.id !== c.id) e.currentTarget.style.background = 'var(--bg-hover)' }}
+                onMouseLeave={e => { if (selectedUser?.id !== c.id) e.currentTarget.style.background = selectedUser?.id === c.id ? 'var(--bg-selected)' : 'transparent' }}>
                 <Avatar name={c.nickname || c.username} size={40} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 14, fontWeight: c.unread_count > 0 ? 700 : 500, color: '#0f172a' }}>{c.nickname || c.username}</span>
-                    {c.last_time && <span style={{ fontSize: 11, color: '#94a3b8' }}>{new Date(c.last_time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</span>}
+                    <span style={{ fontSize: 14, fontWeight: c.unread_count > 0 ? 700 : 500, color: 'var(--text-heading)' }}>{c.nickname || c.username}</span>
+                    {c.last_time && <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{new Date(c.last_time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</span>}
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 12, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>{c.last_message}</span>
-                    {c.unread_count > 0 && <span style={{ fontSize: 10, padding: '1px 7px', borderRadius: 10, background: '#dc2626', color: '#fff', fontWeight: 600, flexShrink: 0 }}>{c.unread_count}</span>}
+                    <span style={{ fontSize: 12, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>{c.last_message}</span>
+                    {c.unread_count > 0 && <span style={{ fontSize: 10, padding: '1px 7px', borderRadius: 10, background: 'var(--color-danger)', color: '#fff', fontWeight: 600, flexShrink: 0 }}>{c.unread_count}</span>}
                   </div>
                 </div>
               </div>
@@ -180,20 +208,20 @@ export default function Messaging() {
         </div>
       </div>
 
-      {/* Right: chat area */}
+      {/* 右栏：聊天区域 */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {selectedUser ? (
           <>
-            <div style={{ padding: '12px 20px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 12 }}>
-              {isMobile && <button onClick={() => setSelectedUser(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, padding: 4 }}>←</button>}
+            <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--border-primary)', display: 'flex', alignItems: 'center', gap: 12 }}>
+              {isMobile && <button onClick={() => setSelectedUser(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, padding: 4, color: 'var(--text-secondary)' }}>←</button>}
               <Avatar name={selectedUser.nickname || selectedUser.username} size={36} />
               <div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>{selectedUser.nickname || selectedUser.username}</div>
-                <div style={{ fontSize: 11, color: '#94a3b8' }}>{roleLabel[selectedUser.role] || selectedUser.role}</div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{selectedUser.nickname || selectedUser.username}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{roleLabel[selectedUser.role] || selectedUser.role}</div>
               </div>
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {messages.length === 0 && <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, padding: 40 }}>开始你们的对话</div>}
+              {messages.length === 0 && <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 13, padding: 40 }}>开始你们的对话</div>}
               {messages.map(m => {
                 const isMine = me && m.sender_id === me.id
                 const isRecalled = m.is_recalled
@@ -207,19 +235,17 @@ export default function Messaging() {
                 return (
                   <div key={m.id} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
                     {isRecalled ? (
-                      <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic', padding: '4px 0' }}>{isMine ? '你' : (selectedUser.nickname || selectedUser.username)}撤回了一条消息</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-tertiary)', fontStyle: 'italic', padding: '4px 0' }}>{isMine ? '你' : (selectedUser.nickname || selectedUser.username)}撤回了一条消息</div>
                     ) : (
-                      <div style={{ position: 'relative', maxWidth: '70%' }}
-                        onDoubleClick={canRecall ? handleRecall : undefined}>
+                      <div style={{ position: 'relative', maxWidth: '70%' }} onDoubleClick={canRecall ? handleRecall : undefined}>
                         <div style={{
                           padding: '10px 14px', borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                          background: isMine ? '#2563eb' : '#f1f5f9', color: isMine ? '#fff' : '#0f172a', fontSize: 14, lineHeight: 1.5, wordBreak: 'break-word',
-                          cursor: canRecall ? 'pointer' : 'default'
+                          background: isMine ? 'var(--brand)' : 'var(--bg-tertiary)', color: isMine ? '#fff' : 'var(--text-heading)',
+                          fontSize: 14, lineHeight: 1.5, wordBreak: 'break-word', cursor: canRecall ? 'pointer' : 'default'
                         }} title={canRecall ? '双击撤回' : undefined}>
                           {m.content}
-                          <div style={{ fontSize: 10, marginTop: 4, opacity: 0.6, textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
+                          <div style={{ fontSize: 10, marginTop: 4, opacity: 0.6, textAlign: 'right' }}>
                             {new Date(m.created_at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
-                            
                           </div>
                         </div>
                       </div>
@@ -229,23 +255,84 @@ export default function Messaging() {
               })}
               <div ref={chatEndRef} />
             </div>
-            <div style={{ padding: '12px 20px', borderTop: '1px solid #e2e8f0', display: 'flex', gap: 8 }}>
+            <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border-primary)', display: 'flex', gap: 8 }}>
               <input value={input} onChange={e => setInput(e.target.value)} placeholder="输入消息..."
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
-                style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none', background: '#f8fafc' }} autoFocus />
+                style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-secondary)', color: 'var(--text-body)' }} autoFocus />
               <button onClick={handleSend} disabled={sending || !input.trim()}
-                style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 500, opacity: !input.trim() ? 0.5 : 1 }}>
+                style={{ background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 500, opacity: !input.trim() ? 0.5 : 1 }}>
                 <Send size={16} /> 发送
               </button>
             </div>
           </>
         ) : (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: '#94a3b8' }}>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: 'var(--text-tertiary)' }}>
             <MessageSquare size={48} style={{ marginBottom: 12, opacity: 0.5 }} />
             <div style={{ fontSize: 15 }}>选择一个对话或开始新聊天</div>
           </div>
         )}
       </div>
+
+      {/* 添加好友弹窗 */}
+      {showAddFriend && (
+        <>
+          <div onClick={() => setShowAddFriend(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 200 }} />
+          <div style={{
+            position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+            background: 'var(--bg-primary)', borderRadius: 14, padding: 24, width: isMobile ? '92vw' : 400,
+            maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', zIndex: 201,
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>添加好友</h2>
+              <button onClick={() => setShowAddFriend(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)' }}><X size={20} /></button>
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+              <div style={{ flex: 1, position: 'relative' }}>
+                <Phone size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
+                <input value={phoneSearch} onChange={e => setPhoneSearch(e.target.value)} placeholder="输入手机号搜索..."
+                  onKeyDown={e => { if (e.key === 'Enter') handlePhoneSearch() }}
+                  style={{ width: '100%', padding: '10px 12px 10px 34px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-body)' }} autoFocus />
+              </div>
+              <button onClick={handlePhoneSearch} disabled={searching}
+                style={{ background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 8, padding: '0 16px', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>
+                {searching ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Search size={16} />}
+              </button>
+            </div>
+
+            {searchResults.length > 0 && (
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: 8 }}>搜索结果</div>
+                {searchResults.map(u => (
+                  <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--border-secondary)' }}>
+                    <Avatar name={u.nickname || u.username} size={40} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)' }}>{u.nickname || u.username}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{u.phone}</div>
+                    </div>
+                    <button onClick={() => handleSendRequest(u.id)} disabled={requestingId === u.id}
+                      style={{ background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      {requestingId === u.id ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <UserPlus size={14} />}
+                      申请添加
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {searchResults.length === 0 && phoneSearch.length >= 3 && !searching && (
+              <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 13 }}>未找到匹配用户</div>
+            )}
+
+            <div style={{ marginTop: 12, padding: 12, background: 'var(--bg-secondary)', borderRadius: 8 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
+                💡 输入对方手机号搜索，找到后点击"申请添加"。<br />
+                对方同意后即可成为好友，互相发送消息。
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

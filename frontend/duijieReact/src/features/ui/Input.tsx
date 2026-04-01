@@ -15,8 +15,8 @@ export default function Input({ label, style, ...rest }: Props) {
       {label && <label style={{ fontSize: 13, fontWeight: 500, color: '#475569' }}>{label}</label>}
       <input
         style={{ ...base, ...style }}
-        onFocus={e => (e.currentTarget.style.borderColor = '#2563eb')}
-        onBlur={e => (e.currentTarget.style.borderColor = '#cbd5e1')}
+        onFocus={e => (e.currentTarget.style.borderColor = 'var(--brand)')}
+        onBlur={e => (e.currentTarget.style.borderColor = 'var(--text-disabled)')}
         {...rest}
       />
     </div>

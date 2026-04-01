@@ -8,17 +8,17 @@ import TicketDetail from './TicketDetail'
 import TicketCreateModal from './TicketCreateModal'
 
 const typeMap: Record<string, { label: string; color: string }> = {
-  requirement: { label: '需求', color: '#2563eb' }, bug: { label: '问题', color: '#dc2626' },
-  question: { label: '咨询', color: '#d97706' }, other: { label: '其他', color: '#6b7280' },
+  requirement: { label: '需求', color: 'var(--brand)' }, bug: { label: '问题', color: 'var(--color-danger)' },
+  question: { label: '咨询', color: 'var(--color-warning)' }, other: { label: '其他', color: '#6b7280' },
 }
 const priorityMap: Record<string, { label: string; color: string }> = {
-  low: { label: '低', color: '#6b7280' }, medium: { label: '中', color: '#d97706' },
-  high: { label: '高', color: '#ea580c' }, urgent: { label: '紧急', color: '#dc2626' },
+  low: { label: '低', color: '#6b7280' }, medium: { label: '中', color: 'var(--color-warning)' },
+  high: { label: '高', color: 'var(--color-orange)' }, urgent: { label: '紧急', color: 'var(--color-danger)' },
 }
 const statusMap: Record<string, { label: string; color: string; icon: any }> = {
-  open: { label: '待处理', color: '#d97706', icon: Clock },
-  processing: { label: '处理中', color: '#2563eb', icon: Loader2 },
-  resolved: { label: '已解决', color: '#16a34a', icon: CheckCircle },
+  open: { label: '待处理', color: 'var(--color-warning)', icon: Clock },
+  processing: { label: '处理中', color: 'var(--brand)', icon: Loader2 },
+  resolved: { label: '已解决', color: 'var(--color-success)', icon: CheckCircle },
   closed: { label: '已关闭', color: '#6b7280', icon: XCircle },
 }
 
@@ -70,10 +70,10 @@ export default function TicketPage() {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>工单</h1>
-          <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>{isStaff ? '管理工单' : '提交需求或问题'}</p>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>工单</h1>
+          <p style={{ color: 'var(--text-secondary)', margin: '4px 0 0', fontSize: 14 }}>{isStaff ? '管理工单' : '提交需求或问题'}</p>
         </div>
-        <button onClick={() => setCreateOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 10, background: '#2563eb', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500 }}>
+        <button onClick={() => setCreateOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 10, background: 'var(--brand)', color: 'var(--bg-primary)', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500 }}>
           <Plus size={16} /> 新建工单
         </button>
       </div>
@@ -81,19 +81,19 @@ export default function TicketPage() {
       <div style={{ display: 'flex', gap: 4, marginBottom: 16, overflowX: 'auto', paddingBottom: 4 }}>
         {statusTabs.map(tab => (
           <button key={tab.key} onClick={() => setFilter(tab.key)}
-            style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid ' + (filter === tab.key ? '#2563eb' : '#e2e8f0'),
-              background: filter === tab.key ? '#eff6ff' : '#fff', color: filter === tab.key ? '#2563eb' : '#64748b',
+            style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid ' + (filter === tab.key ? 'var(--brand)' : 'var(--border-primary)'),
+              background: filter === tab.key ? 'var(--bg-selected)' : 'var(--bg-primary)', color: filter === tab.key ? 'var(--brand)' : 'var(--text-secondary)',
               fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
             {tab.label}
-            {tab.count > 0 && <span style={{ fontSize: 11, padding: '0 6px', borderRadius: 8, background: filter === tab.key ? '#2563eb' : '#e2e8f0', color: filter === tab.key ? '#fff' : '#64748b' }}>{tab.count}</span>}
+            {tab.count > 0 && <span style={{ fontSize: 11, padding: '0 6px', borderRadius: 8, background: filter === tab.key ? 'var(--brand)' : 'var(--border-primary)', color: filter === tab.key ? 'var(--bg-primary)' : 'var(--text-secondary)' }}>{tab.count}</span>}
           </button>
         ))}
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
+        <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 60, color: '#94a3b8' }}>
+        <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}>
           <Ticket size={48} style={{ marginBottom: 12, opacity: 0.5 }} />
           <div style={{ fontSize: 15 }}>暂无工单</div>
         </div>
@@ -106,23 +106,23 @@ export default function TicketPage() {
             const StIcon = st.icon
             return (
               <div key={t.id} onClick={() => openDetail(t)}
-                style={{ background: '#fff', borderRadius: 10, padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 16, transition: 'box-shadow 0.15s' }}
+                style={{ background: 'var(--bg-primary)', borderRadius: 10, padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 16, transition: 'box-shadow 0.15s' }}
                 onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)')}
                 onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)')}>
                 <div style={{ width: 36, height: 36, borderRadius: 8, background: st.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><StIcon size={18} color={st.color} /></div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{t.title}</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)' }}>{t.title}</span>
                     <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: tp.color + '18', color: tp.color }}>{tp.label}</span>
                     <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: pr.color + '18', color: pr.color }}>{pr.label}</span>
                   </div>
-                  <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                     <span>#{t.id}</span>
                     <span>{t.creator_name || t.creator_username}</span>
                     {t.project_name && <span>{t.project_name}</span>}
                     <span>{new Date(t.created_at).toLocaleDateString('zh-CN')}</span>
                     {t.reply_count > 0 && <span>{t.reply_count} 条回复</span>}
-                    {t.rating && <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><Star size={10} color="#d97706" fill="#d97706" />{t.rating}</span>}
+                    {t.rating && <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}><Star size={10} color="var(--color-warning)" fill="#d97706" />{t.rating}</span>}
                   </div>
                 </div>
                 <div style={{ fontSize: 11, padding: '4px 10px', borderRadius: 6, background: st.color + '18', color: st.color, fontWeight: 500, flexShrink: 0 }}>{st.label}</div>

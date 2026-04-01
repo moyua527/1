@@ -39,7 +39,7 @@ const CONFIG_GROUPS = [
     { key: 'AUDIT_LOG_RETENTION_DAYS', label: '日志保留天数', desc: '审计日志自动清理天数，0为永久保留', placeholder: '90' },
   ]},
   { title: '显示设置', icon: '🎨', items: [
-    { key: 'THEME_COLOR', label: '主题色', desc: '系统主色调 (Hex值)', placeholder: '#2563eb' },
+    { key: 'THEME_COLOR', label: '主题色', desc: '系统主色调 (Hex值)', placeholder: 'var(--brand)' },
     { key: 'PAGE_SIZE', label: '默认分页条数', desc: '列表页默认每页显示条数', placeholder: '20' },
     { key: 'DATE_FORMAT', label: '日期格式', desc: '日期显示格式 (YYYY-MM-DD / DD/MM/YYYY)', placeholder: 'YYYY-MM-DD' },
     { key: 'SHOW_DASHBOARD_CHARTS', label: '仪表盘图表', desc: '仪表盘是否显示统计图表 (true/false)', placeholder: 'true' },
@@ -65,14 +65,14 @@ export default function SystemSettings() {
     else toast(r.message || '保存失败', 'error')
   }
 
-  if (loading) return <div style={{ textAlign: 'center', padding: 80, color: '#94a3b8' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
+  if (loading) return <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>系统配置</h1>
-          <p style={{ color: '#64748b', margin: '4px 0 0', fontSize: 14 }}>管理平台全局设置</p>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>系统配置</h1>
+          <p style={{ color: 'var(--text-secondary)', margin: '4px 0 0', fontSize: 14 }}>管理平台全局设置</p>
         </div>
         <Button onClick={handleSave} disabled={saving}>
           {saving ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={14} />}
@@ -85,24 +85,24 @@ export default function SystemSettings() {
           <div key={group.title}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
               <span style={{ fontSize: 18 }}>{group.icon}</span>
-              <span style={{ fontSize: 16, fontWeight: 600, color: '#0f172a' }}>{group.title}</span>
-              <span style={{ fontSize: 12, color: '#94a3b8' }}>({group.items.length} 项)</span>
+              <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>{group.title}</span>
+              <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>({group.items.length} 项)</span>
             </div>
-            <div style={{ background: '#fff', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+            <div style={{ background: 'var(--bg-primary)', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
               {group.items.map((item, idx) => (
-                <div key={item.key} style={{ display: 'flex', alignItems: 'flex-start', gap: 16, padding: '16px 20px', borderBottom: idx < group.items.length - 1 ? '1px solid #f1f5f9' : 'none', flexWrap: 'wrap' }}>
+                <div key={item.key} style={{ display: 'flex', alignItems: 'flex-start', gap: 16, padding: '16px 20px', borderBottom: idx < group.items.length - 1 ? '1px solid var(--border-secondary)' : 'none', flexWrap: 'wrap' }}>
                   <div style={{ flex: '1 1 280px', minWidth: 180 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 2 }}>{item.label}</div>
-                    <div style={{ fontSize: 12, color: '#94a3b8' }}>{item.desc}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)', marginBottom: 2 }}>{item.label}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{item.desc}</div>
                   </div>
                   <div style={{ flex: '1 1 280px', minWidth: 180 }}>
                     <input
                       value={config[item.key] || ''}
                       onChange={e => setConfig({ ...config, [item.key]: e.target.value })}
                       placeholder={item.placeholder}
-                      style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
-                      onFocus={e => e.target.style.borderColor = '#2563eb'}
-                      onBlur={e => e.target.style.borderColor = '#e2e8f0'}
+                      style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.15s' }}
+                      onFocus={e => e.target.style.borderColor = 'var(--brand)'}
+                      onBlur={e => e.target.style.borderColor = 'var(--border-primary)'}
                     />
                   </div>
                 </div>

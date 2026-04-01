@@ -8,17 +8,17 @@ import Button from '../ui/Button'
 import { toast } from '../ui/Toast'
 
 const typeMap: Record<string, { label: string; color: string }> = {
-  requirement: { label: '需求', color: '#2563eb' }, bug: { label: '问题', color: '#dc2626' },
-  question: { label: '咨询', color: '#d97706' }, other: { label: '其他', color: '#6b7280' },
+  requirement: { label: '需求', color: 'var(--brand)' }, bug: { label: '问题', color: 'var(--color-danger)' },
+  question: { label: '咨询', color: 'var(--color-warning)' }, other: { label: '其他', color: '#6b7280' },
 }
 const priorityMap: Record<string, { label: string; color: string }> = {
-  low: { label: '低', color: '#6b7280' }, medium: { label: '中', color: '#d97706' },
-  high: { label: '高', color: '#ea580c' }, urgent: { label: '紧急', color: '#dc2626' },
+  low: { label: '低', color: '#6b7280' }, medium: { label: '中', color: 'var(--color-warning)' },
+  high: { label: '高', color: 'var(--color-orange)' }, urgent: { label: '紧急', color: 'var(--color-danger)' },
 }
 const statusMap: Record<string, { label: string; color: string; icon: any }> = {
-  open: { label: '待处理', color: '#d97706', icon: Clock },
-  processing: { label: '处理中', color: '#2563eb', icon: Loader2 },
-  resolved: { label: '已解决', color: '#16a34a', icon: CheckCircle },
+  open: { label: '待处理', color: 'var(--color-warning)', icon: Clock },
+  processing: { label: '处理中', color: 'var(--brand)', icon: Loader2 },
+  resolved: { label: '已解决', color: 'var(--color-success)', icon: CheckCircle },
   closed: { label: '已关闭', color: '#6b7280', icon: XCircle },
 }
 const fmtSize = (b: number) => b < 1024 ? b + 'B' : b < 1048576 ? (b / 1024).toFixed(1) + 'KB' : (b / 1048576).toFixed(1) + 'MB'
@@ -71,13 +71,13 @@ export default function TicketDetail({ ticket, user, staffMembers, onBack, onRef
 
   return (
     <div style={{ maxWidth: 800, margin: '0 auto' }}>
-      <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', fontSize: 14, marginBottom: 16, padding: 0 }}>
+      <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 14, marginBottom: 16, padding: 0 }}>
         <ChevronLeft size={16} /> 返回列表
       </button>
-      <div style={{ background: '#fff', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+      <div style={{ background: 'var(--bg-primary)', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#0f172a' }}>{ticket.title}</h2>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--text-heading)' }}>{ticket.title}</h2>
             <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6, background: st.color + '18', color: st.color, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}><StIcon size={12} />{st.label}</span>
               <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 6, background: (typeMap[ticket.type]?.color || '#6b7280') + '18', color: typeMap[ticket.type]?.color || '#6b7280' }}>{typeMap[ticket.type]?.label || ticket.type}</span>
@@ -85,12 +85,12 @@ export default function TicketDetail({ ticket, user, staffMembers, onBack, onRef
             </div>
           </div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {isStaff && ticket.status === 'open' && <button onClick={() => handleStatusChange('processing')} style={{ fontSize: 12, padding: '4px 12px', borderRadius: 6, background: '#2563eb', color: '#fff', border: 'none', cursor: 'pointer' }}>开始处理</button>}
-            {isStaff && ticket.status === 'processing' && <button onClick={() => handleStatusChange('resolved')} style={{ fontSize: 12, padding: '4px 12px', borderRadius: 6, background: '#16a34a', color: '#fff', border: 'none', cursor: 'pointer' }}>标记解决</button>}
-            {(ticket.status === 'resolved') && !ticket.rating && ticket.created_by === user?.id && <button onClick={() => { setRateForm({ rating: 5, comment: '' }); setRateOpen(true) }} style={{ fontSize: 12, padding: '4px 12px', borderRadius: 6, background: '#d97706', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}><Star size={12} />评价</button>}
+            {isStaff && ticket.status === 'open' && <button onClick={() => handleStatusChange('processing')} style={{ fontSize: 12, padding: '4px 12px', borderRadius: 6, background: 'var(--brand)', color: 'var(--bg-primary)', border: 'none', cursor: 'pointer' }}>开始处理</button>}
+            {isStaff && ticket.status === 'processing' && <button onClick={() => handleStatusChange('resolved')} style={{ fontSize: 12, padding: '4px 12px', borderRadius: 6, background: 'var(--color-success)', color: 'var(--bg-primary)', border: 'none', cursor: 'pointer' }}>标记解决</button>}
+            {(ticket.status === 'resolved') && !ticket.rating && ticket.created_by === user?.id && <button onClick={() => { setRateForm({ rating: 5, comment: '' }); setRateOpen(true) }} style={{ fontSize: 12, padding: '4px 12px', borderRadius: 6, background: 'var(--color-warning)', color: 'var(--bg-primary)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}><Star size={12} />评价</button>}
           </div>
         </div>
-        <div style={{ fontSize: 13, color: '#64748b', marginBottom: 8, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
           <span>提交者：{ticket.creator_name || ticket.creator_username}</span>
           {ticket.assignee_name && <span>处理人：{ticket.assignee_name || ticket.assignee_username}</span>}
           {ticket.project_name && <span>项目：{ticket.project_name}</span>}
@@ -98,20 +98,20 @@ export default function TicketDetail({ ticket, user, staffMembers, onBack, onRef
         </div>
         {isStaff && !ticket.assigned_to && staffMembers.length > 0 && (
           <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 12, color: '#94a3b8' }}>分配给：</span>
-            <select onChange={e => handleAssign(Number(e.target.value))} defaultValue="" style={{ fontSize: 12, padding: '4px 8px', borderRadius: 6, border: '1px solid #e2e8f0' }}>
+            <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>分配给：</span>
+            <select onChange={e => handleAssign(Number(e.target.value))} defaultValue="" style={{ fontSize: 12, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border-primary)' }}>
               <option value="" disabled>选择处理人</option>
               {staffMembers.map((m: any) => <option key={m.id} value={m.id}>{m.nickname || m.username}</option>)}
             </select>
           </div>
         )}
-        <div style={{ padding: 16, background: '#f8fafc', borderRadius: 8, fontSize: 14, color: '#334155', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: 16 }}>{ticket.content || '(无描述)'}</div>
+        <div style={{ padding: 16, background: 'var(--bg-secondary)', borderRadius: 8, fontSize: 14, color: 'var(--text-body)', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: 16 }}>{ticket.content || '(无描述)'}</div>
         {ticket.attachments?.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
             {ticket.attachments.map((a: any) => (
               <a key={a.id} href={`${BACKEND_URL}/uploads/${a.filename}`} target="_blank" rel="noreferrer"
-                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, background: '#f1f5f9', border: '1px solid #e2e8f0', fontSize: 12, color: '#334155', textDecoration: 'none' }}>
-                <Paperclip size={14} color="#64748b" /> {a.original_name} <span style={{ color: '#94a3b8' }}>({fmtSize(a.file_size)})</span> <Download size={12} color="#2563eb" />
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', fontSize: 12, color: 'var(--text-body)', textDecoration: 'none' }}>
+                <Paperclip size={14} color="var(--text-secondary)" /> {a.original_name} <span style={{ color: 'var(--text-tertiary)' }}>({fmtSize(a.file_size)})</span> <Download size={12} color="var(--brand)" />
               </a>
             ))}
           </div>
@@ -119,29 +119,29 @@ export default function TicketDetail({ ticket, user, staffMembers, onBack, onRef
 
         {ticket.rating && (
           <div style={{ padding: 12, background: '#fef3c7', borderRadius: 8, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ display: 'flex', gap: 2 }}>{[1,2,3,4,5].map(i => <Star key={i} size={16} color="#d97706" fill={i <= ticket.rating ? '#d97706' : 'none'} />)}</div>
+            <div style={{ display: 'flex', gap: 2 }}>{[1,2,3,4,5].map(i => <Star key={i} size={16} color="var(--color-warning)" fill={i <= ticket.rating ? 'var(--color-warning)' : 'none'} />)}</div>
             {ticket.rating_comment && <span style={{ fontSize: 13, color: '#92400e' }}>{ticket.rating_comment}</span>}
           </div>
         )}
 
-        <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 16 }}>
-          <div style={{ fontSize: 14, fontWeight: 600, color: '#0f172a', marginBottom: 12 }}>回复 ({ticket.replies?.length || 0})</div>
+        <div style={{ borderTop: '1px solid var(--border-primary)', paddingTop: 16 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)', marginBottom: 12 }}>回复 ({ticket.replies?.length || 0})</div>
           {(ticket.replies || []).map((r: any) => (
             <div key={r.id} style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
               <Avatar name={r.creator_name || r.creator_username} size={32} />
               <div style={{ flex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#0f172a' }}>{r.creator_name || r.creator_username}</span>
-                  {isStaff && r.creator_role && ['admin', 'member'].includes(r.creator_role) && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: '#eff6ff', color: '#2563eb' }}>工作人员</span>}
-                  <span style={{ fontSize: 11, color: '#94a3b8' }}>{new Date(r.created_at).toLocaleString('zh-CN')}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-heading)' }}>{r.creator_name || r.creator_username}</span>
+                  {isStaff && r.creator_role && ['admin', 'member'].includes(r.creator_role) && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: 'var(--bg-selected)', color: 'var(--brand)' }}>工作人员</span>}
+                  <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{new Date(r.created_at).toLocaleString('zh-CN')}</span>
                 </div>
-                <div style={{ fontSize: 13, color: '#334155', marginTop: 4, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{r.content}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-body)', marginTop: 4, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{r.content}</div>
                 {r.attachments?.length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
                     {r.attachments.map((a: any) => (
                       <a key={a.id} href={`${BACKEND_URL}/uploads/${a.filename}`} target="_blank" rel="noreferrer"
-                        style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6, background: '#f1f5f9', border: '1px solid #e2e8f0', fontSize: 11, color: '#334155', textDecoration: 'none' }}>
-                        <Paperclip size={12} color="#64748b" /> {a.original_name} <span style={{ color: '#94a3b8' }}>({fmtSize(a.file_size)})</span> <Download size={10} color="#2563eb" />
+                        style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6, background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', fontSize: 11, color: 'var(--text-body)', textDecoration: 'none' }}>
+                        <Paperclip size={12} color="var(--text-secondary)" /> {a.original_name} <span style={{ color: 'var(--text-tertiary)' }}>({fmtSize(a.file_size)})</span> <Download size={10} color="var(--brand)" />
                       </a>
                     ))}
                   </div>
@@ -157,7 +157,7 @@ export default function TicketDetail({ ticket, user, staffMembers, onBack, onRef
             {replyFiles.length > 0 && (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
                 {replyFiles.map((f, i) => (
-                  <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6, background: '#eff6ff', border: '1px solid #bfdbfe', fontSize: 12, color: '#1e40af' }}>
+                  <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6, background: 'var(--bg-selected)', border: '1px solid #bfdbfe', fontSize: 12, color: 'var(--brand)' }}>
                     <Paperclip size={12} /> {f.name} ({fmtSize(f.size)})
                     <button onClick={() => setReplyFiles(replyFiles.filter((_, j) => j !== i))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}><X size={12} color="#94a3b8" /></button>
                   </span>
@@ -167,11 +167,11 @@ export default function TicketDetail({ ticket, user, staffMembers, onBack, onRef
             <div style={{ display: 'flex', gap: 8 }}>
               <input value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="输入回复..."
                 onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleReply() } }}
-                style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none', background: '#f8fafc' }} />
+                style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-secondary)' }} />
               <input ref={replyFileRef} type="file" multiple hidden onChange={e => { if (e.target.files) setReplyFiles([...replyFiles, ...Array.from(e.target.files)]); e.target.value = '' }} />
-              <button onClick={() => replyFileRef.current?.click()} title="添加附件" style={{ background: '#f1f5f9', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Paperclip size={16} color="#64748b" /></button>
+              <button onClick={() => replyFileRef.current?.click()} title="添加附件" style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', borderRadius: 10, padding: '10px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Paperclip size={16} color="var(--text-secondary)" /></button>
               <button onClick={handleReply} disabled={sending || (!replyText.trim() && replyFiles.length === 0)}
-                style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, opacity: (!replyText.trim() && replyFiles.length === 0) ? 0.5 : 1 }}>
+                style={{ background: 'var(--brand)', color: 'var(--bg-primary)', border: 'none', borderRadius: 10, padding: '10px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, opacity: (!replyText.trim() && replyFiles.length === 0) ? 0.5 : 1 }}>
                 <Send size={16} /> 回复
               </button>
             </div>
@@ -182,19 +182,19 @@ export default function TicketDetail({ ticket, user, staffMembers, onBack, onRef
       <Modal open={rateOpen} onClose={() => setRateOpen(false)} title="评价工单服务">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 8 }}>满意度评分</div>
+            <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 8 }}>满意度评分</div>
             <div style={{ display: 'flex', gap: 8 }}>
               {[1,2,3,4,5].map(i => (
                 <button key={i} onClick={() => setRateForm({ ...rateForm, rating: i })} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-                  <Star size={32} color="#d97706" fill={i <= rateForm.rating ? '#d97706' : 'none'} />
+                  <Star size={32} color="var(--color-warning)" fill={i <= rateForm.rating ? 'var(--color-warning)' : 'none'} />
                 </button>
               ))}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 8 }}>评价内容（选填）</div>
+            <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 8 }}>评价内容（选填）</div>
             <textarea value={rateForm.comment} onChange={e => setRateForm({ ...rateForm, comment: e.target.value })} placeholder="请输入您的评价..." rows={3}
-              style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 14, outline: 'none', resize: 'vertical' }} />
+              style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', resize: 'vertical' }} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
             <Button variant="secondary" onClick={() => setRateOpen(false)}>取消</Button>

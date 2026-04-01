@@ -4,14 +4,14 @@ import Modal from '../../ui/Modal'
 import Avatar from '../../ui/Avatar'
 
 const roleMap: Record<string, { label: string; color: string; bg: string; icon: any }> = {
-  admin: { label: '管理员', color: '#dc2626', bg: '#fef2f2', icon: Shield },
-  member: { label: '成员', color: '#2563eb', bg: '#eff6ff', icon: User },
+  admin: { label: '管理员', color: 'var(--color-danger)', bg: '#fef2f2', icon: Shield },
+  member: { label: '成员', color: 'var(--brand)', bg: 'var(--bg-selected)', icon: User },
 }
 
 const statusMap: Record<number, { label: string; color: string; bg: string }> = {
-  1: { label: '启用', color: '#16a34a', bg: '#f0fdf4' },
-  0: { label: '待审批', color: '#d97706', bg: '#fffbeb' },
-  2: { label: '禁用', color: '#94a3b8', bg: '#f1f5f9' },
+  1: { label: '启用', color: 'var(--color-success)', bg: '#f0fdf4' },
+  0: { label: '待审批', color: 'var(--color-warning)', bg: '#fffbeb' },
+  2: { label: '禁用', color: 'var(--text-tertiary)', bg: 'var(--bg-tertiary)' },
 }
 
 const fmtDate = (d: string | null) => d ? new Date(d).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'
@@ -61,11 +61,11 @@ export default function UserDetailModal({ detailUser, open, onClose, onEdit }: U
         ]
         return (
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20, padding: 16, background: '#f8fafc', borderRadius: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20, padding: 16, background: 'var(--bg-secondary)', borderRadius: 12 }}>
               <Avatar name={detailUser.nickname || detailUser.username} size={56} />
               <div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: '#0f172a' }}>{detailUser.nickname || detailUser.username}</div>
-                <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>@{detailUser.username}</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-heading)' }}>{detailUser.nickname || detailUser.username}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2 }}>@{detailUser.username}</div>
                 <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
                   <span style={{ fontSize: 11, padding: '2px 10px', borderRadius: 10, background: r.bg, color: r.color, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}><RIcon size={12} /> {r.label}</span>
                   <span style={{ fontSize: 11, padding: '2px 10px', borderRadius: 10, background: st.bg, color: st.color, fontWeight: 500 }}>{st.label}</span>
@@ -74,14 +74,14 @@ export default function UserDetailModal({ detailUser, open, onClose, onEdit }: U
             </div>
             {sections.map(sec => (
               <div key={sec.title} style={{ marginBottom: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: '#0f172a', marginBottom: 8, padding: '6px 0', borderBottom: '1px solid #f1f5f9' }}>
-                  <sec.icon size={14} color="#64748b" /> {sec.title}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, color: 'var(--text-heading)', marginBottom: 8, padding: '6px 0', borderBottom: '1px solid var(--border-secondary)' }}>
+                  <sec.icon size={14} color="var(--text-secondary)" /> {sec.title}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
                   {sec.items.map(item => (
                     <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderBottom: '1px solid #fafafa' }}>
-                      <span style={{ fontSize: 12, color: '#94a3b8', minWidth: 56 }}>{item.label}</span>
-                      <span style={{ fontSize: 13, color: (item as any).color || '#0f172a', fontWeight: 500, wordBreak: 'break-all' }}>{item.value}</span>
+                      <span style={{ fontSize: 12, color: 'var(--text-tertiary)', minWidth: 56 }}>{item.label}</span>
+                      <span style={{ fontSize: 13, color: (item as any).color || 'var(--text-heading)', fontWeight: 500, wordBreak: 'break-all' }}>{item.value}</span>
                     </div>
                   ))}
                 </div>

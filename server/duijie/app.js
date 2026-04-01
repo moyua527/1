@@ -15,22 +15,31 @@ app.set('trust proxy', 1);
 app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
 
 // CORS 白名单
-const ALLOWED_ORIGINS = [
+const DEFAULT_ORIGINS = [
   'http://localhost:1300',
   'http://127.0.0.1:1300',
   'http://160.202.253.143:8080',
   'http://160.202.253.143:1800',
 ];
+const ALLOWED_ORIGINS = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',').map(s => s.trim()).concat(DEFAULT_ORIGINS)
+  : DEFAULT_ORIGINS;
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
-    cb(null, true);
+    logger.warn(`CORS blocked origin: ${origin}`);
+    cb(new Error('CORS not allowed'), false);
   },
   credentials: true,
 }));
 
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
+
+// CSRF 防护（Double Submit Cookie）
+const { csrfTokenProvider, csrfProtection } = require('./atomic/middleware/csrf');
+app.use('/api', csrfTokenProvider);
+app.use('/api', csrfProtection);
 
 // 全局 API 速率限制：每 IP 每 15 分钟最多 300 次
 const rlOpts = { validate: { xForwardedForHeader: false } };

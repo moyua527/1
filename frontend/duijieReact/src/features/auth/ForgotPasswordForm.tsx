@@ -12,9 +12,9 @@ const getPwdStrength = (pwd: string) => {
   if (/[A-Z]/.test(pwd)) score++
   if (/[0-9]/.test(pwd)) score++
   if (/[^a-zA-Z0-9]/.test(pwd)) score++
-  if (score <= 1) return { level: 1, label: '弱', color: '#dc2626' }
-  if (score <= 3) return { level: 2, label: '中', color: '#d97706' }
-  return { level: 3, label: '强', color: '#16a34a' }
+  if (score <= 1) return { level: 1, label: '弱', color: 'var(--color-danger)' }
+  if (score <= 3) return { level: 2, label: '中', color: 'var(--color-warning)' }
+  return { level: 3, label: '强', color: 'var(--color-success)' }
 }
 
 interface ForgotPasswordFormProps {
@@ -88,11 +88,11 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {forgotStep === 1 && (
           <>
-            <div style={{ display: 'flex', gap: 0, marginBottom: 8, borderBottom: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', gap: 0, marginBottom: 8, borderBottom: '1px solid var(--border-primary)' }}>
               {([{ key: 'phone' as const, label: '手机号找回', icon: <Phone size={14} /> }, { key: 'email' as const, label: '邮箱找回', icon: <Mail size={14} /> }]).map(m => (
                 <button key={m.key} type="button" onClick={() => { setForgotMethod(m.key); setError(''); setVerifyCode('') }}
                   style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '8px 0', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500,
-                    color: forgotMethod === m.key ? '#2563eb' : '#94a3b8', background: 'transparent',
+                    color: forgotMethod === m.key ? 'var(--brand)' : 'var(--text-tertiary)', background: 'transparent',
                     borderBottom: forgotMethod === m.key ? '2px solid #2563eb' : '2px solid transparent', transition: 'all 0.15s' }}>
                   {m.icon} {m.label}
                 </button>
@@ -109,9 +109,9 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
               <div style={{ display: 'flex', gap: 8 }}>
                 <input placeholder="输入6位验证码" value={verifyCode} onChange={e => setVerifyCode(e.target.value)} maxLength={6}
                   style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
-                  onFocus={e => (e.currentTarget.style.borderColor = '#2563eb')} onBlur={e => (e.currentTarget.style.borderColor = '#cbd5e1')} />
+                  onFocus={e => (e.currentTarget.style.borderColor = 'var(--brand)')} onBlur={e => (e.currentTarget.style.borderColor = 'var(--text-disabled)')} />
                 <button type="button" disabled={countdown > 0} onClick={handleForgotSendCode}
-                  style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: countdown > 0 ? '#e2e8f0' : '#2563eb', color: countdown > 0 ? '#94a3b8' : '#fff', fontSize: 13, fontWeight: 500, cursor: countdown > 0 ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
+                  style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: countdown > 0 ? 'var(--border-primary)' : 'var(--brand)', color: countdown > 0 ? 'var(--text-tertiary)' : 'var(--bg-primary)', fontSize: 13, fontWeight: 500, cursor: countdown > 0 ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
                   {countdown > 0 ? `${countdown}s` : '获取验证码'}
                 </button>
               </div>
@@ -122,8 +122,8 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
         {forgotStep === 2 && (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, background: '#f0fdf4', border: '1px solid #bbf7d0', marginBottom: 4 }}>
-              <CheckCircle size={16} color="#16a34a" />
-              <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 500 }}>
+              <CheckCircle size={16} color="var(--color-success)" />
+              <span style={{ fontSize: 13, color: 'var(--color-success)', fontWeight: 500 }}>
                 {forgotMethod === 'phone' ? phone : email} 已验证
               </span>
             </div>
@@ -133,7 +133,7 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
                 <div style={{ flex: 1, display: 'flex', gap: 4 }}>
                   {[1, 2, 3].map(i => {
                     const s = getPwdStrength(newPassword)
-                    return <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= s.level ? s.color : '#e2e8f0', transition: 'background 0.2s' }} />
+                    return <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= s.level ? s.color : 'var(--border-primary)', transition: 'background 0.2s' }} />
                   })}
                 </div>
                 <span style={{ fontSize: 12, color: getPwdStrength(newPassword).color, fontWeight: 500 }}>{getPwdStrength(newPassword).label}</span>
@@ -143,8 +143,8 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
           </>
         )}
 
-        {error && <div style={{ color: '#dc2626', fontSize: 13, textAlign: 'center', padding: '6px 0' }}>{error}</div>}
-        {success && <div style={{ color: '#16a34a', fontSize: 13, textAlign: 'center', padding: '6px 0' }}>{success}</div>}
+        {error && <div style={{ color: 'var(--color-danger)', fontSize: 13, textAlign: 'center', padding: '6px 0' }}>{error}</div>}
+        {success && <div style={{ color: 'var(--color-success)', fontSize: 13, textAlign: 'center', padding: '6px 0' }}>{success}</div>}
 
         {forgotStep === 1 && (
           <Button type="button" onClick={handleForgotNext} style={{ width: '100%', justifyContent: 'center', padding: '10px 0', marginTop: 4 }} disabled={verifying}>

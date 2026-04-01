@@ -40,30 +40,30 @@ export default function ContactSection({ clientId, contacts, onRefresh, embedded
     <div style={embedded ? {} : { ...sectionStyle, marginTop: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Users size={18} color="#7c3aed" />
-          <span style={{ fontSize: 16, fontWeight: 600, color: '#334155' }}>联系人</span>
-          <span style={{ fontSize: 12, color: '#94a3b8' }}>({contacts.length})</span>
+          <Users size={18} color="var(--color-purple)" />
+          <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-body)' }}>联系人</span>
+          <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>({contacts.length})</span>
         </div>
         <Button onClick={openAdd}><UserPlus size={14} /> 添加联系人</Button>
       </div>
       {contacts.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 24, color: '#94a3b8', fontSize: 14 }}>暂无联系人，点击"添加联系人"开始</div>
+        <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-tertiary)', fontSize: 14 }}>暂无联系人，点击"添加联系人"开始</div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
           {contacts.map((c: any) => (
-            <div key={c.id} style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, position: 'relative' }}>
+            <div key={c.id} style={{ border: '1px solid var(--border-primary)', borderRadius: 10, padding: 14, position: 'relative' }}>
               {c.is_primary === 1 && <Star size={14} color="#f59e0b" fill="#f59e0b" style={{ position: 'absolute', top: 10, right: 10 }} />}
-              <div style={{ fontSize: 15, fontWeight: 600, color: '#0f172a', marginBottom: 2 }}>{c.name}</div>
-              {c.position && <div style={{ fontSize: 12, color: '#64748b', marginBottom: 6 }}>{c.position}</div>}
+              <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)', marginBottom: 2 }}>{c.name}</div>
+              {c.position && <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>{c.position}</div>}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {c.phone && <div style={{ fontSize: 13, color: '#334155', display: 'flex', alignItems: 'center', gap: 4 }}><Phone size={12} color="#94a3b8" />{c.phone}</div>}
-                {c.email && <div style={{ fontSize: 13, color: '#334155', display: 'flex', alignItems: 'center', gap: 4 }}><Mail size={12} color="#94a3b8" />{c.email}</div>}
-                {c.wechat && <div style={{ fontSize: 13, color: '#334155', display: 'flex', alignItems: 'center', gap: 4 }}><MessageSquare size={12} color="#94a3b8" />{c.wechat}</div>}
+                {c.phone && <div style={{ fontSize: 13, color: 'var(--text-body)', display: 'flex', alignItems: 'center', gap: 4 }}><Phone size={12} color="#94a3b8" />{c.phone}</div>}
+                {c.email && <div style={{ fontSize: 13, color: 'var(--text-body)', display: 'flex', alignItems: 'center', gap: 4 }}><Mail size={12} color="#94a3b8" />{c.email}</div>}
+                {c.wechat && <div style={{ fontSize: 13, color: 'var(--text-body)', display: 'flex', alignItems: 'center', gap: 4 }}><MessageSquare size={12} color="#94a3b8" />{c.wechat}</div>}
               </div>
-              {c.notes && <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>{c.notes}</div>}
+              {c.notes && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 6 }}>{c.notes}</div>}
               <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                <button onClick={() => openEdit(c)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, display: 'flex' }}><Edit3 size={13} /></button>
-                <button onClick={() => handleDelete(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: 2, display: 'flex' }}><X size={13} /></button>
+                <button onClick={() => openEdit(c)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 2, display: 'flex' }}><Edit3 size={13} /></button>
+                <button onClick={() => handleDelete(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', padding: 2, display: 'flex' }}><X size={13} /></button>
               </div>
             </div>
           ))}
@@ -78,11 +78,11 @@ export default function ContactSection({ clientId, contacts, onRefresh, embedded
           <Input label="邮箱" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
           <Input label="微信" value={form.wechat} onChange={e => setForm({ ...form, wechat: e.target.value })} />
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>备注</label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>备注</label>
             <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2}
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
           </div>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#334155', cursor: 'pointer' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-body)', cursor: 'pointer' }}>
             <input type="checkbox" checked={form.is_primary} onChange={e => setForm({ ...form, is_primary: e.target.checked })} />
             设为主要联系人
           </label>

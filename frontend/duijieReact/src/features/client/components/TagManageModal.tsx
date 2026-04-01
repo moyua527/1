@@ -54,17 +54,17 @@ export default function TagManageModal({ open, onClose, clientId, clientTags, on
           <input type="color" value={newTagColor} onChange={e => setNewTagColor(e.target.value)}
             style={{ width: 36, height: 32, border: '1px solid #cbd5e1', borderRadius: 6, cursor: 'pointer', padding: 2 }} />
           <button onClick={handleCreateTag}
-            style={{ padding: '6px 12px', borderRadius: 6, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer', fontSize: 13 }}>创建</button>
+            style={{ padding: '6px 12px', borderRadius: 6, border: 'none', background: 'var(--brand)', color: 'var(--bg-primary)', cursor: 'pointer', fontSize: 13 }}>创建</button>
         </div>
         {allTags.length === 0 ? (
-          <div style={{ fontSize: 13, color: '#94a3b8', textAlign: 'center', padding: 16 }}>暂无标签，请先创建</div>
+          <div style={{ fontSize: 13, color: 'var(--text-tertiary)', textAlign: 'center', padding: 16 }}>暂无标签，请先创建</div>
         ) : (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {allTags.map((t: any) => {
               const selected = selectedTagIds.includes(t.id)
               return (
                 <button key={t.id} onClick={() => toggleTag(t.id)}
-                  style={{ padding: '5px 12px', borderRadius: 16, border: selected ? `2px solid ${t.color}` : '2px solid #e2e8f0', background: selected ? t.color + '18' : '#fff', color: selected ? t.color : '#64748b', cursor: 'pointer', fontSize: 13, fontWeight: selected ? 600 : 400, transition: 'all 0.15s' }}>
+                  style={{ padding: '5px 12px', borderRadius: 16, border: selected ? `2px solid ${t.color}` : '2px solid var(--border-primary)', background: selected ? t.color + '18' : 'var(--bg-primary)', color: selected ? t.color : 'var(--text-secondary)', cursor: 'pointer', fontSize: 13, fontWeight: selected ? 600 : 400, transition: 'all 0.15s' }}>
                   {t.name}
                 </button>
               )

@@ -44,35 +44,35 @@ export default function ContractSection({ clientId, contracts, onRefresh, embedd
     <div style={embedded ? {} : { ...sectionStyle, marginTop: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <FileSignature size={18} color="#16a34a" />
-          <span style={{ fontSize: 16, fontWeight: 600, color: '#334155' }}>合同订单</span>
-          <span style={{ fontSize: 12, color: '#94a3b8' }}>({contracts.length})</span>
+          <FileSignature size={18} color="var(--color-success)" />
+          <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-body)' }}>合同订单</span>
+          <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>({contracts.length})</span>
         </div>
         <Button onClick={openAdd}><Plus size={14} /> 新建合同</Button>
       </div>
       {contracts.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 24, color: '#94a3b8', fontSize: 14 }}>暂无合同，点击"新建合同"开始</div>
+        <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-tertiary)', fontSize: 14 }}>暂无合同，点击"新建合同"开始</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {contracts.map((c: any) => {
             const st = contractStatusMap[c.status] || contractStatusMap.draft
             return (
-              <div key={c.id} style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div key={c.id} style={{ border: '1px solid var(--border-primary)', borderRadius: 10, padding: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{c.title}</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)' }}>{c.title}</span>
                     <span style={{ fontSize: 11, padding: '1px 8px', borderRadius: 6, background: st.bg, color: st.color, fontWeight: 500 }}>{st.label}</span>
                   </div>
-                  <div style={{ display: 'flex', gap: 16, fontSize: 13, color: '#64748b' }}>
+                  <div style={{ display: 'flex', gap: 16, fontSize: 13, color: 'var(--text-secondary)' }}>
                     <span><DollarSign size={12} style={{ verticalAlign: -1 }} /> ¥{Number(c.amount || 0).toLocaleString()}</span>
                     {c.signed_date && <span>签约: {new Date(c.signed_date).toLocaleDateString('zh-CN')}</span>}
                     {c.expire_date && <span>到期: {new Date(c.expire_date).toLocaleDateString('zh-CN')}</span>}
                   </div>
-                  {c.notes && <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{c.notes}</div>}
+                  {c.notes && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>{c.notes}</div>}
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <button onClick={() => openEdit(c)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, display: 'flex' }}><Edit3 size={14} /></button>
-                  <button onClick={() => handleDelete(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: 2, display: 'flex' }}><X size={14} /></button>
+                  <button onClick={() => openEdit(c)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 2, display: 'flex' }}><Edit3 size={14} /></button>
+                  <button onClick={() => handleDelete(c.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', padding: 2, display: 'flex' }}><X size={14} /></button>
                 </div>
               </div>
             )
@@ -85,24 +85,24 @@ export default function ContractSection({ clientId, contracts, onRefresh, embedd
           <Input label="合同标题 *" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
           <Input label="金额 (¥)" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} />
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>状态</label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>状态</label>
             <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}
-              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }}>
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
               <option value="draft">草稿</option><option value="active">生效中</option><option value="expired">已到期</option><option value="terminated">已终止</option>
             </select>
           </div>
           <div style={{ display: 'flex', gap: 12 }}>
             <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>签约日期</label>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>签约日期</label>
               <input type="date" value={form.signed_date} onChange={e => setForm({ ...form, signed_date: e.target.value })} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none' }} />
             </div>
             <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>到期日期</label>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>到期日期</label>
               <input type="date" value={form.expire_date} onChange={e => setForm({ ...form, expire_date: e.target.value })} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none' }} />
             </div>
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>备注</label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>备注</label>
             <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>

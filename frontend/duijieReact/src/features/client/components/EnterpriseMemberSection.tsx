@@ -40,34 +40,34 @@ export default function EnterpriseMemberSection({ clientId, members, onRefresh, 
     <div style={embedded ? {} : { ...sectionStyle, marginTop: 16 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Building2 size={18} color="#0284c7" />
-          <span style={{ fontSize: 16, fontWeight: 600, color: '#334155' }}>企业成员</span>
-          <span style={{ fontSize: 12, color: '#94a3b8' }}>({members.length})</span>
+          <Building2 size={18} color="var(--brand)" />
+          <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-body)' }}>企业成员</span>
+          <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>({members.length})</span>
         </div>
         <Button onClick={openAdd}><UserPlus size={14} /> 添加成员</Button>
       </div>
       {members.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 24, color: '#94a3b8', fontSize: 14 }}>暂无企业成员，点击"添加成员"开始</div>
+        <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-tertiary)', fontSize: 14 }}>暂无企业成员，点击"添加成员"开始</div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
           {members.map((m: any) => (
-            <div key={m.id} style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 14 }}>
+            <div key={m.id} style={{ border: '1px solid var(--border-primary)', borderRadius: 10, padding: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
                 <Avatar name={m.name} size={36} />
                 <div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: '#0f172a' }}>{m.name}</div>
-                  {m.position && <div style={{ fontSize: 12, color: '#64748b' }}>{m.position}</div>}
+                  <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{m.name}</div>
+                  {m.position && <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{m.position}</div>}
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {m.department && <div style={{ fontSize: 13, color: '#334155', display: 'flex', alignItems: 'center', gap: 4 }}><Building size={12} color="#94a3b8" />{m.department}</div>}
-                {m.phone && <div style={{ fontSize: 13, color: '#334155', display: 'flex', alignItems: 'center', gap: 4 }}><Phone size={12} color="#94a3b8" />{m.phone}</div>}
-                {m.email && <div style={{ fontSize: 13, color: '#334155', display: 'flex', alignItems: 'center', gap: 4 }}><Mail size={12} color="#94a3b8" />{m.email}</div>}
+                {m.department && <div style={{ fontSize: 13, color: 'var(--text-body)', display: 'flex', alignItems: 'center', gap: 4 }}><Building size={12} color="#94a3b8" />{m.department}</div>}
+                {m.phone && <div style={{ fontSize: 13, color: 'var(--text-body)', display: 'flex', alignItems: 'center', gap: 4 }}><Phone size={12} color="#94a3b8" />{m.phone}</div>}
+                {m.email && <div style={{ fontSize: 13, color: 'var(--text-body)', display: 'flex', alignItems: 'center', gap: 4 }}><Mail size={12} color="#94a3b8" />{m.email}</div>}
               </div>
-              {m.notes && <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 6 }}>{m.notes}</div>}
+              {m.notes && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 6 }}>{m.notes}</div>}
               <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                <button onClick={() => openEdit(m)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 2, display: 'flex' }}><Edit3 size={13} /></button>
-                <button onClick={() => handleDelete(m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: 2, display: 'flex' }}><X size={13} /></button>
+                <button onClick={() => openEdit(m)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 2, display: 'flex' }}><Edit3 size={13} /></button>
+                <button onClick={() => handleDelete(m.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', padding: 2, display: 'flex' }}><X size={13} /></button>
               </div>
             </div>
           ))}
@@ -82,7 +82,7 @@ export default function EnterpriseMemberSection({ clientId, members, onRefresh, 
           <Input label="电话" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
           <Input label="邮箱" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }}>备注</label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>备注</label>
             <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
