@@ -52,7 +52,7 @@ export default function ClientRequests({ canAdmin, onRefresh }: Props) {
     try {
       const r = await fetchApi('/api/my-enterprise')
       if (r.success && r.data?.members) {
-        setEnterpriseMembers(r.data.members)
+        setEnterpriseMembers(r.data.members.filter((m: any) => m.user_id))
       }
     } catch { /* ignore */ }
     setMemberLoading(false)
@@ -230,11 +230,11 @@ export default function ClientRequests({ canAdmin, onRefresh }: Props) {
                         {selected && <span style={{ color: '#fff', fontSize: 12, fontWeight: 700 }}>✓</span>}
                       </div>
                       <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 13, fontWeight: 600, flexShrink: 0 }}>
-                        {(m.display_name || m.username || '?')[0]}
+                        {(m.name || '?')[0]}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{m.display_name || m.username}</div>
-                        {m.role_name && <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{m.role_name}</div>}
+                        <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{m.name}</div>
+                        {m.position && <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{m.position}</div>}
                       </div>
                     </div>
                   )

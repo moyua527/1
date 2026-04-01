@@ -244,9 +244,42 @@ export default function ProjectDetail() {
           </div>
           {project.description && <div style={{ marginBottom: 16 }}><div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>描述</div><div style={{ fontSize: 14, color: 'var(--text-body)', lineHeight: 1.6 }}>{project.description}</div></div>}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
-            <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>开始日期</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.start_date || '未设置'}</div></div>
-            <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>结束日期</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.end_date || '未设置'}</div></div>
-            <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>预算</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.budget > 0 ? `¥${Number(project.budget).toLocaleString()}` : '未设置'}</div></div>
+            <div>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>开始日期</div>
+              {canEdit ? (
+                <input type="date" value={project.start_date ? project.start_date.slice(0, 10) : ''} onChange={async e => {
+                  const r = await projectApi.update(id!, { start_date: e.target.value || null })
+                  if (r.success) { toast('已更新', 'success'); loadProject() } else toast(r.message || '更新失败', 'error')
+                }} style={{ fontSize: 14, fontWeight: 500, marginTop: 2, border: '1px solid var(--border-primary)', borderRadius: 6, padding: '4px 8px', background: 'var(--bg-primary)', color: 'var(--text-heading)', cursor: 'pointer', width: '100%' }} />
+              ) : (
+                <div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.start_date ? project.start_date.slice(0, 10) : '未设置'}</div>
+              )}
+            </div>
+            <div>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>结束日期</div>
+              {canEdit ? (
+                <input type="date" value={project.end_date ? project.end_date.slice(0, 10) : ''} onChange={async e => {
+                  const r = await projectApi.update(id!, { end_date: e.target.value || null })
+                  if (r.success) { toast('已更新', 'success'); loadProject() } else toast(r.message || '更新失败', 'error')
+                }} style={{ fontSize: 14, fontWeight: 500, marginTop: 2, border: '1px solid var(--border-primary)', borderRadius: 6, padding: '4px 8px', background: 'var(--bg-primary)', color: 'var(--text-heading)', cursor: 'pointer', width: '100%' }} />
+              ) : (
+                <div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.end_date ? project.end_date.slice(0, 10) : '未设置'}</div>
+              )}
+            </div>
+            <div>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>预算</div>
+              {canEdit ? (
+                <input type="number" placeholder="输入预算金额" defaultValue={project.budget > 0 ? project.budget : ''} onBlur={async e => {
+                  const val = e.target.value ? Number(e.target.value) : 0
+                  if (val === (project.budget || 0)) return
+                  const r = await projectApi.update(id!, { budget: val })
+                  if (r.success) { toast('已更新', 'success'); loadProject() } else toast(r.message || '更新失败', 'error')
+                }} onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
+                style={{ fontSize: 14, fontWeight: 500, marginTop: 2, border: '1px solid var(--border-primary)', borderRadius: 6, padding: '4px 8px', background: 'var(--bg-primary)', color: 'var(--text-heading)', width: '100%' }} />
+              ) : (
+                <div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.budget > 0 ? `¥${Number(project.budget).toLocaleString()}` : '未设置'}</div>
+              )}
+            </div>
             <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>我方企业</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{myEnterpriseName}</div></div>
             <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{isClientPerspective ? '对方企业' : '客户企业'}</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{hasExternalEnterprise ? (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>{isClientPerspective ? otherEnterpriseName : (project.client_id ? <span onClick={() => openClientModal(project.client_id)} style={{ color: 'var(--brand)', cursor: 'pointer' }}>{otherEnterpriseName}</span> : otherEnterpriseName)}{canEdit && !isClientPerspective && <button onClick={openSetClient} style={{ fontSize: 11, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>更换</button>}</span>) : (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>无{canEdit && <button onClick={openSetClient} style={{ fontSize: 11, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>设置</button>}</span>)}</div></div>
             <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>创建时间</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.created_at ? new Date(project.created_at).toLocaleDateString('zh-CN') : '-'}</div></div>

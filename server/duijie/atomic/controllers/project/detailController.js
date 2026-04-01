@@ -20,7 +20,7 @@ module.exports = async (req, res) => {
       );
       allowed = rows.length > 0;
 
-      // 企业管理人员可以访问本企业项目
+      // 企业管理人员（creator/admin）可以访问本企业关联的项目
       if (!allowed) {
         const activeEntId = await getUserActiveEnterpriseId(uid);
         if (activeEntId) {

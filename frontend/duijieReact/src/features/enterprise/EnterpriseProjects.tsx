@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FolderKanban, User, Calendar, TrendingUp } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { section } from './constants'
@@ -18,6 +19,7 @@ export default function EnterpriseProjects() {
   const [projects, setProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const { activeEnterpriseId } = useEnterpriseStore()
+  const navigate = useNavigate()
 
   useEffect(() => {
     fetchApi('/api/my-enterprise/projects').then(r => {
@@ -41,9 +43,9 @@ export default function EnterpriseProjects() {
             {projects.map((p: any) => {
               const st = statusMap[p.status] || statusMap.planning
               return (
-                <div key={p.id} style={{ border: '1px solid var(--border-primary)', borderRadius: 10, padding: 14, transition: 'all 0.15s' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = 'none' }}>
+                <div key={p.id} onClick={() => navigate(`/projects/${p.id}`)} style={{ border: '1px solid var(--border-primary)', borderRadius: 10, padding: 14, cursor: 'pointer', transition: 'all 0.15s' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'; (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--brand)' }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'; (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border-primary)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <FolderKanban size={16} color="var(--brand)" />

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
 import { emptyEntForm, emptyMemberForm, emptyDeptForm } from './constants'
@@ -22,7 +23,12 @@ export function useEnterprise() {
   const activeId = data?.activeId || null
 
   // --- UI state ---
-  const [tab, setTab] = useState<'members' | 'departments' | 'tree' | 'projects' | 'roles' | 'requests' | 'client-requests'>('members')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const validTabs = ['members', 'departments', 'tree', 'projects', 'roles', 'requests', 'client-requests'] as const
+  type TabType = typeof validTabs[number]
+  const urlTab = searchParams.get('tab') as TabType
+  const [tab, setTabState] = useState<TabType>(validTabs.includes(urlTab as any) ? urlTab! : 'members')
+  const setTab = (t: TabType) => { setTabState(t); setSearchParams({ tab: t }, { replace: true }) }
   const [editEntOpen, setEditEntOpen] = useState(false)
   const [entForm, setEntForm] = useState({ ...emptyEntForm })
   const [entSaving, setEntSaving] = useState(false)
