@@ -168,6 +168,16 @@ async function getProjectAccessStatus(userId, userRole, projectId) {
   if (!project) return 'missing';
   if (userRole === 'admin') return 'allowed';
 
+  // 企业范围隔离：用户只能访问当前活跃企业的项目
+  const activeEnterpriseId = await getUserActiveEnterpriseId(userId);
+  if (activeEnterpriseId) {
+    const clientId = toNullableNumber(project.client_id);
+    const internalClientId = toNullableNumber(project.internal_client_id);
+    if (clientId !== activeEnterpriseId && internalClientId !== activeEnterpriseId) {
+      return 'forbidden';
+    }
+  }
+
   const [[row]] = await db.query(
     `SELECT 1 as allowed
      FROM duijie_project_members
@@ -193,6 +203,20 @@ async function getClientAccessStatus(userId, userRole, clientId) {
   );
   if (!client) return 'missing';
   if (userRole === 'admin') return 'allowed';
+
+  // 企业范围隔离：客户必须与用户活跃企业有关联
+  const activeEnterpriseId = await getUserActiveEnterpriseId(userId);
+  if (activeEnterpriseId && Number(clientId) !== activeEnterpriseId) {
+    const [[related]] = await db.query(
+      `SELECT 1 FROM duijie_projects p
+       WHERE p.is_deleted = 0
+         AND (p.client_id = ? OR p.internal_client_id = ?)
+         AND (p.internal_client_id = ? OR p.client_id = ?)
+       LIMIT 1`,
+      [clientId, clientId, activeEnterpriseId, activeEnterpriseId]
+    );
+    if (!related) return 'forbidden';
+  }
 
   const [[row]] = await db.query(
     `SELECT c.id

@@ -1,13 +1,30 @@
 const db = require('../../config/db');
+const { getUserActiveEnterpriseId } = require('../services/accessScope');
 
 /**
  * 获取用户在指定项目中的有效权限（第二身份）
  * 优先级：项目级企业角色 > 平台角色
+ * 增加企业范围隔离：项目必须属于用户活跃企业
  * @param {number} userId
  * @param {number} projectId
  * @returns {object|null} 权限对象，null 表示不是项目成员
  */
 async function getProjectPerms(userId, projectId) {
+  // 企业范围隔离
+  const activeEnterpriseId = await getUserActiveEnterpriseId(userId);
+  if (activeEnterpriseId) {
+    const [[project]] = await db.query(
+      'SELECT client_id, internal_client_id FROM duijie_projects WHERE id = ? AND is_deleted = 0 LIMIT 1',
+      [projectId]
+    );
+    if (!project) return null;
+    const clientId = project.client_id ? Number(project.client_id) : null;
+    const internalClientId = project.internal_client_id ? Number(project.internal_client_id) : null;
+    if (clientId !== activeEnterpriseId && internalClientId !== activeEnterpriseId) {
+      return null;
+    }
+  }
+
   const [[member]] = await db.query(
     `SELECT pm.role, pm.enterprise_role_id, pm.source,
             er.can_manage_members, er.can_manage_roles,

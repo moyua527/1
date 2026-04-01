@@ -1,4 +1,5 @@
 ﻿const db = require('../../../config/db');
+const { withTransaction } = require('../../utils/transaction');
 const logger = require('../../../config/logger');
 const bcrypt = require('bcryptjs');
 const generateDisplayId = require('../../utils/generateDisplayId');
@@ -20,7 +21,6 @@ module.exports = async (req, res) => {
       [vcType, vcTarget, verify_code]
     );
     if (vcRows.length === 0) return res.status(400).json({ success: false, message: '验证码无效或已过期' });
-    await db.query('UPDATE verification_codes SET used = 1 WHERE id = ?', [vcRows[0].id]);
 
     // 检查是否已注册
     const checkField = phone ? 'phone' : 'email';
@@ -47,20 +47,20 @@ module.exports = async (req, res) => {
       );
       if (linkRows.length > 0) {
         inviterId = linkRows[0].created_by;
-        await db.query('UPDATE duijie_invite_links SET used_by = ?, used_at = NOW() WHERE id = ?', [null, linkRows[0].id]);
       }
     }
 
-    const [result] = await db.query(
-      'INSERT INTO voice_users (username, password, nickname, email, phone, role, display_id, personal_invite_code, invited_by, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [username, await bcrypt.hash(defaultPwd, 10), nickname, email || null, phone || null, assignedRole, displayId, personalCode, inviterId, isActive]
-    );
-    const newUserId = result.insertId;
-
-    // 邀请链接标记已使用
-    if (invite_token) {
-      await db.query('UPDATE duijie_invite_links SET used_by = ? WHERE token = ? AND used_by IS NULL', [newUserId, invite_token.trim()]);
-    }
+    const newUserId = await withTransaction(async (conn) => {
+      await conn.query('UPDATE verification_codes SET used = 1 WHERE id = ?', [vcRows[0].id]);
+      const [result] = await conn.query(
+        'INSERT INTO voice_users (username, password, nickname, email, phone, role, display_id, personal_invite_code, invited_by, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [username, await bcrypt.hash(defaultPwd, 10), nickname, email || null, phone || null, assignedRole, displayId, personalCode, inviterId, isActive]
+      );
+      if (invite_token) {
+        await conn.query('UPDATE duijie_invite_links SET used_by = ? WHERE token = ? AND used_by IS NULL', [result.insertId, invite_token.trim()]);
+      }
+      return result.insertId;
+    });
 
     // 注册成功自动登录
     const jwt = require('jsonwebtoken');

@@ -1,9 +1,9 @@
 const db = require('../../../config/db');
+const { optimisticUpdate } = require('../../utils/optimisticLock');
 
 module.exports = async (id, fields) => {
-  const keys = Object.keys(fields).filter(k => fields[k] !== undefined);
-  if (!keys.length) return;
-  const sets = keys.map(k => `${k} = ?`).join(', ');
-  const vals = keys.map(k => fields[k]);
-  await db.query(`UPDATE duijie_clients SET ${sets} WHERE id = ? AND is_deleted = 0`, [...vals, id]);
+  const version = fields.version;
+  const data = { ...fields };
+  delete data.version;
+  await optimisticUpdate(db, 'duijie_clients', id, data, version ?? null);
 };

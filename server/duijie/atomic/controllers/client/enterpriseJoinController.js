@@ -1,4 +1,5 @@
 const db = require('../../../config/db');
+const { withTransaction } = require('../../utils/transaction');
 const { auditLog } = require('../../utils/auditLog');
 const { notifyMany } = require('../../utils/notify');
 const { findActiveEnterprise, canManage, getEnterpriseManagerUserIds } = require('./enterpriseHelpers');
@@ -23,16 +24,18 @@ exports.joinEnterprise = async (req, res) => {
     }
     const [user] = await db.query('SELECT nickname, username, phone, email FROM voice_users WHERE id = ?', [req.userId]);
     const u = user[0] || {};
-    await db.query(
-      'INSERT INTO duijie_client_members (client_id, user_id, name, phone, email, created_by) VALUES (?, ?, ?, ?, ?, ?)',
-      [enterprise_id, req.userId, u.nickname || u.username || '', u.phone || null, u.email || null, req.userId]
-    );
-    await db.query('UPDATE voice_users SET active_enterprise_id = ? WHERE id = ? AND active_enterprise_id IS NULL', [enterprise_id, req.userId]);
-    if (pendingDup[0]) {
-      await db.query("UPDATE duijie_join_requests SET status = 'approved', handled_at = NOW(), handled_by = NULL WHERE id = ?", [pendingDup[0].id]);
-    } else {
-      await db.query("INSERT INTO duijie_join_requests (client_id, user_id, status, handled_at, handled_by) VALUES (?, ?, 'approved', NOW(), NULL)", [enterprise_id, req.userId]);
-    }
+    await withTransaction(async (conn) => {
+      await conn.query(
+        'INSERT INTO duijie_client_members (client_id, user_id, name, phone, email, created_by) VALUES (?, ?, ?, ?, ?, ?)',
+        [enterprise_id, req.userId, u.nickname || u.username || '', u.phone || null, u.email || null, req.userId]
+      );
+      await conn.query('UPDATE voice_users SET active_enterprise_id = ? WHERE id = ? AND active_enterprise_id IS NULL', [enterprise_id, req.userId]);
+      if (pendingDup[0]) {
+        await conn.query("UPDATE duijie_join_requests SET status = 'approved', handled_at = NOW(), handled_by = NULL WHERE id = ?", [pendingDup[0].id]);
+      } else {
+        await conn.query("INSERT INTO duijie_join_requests (client_id, user_id, status, handled_at, handled_by) VALUES (?, ?, 'approved', NOW(), NULL)", [enterprise_id, req.userId]);
+      }
+    });
     const managerIds = await getEnterpriseManagerUserIds(enterprise_id, req.userId);
     await notifyMany(managerIds, 'join_via_code', '企业新增成员', `${u.nickname || u.username || '新成员'} 通过推荐码加入了企业「${ent[0].name}」`, '/enterprise');
     await auditLog({
@@ -73,14 +76,16 @@ exports.approveJoinRequest = async (req, res) => {
     const [reqRows] = await db.query("SELECT * FROM duijie_join_requests WHERE id = ? AND client_id = ? AND status = 'pending'", [req.params.id, ent.id]);
     if (!reqRows[0]) return res.status(404).json({ success: false, message: '申请不存在或已处理' });
     const jr = reqRows[0];
-    await db.query("UPDATE duijie_join_requests SET status = 'approved', handled_at = NOW(), handled_by = ? WHERE id = ?", [req.userId, jr.id]);
     const [user] = await db.query('SELECT nickname, username, phone, email FROM voice_users WHERE id = ?', [jr.user_id]);
     const u = user[0] || {};
-    await db.query(
-      'INSERT INTO duijie_client_members (client_id, user_id, name, phone, email, created_by) VALUES (?, ?, ?, ?, ?, ?)',
-      [ent.id, jr.user_id, u.nickname || u.username || '', u.phone || null, u.email || null, req.userId]
-    );
-    await db.query('UPDATE voice_users SET active_enterprise_id = ? WHERE id = ? AND active_enterprise_id IS NULL', [ent.id, jr.user_id]);
+    await withTransaction(async (conn) => {
+      await conn.query("UPDATE duijie_join_requests SET status = 'approved', handled_at = NOW(), handled_by = ? WHERE id = ?", [req.userId, jr.id]);
+      await conn.query(
+        'INSERT INTO duijie_client_members (client_id, user_id, name, phone, email, created_by) VALUES (?, ?, ?, ?, ?, ?)',
+        [ent.id, jr.user_id, u.nickname || u.username || '', u.phone || null, u.email || null, req.userId]
+      );
+      await conn.query('UPDATE voice_users SET active_enterprise_id = ? WHERE id = ? AND active_enterprise_id IS NULL', [ent.id, jr.user_id]);
+    });
     res.json({ success: true, message: '已批准' });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });

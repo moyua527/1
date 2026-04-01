@@ -1,4 +1,5 @@
 const db = require('../../../config/db');
+const { withTransaction } = require('../../utils/transaction');
 const { findMyEnterprises, findActiveEnterprise, isCreator, getEnterprisePerms, canManage, generateJoinCode } = require('./enterpriseHelpers');
 const { createDefaultRoles } = require('./enterpriseRoleController');
 const { auditLog } = require('../../utils/auditLog');
@@ -89,9 +90,11 @@ exports.remove = async (req, res) => {
     const ent = await findActiveEnterprise(req.userId);
     if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
     if (!isCreator(ent)) return res.status(403).json({ success: false, message: '仅企业创建者可删除企业' });
-    await db.query('UPDATE duijie_clients SET is_deleted=1 WHERE id=?', [ent.id]);
-    await db.query('UPDATE duijie_client_members SET is_deleted=1 WHERE client_id=?', [ent.id]);
-    await db.query('UPDATE voice_users SET active_enterprise_id = NULL WHERE active_enterprise_id = ?', [ent.id]);
+    await withTransaction(async (conn) => {
+      await conn.query('UPDATE duijie_clients SET is_deleted=1 WHERE id=?', [ent.id]);
+      await conn.query('UPDATE duijie_client_members SET is_deleted=1 WHERE client_id=?', [ent.id]);
+      await conn.query('UPDATE voice_users SET active_enterprise_id = NULL WHERE active_enterprise_id = ?', [ent.id]);
+    });
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });
