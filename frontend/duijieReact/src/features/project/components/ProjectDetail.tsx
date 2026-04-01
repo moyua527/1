@@ -42,7 +42,6 @@ export default function ProjectDetail() {
   const { perms: projectPerms } = useProjectPerms(id)
   const canEdit = platformCanEdit || !!projectPerms?.can_edit_project
   const canDelete = platformCanDelete || !!projectPerms?.can_delete_project
-  const canManageTask = can(role, 'task:create') || !!projectPerms?.can_manage_task
   const [project, setProject] = useState<any>(null)
   const [projectLoading, setProjectLoading] = useState(true)
   const [projectError, setProjectError] = useState('')

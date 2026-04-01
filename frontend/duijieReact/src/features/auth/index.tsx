@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { fetchApi } from '../../bootstrap'
 import LoginForm from './LoginForm'
 import RegisterForm from './RegisterForm'
 import ForgotPasswordForm from './ForgotPasswordForm'

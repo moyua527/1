@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Settings, Save, Loader2 } from 'lucide-react'
+import { Save, Loader2 } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import Button from '../ui/Button'
-import Input from '../ui/Input'
 import { toast } from '../ui/Toast'
 
 const CONFIG_GROUPS = [

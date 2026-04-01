@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useState, useRef } from 'react'
 import { FileText, Upload, Loader2, Trash2 } from 'lucide-react'
 import { fetchApi, uploadFile, BACKEND_URL } from '../../bootstrap'
+import { useFiles, useInvalidate } from '../../hooks/useApi'
 import useLiveData from '../../hooks/useLiveData'
 import Button from '../ui/Button'
 import PageHeader from '../ui/PageHeader'
@@ -35,22 +35,16 @@ const categoryTabs = [
 ]
 
 export default function FileManager() {
-  const [files, setFiles] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: files = [], isLoading: loading } = useFiles()
+  const invalidate = useInvalidate()
   const [search, setSearch] = useState('')
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState<any>(null)
   const [category, setCategory] = useState('')
   const [selected, setSelected] = useState<Set<number>>(new Set())
-  const { isMobile } = useOutletContext<{ isMobile: boolean }>()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const load = () => {
-    setLoading(true)
-    fetchApi('/api/files/all').then(r => { if (r.success) setFiles(r.data || []) }).finally(() => setLoading(false))
-  }
-  useEffect(load, [])
-  useLiveData(['file'], load)
+  useLiveData(['file'], () => invalidate('files'))
 
   const filtered = files.filter(f => {
     if (category && getCategory(f.mime_type) !== category) return false
@@ -80,14 +74,14 @@ export default function FileManager() {
     }
     setUploading(false)
     toast(`${fileList.length}个文件上传完成`, 'success')
-    load()
+    invalidate('files')
     e.target.value = ''
   }
 
   const handleDelete = async (f: any) => {
     if (!(await confirm({ message: `确定删除文件"${f.original_name}"？`, danger: true }))) return
     const r = await fetchApi(`/api/files/${f.id}`, { method: 'DELETE' })
-    if (r.success) { toast('文件已删除', 'success'); load() }
+    if (r.success) { toast('文件已删除', 'success'); invalidate('files') }
     else toast(r.message || '删除失败', 'error')
   }
 
@@ -101,7 +95,7 @@ export default function FileManager() {
     }
     toast(`已删除 ${ok} 个文件`, 'success')
     setSelected(new Set())
-    load()
+    invalidate('files')
   }
 
   const handleDownload = (f: any) => {

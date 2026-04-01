@@ -1,0 +1,3 @@
+#!/bin/sh
+cd frontend/duijieReact || exit 1
+npx tsc --noEmit || exit 1

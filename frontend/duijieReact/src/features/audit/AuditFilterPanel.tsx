@@ -1,4 +1,3 @@
-import { useRef } from 'react'
 import { Search, X } from 'lucide-react'
 import { actionLabel, entityLabel, selectStyle, dateStyle } from './constants'
 import useThemeStore from '../../stores/useThemeStore'

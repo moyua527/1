@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BarChart3, TrendingUp, PieChart, Loader2, FileSignature, Users, Calendar, Activity, Target, DollarSign, Printer } from 'lucide-react'
+import { BarChart3, TrendingUp, PieChart, Loader2, FileSignature, Users, Activity, Target, DollarSign, Printer } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 
 const section: React.CSSProperties = { background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }

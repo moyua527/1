@@ -8,14 +8,6 @@ import Button from '../ui/Button'
 import Badge from '../ui/Badge'
 import { Plug2, Plus, Copy, RotateCcw, Trash2, Eye, EyeOff, Edit2, ExternalLink, ArrowLeft, Maximize2, Minimize2, RefreshCw, Monitor } from 'lucide-react'
 
-const PERMISSION_OPTIONS = [
-  { value: 'clients:read', label: '读取客户', desc: '查询客户列表和详情' },
-  { value: 'clients:write', label: '写入客户', desc: '创建/更新客户数据' },
-  { value: 'projects:read', label: '读取项目', desc: '查询项目列表和详情' },
-  { value: 'projects:write', label: '写入项目', desc: '创建/更新项目数据' },
-  { value: 'webhook', label: 'Webhook', desc: '接收合作方推送事件' },
-]
-
 interface Partner {
   id: number; partner_name: string; api_key: string; partner_url: string | null; partner_key?: string
   permissions: string[]; is_active: number; last_used_at: string | null; call_count: number
@@ -23,8 +15,6 @@ interface Partner {
 }
 
 const card: React.CSSProperties = { background: 'var(--bg-primary)', borderRadius: 14, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }
-const headerStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid var(--border-secondary)' }
-
 function AppViewer({ partner, onBack }: { partner: Partner; onBack: () => void }) {
   const [fullscreen, setFullscreen] = useState(false)
   const [loadError, setLoadError] = useState(false)
@@ -192,26 +182,11 @@ export default function PartnerManagement() {
     }
   }
 
-  const handleToggle = async (p: Partner) => {
-    const r = await fetchApi(`/api/partners/${p.id}`, {
-      method: 'PUT',
-      body: JSON.stringify({ ...p, permissions: p.permissions, is_active: p.is_active ? 0 : 1 }),
-    })
-    if (r.success) { toast(p.is_active ? '已禁用' : '已启用', 'success'); load() }
-  }
-
   const handleDelete = async (p: Partner) => {
     const ok = await confirm({ message: `确定删除合作方 [${p.partner_name}]？`, danger: true })
     if (!ok) return
     const r = await fetchApi(`/api/partners/${p.id}`, { method: 'DELETE' })
     if (r.success) { toast('已删除', 'success'); load() }
-  }
-
-  const togglePerm = (perm: string) => {
-    setForm(f => ({
-      ...f,
-      permissions: f.permissions.includes(perm) ? f.permissions.filter(p => p !== perm) : [...f.permissions, perm],
-    }))
   }
 
   const toggleKeyVisible = (id: number) => {

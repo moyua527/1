@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Search, Plus, ChevronDown, ChevronUp, Check, X as XIcon } from 'lucide-react'
+import { Search, Plus, Check, X as XIcon } from 'lucide-react'
 import Modal from '../ui/Modal'
 import Input from '../ui/Input'
 import Button from '../ui/Button'

@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchApi } from '../bootstrap'
 import type { ApiResponse, Client, Project, Task, Ticket, Opportunity } from '../types'
 
@@ -106,13 +106,13 @@ export function useDashboardChart(days: number) {
   })
 }
 
-export function useNotifications() {
-  return useQuery({
-    queryKey: ['notifications'],
+export function useNotifications(category = 'all') {
+  return useQuery<{ notifications: any[]; unreadCount: number; unreadByCategory: Record<string, number> }>({
+    queryKey: ['notifications', category],
     queryFn: async () => {
-      const r: ApiResponse = await fetchApi('/api/notifications')
+      const r: ApiResponse = await fetchApi(`/api/notifications?limit=100&category=${category}`)
       if (!r.success) throw new Error(r.message)
-      return r.data || []
+      return r.data
     },
     refetchInterval: 120_000,
   })
@@ -152,6 +152,45 @@ export function useFiles() {
       const r: ApiResponse = await fetchApi('/api/files/all')
       if (!r.success) throw new Error(r.message)
       return r.data || []
+    },
+  })
+}
+
+export function useAuditLogs(page: number, filters?: { action?: string; entity?: string; keyword?: string; startDate?: string; endDate?: string }) {
+  const params = new URLSearchParams()
+  params.set('page', String(page))
+  params.set('limit', '200')
+  if (filters?.action) params.set('action', filters.action)
+  if (filters?.entity) params.set('entity_type', filters.entity)
+  if (filters?.keyword) params.set('keyword', filters.keyword)
+  if (filters?.startDate) params.set('start_date', filters.startDate)
+  if (filters?.endDate) params.set('end_date', filters.endDate)
+  return useQuery<{ logs: any[]; total: number }>({
+    queryKey: ['audit-logs', page, filters],
+    queryFn: async () => {
+      const r: ApiResponse = await fetchApi(`/api/audit-logs?${params}`)
+      if (!r.success) throw new Error(r.message)
+      return r.data
+    },
+  })
+}
+
+export function useCalendarEvents(year: number, month: number) {
+  const m = month + 1
+  const start = `${year}-${String(m).padStart(2, '0')}-01`
+  const lastDay = new Date(year, m, 0).getDate()
+  const end = `${year}-${String(m).padStart(2, '0')}-${lastDay}`
+  return useQuery<{ tasks: any[]; followUps: any[] }>({
+    queryKey: ['calendar-events', year, month],
+    queryFn: async () => {
+      const [tasksR, followR] = await Promise.all([
+        fetchApi(`/api/tasks?start_date=${start}&end_date=${end}`).catch(() => ({ success: false, data: [] })),
+        fetchApi('/api/follow-ups').catch(() => ({ success: false, data: [] })),
+      ])
+      return {
+        tasks: tasksR.success && Array.isArray(tasksR.data) ? tasksR.data : [],
+        followUps: followR.success && Array.isArray(followR.data) ? followR.data : [],
+      }
     },
   })
 }

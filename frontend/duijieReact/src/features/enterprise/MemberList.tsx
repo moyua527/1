@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Phone, Mail, Building, Edit3, X, Calendar, GitBranch, UserPlus, Shield, Crown, Hash, User, Briefcase, FileText, KeyRound } from 'lucide-react'
+import { Phone, Mail, Building, Edit3, X, Calendar, GitBranch, UserPlus, Crown, Hash, User, FileText, KeyRound } from 'lucide-react'
 import Avatar from '../ui/Avatar'
 import Button from '../ui/Button'
 import Modal from '../ui/Modal'

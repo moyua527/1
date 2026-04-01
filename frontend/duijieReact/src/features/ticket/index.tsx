@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { Ticket, Plus, Clock, Loader2, CheckCircle, XCircle, Star } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
+import { useTickets, useUsers, useInvalidate } from '../../hooks/useApi'
 import { can } from '../../stores/permissions'
 import useLiveData from '../../hooks/useLiveData'
 import PageHeader from '../ui/PageHeader'
@@ -29,24 +30,16 @@ export default function TicketPage() {
   const { user } = useOutletContext<{ user: any; isMobile: boolean }>()
   const isStaff = can(user?.role || '', 'ticket:staff')
 
-  const [tickets, setTickets] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: tickets = [], isLoading: loading } = useTickets()
+  const { data: staffMembers = [] } = useUsers()
+  const invalidate = useInvalidate()
   const [selected, setSelected] = useState<any>(null)
   const [detailLoading, setDetailLoading] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
-  const [staffMembers, setStaffMembers] = useState<any[]>([])
   const [filter, setFilter] = useState('all')
 
-  const load = () => {
-    setLoading(true)
-    fetchApi('/api/tickets').then(r => { if (r.success) setTickets(r.data || []) }).finally(() => setLoading(false))
-  }
-  useEffect(load, [])
+  const load = () => invalidate('tickets')
   useLiveData(['ticket'], load)
-
-  useEffect(() => {
-    if (isStaff) fetchApi('/api/users').then(r => { if (r.success) setStaffMembers(r.data || []) }).catch(() => {})
-  }, [isStaff])
 
   const openDetail = (t: any) => {
     setDetailLoading(true)

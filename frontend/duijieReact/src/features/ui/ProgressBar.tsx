@@ -1,5 +1,3 @@
-import React from 'react'
-
 interface Props { value: number; color?: string; height?: number }
 
 export default function ProgressBar({ value, color = 'var(--brand)', height = 6 }: Props) {

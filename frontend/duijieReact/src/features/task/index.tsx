@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { fetchApi, BACKEND_URL } from '../../bootstrap'
+import { BACKEND_URL } from '../../bootstrap'
 import { taskApi } from './services/api'
+import { useTasks, useProjects, useInvalidate } from '../../hooks/useApi'
+import { useQueryClient } from '@tanstack/react-query'
 import useLiveData from '../../hooks/useLiveData'
 import Badge from '../ui/Badge'
-import Button from '../ui/Button'
 import { toast } from '../ui/Toast'
-import { Plus, GripVertical, Paperclip, Download, Search, Filter } from 'lucide-react'
+import { Plus, GripVertical, Paperclip, Download, Search } from 'lucide-react'
 import TaskDetailModal from './components/TaskDetailModal'
 import TaskCreateModal from './components/TaskCreateModal'
 import { can } from '../../stores/permissions'
@@ -33,8 +34,6 @@ const taskCard: React.CSSProperties = { background: 'var(--bg-primary)', borderR
 export default function TaskBoard() {
   const { user } = useOutletContext<{ user: any }>()
   const canAddTask = can(user?.role || '', 'task:create')
-  const [allTasks, setAllTasks] = useState<Task[]>([])
-  const [projects, setProjects] = useState<any[]>([])
   const [filterProject, setFilterProject] = useState<string>('')
   const [searchText, setSearchText] = useState('')
   const [filterPriority, setFilterPriority] = useState<string>('')
@@ -42,24 +41,20 @@ export default function TaskBoard() {
   const [selectedTask, setSelectedTask] = useState<any>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
 
-  useEffect(() => {
-    fetchApi('/api/projects?limit=100').then(r => {
-      if (r.success && r.data?.rows?.length) setProjects(r.data.rows)
-    })
-  }, [])
+  const { data: allTasks = [], isLoading: _tasksLoading } = useTasks(filterProject || undefined)
+  const { data: projectsData = [] } = useProjects()
+  const projects = projectsData
+  const invalidate = useInvalidate()
+  const reload = () => invalidate('tasks')
 
-  const reload = () => {
-    const url = filterProject ? `/api/tasks?project_id=${filterProject}` : '/api/tasks'
-    fetchApi(url).then(r => { if (r.success) setAllTasks(r.data || []) })
-  }
+  const qc = useQueryClient()
 
-  useEffect(() => { reload() }, [filterProject])
-  useLiveData(['task'], reload)
+  useLiveData(['task'], () => invalidate('tasks'))
 
   const filtered = allTasks.filter(t => {
     if (searchText) {
       const s = searchText.toLowerCase()
-      if (!(t.title || '').toLowerCase().includes(s) && !(t.assignee_name || '').toLowerCase().includes(s) && !(t.project_name || '').toLowerCase().includes(s)) return false
+      if (!(t.title || '').toLowerCase().includes(s) && !(t.assigned_name || '').toLowerCase().includes(s) && !(t.project_name || '').toLowerCase().includes(s)) return false
     }
     if (filterPriority && t.priority !== filterPriority) return false
     return true
@@ -67,10 +62,11 @@ export default function TaskBoard() {
 
   const handleMove = async (taskId: number, newStatus: string) => {
     setDragOverCol(null)
-    const prev = allTasks
-    setAllTasks(tasks => tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t))
+    const qk = ['tasks', filterProject || undefined]
+    const prev = qc.getQueryData<Task[]>(qk)
+    qc.setQueryData<Task[]>(qk, old => old?.map(t => t.id === taskId ? { ...t, status: newStatus } : t))
     const r = await taskApi.move(String(taskId), newStatus)
-    if (!r.success) { setAllTasks(prev); toast(r.message || '移动失败', 'error') }
+    if (!r.success) { qc.setQueryData(qk, prev); toast(r.message || '移动失败', 'error') }
   }
 
   return (
@@ -142,7 +138,7 @@ export default function TaskBoard() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                           <Badge color={pr.color}>{pr.label}</Badge>
                           {task.due_date && <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>截止 {task.due_date.slice(0, 10)}</span>}
-                          {task.assignee_name && <span style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 2 }}><span style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--brand)', display: 'inline-block' }} />{task.assignee_name}</span>}
+                          {task.assigned_name && <span style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 2 }}><span style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--brand)', display: 'inline-block' }} />{task.assigned_name}</span>}
                           {(task as any).attachments?.length > 0 && <span style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 2 }}><Paperclip size={10} />{(task as any).attachments.length}</span>}
                         </div>
                         {(task as any).attachments?.length > 0 && (

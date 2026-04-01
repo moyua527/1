@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { User, Shield, Bell, Palette, Globe, Save, Copy, ArrowLeft, Check, Loader2 } from 'lucide-react'
+import { useState } from 'react'
+import { User, Bell, Palette, Globe, Save, Copy, ArrowLeft, Check, Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'

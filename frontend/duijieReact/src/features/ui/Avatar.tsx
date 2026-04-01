@@ -1,5 +1,3 @@
-import React from 'react'
-
 interface Props { name: string; size?: number; src?: string }
 
 const colors = ['var(--brand)', 'var(--color-purple)', '#059669', 'var(--color-warning)', 'var(--color-danger)', '#0891b2']

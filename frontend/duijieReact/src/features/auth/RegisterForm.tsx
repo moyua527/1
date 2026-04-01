@@ -24,7 +24,7 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
   const [agreed, setAgreed] = useState(false)
   const [showTerms, setShowTerms] = useState(false)
   const [inviteToken, setInviteToken] = useState(inviteTokenProp)
-  const [needInvite, setNeedInvite] = useState(false)
+  const [, setNeedInvite] = useState(false)
 
   useEffect(() => {
     authApi.registerConfig().then(r => { if (r.success) setNeedInvite(r.data?.needInviteCode || false) })

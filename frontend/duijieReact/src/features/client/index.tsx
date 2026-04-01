@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
-import { Plus, Users, Loader2, Download, Upload, Building2, UserCircle } from 'lucide-react'
+import { Plus, Users, Loader2, Download, Upload } from 'lucide-react'
 import { clientApi } from './services/api'
+import { useClients, useInvalidate } from '../../hooks/useApi'
 import useLiveData from '../../hooks/useLiveData'
 import Button from '../ui/Button'
 import Avatar from '../ui/Avatar'
-import { toast } from '../ui/Toast'
 import PageHeader from '../ui/PageHeader'
 import FilterBar from '../ui/FilterBar'
 import EmptyState from '../ui/EmptyState'
@@ -24,12 +24,11 @@ const stageMap: Record<string, { label: string; color: string; bg: string }> = {
   active: { label: '合作中', color: 'var(--color-success)', bg: '#f0fdf4' },
   lost: { label: '流失', color: 'var(--color-danger)', bg: '#fef2f2' },
 }
-const stageKeys = ['all', 'potential', 'intent', 'signed', 'active', 'lost']
-const stageTabLabel: Record<string, string> = { all: '全部', potential: '潜在', intent: '意向', signed: '签约', active: '合作中', lost: '流失' }
+
 
 export default function ClientList() {
-  const [clients, setClients] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: clients = [], isLoading: loading } = useClients()
+  const invalidate = useInvalidate()
   const [showCreate, setShowCreate] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
   const stageFilter = searchParams.get('stage') || ''
@@ -40,12 +39,10 @@ export default function ClientList() {
   const nav = useNavigate()
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
 
-  const load = () => {
-    setLoading(true)
-    clientApi.list().then(r => { if (r.success) setClients(r.data || []) }).finally(() => setLoading(false))
+  useEffect(() => {
     clientApi.allScores().then(r => { if (r.success) setScores(r.data || {}) })
-  }
-  useEffect(load, [])
+  }, [])
+  const load = () => invalidate('clients')
   useLiveData(['client'], load)
 
   const filtered = clients.filter(c => {

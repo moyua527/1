@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Loader2, Circle } from 'lucide-react'
-import { fetchApi } from '../../bootstrap'
+import { useCalendarEvents } from '../../hooks/useApi'
 
 const WEEKDAYS = ['一', '二', '三', '四', '五', '六', '日']
 
@@ -16,52 +16,38 @@ interface CalEvent {
 
 export default function CalendarPage() {
   const [current, setCurrent] = useState(() => { const d = new Date(); return { year: d.getFullYear(), month: d.getMonth() } })
-  const [events, setEvents] = useState<CalEvent[]>([])
-  const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
 
+  const { data: rawData, isLoading: loading } = useCalendarEvents(current.year, current.month)
+
   const today = useMemo(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }, [])
 
-  const loadEvents = () => {
-    setLoading(true)
-    const y = current.year, m = current.month + 1
-    const start = `${y}-${String(m).padStart(2, '0')}-01`
-    const lastDay = new Date(y, m, 0).getDate()
-    const end = `${y}-${String(m).padStart(2, '0')}-${lastDay}`
+  const m = current.month + 1
+  const start = `${current.year}-${String(m).padStart(2, '0')}-01`
+  const lastDay = new Date(current.year, m, 0).getDate()
+  const end = `${current.year}-${String(m).padStart(2, '0')}-${lastDay}`
 
-    Promise.all([
-      fetchApi(`/api/tasks?start_date=${start}&end_date=${end}`).catch(() => ({ success: false })),
-      fetchApi('/api/follow-ups').catch(() => ({ success: false })),
-    ]).then(([tasksR, followR]) => {
-      const evts: CalEvent[] = []
-
-      // Tasks with due_date
-      if (tasksR.success && Array.isArray(tasksR.data)) {
-        for (const t of tasksR.data) {
-          if (t.due_date) {
-            const d = t.due_date.slice(0, 10)
-            evts.push({ id: `task-${t.id}`, title: t.title, date: d, type: 'task', color: '#2563eb', meta: t.status === 'done' ? '已完成' : t.status === 'in_progress' ? '进行中' : '待处理' })
-          }
+  const events = useMemo(() => {
+    const evts: CalEvent[] = []
+    if (rawData?.tasks) {
+      for (const t of rawData.tasks) {
+        if (t.due_date) {
+          const d = t.due_date.slice(0, 10)
+          evts.push({ id: `task-${t.id}`, title: t.title, date: d, type: 'task', color: '#2563eb', meta: t.status === 'done' ? '已完成' : t.status === 'in_progress' ? '进行中' : '待处理' })
         }
       }
-
-      // Follow-ups with next_follow_date or created_at
-      if (followR.success && Array.isArray(followR.data)) {
-        for (const f of followR.data) {
-          const d = (f.next_follow_date || f.created_at || '').slice(0, 10)
-          if (d && d >= start && d <= end) {
-            evts.push({ id: `followup-${f.id}`, title: f.content ? f.content.slice(0, 30) : '跟进提醒', date: d, type: 'followup', color: '#f59e0b', meta: f.client_name })
-          }
+    }
+    if (rawData?.followUps) {
+      for (const f of rawData.followUps) {
+        const d = (f.next_follow_date || f.created_at || '').slice(0, 10)
+        if (d && d >= start && d <= end) {
+          evts.push({ id: `followup-${f.id}`, title: f.content ? f.content.slice(0, 30) : '跟进提醒', date: d, type: 'followup', color: '#f59e0b', meta: f.client_name })
         }
       }
-
-      setEvents(evts)
-      setLoading(false)
-    })
-  }
-
-  useEffect(() => { loadEvents() }, [current.year, current.month])
+    }
+    return evts
+  }, [rawData, start, end])
 
   const prevMonth = () => setCurrent(p => p.month === 0 ? { year: p.year - 1, month: 11 } : { ...p, month: p.month - 1 })
   const nextMonth = () => setCurrent(p => p.month === 11 ? { year: p.year + 1, month: 0 } : { ...p, month: p.month + 1 })

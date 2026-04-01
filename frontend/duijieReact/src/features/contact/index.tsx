@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { UserCheck, Phone, Mail, MessageCircle, Building2, Plus, Edit3, Trash2, Star, Loader2 } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
+import { useContacts, useClients, useInvalidate } from '../../hooks/useApi'
 import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
 import Button from '../ui/Button'
@@ -11,30 +12,15 @@ import FilterBar from '../ui/FilterBar'
 import EmptyState from '../ui/EmptyState'
 
 export default function ContactList() {
-  const [contacts, setContacts] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: contacts = [], isLoading: loading } = useContacts()
+  const { data: clients = [] } = useClients()
+  const invalidate = useInvalidate()
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<any>(null)
   const [form, setForm] = useState({ name: '', position: '', phone: '', email: '', wechat: '', notes: '', client_id: '', is_primary: false })
   const [saving, setSaving] = useState(false)
-  const [clients, setClients] = useState<any[]>([])
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
-
-  const load = () => {
-    setLoading(true)
-    fetchApi('/api/contacts').then(r => {
-      if (r.success) setContacts(r.data || [])
-    }).finally(() => setLoading(false))
-  }
-
-  const loadClients = () => {
-    fetchApi('/api/clients').then(r => {
-      if (r.success) setClients(r.data || [])
-    })
-  }
-
-  useEffect(() => { load(); loadClients() }, [])
 
   const filtered = contacts.filter(c => {
     if (!search) return true
@@ -70,7 +56,7 @@ export default function ContactList() {
     if (r.success) {
       toast(editing ? '联系人已更新' : '联系人已创建', 'success')
       setModalOpen(false)
-      load()
+      invalidate('contacts')
     } else {
       toast(r.message || '操作失败', 'error')
     }
@@ -79,7 +65,7 @@ export default function ContactList() {
   const handleDelete = async (c: any) => {
     if (!(await confirm({ message: `确定删除联系人"${c.name}"？`, danger: true }))) return
     const r = await fetchApi(`/api/contacts/${c.id}`, { method: 'DELETE' })
-    if (r.success) { toast('联系人已删除', 'success'); load() }
+    if (r.success) { toast('联系人已删除', 'success'); invalidate('contacts') }
     else toast(r.message || '删除失败', 'error')
   }
 

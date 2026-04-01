@@ -1,15 +1,14 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Shield, Filter, Download, List, Clock } from 'lucide-react'
+import { Filter, Download, List, Clock } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
+import { useAuditLogs } from '../../hooks/useApi'
 import { actionLabel, entityLabel } from './constants'
 import AuditFilterPanel from './AuditFilterPanel'
 import AuditTable from './AuditTable'
 import AuditTimeline from './AuditTimeline'
 
 export default function AuditLog() {
-  const [logs, setLogs] = useState<any[]>([])
-  const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [filterAction, setFilterAction] = useState('')
   const [filterEntity, setFilterEntity] = useState('')
@@ -20,25 +19,20 @@ export default function AuditLog() {
   const [showFilters, setShowFilters] = useState(false)
   const [viewMode, setViewMode] = useState<'table' | 'timeline'>('table')
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
-  const limit = 200
   const searchTimer = useRef<any>(null)
 
-  const buildUrl = (base: string) => {
-    let url = base
-    if (filterAction) url += `&action=${filterAction}`
-    if (filterEntity) url += `&entity_type=${filterEntity}`
-    if (keyword) url += `&keyword=${encodeURIComponent(keyword)}`
-    if (startDate) url += `&start_date=${startDate}`
-    if (endDate) url += `&end_date=${endDate}`
-    return url
-  }
+  const filters = useMemo(() => ({
+    action: filterAction || undefined,
+    entity: filterEntity || undefined,
+    keyword: keyword || undefined,
+    startDate: startDate || undefined,
+    endDate: endDate || undefined,
+  }), [filterAction, filterEntity, keyword, startDate, endDate])
 
-  const load = () => {
-    fetchApi(buildUrl(`/api/audit-logs?page=${page}&limit=${limit}`)).then(r => {
-      if (r.success) { setLogs(r.data.logs || []); setTotal(r.data.total || 0) }
-    })
-  }
-  useEffect(load, [page, filterAction, filterEntity, keyword, startDate, endDate])
+  const { data } = useAuditLogs(page, filters)
+  const logs = data?.logs || []
+  const total = data?.total || 0
+  const limit = 200
 
   const totalPages = Math.ceil(total / limit) || 1
   const hasFilters = filterAction || filterEntity || keyword || startDate || endDate
@@ -51,7 +45,14 @@ export default function AuditLog() {
   }
 
   const exportCSV = () => {
-    fetchApi(buildUrl(`/api/audit-logs?page=1&limit=10000`)).then(r => {
+    const p = new URLSearchParams()
+    p.set('page', '1'); p.set('limit', '10000')
+    if (filterAction) p.set('action', filterAction)
+    if (filterEntity) p.set('entity_type', filterEntity)
+    if (keyword) p.set('keyword', keyword)
+    if (startDate) p.set('start_date', startDate)
+    if (endDate) p.set('end_date', endDate)
+    fetchApi(`/api/audit-logs?${p}`).then(r => {
       if (!r.success) return
       const rows = r.data.logs || []
       const header = '\uFEFF时间,用户,操作,对象类型,对象ID,详情,IP\n'

@@ -4,7 +4,6 @@ import Input from '../ui/Input'
 import Button from '../ui/Button'
 import { fetchApi } from '../../bootstrap'
 import { toast } from '../ui/Toast'
-import { PERMISSION_OPTIONS } from './constants'
 import type { Partner } from './constants'
 import useThemeStore from '../../stores/useThemeStore'
 
@@ -38,13 +37,6 @@ export default function PartnerFormModal({ open, onClose, editing, onSaved }: Pr
 
   // Reset form when editing changes
   useState(() => { resetForm(editing) })
-
-  const togglePerm = (perm: string) => {
-    setForm(f => ({
-      ...f,
-      permissions: f.permissions.includes(perm) ? f.permissions.filter(p => p !== perm) : [...f.permissions, perm],
-    }))
-  }
 
   const handleSave = async () => {
     if (!form.partner_name.trim()) { toast('请输入合作方名称', 'error'); return }

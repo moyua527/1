@@ -6,7 +6,7 @@ import Button from '../../ui/Button'
 import Input from '../../ui/Input'
 import Modal from '../../ui/Modal'
 import { toast } from '../../ui/Toast'
-import { channels, positionLevels, departmentOptions, jobFunctions, stageMap, fieldLabel } from './constants'
+import { channels, positionLevels, departmentOptions, jobFunctions, stageMap } from './constants'
 
 interface Props { open: boolean; onClose: () => void; client: any; clientId: string; onSaved: () => void }
 

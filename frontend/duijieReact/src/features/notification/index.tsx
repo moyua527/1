@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Bell, CheckCheck, Loader2, ExternalLink, Trash2, Filter } from 'lucide-react'
+import { Bell, CheckCheck, Loader2, ExternalLink, Filter } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
+import { useNotifications, useInvalidate } from '../../hooks/useApi'
 import { useNavigate } from 'react-router-dom'
 
 const typeIcon: Record<string, string> = {
@@ -20,35 +21,22 @@ const CATEGORIES = [
 ]
 
 export default function NotificationCenter() {
-  const [notifications, setNotifications] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [unread, setUnread] = useState(0)
-  const [unreadByCat, setUnreadByCat] = useState<Record<string, number>>({})
   const [activeTab, setActiveTab] = useState('all')
+  const { data, isLoading: loading } = useNotifications(activeTab)
+  const invalidate = useInvalidate()
+  const notifications = data?.notifications || []
+  const unread = data?.unreadCount || 0
+  const unreadByCat = data?.unreadByCategory || {}
   const [selected, setSelected] = useState<any>(null)
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
   const nav = useNavigate()
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
 
-  const load = useCallback((cat?: string) => {
-    setLoading(true)
-    const c = cat || activeTab
-    fetchApi(`/api/notifications?limit=100&category=${c}`).then(r => {
-      if (r.success) {
-        setNotifications(r.data.notifications || [])
-        setUnread(r.data.unreadCount || 0)
-        if (r.data.unreadByCategory) setUnreadByCat(r.data.unreadByCategory)
-      }
-    }).finally(() => setLoading(false))
-  }, [activeTab])
-
-  useEffect(() => { load() }, [])
-
-  const switchTab = (cat: string) => { setActiveTab(cat); setSelected(null); load(cat) }
+  const switchTab = (cat: string) => { setActiveTab(cat); setSelected(null) }
 
   const markRead = async (id: number | 'all') => {
     await fetchApi(`/api/notifications/${id}/read`, { method: 'PATCH' })
-    load()
+    invalidate('notifications')
   }
 
   const handleClick = (n: any) => {

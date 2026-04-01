@@ -18,6 +18,7 @@ export interface Client {
   created_by: number | null
   created_at: string
   updated_at: string
+  tags?: { id: number; name: string }[]
 }
 
 export interface Project {
