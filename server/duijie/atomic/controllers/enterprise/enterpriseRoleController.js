@@ -1,5 +1,7 @@
 const db = require('../../../config/db');
 const { findActiveEnterprise, isCreator } = require('./enterpriseHelpers');
+const { notify } = require('../../utils/notify');
+const { broadcast } = require('../../utils/broadcast');
 
 const PERM_FIELDS = [
   'can_manage_members', 'can_manage_roles',
@@ -109,6 +111,18 @@ exports.assignRole = async (req, res) => {
     const [member] = await db.query('SELECT * FROM duijie_client_members WHERE id = ? AND client_id = ? AND is_deleted = 0', [req.params.id, ent.id]);
     if (!member[0]) return res.status(404).json({ success: false, message: '成员不存在' });
     await db.query('UPDATE duijie_client_members SET enterprise_role_id = ? WHERE id = ?', [enterprise_role_id || null, req.params.id]);
+
+    if (member[0].user_id) {
+      let roleName = '无';
+      if (enterprise_role_id) {
+        const [r] = await db.query('SELECT name FROM enterprise_roles WHERE id = ?', [enterprise_role_id]);
+        roleName = r[0]?.name || '未知角色';
+      }
+      await notify(member[0].user_id, 'enterprise', '企业角色分配',
+        `您在企业「${ent.name}」中的企业角色已变更为「${roleName}」`, '/enterprise');
+      broadcast('enterprise', 'member_role_updated', { enterprise_id: ent.id, member_id: req.params.id });
+    }
+
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });

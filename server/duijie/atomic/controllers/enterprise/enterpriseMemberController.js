@@ -1,5 +1,7 @@
 const db = require('../../../config/db');
 const { findActiveEnterprise, isCreator } = require('./enterpriseHelpers');
+const { notify } = require('../../utils/notify');
+const { broadcast } = require('../../utils/broadcast');
 
 exports.addMember = async (req, res) => {
   try {
@@ -64,6 +66,14 @@ exports.updateMemberRole = async (req, res) => {
     if (!target[0]) return res.status(404).json({ success: false, message: '成员不存在' });
     if (target[0].role === 'creator') return res.status(400).json({ success: false, message: '无法修改创建者角色' });
     await db.query('UPDATE duijie_client_members SET role = ? WHERE id = ?', [role, req.params.id]);
+
+    if (target[0].user_id) {
+      const roleLabel = role === 'admin' ? '管理员' : '普通成员';
+      await notify(target[0].user_id, 'enterprise', '企业角色变更',
+        `您在企业「${ent.name}」中的角色已被修改为「${roleLabel}」`, '/enterprise');
+      broadcast('enterprise', 'member_role_updated', { enterprise_id: ent.id, member_id: req.params.id });
+    }
+
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });

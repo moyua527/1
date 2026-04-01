@@ -14,7 +14,7 @@ router.post('/clients', auth, roleGuard('admin', 'member', { soft: true }), ente
 router.get('/clients', auth, staff, require('../controllers/client/listController'));
 router.get('/clients/:id', auth, staff, require('../controllers/client/detailController'));
 router.put('/clients/:id', auth, staff, V.updateClient, validate, require('../controllers/client/updateController'));
-router.delete('/clients/:id', auth, roleGuard('admin'), require('../controllers/client/deleteController'));
+router.delete('/clients/:id', auth, staff, require('../controllers/client/deleteController'));
 router.post('/clients/import', auth, roleGuard('admin'), require('../controllers/client/importController'));
 router.get('/clients/:id/logs', auth, staff, require('../controllers/client/logsController'));
 router.get('/clients/:id/score', auth, staff, require('../controllers/client/scoreController'));

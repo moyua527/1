@@ -62,7 +62,7 @@ async function getProjectPerms(userId, projectId) {
     can_manage_roles: isOwner,
     can_create_project: isOwner,
     can_edit_project: isOwner,
-    can_delete_project: isOwner,
+    can_delete_project: false, // 项目删除需要企业级权限，项目负责人不能直接删除
     can_manage_client: isOwner,
     can_view_report: isOwner,
     can_manage_task: isOwner || member.role === 'editor',

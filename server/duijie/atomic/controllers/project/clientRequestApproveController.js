@@ -1,6 +1,7 @@
 const db = require('../../../config/db');
 const logger = require('../../../config/logger');
 const { getUserActiveEnterpriseId, normalizeProjectClientId } = require('../../services/accessScope');
+const { notify } = require('../../utils/notify');
 
 // POST /api/projects/client-requests/:id/approve
 module.exports = async (req, res) => {
@@ -43,6 +44,11 @@ module.exports = async (req, res) => {
       'UPDATE duijie_projects SET client_id = ? WHERE id = ?',
       [normalizedClientId || request.to_enterprise_id, request.project_id]
     );
+
+    // 通知发起人请求已通过
+    const [[toEnt]] = await db.query('SELECT name FROM duijie_clients WHERE id = ?', [request.to_enterprise_id]);
+    const [[proj]] = await db.query('SELECT name FROM duijie_projects WHERE id = ?', [request.project_id]);
+    await notify(request.requested_by, 'client_request_approved', '项目关联请求已通过', `企业「${toEnt?.name || ''}」已同意关联到项目「${proj?.name || ''}」`, '/projects');
 
     logger.info(`client-request-approve: request=${requestId} project=${request.project_id} by=${userId}`);
     res.json({ success: true, message: '已同意关联请求' });

@@ -41,7 +41,7 @@ export default function ClientRequests({ canAdmin, onRefresh }: Props) {
   }
   const handleProjectReject = async (id: number) => {
     const r = await projectApi.rejectClientRequest(id)
-    if (r.success) { toast('已拒绝', 'success'); load() }
+    if (r.success) { toast('已拒绝', 'success'); load(); onRefresh?.() }
     else toast(r.message || '操作失败', 'error')
   }
   const handleClientApprove = async (id: number) => {
@@ -51,7 +51,7 @@ export default function ClientRequests({ canAdmin, onRefresh }: Props) {
   }
   const handleClientReject = async (id: number) => {
     const r = await clientApi.rejectRequest(id)
-    if (r.success) { toast('已拒绝', 'success'); load() }
+    if (r.success) { toast('已拒绝', 'success'); load(); onRefresh?.() }
     else toast(r.message || '操作失败', 'error')
   }
 

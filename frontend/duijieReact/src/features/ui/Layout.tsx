@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { Menu, X, LogOut, User, ChevronRight, Palette, Bell, Settings } from 'lucide-react'
+import { Menu, X, LogOut, User, ChevronRight, ChevronLeft, Palette, Bell, Settings, Search } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
 import { can } from '../../stores/permissions'
@@ -13,11 +13,15 @@ import ProfileModal from './ProfileModal'
 import ThemeToggle from './ThemeToggle'
 import SettingsPanel from './SettingsPanel'
 import EnterpriseSwitcher from './EnterpriseSwitcher'
-import { navItems } from '../../data/routeManifest'
+import { navItems, navItemsByGroup } from '../../data/routeManifest'
+
+const SIDEBAR_W = 228
+const SIDEBAR_COLLAPSED_W = 68
 
 export default function Layout() {
   const isMobile = useIsMobile()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const { user, updateProfile, logout: storeLogout } = useUserStore()
   const [profileOpen, setProfileOpen] = useState(false)
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false)
@@ -28,6 +32,7 @@ export default function Layout() {
   const location = useLocation()
   const role = user?.role || 'member'
   const NAV_ITEMS = navItems().filter(n => !n.perm || can(role, n.perm))
+  const groups = navItemsByGroup(NAV_ITEMS)
   const currentNav = NAV_ITEMS.find(n => n.path === '/' ? location.pathname === '/' : location.pathname.startsWith(n.path))
 
   useEffect(() => { if (isMobile) setMobileMenuOpen(false) }, [location.pathname, isMobile])
@@ -54,7 +59,6 @@ export default function Layout() {
 
   const handleLogout = () => { storeLogout() }
 
-  // 点击外部关闭头像菜单
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (avatarMenuRef.current && !avatarMenuRef.current.contains(e.target as Node)) { setAvatarMenuOpen(false) }
@@ -63,50 +67,24 @@ export default function Layout() {
     return () => document.removeEventListener('mousedown', handler)
   }, [avatarMenuOpen])
 
-  // 路由切换时关闭头像菜单
   useEffect(() => { setAvatarMenuOpen(false); setSettingsTab(null) }, [location.pathname])
+
+  const sidebarW = sidebarCollapsed ? SIDEBAR_COLLAPSED_W : SIDEBAR_W
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, background: 'var(--bg-secondary)', fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" }}>
       <CommandPalette />
 
-      {/* 顶部导航栏 */}
+      {/* ===== 顶栏 56px ===== */}
       <header style={{
-        height: 52, background: 'var(--bg-primary)', borderBottom: '1px solid var(--border-primary)',
-        display: 'flex', alignItems: 'center', padding: '0 16px', gap: 8, flexShrink: 0, zIndex: 100,
+        height: 56, background: 'var(--bg-primary)', borderBottom: '1px solid var(--border-primary)',
+        display: 'flex', alignItems: 'center', padding: '0 16px', gap: 12, flexShrink: 0, zIndex: 100,
       }}>
         {/* Logo */}
-        <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--brand)', letterSpacing: -0.5, marginRight: 8, cursor: 'pointer', flexShrink: 0 }}
+        <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--brand)', letterSpacing: -0.5, cursor: 'pointer', flexShrink: 0, minWidth: isMobile ? 'auto' : sidebarW - 32 }}
           onClick={() => navigate('/')}>DuiJie</div>
 
-        {/* Desktop: 水平导航 */}
-        {!isMobile && (
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 0, overflow: 'auto', scrollbarWidth: 'none' }}>
-            {NAV_ITEMS.map(item => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
-                style={({ isActive }) => ({
-                  display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px', borderRadius: 6,
-                  color: isActive ? 'var(--brand)' : 'var(--text-secondary)',
-                  background: isActive ? 'var(--bg-selected)' : 'transparent',
-                  textDecoration: 'none', fontSize: 13, fontWeight: isActive ? 600 : 500,
-                  whiteSpace: 'nowrap', position: 'relative' as const,
-                })}
-                end={item.path === '/'}
-              >
-                <item.icon size={15} />
-                {item.label}
-                {item.path === '/messaging' && dmUnread > 0 && (
-                  <span style={{ minWidth: 16, height: 16, borderRadius: 8, background: 'var(--color-danger)', color: '#fff', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{dmUnread > 99 ? '99+' : dmUnread}</span>
-                )}
-              </NavLink>
-            ))}
-          </nav>
-        )}
-
-        {/* Mobile: 汉堡菜单按钮 */}
+        {/* Mobile hamburger */}
         {isMobile && (
           <>
             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-secondary)', display: 'flex' }}>
@@ -116,35 +94,44 @@ export default function Layout() {
           </>
         )}
 
+        {/* Desktop: 全局搜索 */}
+        {!isMobile && (
+          <div onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8, padding: '7px 14px', borderRadius: 8,
+              background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)',
+              cursor: 'pointer', minWidth: 220, maxWidth: 400, flex: 1,
+            }}>
+            <Search size={14} style={{ color: 'var(--text-tertiary)' }} />
+            <span style={{ fontSize: 13, color: 'var(--text-tertiary)', flex: 1 }}>搜索...</span>
+            <kbd style={{ fontSize: 11, color: 'var(--text-tertiary)', background: 'var(--bg-primary)', padding: '1px 6px', borderRadius: 4, border: '1px solid var(--border-primary)' }}>⌘K</kbd>
+          </div>
+        )}
+
         {/* 右侧工具区 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: isMobile ? 0 : 'auto', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto', flexShrink: 0 }}>
           {user && <NotificationBell />}
           <ThemeToggle />
           {user && (
             <div ref={avatarMenuRef} style={{ position: 'relative' }}>
               <div onClick={() => setAvatarMenuOpen(!avatarMenuOpen)} style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', padding: '4px 6px', borderRadius: 6 }} title="个人菜单">
-                <Avatar name={user.nickname || user.username} size={28} />
+                <Avatar name={user.nickname || user.username} size={30} />
                 {!isMobile && <span style={{ fontSize: 13, color: 'var(--text-secondary)', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.nickname || user.username}</span>}
               </div>
 
-              {/* 头像下拉菜单 */}
               {avatarMenuOpen && (
                 <div style={{
                   position: 'absolute', top: 'calc(100% + 6px)', right: 0,
                   display: 'flex', flexDirection: 'row', zIndex: 200,
                 }}>
-                  {/* 左侧：设置面板 */}
                   {settingsTab && (
                     <SettingsPanel tab={settingsTab} onBack={() => setSettingsTab(null)} />
                   )}
-
-                  {/* 右侧：下拉菜单主体 */}
                   <div style={{
                     width: 220, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)',
                     borderRadius: settingsTab ? '0 12px 12px 0' : 12,
                     boxShadow: '0 8px 24px rgba(0,0,0,0.12)', overflow: 'hidden',
                   }}>
-                    {/* 用户信息头部 */}
                     <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--border-secondary)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         <Avatar name={user.nickname || user.username} size={44} />
@@ -155,11 +142,7 @@ export default function Layout() {
                       </div>
                       {user.email && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>}
                     </div>
-
-                    {/* 企业切换 */}
                     <EnterpriseSwitcher />
-
-                    {/* 菜单项 */}
                     <div style={{ padding: '6px 0' }}>
                       {[
                         { icon: User, label: '账号与安全', tab: 'account' as const },
@@ -190,8 +173,6 @@ export default function Layout() {
                         </div>
                       )}
                     </div>
-
-                    {/* 退出登录 */}
                     <div style={{ borderTop: '1px solid var(--border-secondary)', padding: '6px 0' }}>
                       <div onClick={() => { setAvatarMenuOpen(false); setSettingsTab(null); handleLogout() }}
                         style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', cursor: 'pointer', color: 'var(--color-danger)', fontSize: 13, transition: 'background 0.15s' }}
@@ -207,42 +188,119 @@ export default function Layout() {
         </div>
       </header>
 
-      {/* Mobile: 下拉导航菜单 */}
-      {isMobile && mobileMenuOpen && (
-        <>
-          <div onClick={() => setMobileMenuOpen(false)} style={{ position: 'fixed', inset: 0, top: 52, background: 'rgba(0,0,0,0.3)', zIndex: 90 }} />
-          <nav style={{
-            position: 'absolute', top: 52, left: 0, right: 0, background: 'var(--bg-primary)',
-            borderBottom: '1px solid var(--border-primary)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-            padding: '8px', zIndex: 95, maxHeight: 'calc(100vh - 52px)', overflowY: 'auto',
-            display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4,
-          }}>
-            {NAV_ITEMS.map(item => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                onClick={() => setMobileMenuOpen(false)}
-                style={({ isActive }) => ({
-                  display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4,
-                  padding: '12px 8px', borderRadius: 8, textDecoration: 'none',
-                  color: isActive ? 'var(--brand)' : 'var(--text-secondary)',
-                  background: isActive ? 'var(--bg-selected)' : 'transparent',
-                  fontSize: 12, fontWeight: isActive ? 600 : 500,
-                })}
-                end={item.path === '/'}
-              >
-                <item.icon size={20} />
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
-        </>
-      )}
+      {/* ===== 下方：Sidebar + Content ===== */}
+      <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
 
-      {/* 主要内容 */}
-      <main style={{ flex: 1, overflow: 'auto', minHeight: 0, padding: isMobile ? 12 : 24, WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain' }}>
-        <Outlet context={{ user, isMobile }} />
-      </main>
+        {/* ===== Desktop 侧边导航 ===== */}
+        {!isMobile && (
+          <aside style={{
+            width: sidebarW, flexShrink: 0, background: 'var(--bg-primary)',
+            borderRight: '1px solid var(--border-primary)', display: 'flex', flexDirection: 'column',
+            transition: 'width 0.2s ease', overflow: 'hidden',
+          }}>
+            <nav style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px', scrollbarWidth: 'thin' }}>
+              {groups.map((g, gi) => (
+                <div key={g.key} style={{ marginTop: gi === 0 ? 0 : 12 }}>
+                  {!sidebarCollapsed && (
+                    <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', padding: '4px 10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      {g.label}
+                    </div>
+                  )}
+                  {g.items.map(item => {
+                    const isActive = item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)
+                    return (
+                    <div
+                      key={item.path}
+                      onClick={() => navigate(item.path)}
+                      title={sidebarCollapsed ? item.label : undefined}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        padding: sidebarCollapsed ? '10px 0' : '8px 10px',
+                        justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+                        borderRadius: 8, cursor: 'pointer', marginBottom: 2,
+                        color: isActive ? 'var(--brand)' : 'var(--text-secondary)',
+                        background: isActive ? 'var(--bg-selected)' : 'transparent',
+                        fontWeight: isActive ? 600 : 500, fontSize: 13,
+                        transition: 'background 0.12s, color 0.12s',
+                        position: 'relative' as const,
+                      }}
+                      onMouseEnter={e => {
+                        if (!isActive) e.currentTarget.style.background = 'var(--bg-hover)'
+                      }}
+                      onMouseLeave={e => {
+                        if (!isActive) e.currentTarget.style.background = 'transparent'
+                      }}
+                    >
+                      <item.icon size={18} style={{ flexShrink: 0 }} />
+                      {!sidebarCollapsed && <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>}
+                      {item.path === '/messaging' && dmUnread > 0 && (
+                        <span style={{
+                          minWidth: 18, height: 18, borderRadius: 9, background: 'var(--color-danger)', color: '#fff',
+                          fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          padding: '0 4px', position: sidebarCollapsed ? 'absolute' as const : 'static' as const,
+                          top: sidebarCollapsed ? 4 : undefined, right: sidebarCollapsed ? 8 : undefined,
+                        }}>{dmUnread > 99 ? '99+' : dmUnread}</span>
+                      )}
+                    </div>
+                    )
+                  })}
+                </div>
+              ))}
+            </nav>
+
+            {/* 侧边栏折叠按钮 */}
+            <div style={{ padding: '8px', borderTop: '1px solid var(--border-secondary)', flexShrink: 0 }}>
+              <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+                  gap: 8, padding: '8px 10px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                  background: 'transparent', color: 'var(--text-tertiary)', fontSize: 12, transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                {sidebarCollapsed ? <ChevronRight size={16} /> : <><ChevronLeft size={16} /><span>收起导航</span></>}
+              </button>
+            </div>
+          </aside>
+        )}
+
+        {/* Mobile 下拉导航 */}
+        {isMobile && mobileMenuOpen && (
+          <>
+            <div onClick={() => setMobileMenuOpen(false)} style={{ position: 'fixed', inset: 0, top: 56, background: 'rgba(0,0,0,0.3)', zIndex: 90 }} />
+            <nav style={{
+              position: 'absolute', top: 56, left: 0, right: 0, background: 'var(--bg-primary)',
+              borderBottom: '1px solid var(--border-primary)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              padding: '8px', zIndex: 95, maxHeight: 'calc(100vh - 56px)', overflowY: 'auto',
+              display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4,
+            }}>
+              {NAV_ITEMS.map(item => (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={({ isActive }) => ({
+                    display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 4,
+                    padding: '12px 8px', borderRadius: 8, textDecoration: 'none',
+                    color: isActive ? 'var(--brand)' : 'var(--text-secondary)',
+                    background: isActive ? 'var(--bg-selected)' : 'transparent',
+                    fontSize: 12, fontWeight: isActive ? 600 : 500,
+                  })}
+                  end={item.path === '/'}
+                >
+                  <item.icon size={20} />
+                  {item.label}
+                </NavLink>
+              ))}
+            </nav>
+          </>
+        )}
+
+        {/* ===== 主内容区 ===== */}
+        <main style={{ flex: 1, overflow: 'auto', minHeight: 0, padding: isMobile ? 12 : 24, WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain' }}>
+          <Outlet context={{ user, isMobile }} />
+        </main>
+      </div>
 
       <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} user={user} onProfileUpdated={updateProfile} />
     </div>
