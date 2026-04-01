@@ -101,10 +101,10 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
             <Input label="邮箱 *" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} />
           )}
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#475569', marginBottom: 4 }}>验证码 *</label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>验证码 *</label>
             <div style={{ display: 'flex', gap: 8 }}>
               <input placeholder="输入6位验证码" value={verifyCode} onChange={e => setVerifyCode(e.target.value)} maxLength={6}
-                style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
                 onFocus={e => (e.currentTarget.style.borderColor = 'var(--brand)')} onBlur={e => (e.currentTarget.style.borderColor = 'var(--text-disabled)')} />
               <button type="button" disabled={countdown > 0} onClick={handleRegSendCode}
                 style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: countdown > 0 ? 'var(--border-primary)' : 'var(--brand)', color: countdown > 0 ? 'var(--text-tertiary)' : 'var(--bg-primary)', fontSize: 13, fontWeight: 500, cursor: countdown > 0 ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
@@ -139,7 +139,7 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
           <div style={{ background: 'var(--bg-primary)', borderRadius: 16, padding: '28px 24px', width: 520, maxWidth: '100%', maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.15)' }}
             onClick={e => e.stopPropagation()}>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-heading)', marginBottom: 16, textAlign: 'center' }}>用户服务协议与隐私保护政策</h2>
-            <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.8 }}>
+            <div style={{ fontSize: 13, color: 'var(--text-body)', lineHeight: 1.8 }}>
               <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)', margin: '16px 0 8px' }}>一、服务协议</h3>
               <p>1. 本平台（DuiJie 对接平台）为用户提供项目管理、客户管理、任务协作、文件交付、即时通讯等服务。</p>
               <p>2. 用户应如实填写注册信息，对账号安全负责，不得将账号转让或借于他人使用。</p>

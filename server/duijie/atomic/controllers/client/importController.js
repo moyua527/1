@@ -11,6 +11,8 @@ module.exports = async (req, res) => {
     const validStages = ['potential', 'intent', 'signed', 'active', 'lost'];
     const results = { success: 0, failed: 0, errors: [] };
 
+    const batchRows = [];
+    const batchValues = [];
     for (let i = 0; i < clients.length; i++) {
       const c = clients[i];
       if (!c.name || !c.name.trim()) {
@@ -18,24 +20,25 @@ module.exports = async (req, res) => {
         results.errors.push({ row: i + 1, message: '客户名称不能为空' });
         continue;
       }
-
       const stage = validStages.includes(c.stage) ? c.stage : 'potential';
-      const values = [
+      batchRows.push('(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+      batchValues.push(
         c.name?.trim() || '', c.company?.trim() || '', c.email?.trim() || '', c.phone?.trim() || '',
         c.channel?.trim() || '', stage,
         c.position_level?.trim() || null, c.department?.trim() || null, c.job_function?.trim() || null,
-        c.notes?.trim() || '', req.userId,
-      ];
-
+        c.notes?.trim() || '', req.userId
+      );
+    }
+    if (batchRows.length > 0) {
       try {
-        await db.query(
-          'INSERT INTO duijie_clients (name, company, email, phone, channel, stage, position_level, department, job_function, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          values
+        const [r] = await db.query(
+          `INSERT INTO duijie_clients (name, company, email, phone, channel, stage, position_level, department, job_function, notes, created_by) VALUES ${batchRows.join(', ')}`,
+          batchValues
         );
-        results.success++;
+        results.success = r.affectedRows;
       } catch (err) {
-        results.failed++;
-        results.errors.push({ row: i + 1, message: err.message });
+        results.failed = batchRows.length;
+        results.errors.push({ row: 0, message: err.message });
       }
     }
 

@@ -5,8 +5,10 @@ const findAttachmentsRepo = require('../../repositories/ticket/findAttachmentsRe
 module.exports = async (ticketId) => {
   const ticket = await findByIdRepo(ticketId);
   if (!ticket) return null;
-  const replies = await findRepliesRepo(ticketId);
-  const attachments = await findAttachmentsRepo(ticketId);
+  const [replies, attachments] = await Promise.all([
+    findRepliesRepo(ticketId),
+    findAttachmentsRepo(ticketId),
+  ]);
   const ticketAttachments = attachments.filter(a => !a.reply_id);
   for (const r of replies) {
     r.attachments = attachments.filter(a => a.reply_id === r.id);

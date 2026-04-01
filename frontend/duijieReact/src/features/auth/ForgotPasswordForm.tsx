@@ -105,10 +105,10 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
               <Input label="邮箱 *" placeholder="输入注册时的邮箱" value={email} onChange={e => setEmail(e.target.value)} />
             )}
             <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: '#475569', marginBottom: 4 }}>验证码 *</label>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>验证码 *</label>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input placeholder="输入6位验证码" value={verifyCode} onChange={e => setVerifyCode(e.target.value)} maxLength={6}
-                  style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                  style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
                   onFocus={e => (e.currentTarget.style.borderColor = 'var(--brand)')} onBlur={e => (e.currentTarget.style.borderColor = 'var(--text-disabled)')} />
                 <button type="button" disabled={countdown > 0} onClick={handleForgotSendCode}
                   style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: countdown > 0 ? 'var(--border-primary)' : 'var(--brand)', color: countdown > 0 ? 'var(--text-tertiary)' : 'var(--bg-primary)', fontSize: 13, fontWeight: 500, cursor: countdown > 0 ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
@@ -121,7 +121,7 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
 
         {forgotStep === 2 && (
           <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, background: '#f0fdf4', border: '1px solid #bbf7d0', marginBottom: 4 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, background: 'var(--bg-success)', border: '1px solid var(--bg-success-border)', marginBottom: 4 }}>
               <CheckCircle size={16} color="var(--color-success)" />
               <span style={{ fontSize: 13, color: 'var(--color-success)', fontWeight: 500 }}>
                 {forgotMethod === 'phone' ? phone : email} 已验证

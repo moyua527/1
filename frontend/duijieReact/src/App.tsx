@@ -79,7 +79,7 @@ export default function App() {
     }
   }, [user])
 
-  if (checking) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: 0, color: '#94a3b8' }}>加载中...</div>
+  if (checking) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: 0, color: 'var(--text-tertiary)' }}>加载中...</div>
   if (!user) return <LoginPage onLogin={setUser} />
   if (!hasEnterprise) return <><ToastContainer /><EnterpriseOnboarding /></>
 
@@ -100,7 +100,7 @@ export default function App() {
       <ToastContainer />
       <MobilePushBridge />
       <AppUpdateChecker />
-      <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8', padding: 40 }}>加载中...</div>}>
+      <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)', padding: 40 }}>加载中...</div>}>
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<Dashboard />} />

@@ -69,10 +69,63 @@ async function scoreOne(clientId) {
 }
 
 async function scoreAll() {
-  const [clients] = await db.query('SELECT id FROM duijie_clients WHERE is_deleted = 0');
+  const [clients] = await db.query('SELECT * FROM duijie_clients WHERE is_deleted = 0');
+  if (!clients.length) return {};
+
+  const ids = clients.map(c => c.id);
+  const ph = ids.map(() => '?').join(',');
+
+  // 批量查询所有维度数据 (5个批量查询代替 N*5 个)
+  const [[followCounts], [lastFollows], [contractStats], [contactCounts]] = await Promise.all([
+    db.query(`SELECT client_id, COUNT(*) as cnt FROM duijie_follow_ups WHERE client_id IN (${ph}) GROUP BY client_id`, ids),
+    db.query(`SELECT client_id, MAX(created_at) as last_at FROM duijie_follow_ups WHERE client_id IN (${ph}) GROUP BY client_id`, ids),
+    db.query(`SELECT client_id, COALESCE(SUM(amount),0) as total, COUNT(*) as cnt FROM duijie_contracts WHERE client_id IN (${ph}) GROUP BY client_id`, ids),
+    db.query(`SELECT client_id, COUNT(*) as cnt FROM duijie_contacts WHERE client_id IN (${ph}) GROUP BY client_id`, ids),
+  ]);
+
+  const followCountMap = Object.fromEntries(followCounts.map(r => [r.client_id, r.cnt]));
+  const lastFollowMap = Object.fromEntries(lastFollows.map(r => [r.client_id, r.last_at]));
+  const contractMap = Object.fromEntries(contractStats.map(r => [r.client_id, { total: r.total, count: r.cnt }]));
+  const contactMap = Object.fromEntries(contactCounts.map(r => [r.client_id, r.cnt]));
+
   const scores = {};
-  for (const c of clients) {
-    scores[c.id] = await scoreOne(c.id);
+  for (const client of clients) {
+    const followCount = followCountMap[client.id] || 0;
+    const lastFollowAt = lastFollowMap[client.id] || null;
+    const ct = contractMap[client.id] || { total: 0, count: 0 };
+    const contactCount = contactMap[client.id] || 0;
+
+    let followScore = 0;
+    if (lastFollowAt) {
+      const daysSince = (Date.now() - new Date(lastFollowAt).getTime()) / (1000 * 60 * 60 * 24);
+      if (daysSince <= 3) followScore += 15;
+      else if (daysSince <= 7) followScore += 12;
+      else if (daysSince <= 14) followScore += 8;
+      else if (daysSince <= 30) followScore += 4;
+      else followScore += 1;
+    }
+    followScore += Math.min(15, followCount * 2.5);
+
+    let contractScore = Math.min(15, ct.total / 10000 * 3) + Math.min(10, ct.count * 5);
+    const stageRaw = STAGE_SCORES[client.stage || 'potential'] || 10;
+    const stageScore = stageRaw / 100 * 20;
+    const contactScore = Math.min(10, contactCount * 4);
+    let infoScore = 0;
+    if (client.name) infoScore += 3;
+    if (client.company) infoScore += 3;
+    if (client.email) infoScore += 3;
+    if (client.phone) infoScore += 3;
+    if (client.channel) infoScore += 3;
+
+    const total = Math.round(Math.min(100, followScore + contractScore + stageScore + contactScore + infoScore));
+    scores[client.id] = {
+      total,
+      breakdown: {
+        follow: Math.round(followScore), contract: Math.round(contractScore),
+        stage: Math.round(stageScore), contact: Math.round(contactScore), info: Math.round(infoScore),
+      },
+      label: total >= 80 ? 'A' : total >= 60 ? 'B' : total >= 40 ? 'C' : total >= 20 ? 'D' : 'E',
+    };
   }
   return scores;
 }

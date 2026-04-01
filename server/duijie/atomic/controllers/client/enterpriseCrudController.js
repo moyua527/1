@@ -10,12 +10,18 @@ exports.getAll = async (req, res) => {
     const [enterprises] = await db.query(
       "SELECT c.*, u.nickname as creator_name FROM duijie_clients c LEFT JOIN voice_users u ON c.user_id = u.id WHERE c.client_type = 'company' AND c.is_deleted = 0 ORDER BY c.created_at DESC"
     );
-    const list = [];
-    for (const ent of enterprises) {
-      const [members] = await db.query('SELECT * FROM duijie_client_members WHERE client_id = ? AND is_deleted = 0 ORDER BY created_at ASC', [ent.id]);
-      const [departments] = await db.query('SELECT * FROM duijie_departments WHERE client_id = ? AND is_deleted = 0 ORDER BY sort_order ASC, id ASC', [ent.id]);
-      list.push({ enterprise: ent, members, departments });
+    const ids = enterprises.map(e => e.id);
+    let allMembers = [], allDepts = [];
+    if (ids.length) {
+      const ph = ids.map(() => '?').join(',');
+      [allMembers] = (await db.query(`SELECT * FROM duijie_client_members WHERE client_id IN (${ph}) AND is_deleted = 0 ORDER BY created_at ASC`, ids));
+      [allDepts] = (await db.query(`SELECT * FROM duijie_departments WHERE client_id IN (${ph}) AND is_deleted = 0 ORDER BY sort_order ASC, id ASC`, ids));
     }
+    const list = enterprises.map(ent => ({
+      enterprise: ent,
+      members: allMembers.filter(m => m.client_id === ent.id),
+      departments: allDepts.filter(d => d.client_id === ent.id),
+    }));
     res.json({ success: true, data: list });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });
@@ -52,9 +58,11 @@ exports.get = async (req, res) => {
     const enterprises = await findMyEnterprises(req.userId);
     if (enterprises.length === 0) return res.json({ success: true, data: null });
     const active = await findActiveEnterprise(req.userId);
-    const [members] = await db.query('SELECT * FROM duijie_client_members WHERE client_id = ? AND is_deleted = 0 ORDER BY created_at ASC', [active.id]);
-    const [departments] = await db.query('SELECT * FROM duijie_departments WHERE client_id = ? AND is_deleted = 0 ORDER BY sort_order ASC, id ASC', [active.id]);
-    const [roles] = await db.query('SELECT * FROM enterprise_roles WHERE enterprise_id = ? AND is_deleted = 0 ORDER BY sort_order ASC, id ASC', [active.id]);
+    const [[members], [departments], [roles]] = await Promise.all([
+      db.query('SELECT * FROM duijie_client_members WHERE client_id = ? AND is_deleted = 0 ORDER BY created_at ASC', [active.id]),
+      db.query('SELECT * FROM duijie_departments WHERE client_id = ? AND is_deleted = 0 ORDER BY sort_order ASC, id ASC', [active.id]),
+      db.query('SELECT * FROM enterprise_roles WHERE enterprise_id = ? AND is_deleted = 0 ORDER BY sort_order ASC, id ASC', [active.id]),
+    ]);
     const perms = await getEnterprisePerms(req.userId);
     const enterprise = active.member_role === 'creator' || !!perms?.can_manage_members
       ? active
