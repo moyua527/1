@@ -12,9 +12,11 @@ const roleMap: Record<string, { label: string; color: string; bg: string; icon: 
   member: { label: '成员', color: 'var(--brand)', bg: 'var(--bg-selected)', icon: User },
 }
 
-const selectStyle: React.CSSProperties = { width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }
+const selectStyle: React.CSSProperties = { width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-body)' }
 
-const groupTitle = (t: string) => <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-heading)', padding: '8px 0 4px', borderBottom: '1px solid var(--border-secondary)', marginBottom: 4 }}>{t}</div>
+const labelStyle: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }
+
+const groupTitle = (t: string) => <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase' as const, letterSpacing: '0.05em', padding: '12px 0 6px' }}>{t}</div>
 
 const emptyForm = { username: '', password: '', nickname: '', role: 'member', email: '', phone: '', client_id: '', manager_id: '' }
 
@@ -97,13 +99,13 @@ export default function UserFormModal({ mode, editUser, open, onClose, onSaved, 
           {groupTitle('权限信息')}
           <div style={{ display: 'flex', gap: 12 }}>
             <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>角色 <span style={{ color: 'var(--color-danger)' }}>*</span></label>
+              <label style={labelStyle}>角色 <span style={{ color: 'var(--color-danger)' }}>*</span></label>
               <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} style={selectStyle}>
                 {Object.entries(roleMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
               </select>
             </div>
             <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>上级经理</label>
+              <label style={labelStyle}>上级经理</label>
               <select value={form.manager_id} onChange={e => setForm({ ...form, manager_id: e.target.value })} style={selectStyle}>
                 <option value="">无</option>
                 {users.filter(u => u.role === 'admin').map(u => (
@@ -139,13 +141,13 @@ export default function UserFormModal({ mode, editUser, open, onClose, onSaved, 
         {groupTitle('权限信息')}
         <div style={{ display: 'flex', gap: 12 }}>
           <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>角色</label>
+            <label style={labelStyle}>角色</label>
             <select value={form.role} onChange={e => setForm({ ...form, role: e.target.value })} style={selectStyle}>
               {Object.entries(roleMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
             </select>
           </div>
           <div style={{ flex: 1 }}>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>上级经理</label>
+            <label style={labelStyle}>上级经理</label>
             <select value={form.manager_id} onChange={e => setForm({ ...form, manager_id: e.target.value })} style={selectStyle}>
               <option value="">无</option>
               {users.filter(u => u.role === 'admin' && u.id !== editUser?.id).map(u => (
