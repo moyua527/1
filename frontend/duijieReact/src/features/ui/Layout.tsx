@@ -81,7 +81,7 @@ export default function Layout() {
 
         {/* Desktop: 水平导航 */}
         {!isMobile && (
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, overflow: 'auto', scrollbarWidth: 'none' }}>
+          <nav style={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1, minWidth: 0, overflow: 'auto', scrollbarWidth: 'none' }}>
             {NAV_ITEMS.map(item => (
               <NavLink
                 key={item.path}
