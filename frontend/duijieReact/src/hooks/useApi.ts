@@ -205,3 +205,50 @@ export function useCalendarEvents(year: number, month: number) {
     },
   })
 }
+
+// === Enterprise hooks ===
+
+export function useEnterpriseData() {
+  return useQuery<any>({
+    queryKey: ['enterprise'],
+    queryFn: async () => {
+      const r: ApiResponse = await fetchApi('/api/my-enterprise')
+      if (!r.success) throw new Error(r.message)
+      return r.data
+    },
+  })
+}
+
+export function useJoinRequests() {
+  return useQuery<any[]>({
+    queryKey: ['enterprise', 'join-requests'],
+    queryFn: async () => {
+      const r: ApiResponse = await fetchApi('/api/my-enterprise/join-requests')
+      if (!r.success) throw new Error(r.message)
+      return r.data || []
+    },
+  })
+}
+
+export function useMyJoinRequests() {
+  return useQuery<any[]>({
+    queryKey: ['enterprise', 'my-requests'],
+    queryFn: async () => {
+      const r: ApiResponse = await fetchApi('/api/my-enterprise/my-requests')
+      if (!r.success) throw new Error(r.message)
+      return r.data || []
+    },
+  })
+}
+
+export function useAllEnterprises(enabled: boolean) {
+  return useQuery<any[]>({
+    queryKey: ['enterprise', 'all'],
+    queryFn: async () => {
+      const r: ApiResponse = await fetchApi('/api/my-enterprise/all')
+      if (!r.success) throw new Error(r.message)
+      return r.data || []
+    },
+    enabled,
+  })
+}

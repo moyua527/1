@@ -4,12 +4,24 @@ import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
 import { emptyEntForm, emptyMemberForm, emptyDeptForm } from './constants'
 import useUserStore from '../../stores/useUserStore'
+import { useEnterpriseData, useJoinRequests, useMyJoinRequests, useAllEnterprises, useInvalidate } from '../../hooks/useApi'
+import useEnterpriseStore from '../../stores/useEnterpriseStore'
 
 export function useEnterprise() {
-  const [data, setData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [enterprises, setEnterprises] = useState<any[]>([])
-  const [activeId, setActiveId] = useState<number | null>(null)
+  const sysRole = useUserStore(s => s.user?.role) || ''
+  const isSysAdmin = sysRole === 'admin'
+  const invalidate = useInvalidate()
+
+  // --- React Query data ---
+  const { data, isLoading: loading } = useEnterpriseData()
+  const { data: joinRequests = [] } = useJoinRequests()
+  const { data: myRequests = [] } = useMyJoinRequests()
+  const { data: allEnterprises = [] } = useAllEnterprises(isSysAdmin)
+
+  const enterprises = data?.enterprises || []
+  const activeId = data?.activeId || null
+
+  // --- UI state ---
   const [tab, setTab] = useState<'members' | 'departments' | 'tree' | 'projects' | 'roles' | 'requests'>('members')
   const [editEntOpen, setEditEntOpen] = useState(false)
   const [entForm, setEntForm] = useState({ ...emptyEntForm })
@@ -35,48 +47,18 @@ export function useEnterprise() {
   const [entMenuOpen, setEntMenuOpen] = useState(false)
   const [lookupPhone, setLookupPhone] = useState('')
   const [lookupLoading, setLookupLoading] = useState(false)
-  const [allEnterprises, setAllEnterprises] = useState<any[]>([])
   const [expandedEntId, setExpandedEntId] = useState<number | null>(null)
-  const [myRequests, setMyRequests] = useState<any[]>([])
-  const [joinRequests, setJoinRequests] = useState<any[]>([])
   const [selectedJoinEnterpriseId, setSelectedJoinEnterpriseId] = useState<number | null>(null)
   const [joinCode, setJoinCode] = useState('')
   const [joinCodeRefreshing, setJoinCodeRefreshing] = useState(false)
   const joinSearchRequestRef = useRef(0)
   const joinSearchTimerRef = useRef<number | null>(null)
 
-  const sysRole = useUserStore(s => s.user?.role) || ''
-  const isSysAdmin = sysRole === 'admin'
-
-  const load = () => {
-    fetchApi('/api/my-enterprise').then(r => {
-      if (r.success) {
-        setData(r.data)
-        setEnterprises(r.data?.enterprises || [])
-        setActiveId(r.data?.activeId || null)
-      }
-      setLoading(false)
-    }).catch(() => setLoading(false))
+  /** Invalidate enterprise data + sync global store */
+  const refresh = () => {
+    invalidate('enterprise')
+    useEnterpriseStore.getState().refresh()
   }
-  const loadAllEnterprises = () => {
-    if (!isSysAdmin) return
-    fetchApi('/api/my-enterprise/all').then(r => { if (r.success) setAllEnterprises(r.data || []) })
-  }
-  const loadJoinRequests = async () => {
-    const r = await fetchApi('/api/my-enterprise/join-requests')
-    if (r.success) setJoinRequests(r.data || [])
-  }
-  const loadMyRequests = async () => {
-    const r = await fetchApi('/api/my-enterprise/my-requests')
-    if (r.success) setMyRequests(r.data || [])
-  }
-
-  useEffect(() => { load(); loadAllEnterprises(); loadMyRequests() }, [])
-  useEffect(() => {
-    const role = data?.enterprise?.member_role
-    const canManageMembers = !!data?.enterprisePerms?.can_manage_members
-    if (role === 'creator' || role === 'admin' || canManageMembers) loadJoinRequests()
-  }, [data])
 
   // === 企业操作 ===
   const openEditEnt = () => {
@@ -90,13 +72,13 @@ export function useEnterprise() {
     setEntSaving(true)
     const r = await fetchApi('/api/my-enterprise', { method: 'PUT', body: JSON.stringify(entForm) })
     setEntSaving(false)
-    if (r.success) { toast('企业信息已更新', 'success'); setEditEntOpen(false); load() }
+    if (r.success) { toast('企业信息已更新', 'success'); setEditEntOpen(false); refresh() }
     else toast(r.message || '保存失败', 'error')
   }
   const handleDeleteEnterprise = async () => {
     if (!(await confirm({ message: '确定删除该企业？删除后可重新创建。', danger: true }))) return
     const r = await fetchApi('/api/my-enterprise', { method: 'DELETE' })
-    if (r.success) { toast('企业已删除', 'success'); setData(null) }
+    if (r.success) { toast('企业已删除', 'success'); refresh() }
     else toast(r.message || '删除失败', 'error')
   }
   const handleCreate = async () => {
@@ -104,7 +86,7 @@ export function useEnterprise() {
     setCreating(true)
     const r = await fetchApi('/api/my-enterprise', { method: 'POST', body: JSON.stringify(createForm) })
     setCreating(false)
-    if (r.success) { toast('企业创建成功', 'success'); load() }
+    if (r.success) { toast('企业创建成功', 'success'); refresh() }
     else toast(r.message || '创建失败', 'error')
   }
 
@@ -118,7 +100,7 @@ export function useEnterprise() {
     setSelectedJoinEnterpriseId(null)
     setJoinCode('')
     joinSearchRequestRef.current += 1
-    loadMyRequests()
+    invalidate('enterprise', 'my-requests')
   }
 
   const clearJoinSearchTimer = () => {
@@ -154,7 +136,7 @@ export function useEnterprise() {
     setJoinCodeRefreshing(false)
     if (r.success) {
       toast('企业推荐码已重置', 'success')
-      load()
+      refresh()
     } else {
       toast(r.message || '重置失败', 'error')
     }
@@ -192,18 +174,18 @@ export function useEnterprise() {
       ? await fetchApi(`/api/my-enterprise/members/${editingMember.id}`, { method: 'PUT', body: JSON.stringify(payload) })
       : await fetchApi('/api/my-enterprise/members', { method: 'POST', body: JSON.stringify(payload) })
     setMemberSaving(false)
-    if (r.success) { toast(editingMember ? '成员已更新' : '成员已添加', 'success'); setMemberModalOpen(false); load() }
+    if (r.success) { toast(editingMember ? '成员已更新' : '成员已添加', 'success'); setMemberModalOpen(false); refresh() }
     else toast(r.message || '保存失败', 'error')
   }
   const handleDeleteMember = async (mid: number) => {
     if (!(await confirm({ message: '确定删除此成员？', danger: true }))) return
     const r = await fetchApi(`/api/my-enterprise/members/${mid}`, { method: 'DELETE' })
-    if (r.success) { toast('成员已删除', 'success'); load() }
+    if (r.success) { toast('成员已删除', 'success'); refresh() }
     else toast(r.message || '删除失败', 'error')
   }
   const handleRoleChange = async (memberId: number, role: string) => {
     const r = await fetchApi(`/api/my-enterprise/members/${memberId}/role`, { method: 'PUT', body: JSON.stringify({ role }) })
-    if (r.success) { toast('角色已更新', 'success'); load() }
+    if (r.success) { toast('角色已更新', 'success'); refresh() }
     else toast(r.message || '操作失败', 'error')
   }
 
@@ -226,13 +208,13 @@ export function useEnterprise() {
       ? await fetchApi(`/api/my-enterprise/departments/${editingDept.id}`, { method: 'PUT', body: JSON.stringify(payload) })
       : await fetchApi('/api/my-enterprise/departments', { method: 'POST', body: JSON.stringify(payload) })
     setDeptSaving(false)
-    if (r.success) { toast(editingDept ? '部门已更新' : '部门已添加', 'success'); setDeptModalOpen(false); load() }
+    if (r.success) { toast(editingDept ? '部门已更新' : '部门已添加', 'success'); setDeptModalOpen(false); refresh() }
     else toast(r.message || '保存失败', 'error')
   }
   const handleDeleteDept = async (did: number) => {
     if (!(await confirm({ message: '删除部门后，该部门下的成员将变为"未分配"状态', danger: true }))) return
     const r = await fetchApi(`/api/my-enterprise/departments/${did}`, { method: 'DELETE' })
-    if (r.success) { toast('部门已删除', 'success'); load() }
+    if (r.success) { toast('部门已删除', 'success'); refresh() }
     else toast(r.message || '删除失败', 'error')
   }
   const toggleDept = (id: number) => {
@@ -242,16 +224,14 @@ export function useEnterprise() {
   // === 切换企业 ===
   const switchEnterprise = async (entId: number) => {
     try {
-      const r = await fetchApi('/api/my-enterprise/switch', { method: 'PUT', body: JSON.stringify({ enterprise_id: entId }) })
-      if (r.success) {
+      const ok = await useEnterpriseStore.getState().switchEnterprise(entId)
+      if (ok) {
         toast('已切换企业', 'success')
-        setActiveId(entId)
-        await new Promise(resolve => setTimeout(resolve, 200))
-        load()
+        refresh()
       } else {
-        toast(r.message || '切换失败', 'error')
+        toast('切换失败', 'error')
       }
-    } catch (e) {
+    } catch {
       toast('切换企业请求失败，请重试', 'error')
     }
   }
@@ -287,8 +267,8 @@ export function useEnterprise() {
       setSelectedJoinEnterpriseId(null)
       setJoinCode('')
       joinSearchRequestRef.current += 1
-      loadMyRequests()
-      if (r.data?.joinedDirectly) load()
+      invalidate('enterprise', 'my-requests')
+      if (r.data?.joinedDirectly) refresh()
     } else {
       toast(r.message || '申请失败', 'error')
     }
@@ -297,40 +277,40 @@ export function useEnterprise() {
   // === 审批 ===
   const handleApprove = async (id: number) => {
     const r = await fetchApi(`/api/my-enterprise/join-requests/${id}/approve`, { method: 'POST' })
-    if (r.success) { toast('已批准', 'success'); loadJoinRequests(); load() }
+    if (r.success) { toast('已批准', 'success'); invalidate('enterprise', 'join-requests'); refresh() }
     else toast(r.message || '操作失败', 'error')
   }
   const handleReject = async (id: number) => {
     const r = await fetchApi(`/api/my-enterprise/join-requests/${id}/reject`, { method: 'POST' })
-    if (r.success) { toast('已拒绝', 'success'); loadJoinRequests() }
+    if (r.success) { toast('已拒绝', 'success'); invalidate('enterprise', 'join-requests') }
     else toast(r.message || '操作失败', 'error')
   }
 
   // === 角色操作 ===
   const handleCreateRole = async (form: any) => {
     const r = await fetchApi('/api/my-enterprise/roles', { method: 'POST', body: JSON.stringify(form) })
-    if (r.success) { toast('角色已创建', 'success'); load() }
+    if (r.success) { toast('角色已创建', 'success'); refresh() }
     else toast(r.message || '创建失败', 'error')
   }
   const handleUpdateRole = async (id: number, form: any) => {
     const r = await fetchApi(`/api/my-enterprise/roles/${id}`, { method: 'PUT', body: JSON.stringify(form) })
-    if (r.success) { toast('角色已更新', 'success'); load() }
+    if (r.success) { toast('角色已更新', 'success'); refresh() }
     else toast(r.message || '更新失败', 'error')
   }
   const handleDeleteRole = async (id: number) => {
     if (!(await confirm({ message: '确定删除该角色？', danger: true }))) return
     const r = await fetchApi(`/api/my-enterprise/roles/${id}`, { method: 'DELETE' })
-    if (r.success) { toast('角色已删除', 'success'); load() }
+    if (r.success) { toast('角色已删除', 'success'); refresh() }
     else toast(r.message || '删除失败', 'error')
   }
   const handleAssignRole = async (memberId: number, roleId: number | null) => {
     const r = await fetchApi(`/api/my-enterprise/members/${memberId}/assign-role`, { method: 'PUT', body: JSON.stringify({ enterprise_role_id: roleId }) })
-    if (r.success) { toast('角色已分配', 'success'); load() }
+    if (r.success) { toast('角色已分配', 'success'); refresh() }
     else toast(r.message || '操作失败', 'error')
   }
   const inlineCreateRole = async (form: any): Promise<number | null> => {
     const r = await fetchApi('/api/my-enterprise/roles', { method: 'POST', body: JSON.stringify(form) })
-    if (r.success) { toast(`角色「${form.name}」已创建`, 'success'); await load(); return r.data?.id || null }
+    if (r.success) { toast(`角色「${form.name}」已创建`, 'success'); refresh(); return r.data?.id || null }
     else { toast(r.message || '创建失败', 'error'); return null }
   }
 
@@ -361,7 +341,7 @@ export function useEnterprise() {
     // 加入
     joinModalOpen, setJoinModalOpen, openJoinModal, joinSearch, setJoinSearch: updateJoinSearch, joinResults, setJoinResults, joinSearching, joining,
     selectedJoinEnterpriseId, setSelectedJoinEnterpriseId, joinCode, setJoinCode,
-    myRequests, loadMyRequests, handleJoinSearch, handleJoin,
+    myRequests, handleJoinSearch, handleJoin,
     // 成员
     memberModalOpen, setMemberModalOpen, editingMember, memberForm, setMemberForm, memberSaving,
     lookupPhone, setLookupPhone, lookupLoading,
