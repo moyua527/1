@@ -27,12 +27,13 @@ export function useClient(id: string | undefined) {
 }
 
 export function useProjects() {
-  return useQuery<Project[]>({
+  return useQuery<any[]>({
     queryKey: ['projects'],
     queryFn: async () => {
-      const r: ApiResponse = await fetchApi('/api/projects')
+      const r: ApiResponse = await fetchApi('/api/projects?limit=200')
       if (!r.success) throw new Error(r.message)
-      return r.data?.rows || r.data || []
+      const d = r.data
+      return Array.isArray(d?.rows) ? d.rows : Array.isArray(d) ? d : []
     },
   })
 }
@@ -114,6 +115,17 @@ export function useNotifications() {
       return r.data || []
     },
     refetchInterval: 120_000,
+  })
+}
+
+export function useUsers() {
+  return useQuery<any[]>({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const r: ApiResponse = await fetchApi('/api/users')
+      if (!r.success) throw new Error(r.message)
+      return r.data || []
+    },
   })
 }
 

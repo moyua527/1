@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useNavigate, useOutletContext, useLocation } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 import { Plus, FolderKanban, Loader2, Search, Download } from 'lucide-react'
 import { projectApi } from './services/api'
 import { can } from '../../stores/permissions'
-import useLiveData from '../../hooks/useLiveData'
+import { useProjects, useInvalidate } from '../../hooks/useApi'
 import Button from '../ui/Button'
 import Badge from '../ui/Badge'
 import ProgressBar from '../ui/ProgressBar'
@@ -33,36 +33,18 @@ const cardStyle: React.CSSProperties = {
 }
 
 export default function ProjectList() {
-  const [projects, setProjects] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: projects = [], isLoading: loading } = useProjects()
+  const invalidate = useInvalidate()
   const [showCreate, setShowCreate] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({ name: '', description: '' })
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const nav = useNavigate()
-  const location = useLocation()
   const { user, isMobile } = useOutletContext<{ user: any; isMobile?: boolean }>()
   const canCreate = can(user?.role || '', 'project:create')
 
-  const load = useCallback(() => {
-    setLoading(true)
-    projectApi.list({ _t: String(Date.now()), limit: '200' }).then(r => {
-      if (r.success) {
-        const d = r.data
-        const rows = Array.isArray(d?.rows) ? d.rows : Array.isArray(d) ? d : []
-        setProjects(rows)
-      } else {
-        setProjects([])
-        toast(r.message || '加载项目列表失败', 'error')
-      }
-    }).catch(() => {
-      setProjects([])
-      toast('网络错误，无法加载项目', 'error')
-    }).finally(() => setLoading(false))
-  }, [])
-  useEffect(() => { load() }, [load, location.pathname])
-  useLiveData(['project'], load)
+  const load = () => invalidate('projects')
 
   const filtered = projects.filter(p => {
     if (statusFilter && p.status !== statusFilter) return false

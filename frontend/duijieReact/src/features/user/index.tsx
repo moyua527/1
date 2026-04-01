@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Plus, Trash2, Edit2, Shield, Loader2, User, Search, Power, Link2, Copy, Clock, CheckCircle2, Mail, Phone, Calendar, Hash, MapPin, UserCheck, Eye, KeyRound, Download, ChevronLeft, ChevronRight, Users, X, MoreVertical } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
-import { clientApi } from '../client/services/api'
+import { useUsers, useClients, useInvalidate } from '../../hooks/useApi'
 import Button from '../ui/Button'
 import Avatar from '../ui/Avatar'
 import { toast } from '../ui/Toast'
@@ -31,9 +31,9 @@ const thStyle: React.CSSProperties = { padding: '10px 12px', fontSize: 12, fontW
 const tdStyle: React.CSSProperties = { padding: '12px 12px', fontSize: 13, color: 'var(--text-body)', borderBottom: '1px solid var(--border-secondary)' }
 
 export default function UserManagement() {
-  const [users, setUsers] = useState<any[]>([])
-  const [clients, setClients] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: users = [], isLoading: loading } = useUsers()
+  const { data: clients = [] } = useClients()
+  const invalidate = useInvalidate()
   const [showCreate, setShowCreate] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
   const [editUser, setEditUser] = useState<any>(null)
@@ -46,18 +46,7 @@ export default function UserManagement() {
   const [selected, setSelected] = useState<number[]>([])
   const [menuOpen, setMenuOpen] = useState<number | null>(null)
 
-  const load = () => {
-    setLoading(true)
-    Promise.all([
-      fetchApi('/api/users'),
-      clientApi.list(),
-    ]).then(([ur, cr]) => {
-      if (ur.success) setUsers(ur.data || [])
-      if (cr.success) setClients(cr.data || [])
-    }).finally(() => setLoading(false))
-  }
-
-  useEffect(() => { load() }, [])
+  const load = () => invalidate('users', 'clients')
 
   const filtered = useMemo(() => {
     return users.filter((u: any) => {
