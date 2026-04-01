@@ -1,5 +1,6 @@
 const db = require('../../../config/db');
 const { notify } = require('../../utils/notify');
+const { broadcast } = require('../../utils/broadcast');
 
 module.exports = async (req, res) => {
   try {
@@ -36,6 +37,7 @@ module.exports = async (req, res) => {
     if (user_id !== req.userId) {
       await notify(user_id, 'project_member', '项目邀请', `你被添加为项目「${project.name}」的成员`, `/projects/${id}`);
     }
+    broadcast('project', 'member_added', { id, userId: req.userId });
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });

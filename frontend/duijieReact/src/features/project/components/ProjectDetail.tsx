@@ -20,6 +20,7 @@ import TaskTab from './TaskTab'
 import MilestoneTab from './MilestoneTab'
 import MembersSection from './MembersSection'
 import { ManageMembersModal, ManageClientMembersModal, MemberInfoModal, ClientInfoModal } from './ProjectModals'
+import useLiveData from '../../../hooks/useLiveData'
 
 const statusMap: Record<string, { label: string; color: string }> = {
   planning: { label: '规划中', color: 'blue' },
@@ -111,6 +112,8 @@ export default function ProjectDetail() {
     setProjectError(message)
     setProjectLoading(false)
   }, [id])
+
+  useLiveData(['project', 'task'], loadProject)
 
   const loadTasks = () => {
     if (!id) return
@@ -259,7 +262,7 @@ export default function ProjectDetail() {
             {canEdit && <button onClick={() => { setAppForm({ app_name: project.app_name || '', app_url: project.app_url || '' }); setShowAppEdit(true) }}
               style={{ fontSize: 12, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>{project.app_url ? '编辑' : '添加'}</button>}
           </div>
-          {project.app_url ? (
+          {project.app_url && /^https?:\/\/.+/.test(project.app_url) ? (
             <a href={project.app_url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', background: 'linear-gradient(135deg, #eff6ff, #f0f4ff)', borderRadius: 12, border: '1px solid #dbeafe', textDecoration: 'none', cursor: 'pointer', transition: 'all 0.2s' }}
               onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(37,99,235,0.15)'; e.currentTarget.style.borderColor = '#93c5fd' }}
               onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--brand-light-2)' }}>
@@ -272,6 +275,16 @@ export default function ProjectDetail() {
               </div>
               <ExternalLink size={18} color="var(--brand)" />
             </a>
+          ) : project.app_url ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <AppWindow size={22} color="#ef4444" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 15, fontWeight: 600, color: '#dc2626' }}>{project.app_name || '应用'}</div>
+                <div style={{ fontSize: 12, color: '#ef4444' }}>应用链接无效，请编辑修正（需以 http:// 或 https:// 开头）</div>
+              </div>
+            </div>
           ) : (
             <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 13 }}>暂无关联应用{canEdit ? '，点击"添加"按钮关联' : ''}</div>
           )}
@@ -288,6 +301,7 @@ export default function ProjectDetail() {
               }}>移除应用</Button>}
               <Button onClick={async () => {
                 if (!appForm.app_url.trim()) { toast('请输入应用链接', 'error'); return }
+                if (!/^https?:\/\/.+/.test(appForm.app_url.trim())) { toast('应用链接必须以 http:// 或 https:// 开头', 'error'); return }
                 const r = await projectApi.update(id!, appForm)
                 if (r.success) { toast('应用已保存', 'success'); setShowAppEdit(false); loadProject() }
                 else toast(r.message || '保存失败', 'error')
@@ -335,7 +349,7 @@ export default function ProjectDetail() {
 
       {tab === 'messages' && <div style={section}><MessagePanel projectId={id!} /></div>}
 
-      {tab === 'app' && project.app_url && (
+      {tab === 'app' && project.app_url && /^https?:\/\/.+/.test(project.app_url) && (
         <div style={section}>
           <div style={{ borderRadius: 12, border: '1px solid #dbeafe', background: 'linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 24px', gap: 16 }}>
             <div style={{ width: 72, height: 72, borderRadius: 18, background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', boxShadow: '0 4px 16px rgba(37,99,235,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -351,6 +365,20 @@ export default function ProjectDetail() {
               onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(37,99,235,0.3)' }}>
               <ExternalLink size={16} /> 打开应用
             </a>
+          </div>
+        </div>
+      )}
+
+      {tab === 'app' && (!project.app_url || !/^https?:\/\/.+/.test(project.app_url)) && (
+        <div style={section}>
+          <div style={{ borderRadius: 12, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 24px', gap: 12 }}>
+            <AppWindow size={40} color="var(--text-tertiary)" />
+            <p style={{ margin: 0, fontSize: 15, color: 'var(--text-secondary)', fontWeight: 500 }}>
+              {project.app_url ? '应用链接无效' : '该项目未配置应用'}
+            </p>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--text-tertiary)' }}>
+              {project.app_url ? '链接必须以 http:// 或 https:// 开头，请编辑修正' : '请在项目设置中添加应用链接'}
+            </p>
           </div>
         </div>
       )}

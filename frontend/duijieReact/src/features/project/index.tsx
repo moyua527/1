@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import { Plus, FolderKanban, Loader2, Download } from 'lucide-react'
 import { projectApi } from './services/api'
@@ -14,6 +14,7 @@ import { toast } from '../ui/Toast'
 import PageHeader from '../ui/PageHeader'
 import FilterBar from '../ui/FilterBar'
 import EmptyState from '../ui/EmptyState'
+import useLiveData from '../../hooks/useLiveData'
 
 const statusMap: Record<string, { label: string; color: string }> = {
   planning: { label: '规划中', color: 'blue' },
@@ -49,7 +50,8 @@ export default function ProjectList() {
   const { user, isMobile } = useOutletContext<{ user: any; isMobile?: boolean }>()
   const canCreate = can(user?.role || '', 'project:create')
 
-  const load = () => invalidate('projects')
+  const load = useCallback(() => invalidate('projects'), [invalidate])
+  useLiveData(['project'], load)
 
   const filtered = projects.filter(p => {
     if (statusFilter && p.status !== statusFilter) return false

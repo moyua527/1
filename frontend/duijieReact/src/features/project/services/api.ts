@@ -22,6 +22,6 @@ export const projectApi = {
   sendClientRequest: (id: string, data: { to_enterprise_id: number; message?: string }) => fetchApi(`/api/projects/${id}/client-request`, { method: 'POST', body: JSON.stringify(data) }),
   getClientRequests: () => fetchApi('/api/projects/client-requests'),
   getSentClientRequests: () => fetchApi('/api/projects/client-requests/sent'),
-  approveClientRequest: (requestId: number) => fetchApi(`/api/projects/client-requests/${requestId}/approve`, { method: 'POST' }),
+  approveClientRequest: (requestId: number, memberIds?: number[]) => fetchApi(`/api/projects/client-requests/${requestId}/approve`, { method: 'POST', body: JSON.stringify({ member_ids: memberIds || [] }) }),
   rejectClientRequest: (requestId: number, reason?: string) => fetchApi(`/api/projects/client-requests/${requestId}/reject`, { method: 'POST', body: JSON.stringify({ reason }) }),
 }

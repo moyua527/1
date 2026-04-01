@@ -1,4 +1,5 @@
 const db = require('../../../config/db');
+const { broadcast } = require('../../utils/broadcast');
 
 module.exports = async (req, res) => {
   try {
@@ -27,6 +28,7 @@ module.exports = async (req, res) => {
 
     vals.push(memberId, id);
     await db.query(`UPDATE duijie_project_members SET ${sets.join(', ')} WHERE id = ? AND project_id = ?`, vals);
+    broadcast('project', 'member_role_updated', { id, userId: req.userId });
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });

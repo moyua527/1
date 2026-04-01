@@ -35,7 +35,32 @@ async function getProjectPerms(userId, projectId) {
      WHERE pm.project_id = ? AND pm.user_id = ?`,
     [projectId, userId]
   );
-  if (!member) return null;
+  if (!member) {
+    // 非项目成员：检查是否企业管理人员（creator/admin）
+    if (activeEnterpriseId) {
+      const [[entMember]] = await db.query(
+        "SELECT role FROM duijie_client_members WHERE client_id = ? AND user_id = ? AND role IN ('creator','admin') AND is_deleted = 0 LIMIT 1",
+        [activeEnterpriseId, userId]
+      );
+      if (entMember) {
+        return {
+          projectRole: null,
+          source: null,
+          enterpriseRoleId: null,
+          enterpriseManager: true,
+          can_manage_members: true,
+          can_manage_roles: false,
+          can_create_project: true,
+          can_edit_project: true,
+          can_delete_project: entMember.role === 'creator',
+          can_manage_client: true,
+          can_view_report: true,
+          can_manage_task: true,
+        };
+      }
+    }
+    return null;
+  }
 
   if (member.enterprise_role_id && member.can_edit_project !== null) {
     return {
@@ -62,7 +87,7 @@ async function getProjectPerms(userId, projectId) {
     can_manage_roles: isOwner,
     can_create_project: isOwner,
     can_edit_project: isOwner,
-    can_delete_project: false, // 项目删除需要企业级权限，项目负责人不能直接删除
+    can_delete_project: isOwner,
     can_manage_client: isOwner,
     can_view_report: isOwner,
     can_manage_task: isOwner || member.role === 'editor',

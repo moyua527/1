@@ -3,6 +3,7 @@ import { clientApi } from '../client/services/api'
 import { projectApi } from '../project/services/api'
 import { toast } from '../ui/Toast'
 import { section } from './constants'
+import { fetchApi } from '../../bootstrap'
 
 interface Props {
   canAdmin: boolean
@@ -16,6 +17,14 @@ export default function ClientRequests({ canAdmin, onRefresh }: Props) {
   const [clientOutgoing, setClientOutgoing] = useState<any[]>([])
   const [subTab, setSubTab] = useState<'incoming' | 'outgoing'>('incoming')
   const [loading, setLoading] = useState(true)
+
+  // 对接人员选择弹窗
+  const [memberModalOpen, setMemberModalOpen] = useState(false)
+  const [memberModalRequestId, setMemberModalRequestId] = useState<number | null>(null)
+  const [enterpriseMembers, setEnterpriseMembers] = useState<any[]>([])
+  const [selectedMemberIds, setSelectedMemberIds] = useState<number[]>([])
+  const [memberLoading, setMemberLoading] = useState(false)
+  const [approving, setApproving] = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -35,9 +44,38 @@ export default function ClientRequests({ canAdmin, onRefresh }: Props) {
   useEffect(() => { load() }, [])
 
   const handleProjectApprove = async (id: number) => {
-    const r = await projectApi.approveClientRequest(id)
-    if (r.success) { toast('已同意项目关联', 'success'); load(); onRefresh?.() }
-    else toast(r.message || '操作失败', 'error')
+    // 打开对接人员选择弹窗
+    setMemberModalRequestId(id)
+    setSelectedMemberIds([])
+    setMemberModalOpen(true)
+    setMemberLoading(true)
+    try {
+      const r = await fetchApi('/api/my-enterprise')
+      if (r.success && r.data?.members) {
+        setEnterpriseMembers(r.data.members)
+      }
+    } catch { /* ignore */ }
+    setMemberLoading(false)
+  }
+
+  const handleConfirmApprove = async () => {
+    if (!memberModalRequestId) return
+    setApproving(true)
+    const r = await projectApi.approveClientRequest(memberModalRequestId, selectedMemberIds)
+    setApproving(false)
+    if (r.success) {
+      toast('已同意项目关联', 'success')
+      setMemberModalOpen(false)
+      setMemberModalRequestId(null)
+      load()
+      onRefresh?.()
+    } else {
+      toast(r.message || '操作失败', 'error')
+    }
+  }
+
+  const toggleMember = (userId: number) => {
+    setSelectedMemberIds(prev => prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId])
   }
   const handleProjectReject = async (id: number) => {
     const r = await projectApi.rejectClientRequest(id)
@@ -166,6 +204,59 @@ export default function ClientRequests({ canAdmin, onRefresh }: Props) {
             })}
           </div>
         </>
+      )}
+
+      {/* 对接人员选择弹窗 */}
+      {memberModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} onClick={() => setMemberModalOpen(false)} />
+          <div style={{ position: 'relative', background: 'var(--bg-primary)', borderRadius: 12, padding: 24, width: 420, maxHeight: '70vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+            <h3 style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>选择对接人员</h3>
+            <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--text-tertiary)' }}>从企业成员中选择参与该项目的对接人员</p>
+
+            {memberLoading ? (
+              <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-tertiary)', fontSize: 14 }}>加载中...</div>
+            ) : enterpriseMembers.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-tertiary)', fontSize: 14 }}>暂无企业成员</div>
+            ) : (
+              <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6, maxHeight: '40vh' }}>
+                {enterpriseMembers.map((m: any) => {
+                  const uid = m.user_id || m.id
+                  const selected = selectedMemberIds.includes(uid)
+                  return (
+                    <div key={uid} onClick={() => toggleMember(uid)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, cursor: 'pointer', border: `1.5px solid ${selected ? '#3b82f6' : 'var(--border-primary)'}`, background: selected ? '#eff6ff' : 'var(--bg-primary)', transition: 'all 0.15s' }}>
+                      <div style={{ width: 20, height: 20, borderRadius: 4, border: `2px solid ${selected ? '#3b82f6' : '#d1d5db'}`, background: selected ? '#3b82f6' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        {selected && <span style={{ color: '#fff', fontSize: 12, fontWeight: 700 }}>✓</span>}
+                      </div>
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 13, fontWeight: 600, flexShrink: 0 }}>
+                        {(m.display_name || m.username || '?')[0]}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{m.display_name || m.username}</div>
+                        {m.role_name && <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{m.role_name}</div>}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border-primary)' }}>
+              <span style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>
+                {selectedMemberIds.length > 0 ? `已选 ${selectedMemberIds.length} 人` : '可以不选，稍后再添加'}
+              </span>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => setMemberModalOpen(false)}
+                  style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>取消</button>
+                <button onClick={handleConfirmApprove} disabled={approving}
+                  style={{ padding: '8px 20px', borderRadius: 8, border: 'none', background: '#22c55e', color: '#fff', cursor: approving ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 500, opacity: approving ? 0.6 : 1 }}>
+                  {approving ? '处理中...' : '确认同意'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
