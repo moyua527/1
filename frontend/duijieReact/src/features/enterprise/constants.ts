@@ -1,10 +1,10 @@
 import React from 'react'
 
-export const section: React.CSSProperties = { background: '#fff', borderRadius: 12, padding: 20, border: '1px solid #e2e8f0' }
-export const infoRow: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#334155', padding: '6px 0' }
-export const labelStyle: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 500, color: '#334155', marginBottom: 4 }
-export const selectStyle: React.CSSProperties = { width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: '#fff' }
-export const textareaStyle: React.CSSProperties = { width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }
+export const section: React.CSSProperties = { background: 'var(--bg-primary)', borderRadius: 12, padding: 20, border: '1px solid var(--border-primary)' }
+export const infoRow: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: 'var(--text-body)', padding: '6px 0' }
+export const labelStyle: React.CSSProperties = { display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }
+export const selectStyle: React.CSSProperties = { width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-body)' }
+export const textareaStyle: React.CSSProperties = { width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit', background: 'var(--bg-primary)', color: 'var(--text-body)' }
 
 export const industryOptions = ['互联网/IT', '金融', '教育', '医疗健康', '制造业', '房地产', '零售/电商', '物流', '传媒/文化', '咨询/服务', '能源', '农业', '政府/公共事业', '其他']
 export const scaleOptions = ['1-10人', '11-50人', '51-200人', '201-500人', '501-1000人', '1000人以上']

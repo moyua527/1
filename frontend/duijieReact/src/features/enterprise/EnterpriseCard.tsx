@@ -112,7 +112,7 @@ export default function EnterpriseCard({ ent, myRole, isOwner, canAdmin, entMenu
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <div style={{ padding: '8px 12px', borderRadius: 10, background: 'var(--bg-primary)', border: '1px solid #dbeafe', fontSize: 18, fontWeight: 800, letterSpacing: 2, color: 'var(--text-heading)', fontFamily: 'monospace' }}>{ent.join_code}</div>
-              <button onClick={handleCopyJoinCode} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', background: 'var(--bg-primary)', cursor: 'pointer', color: 'var(--text-body)', fontSize: 13, fontWeight: 600 }}>
+              <button onClick={handleCopyJoinCode} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', cursor: 'pointer', color: 'var(--text-body)', fontSize: 13, fontWeight: 600 }}>
                 <Copy size={14} /> 复制
               </button>
               <button onClick={handleRegenerateJoinCode} disabled={joinCodeRefreshing} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--brand)', cursor: 'pointer', color: 'var(--bg-primary)', fontSize: 13, fontWeight: 600, opacity: joinCodeRefreshing ? 0.6 : 1 }}>

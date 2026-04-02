@@ -139,7 +139,7 @@ export default function EnterpriseModals(props: Props) {
               <label style={{ ...labelStyle, marginBottom: 8 }}>从已有账号导入</label>
               <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 8 }}>
                 <input value={lookupPhone} onChange={e => { const v = e.target.value.replace(/\D/g, '').slice(0, 11); setLookupPhone(v) }} placeholder="输入手机号查找" maxLength={11}
-                  style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none' }} />
+                  style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-body)' }} />
                 <button onClick={handleLookup} disabled={lookupLoading} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: 'var(--brand)', color: 'var(--bg-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, fontSize: 13, fontWeight: 500, opacity: lookupLoading ? 0.6 : 1, width: isMobile ? '100%' : undefined }}>
                   <Search size={14} /> {lookupLoading ? '查找中...' : '导入'}
                 </button>
@@ -198,7 +198,7 @@ export default function EnterpriseModals(props: Props) {
                   {ENTERPRISE_PERMISSIONS.map(p => (
                     <label key={p.key} onClick={() => setRoleForm({ ...roleForm, [p.key]: !(roleForm as any)[p.key] })}
                       style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 8px', borderRadius: 6, cursor: 'pointer', fontSize: 12, border: '1px solid var(--border-primary)', background: (roleForm as any)[p.key] ? '#f0fdf4' : 'var(--bg-primary)' }}>
-                      <div style={{ width: 16, height: 16, borderRadius: 4, border: (roleForm as any)[p.key] ? 'none' : '1.5px solid #cbd5e1', background: (roleForm as any)[p.key] ? 'var(--brand)' : 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <div style={{ width: 16, height: 16, borderRadius: 4, border: (roleForm as any)[p.key] ? 'none' : '1.5px solid var(--border-primary)', background: (roleForm as any)[p.key] ? 'var(--brand)' : 'var(--bg-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         {(roleForm as any)[p.key] && <Check size={10} color="#fff" />}
                       </div>
                       <span style={{ color: 'var(--text-body)' }}>{p.label}</span>

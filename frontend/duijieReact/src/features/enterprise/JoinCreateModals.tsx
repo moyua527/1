@@ -96,7 +96,7 @@ export default function JoinCreateModals({ joinModalOpen, setJoinModalOpen, join
             <div style={{ position: 'relative' }}>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input value={joinSearch} onChange={e => setJoinSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleJoinSearch()} placeholder="先下拉查看平台企业，或输入 1 个字筛选"
-                  style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none' }} />
+                  style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-body)' }} />
                 <button onClick={() => handleJoinSearch()} disabled={joinSearching} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: 'var(--brand)', color: 'var(--bg-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 500, opacity: joinSearching ? 0.6 : 1 }}>
                   <Search size={14} /> {joinSearching ? '搜索中...' : '搜索'}
                 </button>
@@ -117,10 +117,10 @@ export default function JoinCreateModals({ joinModalOpen, setJoinModalOpen, join
             </div>
             <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-tertiary)' }}>默认下拉展示平台可加入企业，输入 1 个字即可按包含关系实时筛选。</div>
           </div>
-          <div style={{ padding: '14px 16px', borderRadius: 12, border: '1px solid #dbeafe', background: '#f8fbff' }}>
+          <div style={{ padding: '14px 16px', borderRadius: 12, border: '1px solid var(--brand-border)', background: 'var(--bg-selected)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
               <CheckCircle2 size={16} color="var(--brand)" />
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#1e3a8a' }}>已选企业</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--brand)' }}>已选企业</span>
             </div>
             {selectedEnterprise ? (
               <div>
@@ -140,7 +140,7 @@ export default function JoinCreateModals({ joinModalOpen, setJoinModalOpen, join
                 value={joinCode}
                 onChange={e => setJoinCode(e.target.value.toUpperCase().replace(/\s/g, '').slice(0, 20))}
                 placeholder="有推荐码就填写，填写后可直接加入企业"
-                style={{ width: '100%', padding: '10px 12px 10px 40px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '10px 12px 10px 40px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', boxSizing: 'border-box', background: 'var(--bg-primary)', color: 'var(--text-body)' }}
               />
               <KeyRound size={16} color="#94a3b8" style={{ position: 'absolute', left: 12, top: 11 }} />
             </div>
