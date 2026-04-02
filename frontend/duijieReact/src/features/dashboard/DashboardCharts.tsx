@@ -2,7 +2,7 @@ import { Activity } from 'lucide-react'
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 
 const CHART_COLORS = ['#6366f1', '#14b8a6', '#f59e0b', '#ec4899', '#8b5cf6', '#0284c7']
-const taskStatusLabel: Record<string, string> = { todo: '待办', in_progress: '进行中', pending_review: '待验收', accepted: '已完成', done: '已完成' }
+const taskStatusLabel: Record<string, string> = { todo: '待办', submitted: '已提出', disputed: '待补充', in_progress: '执行中', pending_review: '待验收', review_failed: '验收不通过', accepted: '验收通过', done: '已完成' }
 const oppStageLabel: Record<string, string> = { lead: '线索', qualify: '验证', proposal: '方案', negotiate: '谈判', won: '赢单', lost: '丢单' }
 
 const CustomTooltip = ({ active, payload, label }: any) => {

@@ -38,6 +38,7 @@ export interface Project {
   budget: number | null
   app_name: string | null
   app_url: string | null
+  task_title_presets?: string[]
   created_by: number | null
   created_at: string
   members?: ProjectMember[]

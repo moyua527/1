@@ -15,9 +15,11 @@ import { can } from '../../stores/permissions'
 interface Task { id: number; title: string; description?: string; status: string; priority: string; project_id: number; project_name?: string; due_date?: string; assignee_name?: string }
 
 const columns = [
-  { key: 'todo', label: '待办', color: 'var(--text-secondary)', bg: 'var(--bg-tertiary)' },
-  { key: 'in_progress', label: '进行中', color: 'var(--color-warning)', bg: '#fffbeb' },
-  { key: 'pending_review', label: '待验收', color: 'var(--brand)', bg: 'var(--bg-selected)' },
+  { key: 'submitted', label: '已提出', color: 'var(--brand)', bg: 'var(--bg-selected)' },
+  { key: 'disputed', label: '待补充', color: 'var(--color-warning)', bg: '#fffbeb' },
+  { key: 'in_progress', label: '执行中', color: '#7c3aed', bg: '#f5f3ff' },
+  { key: 'pending_review', label: '待验收', color: '#ea580c', bg: '#fff7ed' },
+  { key: 'review_failed', label: '验收不通过', color: 'var(--color-danger)', bg: '#fef2f2' },
   { key: 'accepted', label: '验收通过', color: 'var(--color-success)', bg: '#f0fdf4' },
 ]
 

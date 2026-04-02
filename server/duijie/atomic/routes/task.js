@@ -8,6 +8,7 @@ const upload = require('./upload');
 const router = express.Router();
 
 const taskStaff = roleGuard('admin', 'member');
+const reviewPoints = require('../controllers/task/reviewPointsController');
 
 // Tasks
 router.post('/tasks', auth, roleGuard('admin', 'member', { soft: true }), enterprisePermGuard('can_manage_task'), upload.array('files', 10), require('../controllers/task/createController'));
@@ -19,6 +20,12 @@ router.delete('/tasks/:id', auth, taskStaff, require('../controllers/task/delete
 router.post('/tasks/:id/attachments', auth, taskStaff, upload.array('files', 10), require('../controllers/task/uploadAttachmentController'));
 router.delete('/tasks/attachments/:attachmentId', auth, taskStaff, require('../controllers/task/deleteAttachmentController'));
 router.get('/tasks/attachments/:attachmentId/download', auth, require('../controllers/task/downloadAttachmentController'));
+
+// 审核要点
+router.get('/tasks/:id/review-points', auth, reviewPoints.list);
+router.post('/tasks/:id/review-points', auth, taskStaff, reviewPoints.add);
+router.put('/tasks/review-points/:pointId/respond', auth, taskStaff, reviewPoints.respond);
+router.put('/tasks/review-points/:pointId/confirm', auth, taskStaff, reviewPoints.confirm);
 
 // Milestones
 router.post('/milestones', auth, V.createMilestone, validate, require('../controllers/milestone/createController'));

@@ -75,7 +75,7 @@ export default function ProjectDetail() {
   const [settingClient, setSettingClient] = useState(false)
   const [showActionMenu, setShowActionMenu] = useState(false)
   const [showEditProject, setShowEditProject] = useState(false)
-  const [editForm, setEditForm] = useState({ name: '', description: '', status: 'planning' })
+  const [editForm, setEditForm] = useState({ name: '', description: '', status: 'planning', task_title_presets_text: '' })
   const [joinRequests, setJoinRequests] = useState<any[]>([])
   const [joinReqLoading, setJoinReqLoading] = useState(false)
 
@@ -154,13 +154,20 @@ export default function ProjectDetail() {
 
   useEffect(() => {
     if (!id) return
-    setProject(null)
-    loadProject()
-    loadTasks()
+    const timer = window.setTimeout(() => {
+      setProject(null)
+      loadProject()
+      loadTasks()
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [id, loadProject, loadTasks])
 
   useEffect(() => {
-    if (tab === 'join_requests') loadJoinRequests()
+    if (tab !== 'join_requests') return
+    const timer = window.setTimeout(() => {
+      loadJoinRequests()
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [tab, loadJoinRequests])
 
   if (projectLoading) return <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}>加载中...</div>
@@ -264,7 +271,7 @@ export default function ProjectDetail() {
             {showActionMenu && <>
               <div style={{ position: 'fixed', inset: 0, zIndex: 99 }} onClick={() => setShowActionMenu(false)} />
               <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)', borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 100, minWidth: 140, overflow: 'hidden' }}>
-                {canEdit && <button onClick={() => { setShowActionMenu(false); setEditForm({ name: project.name || '', description: project.description || '', status: project.status || 'planning' }); setShowEditProject(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Pencil size={14} /> 编辑项目</button>}
+                {canEdit && <button onClick={() => { setShowActionMenu(false); setEditForm({ name: project.name || '', description: project.description || '', status: project.status || 'planning', task_title_presets_text: Array.isArray(project.task_title_presets) ? project.task_title_presets.join('\n') : '' }); setShowEditProject(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Pencil size={14} /> 编辑项目</button>}
                 {canDelete && <button onClick={() => { setShowActionMenu(false); handleDelete() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#ef4444', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Trash2 size={14} /> 删除项目</button>}
               </div>
             </>}
@@ -276,6 +283,7 @@ export default function ProjectDetail() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div><label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>项目名称</label><Input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} placeholder="项目名称" /></div>
           <div><label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>描述</label><textarea value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} placeholder="项目描述（可选）" rows={3} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', fontSize: 14, resize: 'vertical' }} /></div>
+          <div><label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>固定功能名称</label><textarea value={editForm.task_title_presets_text} onChange={e => setEditForm(f => ({ ...f, task_title_presets_text: e.target.value }))} placeholder="每行一个功能名称，如：登录页\n用户管理\n消息中心" rows={4} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', fontSize: 14, resize: 'vertical' }} /><div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>任务创建时可直接下拉选择这些固定功能名称</div></div>
           <div><label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>状态</label><select value={editForm.status} onChange={e => setEditForm(f => ({ ...f, status: e.target.value }))} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', fontSize: 14 }}>
             {Object.entries(statusMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
           </select></div>
@@ -283,7 +291,8 @@ export default function ProjectDetail() {
             <Button variant="secondary" onClick={() => setShowEditProject(false)}>取消</Button>
             <Button onClick={async () => {
               if (!editForm.name.trim()) { toast('请输入项目名称', 'error'); return }
-              const r = await projectApi.update(id!, { name: editForm.name.trim(), description: editForm.description.trim(), status: editForm.status })
+              const task_title_presets = editForm.task_title_presets_text.split(/\r?\n/).map(v => v.trim()).filter(Boolean)
+              const r = await projectApi.update(id!, { name: editForm.name.trim(), description: editForm.description.trim(), status: editForm.status, task_title_presets })
               if (r.success) { toast('已更新', 'success'); setShowEditProject(false); loadProject() } else toast(r.message || '更新失败', 'error')
             }}>保存</Button>
           </div>

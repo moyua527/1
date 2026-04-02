@@ -9,7 +9,7 @@ const priorityColor: Record<string, { bg: string; text: string; label: string }>
   medium: { bg: '#fefce8', text: '#ca8a04', label: '中' },
   low: { bg: '#f0fdf4', text: 'var(--color-success)', label: '低' },
 }
-const statusLabel: Record<string, string> = { todo: '待办', in_progress: '进行中', pending_review: '待验收' }
+const statusLabel: Record<string, string> = { todo: '待办', submitted: '已提出', disputed: '待补充', in_progress: '执行中', pending_review: '待验收', review_failed: '验收不通过', accepted: '验收通过' }
 const projStatus: Record<string, { color: string; label: string }> = {
   planning: { color: '#6b7280', label: '规划中' },
   in_progress: { color: 'var(--brand)', label: '进行中' },

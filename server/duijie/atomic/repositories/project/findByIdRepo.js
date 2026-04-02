@@ -1,4 +1,5 @@
 const db = require('../../../config/db');
+const { normalizeTaskTitlePresets } = require('../../utils/taskTitlePresets');
 
 module.exports = async (id) => {
   const [rows] = await db.query(
@@ -22,5 +23,5 @@ module.exports = async (id) => {
      WHERE pm.project_id = ? AND u.is_deleted = 0 ORDER BY pm.source ASC, pm.role DESC`,
     [id]
   );
-  return { ...rows[0], members };
+  return { ...rows[0], task_title_presets: normalizeTaskTitlePresets(rows[0].task_title_presets), members };
 };

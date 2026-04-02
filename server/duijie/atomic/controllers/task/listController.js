@@ -6,11 +6,22 @@ module.exports = async (req, res) => {
     const data = await listTasks(req.query.project_id, { role: req.userRole, userId: req.userId, activeEnterpriseId: req.activeEnterpriseId });
     if (data.length > 0) {
       const ids = data.map(t => t.id);
+      const placeholders = ids.map(() => '?').join(',');
       const [attachments] = await db.query(
-        `SELECT id, task_id, filename, original_name, file_size, mime_type, created_at FROM duijie_task_attachments WHERE task_id IN (${ids.map(() => '?').join(',')})`, ids
+        `SELECT id, task_id, filename, original_name, file_size, mime_type, created_at FROM duijie_task_attachments WHERE task_id IN (${placeholders})`, ids
+      );
+      // 查询审核要点
+      const [reviewPoints] = await db.query(
+        `SELECT rp.*, u.nickname AS author_name, ru.nickname AS responder_name
+         FROM duijie_task_review_points rp
+         LEFT JOIN voice_users u ON u.id = rp.author_id
+         LEFT JOIN voice_users ru ON ru.id = rp.response_by
+         WHERE rp.task_id IN (${placeholders})
+         ORDER BY rp.created_at ASC`, ids
       );
       for (const t of data) {
         t.attachments = attachments.filter(a => a.task_id === t.id);
+        t.review_points = reviewPoints.filter(rp => rp.task_id === t.id);
       }
     }
     res.json({ success: true, data });

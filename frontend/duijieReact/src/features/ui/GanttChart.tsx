@@ -18,7 +18,11 @@ interface GanttChartProps {
 
 const STATUS_COLORS: Record<string, string> = {
   todo: 'var(--text-tertiary)',
-  in_progress: 'var(--brand)',
+  submitted: 'var(--brand)',
+  disputed: '#f59e0b',
+  in_progress: '#7c3aed',
+  pending_review: '#ea580c',
+  review_failed: '#ef4444',
   review: '#f59e0b',
   done: '#22c55e',
   accepted: '#22c55e',

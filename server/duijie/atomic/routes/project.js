@@ -25,6 +25,9 @@ router.post('/projects/client-requests/:id/approve', auth, require('../controlle
 router.post('/projects/client-requests/:id/reject', auth, require('../controllers/project/clientRequestRejectController'));
 router.get('/projects', auth, projectStaff, require('../controllers/project/listController'));
 router.get('/projects/:id', auth, projectStaff, require('../controllers/project/detailController'));
+router.get('/projects/:id/task-title-options', auth, pag, projectPermGuard('can_manage_task'), require('../controllers/project/taskTitleOptionsController'));
+router.post('/projects/:id/task-title-history', auth, pag, projectPermGuard('can_manage_task'), require('../controllers/project/rememberTaskTitleController'));
+router.delete('/projects/:id/task-title-history/:historyId', auth, pag, projectPermGuard('can_manage_task'), require('../controllers/project/deleteTaskTitleHistoryController'));
 router.put('/projects/:id', auth, pag, projectPermGuard('can_edit_project'), require('../controllers/project/updateController'));
 router.delete('/projects/:id', auth, pag, projectPermGuard('can_delete_project'), require('../controllers/project/deleteController'));
 router.get('/projects/:id/available-users', auth, pag, require('../controllers/project/availableUsersController'));

@@ -28,6 +28,9 @@ export const projectApi = {
   searchByCode: (code: string) => fetchApi(`/api/projects/search-by-code?code=${encodeURIComponent(code)}`),
   joinRequest: (project_id: number, message?: string) => fetchApi('/api/projects/join-request', { method: 'POST', body: JSON.stringify({ project_id, message }) }),
   getJoinRequests: (id: string) => fetchApi(`/api/projects/${id}/join-requests`),
+  taskTitleOptions: (id: string) => fetchApi(`/api/projects/${id}/task-title-options`),
+  rememberTaskTitle: (id: string, title: string) => fetchApi(`/api/projects/${id}/task-title-history`, { method: 'POST', body: JSON.stringify({ title }) }),
+  deleteTaskTitleHistory: (id: string, historyId: number) => fetchApi(`/api/projects/${id}/task-title-history/${historyId}`, { method: 'DELETE' }),
   approveJoinRequest: (id: string, requestId: number) => fetchApi(`/api/projects/${id}/join-requests/${requestId}/approve`, { method: 'POST' }),
   rejectJoinRequest: (id: string, requestId: number) => fetchApi(`/api/projects/${id}/join-requests/${requestId}/reject`, { method: 'POST' }),
 }

@@ -33,7 +33,7 @@ module.exports = async (req, res) => {
       params
     );
 
-    const statusMap = { todo: '待办', in_progress: '进行中', pending_review: '待验收', accepted: '已完成', done: '已完成' };
+    const statusMap = { todo: '待办', submitted: '已提出', disputed: '待补充', in_progress: '执行中', pending_review: '待验收', review_failed: '验收不通过', accepted: '验收通过', done: '已完成' };
     const priorityMap = { urgent: '紧急', high: '高', medium: '中', low: '低' };
 
     const BOM = '\uFEFF';

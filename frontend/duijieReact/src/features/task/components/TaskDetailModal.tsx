@@ -16,9 +16,11 @@ const priorityOptions = [
 ]
 
 const statusOptions = [
-  { value: 'todo', label: '待办' },
-  { value: 'in_progress', label: '进行中' },
+  { value: 'submitted', label: '已提出' },
+  { value: 'disputed', label: '待补充' },
+  { value: 'in_progress', label: '执行中' },
   { value: 'pending_review', label: '待验收' },
+  { value: 'review_failed', label: '验收不通过' },
   { value: 'accepted', label: '验收通过' },
 ]
 
@@ -34,7 +36,7 @@ interface Props {
 }
 
 export default function TaskDetailModal({ task, projectId, open, onClose, onUpdated }: Props) {
-  const [form, setForm] = useState({ title: '', description: '', priority: 'medium', status: 'todo', assignee_id: '', due_date: '' })
+  const [form, setForm] = useState({ title: '', description: '', priority: 'medium', status: 'submitted', assignee_id: '', due_date: '' })
   const [members, setMembers] = useState<any[]>([])
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -47,7 +49,7 @@ export default function TaskDetailModal({ task, projectId, open, onClose, onUpda
         title: task.title || '',
         description: task.description || '',
         priority: task.priority || 'medium',
-        status: task.status || 'todo',
+        status: task.status || 'submitted',
         assignee_id: task.assignee_id ? String(task.assignee_id) : '',
         due_date: task.due_date ? task.due_date.slice(0, 10) : '',
       })

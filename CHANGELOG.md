@@ -2,6 +2,8 @@
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.1.64 | 2026-04-03 | 任务标题选择增强：项目支持维护固定功能名称预设（新建项目与编辑项目均可配置），任务创建入口（项目详情内联创建 / 全局新建任务弹窗）统一接入双模式标题选择器，支持固定功能名快速选择、按用户+项目维度自动记忆自由输入标题，并支持历史标题删除；前后端同步补齐 `task_title_presets` 读写与任务标题历史接口接入。 |
+| v1.1.63 | 2026-04-03 | 修复任务创建弹窗粘贴图片/文件时重复添加两次的问题：项目详情页任务弹窗与全局新建任务弹窗的局部 `onPaste` 处理在接管文件粘贴后会阻止事件继续传播，避免与 `document` 级粘贴监听重复消费同一次粘贴事件。 |
 | v1.1.61 | 2026-04-03 | 项目与任务时间展示统一精确到秒；任务附件改为直接走 `/uploads` 预览/下载；前端 Socket.IO 连接统一使用 `BACKEND_URL`，修复反向代理/非同源场景下的实时连接异常；后端附件下载接口补齐图片预览模式与文件缺失时的 404 返回。 |
 | v1.1.60 | 2026-04-03 | 项目协作增强：项目列表新增项目ID展示与一键复制，支持通过项目ID搜索项目并提交加入申请；后端新增项目加入申请搜索/提交/列表/审批接口并修正审批路由参数读取；项目详情页任务区改为按项目维度实时刷新任务变更，避免其他项目任务广播触发整页误刷新。 |
 | v1.1.59 | 2026-04-02 | **安全与工程化全面升级**：安全审计(移除auth query token/验证码端点限速3次60s/密码重置端点限速5次15min/文件上传名清理防路径遍历)；Nginx(Gzip压缩level6+Permissions-Policy头+uploads缓存)；PWA SW v5(缓存上限100条+自动清理)；Vite代码分割(vendor-react 166KB+vendor-ui 42KB独立chunk)；Socket.IO工程化(pingInterval/pingTimeout/maxHttpBufferSize+连接级事件速率限制60/min+未认证禁止join_project+auth_ok/auth_error反馈+连接计数/峰值监控)；优雅关闭(SIGTERM/SIGINT/uncaughtException→关闭HTTP/Socket.IO/DB连接池)；内存缓存工具(memoryCache.js Map+TTL+自动清理+前缀失效)；auth中间件用户查询30秒缓存+写操作自动失效；健康端点增强(进程内存/运行时间/WebSocket连接数)；请求ID跟踪(X-Request-Id头+响应计时+慢请求warn)；GitHub Actions部署工作流(deploy.yml手动触发SFTP部署)；ErrorBoundary增加返回首页按钮+颜色CSS变量；EnterpriseCard标签颜色CSS变量化 |

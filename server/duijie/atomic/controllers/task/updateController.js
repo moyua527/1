@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
       await notify(req.body.assignee_id, 'task_assigned', '任务指派', `你被指派了任务「${oldTask.title}」`, `/tasks`);
     }
     if (oldTask && req.body.status && req.body.status !== oldTask.status && oldTask.created_by && oldTask.created_by !== req.userId) {
-      const statusLabel = { todo: '待办', in_progress: '进行中', pending_review: '待验收', accepted: '验收通过' };
+      const statusLabel = { todo: '待办', submitted: '已提出', disputed: '待补充', in_progress: '执行中', pending_review: '待验收', review_failed: '验收不通过', accepted: '验收通过' };
       await notify(oldTask.created_by, 'task_status', '任务状态变更', `任务「${oldTask.title}」状态变为「${statusLabel[req.body.status] || req.body.status}」`, `/tasks`);
     }
 

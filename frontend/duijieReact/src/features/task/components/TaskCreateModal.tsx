@@ -1,15 +1,18 @@
 import { useState, useEffect, useRef, useCallback, DragEvent, ClipboardEvent } from 'react'
 import { fetchApi, uploadFile } from '../../../bootstrap'
 import Modal from '../../ui/Modal'
-import Input from '../../ui/Input'
 import Button from '../../ui/Button'
 import { toast } from '../../ui/Toast'
 import { Paperclip, X, Upload } from 'lucide-react'
+import TaskTitleSelector from './TaskTitleSelector'
+import { projectApi } from '../../project/services/api'
 
 const columns = [
-  { key: 'todo', label: '待办' },
-  { key: 'in_progress', label: '进行中' },
+  { key: 'submitted', label: '已提出' },
+  { key: 'disputed', label: '待补充' },
+  { key: 'in_progress', label: '执行中' },
   { key: 'pending_review', label: '待验收' },
+  { key: 'review_failed', label: '验收不通过' },
   { key: 'accepted', label: '验收通过' },
 ]
 
@@ -20,14 +23,37 @@ interface Props {
   projects: any[]
 }
 
+const emptyCreateForm = {
+  project_id: '',
+  title: '',
+  description: '',
+  priority: 'medium',
+  status: 'submitted',
+  assignee_id: '',
+  due_date: '',
+}
+
 export default function TaskCreateModal({ open, onClose, onCreated, projects }: Props) {
-  const [createForm, setCreateForm] = useState({ project_id: '', title: '', description: '', priority: 'medium', status: 'todo', assignee_id: '', due_date: '' })
+  const [createForm, setCreateForm] = useState(emptyCreateForm)
   const [createMembers, setCreateMembers] = useState<any[]>([])
   const [createFiles, setCreateFiles] = useState<File[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const dropRef = useRef<HTMLDivElement>(null)
+  const defaultProjectId = projects[0]?.id ? String(projects[0].id) : ''
+  const currentProjectId = createForm.project_id || defaultProjectId
+
+  const resetCreateState = useCallback(() => {
+    setCreateForm(emptyCreateForm)
+    setCreateMembers([])
+    setCreateFiles([])
+  }, [])
+
+  const handleClose = useCallback(() => {
+    resetCreateState()
+    onClose()
+  }, [onClose, resetCreateState])
 
   const addFiles = useCallback((files: FileList | File[]) => {
     setCreateFiles(prev => [...prev, ...Array.from(files)])
@@ -50,15 +76,8 @@ export default function TaskCreateModal({ open, onClose, onCreated, projects }: 
         if (f) files.push(f)
       }
     }
-    if (files.length) { e.preventDefault(); addFiles(files) }
+    if (files.length) { e.preventDefault(); e.stopPropagation(); addFiles(files) }
   }, [addFiles])
-
-  useEffect(() => {
-    if (open) {
-      setCreateForm({ project_id: projects[0]?.id ? String(projects[0].id) : '', title: '', description: '', priority: 'medium', status: 'todo', assignee_id: '', due_date: '' })
-      setCreateFiles([])
-    }
-  }, [open, projects])
 
   useEffect(() => {
     if (!open) return
@@ -74,18 +93,25 @@ export default function TaskCreateModal({ open, onClose, onCreated, projects }: 
   }, [open, addFiles])
 
   useEffect(() => {
-    if (createForm.project_id) {
-      fetchApi(`/api/projects/${createForm.project_id}`).then(r => { if (r.success && r.data?.members) setCreateMembers(r.data.members) })
-    } else setCreateMembers([])
-  }, [createForm.project_id])
+    if (!currentProjectId) return
+    let active = true
+    fetchApi(`/api/projects/${currentProjectId}`).then(r => {
+      if (!active) return
+      if (r.success && r.data?.members) setCreateMembers(r.data.members)
+    })
+    return () => {
+      active = false
+    }
+  }, [currentProjectId])
 
   const handleCreate = async () => {
-    if (!createForm.project_id) { toast('请选择项目', 'error'); return }
-    if (!createForm.title.trim()) { toast('请输入任务标题', 'error'); return }
+    if (!currentProjectId) { toast('请选择项目', 'error'); return }
+    const title = createForm.title.trim()
+    if (!title) { toast('请输入任务标题', 'error'); return }
     setSubmitting(true)
     const fd = new FormData()
-    fd.append('project_id', createForm.project_id)
-    fd.append('title', createForm.title.trim())
+    fd.append('project_id', currentProjectId)
+    fd.append('title', title)
     if (createForm.description) fd.append('description', createForm.description)
     fd.append('priority', createForm.priority)
     fd.append('status', createForm.status)
@@ -95,26 +121,26 @@ export default function TaskCreateModal({ open, onClose, onCreated, projects }: 
     const r = await uploadFile('/api/tasks', fd)
     setSubmitting(false)
     if (r.success) {
+      const rememberResult = await projectApi.rememberTaskTitle(currentProjectId, title)
+      if (!rememberResult.success) toast(rememberResult.message || '任务标题历史保存失败', 'error')
       toast('任务已创建', 'success')
-      onClose()
-      setCreateForm({ project_id: '', title: '', description: '', priority: 'medium', status: 'todo', assignee_id: '', due_date: '' })
-      setCreateFiles([])
+      handleClose()
       onCreated()
     } else toast(r.message || '创建失败', 'error')
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="新建任务">
+    <Modal open={open} onClose={handleClose} title="新建任务">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div>
           <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>所属项目 *</label>
-          <select value={createForm.project_id} onChange={e => setCreateForm({ ...createForm, project_id: e.target.value })}
+          <select value={currentProjectId} onChange={e => { setCreateMembers([]); setCreateForm({ ...createForm, project_id: e.target.value }) }}
             style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
             <option value="">请选择项目</option>
             {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
         </div>
-        <Input label="任务标题 *" placeholder="输入任务标题" value={createForm.title} onChange={e => setCreateForm({ ...createForm, title: e.target.value })} />
+        <TaskTitleSelector key={`task-title-${open ? 'open' : 'closed'}-${currentProjectId || 'none'}`} label="任务标题" open={open} projectId={currentProjectId} value={createForm.title} onChange={title => setCreateForm({ ...createForm, title })} required />
         <div>
           <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>描述</label>
           <textarea value={createForm.description} onChange={e => setCreateForm({ ...createForm, description: e.target.value })} placeholder="任务描述（可选）"
@@ -186,7 +212,7 @@ export default function TaskCreateModal({ open, onClose, onCreated, projects }: 
           )}
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-          <Button variant="secondary" onClick={onClose}>取消</Button>
+          <Button variant="secondary" onClick={handleClose}>取消</Button>
           <Button disabled={submitting} onClick={handleCreate}>{submitting ? '创建中...' : '创建任务'}</Button>
         </div>
       </div>

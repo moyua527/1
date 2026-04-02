@@ -1,6 +1,6 @@
 {
-  "version": "1.1.61",
-  "versionCode": 61,
+  "version": "1.1.63",
+  "versionCode": 63,
   "minVersion": "1.0.0",
-  "changelog": "项目时间显示精确到秒+任务附件预览下载修复+Socket连接修复"
+  "changelog": "修复任务创建弹窗粘贴图片/文件时重复添加两次的问题"
 }

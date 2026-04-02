@@ -43,7 +43,7 @@ export default function ProjectList() {
   const { activeEnterpriseId } = useEnterpriseStore()
   const [showCreate, setShowCreate] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [form, setForm] = useState({ name: '', description: '' })
+  const [form, setForm] = useState({ name: '', description: '', task_title_presets_text: '' })
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [showJoin, setShowJoin] = useState(false)
@@ -74,9 +74,10 @@ export default function ProjectList() {
   const handleCreate = async () => {
     if (!form.name.trim()) { toast('请输入项目名称', 'error'); return }
     setSubmitting(true)
-    const r = await projectApi.create(form)
+    const task_title_presets = form.task_title_presets_text.split(/\r?\n/).map(v => v.trim()).filter(Boolean)
+    const r = await projectApi.create({ name: form.name.trim(), description: form.description.trim(), task_title_presets })
     setSubmitting(false)
-    if (r.success) { toast('项目创建成功', 'success'); setShowCreate(false); setForm({ name: '', description: '' }); load() }
+    if (r.success) { toast('项目创建成功', 'success'); setShowCreate(false); setForm({ name: '', description: '', task_title_presets_text: '' }); load() }
     else toast(r.message || '创建失败', 'error')
   }
 
@@ -179,6 +180,12 @@ export default function ProjectList() {
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>项目描述</label>
             <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={3} placeholder="简要描述项目内容"
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>固定功能名称</label>
+            <textarea value={form.task_title_presets_text} onChange={e => setForm({ ...form, task_title_presets_text: e.target.value })} rows={4} placeholder="每行一个功能名称，如：登录页\n订单管理\n用户中心"
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
+            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>创建任务时可直接从这些固定功能名称中选择</div>
           </div>
           <p style={{ fontSize: 12, color: 'var(--text-tertiary)', margin: 0 }}>创建后可在项目详情中添加成员、关联应用等</p>
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column-reverse' : 'row', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
