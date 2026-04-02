@@ -70,7 +70,7 @@ export function useEnterprise() {
       setJoinModalOpen(true)
       setSearchParams({}, { replace: true })
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [searchParams]) // eslint-disable-line react-hooks/exhaustive-deps
 
   /** Invalidate enterprise data + sync global store */
   const refresh = () => {

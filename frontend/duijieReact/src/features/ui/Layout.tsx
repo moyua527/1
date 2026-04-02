@@ -67,7 +67,7 @@ export default function Layout() {
     return () => document.removeEventListener('mousedown', handler)
   }, [avatarMenuOpen])
 
-  useEffect(() => { setAvatarMenuOpen(false); setSettingsTab(null) }, [location.pathname])
+  useEffect(() => { setAvatarMenuOpen(false); setSettingsTab(null) }, [location.pathname, location.search])
 
   const sidebarW = sidebarCollapsed ? SIDEBAR_COLLAPSED_W : SIDEBAR_W
 

@@ -222,8 +222,8 @@ describe('Enterprise CRUD', () => {
   });
 
   describe('Enterprise Join Code', () => {
-    it('should list recommended enterprises for non-member users', async () => {
-      const res = await authGet('/api/my-enterprise/recommended', joinUserToken);
+    it('should search target enterprise for non-member users', async () => {
+      const res = await authGet(`/api/my-enterprise/search?name=${encodeURIComponent('Jest测试企业')}`, joinUserToken);
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(Array.isArray(res.body.data)).toBe(true);
