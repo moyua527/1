@@ -31,6 +31,7 @@ export const projectApi = {
   taskTitleOptions: (id: string) => fetchApi(`/api/projects/${id}/task-title-options`),
   rememberTaskTitle: (id: string, title: string) => fetchApi(`/api/projects/${id}/task-title-history`, { method: 'POST', body: JSON.stringify({ title }) }),
   deleteTaskTitleHistory: (id: string, historyId: number) => fetchApi(`/api/projects/${id}/task-title-history/${historyId}`, { method: 'DELETE' }),
+  updateTaskTitlePresets: (id: string, presets: string[]) => fetchApi(`/api/projects/${id}/task-title-presets`, { method: 'PATCH', body: JSON.stringify({ presets }) }),
   approveJoinRequest: (id: string, requestId: number) => fetchApi(`/api/projects/${id}/join-requests/${requestId}/approve`, { method: 'POST' }),
   rejectJoinRequest: (id: string, requestId: number) => fetchApi(`/api/projects/${id}/join-requests/${requestId}/reject`, { method: 'POST' }),
 }

@@ -254,7 +254,7 @@ export default function ProjectDetail() {
   }
 
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px - 48px)', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
         <button onClick={() => nav('/projects')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', padding: 4 }}><ArrowLeft size={20} /></button>
         <div style={{ flex: 1 }}>
@@ -299,7 +299,7 @@ export default function ProjectDetail() {
         </div>
       </Modal>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 0, flexWrap: 'wrap', flexShrink: 0 }}>
         {([['overview','概览'],['tasks','任务'],['milestones','里程碑'],['messages','消息'], ...(project.app_url ? [['app', project.app_name || '应用']] : []), ...(canEdit ? [['join_requests', '加入申请']] : [])] as [string, string][]).map(([k,v]) => (
           <button key={k} onClick={() => setTab(k as any)} style={{
             padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500,
@@ -308,6 +308,7 @@ export default function ProjectDetail() {
         ))}
       </div>
 
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingTop: 16 }}>
       {tab === 'overview' && (<>
         <div style={section}>
           <div style={{ marginBottom: 16 }}>
@@ -568,6 +569,7 @@ export default function ProjectDetail() {
 
       <MemberInfoModal member={selectedMember} onClose={() => setSelectedMember(null)} />
       <ClientInfoModal open={clientModal} onClose={() => setClientModal(false)} clientData={clientData} />
+      </div>
     </div>
   )
 }
