@@ -2,6 +2,7 @@ const db = require('../../../config/db');
 const { withTransaction } = require('../../utils/transaction');
 const { auditLog } = require('../../utils/auditLog');
 const { notifyMany } = require('../../utils/notify');
+const { broadcast } = require('../../utils/broadcast');
 const { findActiveEnterprise, canManage, getEnterpriseManagerUserIds } = require('./enterpriseHelpers');
 
 exports.joinEnterprise = async (req, res) => {
@@ -30,6 +31,7 @@ exports.joinEnterprise = async (req, res) => {
     if (!normalizedCode) {
       if (pendingDup[0]) return res.status(400).json({ success: false, message: '您已提交申请，请等待审批' });
       await db.query('INSERT INTO duijie_join_requests (client_id, user_id) VALUES (?, ?)', [enterpriseId, req.userId]);
+      broadcast('enterprise', 'join_request_submitted', { enterprise_id: enterpriseId, user_id: req.userId });
       return res.json({ success: true, message: `已向「${enterprise.name}」提交加入申请，请等待管理员审批`, data: { joinedDirectly: false } });
     }
     if (!enterprise.join_code || enterprise.join_code !== normalizedCode) {
@@ -60,6 +62,7 @@ exports.joinEnterprise = async (req, res) => {
       detail: `通过推荐码加入企业「${enterprise.name}」`,
       ip: req.ip,
     });
+    broadcast('enterprise', 'member_joined', { enterprise_id: enterpriseId, user_id: req.userId });
     return res.json({ success: true, message: `已通过推荐码加入「${enterprise.name}」`, data: { joinedDirectly: true } });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });
@@ -99,6 +102,7 @@ exports.approveJoinRequest = async (req, res) => {
       );
       await conn.query('UPDATE voice_users SET active_enterprise_id = ? WHERE id = ? AND active_enterprise_id IS NULL', [ent.id, jr.user_id]);
     });
+    broadcast('enterprise', 'join_request_approved', { enterprise_id: ent.id, user_id: jr.user_id, request_id: jr.id });
     res.json({ success: true, message: '已批准' });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });
@@ -110,6 +114,7 @@ exports.rejectJoinRequest = async (req, res) => {
     const ent = await findActiveEnterprise(req.userId);
     if (!ent || !(await canManage(ent, req.userId))) return res.status(403).json({ success: false, message: '无权操作' });
     await db.query("UPDATE duijie_join_requests SET status = 'rejected', handled_at = NOW(), handled_by = ? WHERE id = ? AND client_id = ? AND status = 'pending'", [req.userId, req.params.id, ent.id]);
+    broadcast('enterprise', 'join_request_rejected', { enterprise_id: ent.id, request_id: Number(req.params.id) });
     res.json({ success: true, message: '已拒绝' });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });

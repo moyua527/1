@@ -28,6 +28,9 @@ const enterpriseApi = {
   removeMember: (id: number) =>
     fetchApi(`/api/my-enterprise/members/${id}`, { method: 'DELETE' }),
 
+  leaveEnterprise: () =>
+    fetchApi('/api/my-enterprise/leave', { method: 'POST' }),
+
   changeMemberRole: (memberId: number, role: string) =>
     fetchApi(`/api/my-enterprise/members/${memberId}/role`, { method: 'PUT', body: JSON.stringify({ role }) }),
 

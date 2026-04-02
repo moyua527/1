@@ -1,4 +1,4 @@
-import { Building2, Phone, Mail, MapPin, Clock, Briefcase, FileText, Edit3, Trash2, Hash, Calendar, Globe, MoreHorizontal, Shield, Crown, Users, Copy, RotateCw, KeyRound } from 'lucide-react'
+import { Building2, Phone, Mail, MapPin, Clock, Briefcase, FileText, Edit3, Trash2, Hash, Calendar, Globe, MoreHorizontal, Shield, Crown, Users, Copy, RotateCw, KeyRound, LogOut } from 'lucide-react'
 import { section, infoRow, roleConfig } from './constants'
 import { toast } from '../ui/Toast'
 
@@ -11,15 +11,42 @@ interface Props {
   setEntMenuOpen: (v: boolean) => void
   openEditEnt: () => void
   handleDeleteEnterprise: () => void
+  handleLeaveEnterprise?: () => void
   joinCodeRefreshing: boolean
   handleRegenerateJoinCode: () => void
 }
 
-export default function EnterpriseCard({ ent, myRole, isOwner, canAdmin, entMenuOpen, setEntMenuOpen, openEditEnt, handleDeleteEnterprise, joinCodeRefreshing, handleRegenerateJoinCode }: Props) {
+export default function EnterpriseCard({ ent, myRole, isOwner, canAdmin, entMenuOpen, setEntMenuOpen, openEditEnt, handleDeleteEnterprise, handleLeaveEnterprise, joinCodeRefreshing, handleRegenerateJoinCode }: Props) {
+  const fallbackCopyText = (value: string) => {
+    const textarea = document.createElement('textarea')
+    textarea.value = value
+    textarea.style.position = 'fixed'
+    textarea.style.opacity = '0'
+    textarea.style.pointerEvents = 'none'
+    document.body.appendChild(textarea)
+    textarea.focus()
+    textarea.select()
+    const copied = document.execCommand('copy')
+    document.body.removeChild(textarea)
+    return copied
+  }
+
   const handleCopyJoinCode = async () => {
     if (!ent?.join_code) return
-    await navigator.clipboard.writeText(ent.join_code)
-    toast('企业推荐码已复制', 'success')
+    try {
+      if (window.isSecureContext && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(ent.join_code)
+      } else if (!fallbackCopyText(ent.join_code)) {
+        throw new Error('copy_failed')
+      }
+      toast('企业推荐码已复制', 'success')
+    } catch {
+      if (fallbackCopyText(ent.join_code)) {
+        toast('企业推荐码已复制', 'success')
+        return
+      }
+      toast('复制失败，请手动复制', 'error')
+    }
   }
 
   return (
@@ -64,6 +91,13 @@ export default function EnterpriseCard({ ent, myRole, isOwner, canAdmin, entMenu
               </>
             )}
           </div>
+        )}
+        {!isOwner && handleLeaveEnterprise && (
+          <button onClick={handleLeaveEnterprise} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--color-danger)', fontWeight: 500, transition: 'all 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#fef2f2'; e.currentTarget.style.borderColor = '#fca5a5' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.borderColor = 'var(--border-primary)' }}>
+            <LogOut size={14} /> 退出企业
+          </button>
         )}
       </div>
       {canAdmin && ent.join_code && (

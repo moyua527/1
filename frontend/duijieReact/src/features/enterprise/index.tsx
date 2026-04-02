@@ -84,6 +84,7 @@ export default function Enterprise() {
         ent={h.ent} myRole={h.myRole} isOwner={h.isOwner} canAdmin={h.canAdmin}
         entMenuOpen={h.entMenuOpen} setEntMenuOpen={h.setEntMenuOpen}
         openEditEnt={h.openEditEnt} handleDeleteEnterprise={h.handleDeleteEnterprise}
+        handleLeaveEnterprise={h.handleLeaveEnterprise}
         joinCodeRefreshing={h.joinCodeRefreshing} handleRegenerateJoinCode={h.handleRegenerateJoinCode}
       />
 

@@ -30,6 +30,7 @@ router.put('/my-enterprise/departments/:id', auth, V.updateDepartment, validate,
 router.delete('/my-enterprise/departments/:id', auth, myEntCtrl.removeDepartment);
 
 // Enterprise Members
+router.post('/my-enterprise/leave', auth, myEntCtrl.leaveEnterprise);
 router.post('/my-enterprise/members', auth, V.addMember, validate, myEntCtrl.addMember);
 router.put('/my-enterprise/members/:id', auth, V.updateMember, validate, myEntCtrl.updateMember);
 router.put('/my-enterprise/members/:id/role', auth, V.updateMemberRole, validate, myEntCtrl.updateMemberRole);

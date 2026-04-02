@@ -22,6 +22,7 @@ module.exports = {
   updateMember: member.updateMember,
   removeMember: member.removeMember,
   updateMemberRole: member.updateMemberRole,
+  leaveEnterprise: member.leaveEnterprise,
 
   joinEnterprise: join.joinEnterprise,
   listJoinRequests: join.listJoinRequests,

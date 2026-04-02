@@ -36,8 +36,8 @@ exports.send = async (req, res) => {
 
     // 通知目标企业管理人员
     const managerIds = await getEnterpriseManagerUserIds(to_enterprise_id);
-    await notifyMany(managerIds, 'client_request', '收到客户添加请求', `企业「${fromName}」请求将贵企业添加为客户`, '/enterprise');
-    broadcast('client_request', 'created', { id: result.insertId });
+    await notifyMany(managerIds, 'client_request', '收到客户添加请求', `企业「${fromName}」请求将贵企业添加为客户`, '/enterprise?tab=client-requests');
+    broadcast('enterprise', 'client_request', { enterprise_id: to_enterprise_id });
 
     res.json({ success: true, data: { id: result.insertId } });
   } catch (e) {
@@ -109,10 +109,11 @@ exports.approve = async (req, res) => {
     const [[fromEnt]] = await db.query('SELECT name FROM duijie_clients WHERE id = ?', [request.from_enterprise_id]);
     const [[toEnt]] = await db.query('SELECT name FROM duijie_clients WHERE id = ?', [request.to_enterprise_id]);
 
-    // 通知发起方
-    await notify(request.created_by, 'client_request_approved', '客户添加请求已通过',
+    // 通知发起方全部管理员
+    const fromManagerIds = await getEnterpriseManagerUserIds(request.from_enterprise_id);
+    await notifyMany(fromManagerIds, 'client_request_approved', '客户添加请求已通过',
       `企业「${toEnt?.name || ''}」已同意您的客户添加请求`, '/clients');
-    broadcast('client_request', 'approved', { id, from_enterprise_id: request.from_enterprise_id, to_enterprise_id: request.to_enterprise_id });
+    broadcast('enterprise', 'client_request_approved', { from_enterprise_id: request.from_enterprise_id, to_enterprise_id: request.to_enterprise_id });
 
     res.json({ success: true });
   } catch (e) {
@@ -139,9 +140,10 @@ exports.reject = async (req, res) => {
     );
 
     const [[toEnt]] = await db.query('SELECT name FROM duijie_clients WHERE id = ?', [request.to_enterprise_id]);
-    await notify(request.created_by, 'client_request_rejected', '客户添加请求被拒绝',
+    const rejectManagerIds = await getEnterpriseManagerUserIds(request.from_enterprise_id);
+    await notifyMany(rejectManagerIds, 'client_request_rejected', '客户添加请求被拒绝',
       `企业「${toEnt?.name || ''}」拒绝了您的客户添加请求`, '/clients');
-    broadcast('client_request', 'rejected', { id });
+    broadcast('enterprise', 'client_request_rejected', { from_enterprise_id: request.from_enterprise_id });
 
     res.json({ success: true });
   } catch (e) {

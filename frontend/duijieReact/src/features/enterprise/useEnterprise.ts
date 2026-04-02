@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
 import { emptyEntForm, emptyMemberForm, emptyDeptForm } from './constants'
 import useUserStore from '../../stores/useUserStore'
 import { useEnterpriseData, useJoinRequests, useMyJoinRequests, useAllEnterprises, useInvalidate } from '../../hooks/useApi'
+import useLiveData from '../../hooks/useLiveData'
 import useEnterpriseStore from '../../stores/useEnterpriseStore'
 import enterpriseApi from './services/api'
 
@@ -73,10 +74,12 @@ export function useEnterprise() {
   }, [searchParams]) // eslint-disable-line react-hooks/exhaustive-deps
 
   /** Invalidate enterprise data + sync global store */
-  const refresh = () => {
+  const refresh = useCallback(() => {
     invalidate('enterprise')
-    useEnterpriseStore.getState().refresh()
-  }
+    void useEnterpriseStore.getState().refresh()
+  }, [invalidate])
+
+  useLiveData(['enterprise'], refresh)
 
   // === 企业操作 ===
   const openEditEnt = () => {
@@ -201,6 +204,12 @@ export function useEnterprise() {
     if (r.success) { toast('成员已删除', 'success'); refresh() }
     else toast(r.message || '删除失败', 'error')
   }
+  const handleLeaveEnterprise = async () => {
+    if (!(await confirm({ message: '确定退出当前企业？退出后将无法访问该企业的项目和数据。', danger: true }))) return
+    const r = await enterpriseApi.leaveEnterprise()
+    if (r.success) { toast('已退出企业', 'success'); refresh() }
+    else toast(r.message || '退出失败', 'error')
+  }
   const handleRoleChange = async (memberId: number, role: string) => {
     const r = await enterpriseApi.changeMemberRole(memberId, role)
     if (r.success) { toast('角色已更新', 'success'); refresh() }
@@ -282,7 +291,7 @@ export function useEnterprise() {
       setSelectedJoinEnterpriseId(null)
       setJoinCode('')
       joinSearchRequestRef.current += 1
-      invalidate('enterprise', 'my-requests')
+      invalidate('enterprise')
       if (r.data?.joinedDirectly) refresh()
     } else {
       toast(r.message || '申请失败', 'error')
@@ -360,7 +369,7 @@ export function useEnterprise() {
     // 成员
     memberModalOpen, setMemberModalOpen, editingMember, memberForm, setMemberForm, memberSaving,
     lookupPhone, setLookupPhone, lookupLoading,
-    openAddMember, openEditMember, handleSaveMember, handleDeleteMember, handleRoleChange, handleLookup,
+    openAddMember, openEditMember, handleSaveMember, handleDeleteMember, handleRoleChange, handleLookup, handleLeaveEnterprise,
     // 角色
     handleCreateRole, handleUpdateRole, handleDeleteRole, handleAssignRole, inlineCreateRole,
     // 部门

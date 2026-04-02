@@ -96,6 +96,8 @@ const useEnterpriseStore = create<EnterpriseState>((set, get) => ({
           myEnterprises: r.data.enterprises || [],
           activeEnterpriseId: r.data.activeId || null,
         })
+      } else if (r.success) {
+        set({ hasEnterprise: false, enterprisePerms: {}, myEnterprises: [], activeEnterpriseId: null })
       }
     } catch {}
   },

@@ -55,6 +55,29 @@ exports.removeMember = async (req, res) => {
   }
 };
 
+exports.leaveEnterprise = async (req, res) => {
+  try {
+    const ent = await findActiveEnterprise(req.userId);
+    if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
+    if (isCreator(ent)) return res.status(400).json({ success: false, message: '企业创建者不能退出自己的企业，请先转让或解散' });
+    // 软删除该用户在企业中的成员记录
+    await db.query('UPDATE duijie_client_members SET is_deleted=1 WHERE client_id=? AND user_id=? AND is_deleted=0', [ent.id, req.userId]);
+    // 清除活跃企业设置
+    await db.query('UPDATE voice_users SET active_enterprise_id=NULL WHERE id=?', [req.userId]);
+    // 通知企业创建者
+    if (ent.user_id) {
+      const [userRow] = await db.query('SELECT nickname, username FROM voice_users WHERE id=?', [req.userId]);
+      const userName = userRow[0]?.nickname || userRow[0]?.username || '未知用户';
+      await notify(ent.user_id, 'enterprise', '成员退出企业',
+        `成员「${userName}」已退出企业「${ent.name}」`, '/enterprise');
+      broadcast('enterprise', 'member_left', { enterprise_id: ent.id, user_id: req.userId });
+    }
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: '服务器内部错误' });
+  }
+};
+
 exports.updateMemberRole = async (req, res) => {
   try {
     const ent = await findActiveEnterprise(req.userId);
