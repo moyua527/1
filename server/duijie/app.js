@@ -46,14 +46,6 @@ app.use('/api', csrfProtection);
 const rlOpts = { validate: { xForwardedForHeader: false } };
 app.use('/api', rateLimit({ ...rlOpts, windowMs: 15 * 60 * 1000, max: 600, standardHeaders: true, legacyHeaders: false, store: new MySQLRateLimitStore(15 * 60 * 1000), message: { success: false, message: '请求过于频繁，请稍后再试' } }));
 
-// 登录接口严格限速：每 IP 每 15 分钟最多 10 次
-app.use('/api/auth/login', rateLimit({ ...rlOpts, windowMs: 15 * 60 * 1000, max: 10, store: new MySQLRateLimitStore(15 * 60 * 1000), message: { success: false, message: '登录尝试过多，请 15 分钟后再试' } }));
-app.use('/api/auth/register', rateLimit({ ...rlOpts, windowMs: 60 * 60 * 1000, max: 5, store: new MySQLRateLimitStore(60 * 60 * 1000), message: { success: false, message: '注册尝试过多，请 1 小时后再试' } }));
-
-// 验证码/找回密码 端点级限速
-app.use('/api/auth/send-code', rateLimit({ ...rlOpts, windowMs: 60 * 1000, max: 3, keyGenerator: (req) => req.body?.target || req.ip, store: new MySQLRateLimitStore(60 * 1000), message: { success: false, message: '发送过于频繁，请稍后再试' } }));
-app.use('/api/auth/forgot-password', rateLimit({ ...rlOpts, windowMs: 15 * 60 * 1000, max: 5, store: new MySQLRateLimitStore(15 * 60 * 1000), message: { success: false, message: '操作过于频繁，请稍后再试' } }));
-app.use('/api/auth/reset-password', rateLimit({ ...rlOpts, windowMs: 15 * 60 * 1000, max: 5, store: new MySQLRateLimitStore(15 * 60 * 1000), message: { success: false, message: '操作过于频繁，请稍后再试' } }));
 
 // Bot/爬虫检测
 app.use('/api', require('./atomic/middleware/antiBot'));
