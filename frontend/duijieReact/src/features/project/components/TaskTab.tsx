@@ -45,6 +45,9 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
   const [isDragging, setIsDragging] = useState(false)
   const [previewImg, setPreviewImg] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState('')
+  const [showTrash, setShowTrash] = useState(false)
+  const [trashTasks, setTrashTasks] = useState<any[]>([])
+  const [trashLoading, setTrashLoading] = useState(false)
   const [expandedTask, setExpandedTask] = useState<number | null>(null)
   const [showPointsModal, setShowPointsModal] = useState<{ taskId: number; roundType: 'initial' | 'acceptance'; taskTitle: string } | null>(null)
   const [pointInputs, setPointInputs] = useState<string[]>([''])
@@ -130,6 +133,22 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
     const r = await taskApi.confirmReviewPoint(pointId)
     if (r.success) loadTasks()
     else toast(r.message || '确认失败', 'error')
+  }
+
+  const loadTrash = async () => {
+    setTrashLoading(true)
+    const r = await taskApi.trash(projectId)
+    if (r.success) setTrashTasks(r.data || [])
+    setTrashLoading(false)
+  }
+
+  const handleRestore = async (taskId: number) => {
+    const r = await taskApi.restore(String(taskId))
+    if (r.success) {
+      toast('已恢复任务', 'success')
+      setTrashTasks(prev => prev.filter(t => t.id !== taskId))
+      loadTasks()
+    } else toast(r.message || '恢复失败', 'error')
   }
 
   const [actionMenuTask, setActionMenuTask] = useState<number | null>(null)
@@ -278,7 +297,11 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                 </button>
                 <button onClick={() => { setDropdownOpen(false); setDeleteSelected(new Set()); setShowDeleteTask(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--color-danger)' }}
                   onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-                  <Trash2 size={14} /> 移至回收站
+                  <Trash2 size={14} /> 删除
+                </button>
+                <button onClick={() => { setDropdownOpen(false); setShowTrash(true); loadTrash() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-secondary)' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-tertiary)')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                  🗑️ 回收站
                 </button>
               </div>
             )}
@@ -310,7 +333,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
               const isExpanded = expandedTask === t.id
               const hasPoints = t.review_points && t.review_points.length > 0
               return (
-                <div key={t.id} style={{ background: 'var(--bg-secondary)', borderRadius: 8, overflow: 'hidden' }}>
+                <div key={t.id} style={{ background: 'var(--bg-secondary)', borderRadius: 8, overflow: 'visible' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px' }}>
                     {hasPoints && (
                       <button onClick={() => setExpandedTask(isExpanded ? null : t.id)}
@@ -409,7 +432,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
 
       {/* 审核要点模态框 */}
       <Modal open={!!showPointsModal} onClose={() => { setShowPointsModal(null); setPointInputs(['']) }}
-        title={showPointsModal?.roundType === 'initial' ? `提出疑问 - ${showPointsModal?.taskTitle}` : `驳回并列出问题 - ${showPointsModal?.taskTitle}`}>
+        title={showPointsModal?.roundType === 'initial' ? `提出疑问 - ${showPointsModal?.taskTitle}` : `驳回并列出问题 - ${showPointsModal?.taskTitle}`} width={560}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
             {showPointsModal?.roundType === 'initial' ? '请列出需要任务创建者补充说明的要点：' : '请列出验收不通过的具体问题：'}
@@ -444,7 +467,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
       </Modal>
 
       {/* 创建任务模态框 */}
-      <Modal open={showCreateTask} onClose={() => { setShowCreateTask(false); resetCreateForm() }} title="添加任务">
+      <Modal open={showCreateTask} onClose={() => { setShowCreateTask(false); resetCreateForm() }} title="添加任务" width={560}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <TaskTitleSelector open={showCreateTask} projectId={projectId} value={taskForm.title} onChange={title => setTaskForm({ ...taskForm, title })} required />
           <div style={{ display: 'flex', gap: 12 }}>
@@ -531,7 +554,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
       </Modal>
 
       {/* 删除任务模态框 */}
-      <Modal open={showDeleteTask} onClose={() => setShowDeleteTask(false)} title="移至回收站">
+      <Modal open={showDeleteTask} onClose={() => setShowDeleteTask(false)} title="删除任务" width={560}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {tasks.length === 0 ? <div style={{ color: 'var(--text-tertiary)', fontSize: 14, textAlign: 'center', padding: 20 }}>暂无任务</div> : (<>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>选择要移至回收站的任务：</div>
@@ -570,6 +593,40 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
               </div>
             </div>
           </>)}
+        </div>
+      </Modal>
+
+      {/* 回收站模态框 */}
+      <Modal open={showTrash} onClose={() => setShowTrash(false)} title="回收站" width={560}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>项目成员（管理员/成员）可以恢复已删除的任务</div>
+          {trashLoading ? <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)' }}>加载中...</div> :
+           trashTasks.length === 0 ? <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 14 }}>回收站为空</div> :
+           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 400, overflowY: 'auto' }}>
+             {trashTasks.map((t: any) => (
+               <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--bg-secondary)', borderRadius: 8, border: '1px solid var(--border-primary)' }}>
+                 <div style={{ flex: 1, minWidth: 0 }}>
+                   <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
+                   <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
+                     {t.creator_name && `创建者: ${t.creator_name}`}
+                     {t.updated_at && ` · 删除于: ${formatDateTime(t.updated_at)}`}
+                   </div>
+                 </div>
+                 <Badge color={(taskStatusMap[t.status] || taskStatusMap.submitted).color}>
+                   {(taskStatusMap[t.status] || taskStatusMap.submitted).label}
+                 </Badge>
+                 {canEdit && (
+                   <button onClick={() => handleRestore(t.id)}
+                     style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid var(--brand)', background: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 500, color: 'var(--brand)', whiteSpace: 'nowrap' }}
+                     onMouseEnter={e => { e.currentTarget.style.background = 'var(--brand)'; e.currentTarget.style.color = '#fff' }}
+                     onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--brand)' }}>
+                     恢复
+                   </button>
+                 )}
+               </div>
+             ))}
+           </div>
+          }
         </div>
       </Modal>
 

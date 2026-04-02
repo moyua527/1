@@ -1,6 +1,6 @@
 {
-  "version": "1.1.63",
-  "versionCode": 63,
+  "version": "1.1.65",
+  "versionCode": 65,
   "minVersion": "1.0.0",
-  "changelog": "修复任务创建弹窗粘贴图片/文件时重复添加两次的问题"
+  "changelog": "修复任务状态按钮被容器遮挡、弹窗宽度优化、删除文案调整与回收站入口"
 }

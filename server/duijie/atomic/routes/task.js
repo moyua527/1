@@ -13,10 +13,12 @@ const reviewPoints = require('../controllers/task/reviewPointsController');
 // Tasks
 router.post('/tasks', auth, roleGuard('admin', 'member', { soft: true }), enterprisePermGuard('can_manage_task'), upload.array('files', 10), require('../controllers/task/createController'));
 router.get('/tasks/export', auth, require('../controllers/task/exportController'));
+router.get('/tasks/trash', auth, taskStaff, require('../controllers/task/trashController'));
 router.get('/tasks', auth, require('../controllers/task/listController'));
 router.put('/tasks/:id', auth, taskStaff, require('../controllers/task/updateController'));
 router.patch('/tasks/:id/move', auth, taskStaff, require('../controllers/task/moveController'));
 router.delete('/tasks/:id', auth, taskStaff, require('../controllers/task/deleteController'));
+router.patch('/tasks/:id/restore', auth, taskStaff, require('../controllers/task/restoreController'));
 router.post('/tasks/:id/attachments', auth, taskStaff, upload.array('files', 10), require('../controllers/task/uploadAttachmentController'));
 router.delete('/tasks/attachments/:attachmentId', auth, taskStaff, require('../controllers/task/deleteAttachmentController'));
 router.get('/tasks/attachments/:attachmentId/download', auth, require('../controllers/task/downloadAttachmentController'));
