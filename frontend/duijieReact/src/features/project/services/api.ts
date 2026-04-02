@@ -24,4 +24,10 @@ export const projectApi = {
   getSentClientRequests: () => fetchApi('/api/projects/client-requests/sent'),
   approveClientRequest: (requestId: number, memberIds?: number[]) => fetchApi(`/api/projects/client-requests/${requestId}/approve`, { method: 'POST', body: JSON.stringify({ member_ids: memberIds || [] }) }),
   rejectClientRequest: (requestId: number, reason?: string) => fetchApi(`/api/projects/client-requests/${requestId}/reject`, { method: 'POST', body: JSON.stringify({ reason }) }),
+  // 项目加入码
+  searchByCode: (code: string) => fetchApi(`/api/projects/search-by-code?code=${encodeURIComponent(code)}`),
+  joinRequest: (project_id: number, message?: string) => fetchApi('/api/projects/join-request', { method: 'POST', body: JSON.stringify({ project_id, message }) }),
+  getJoinRequests: (id: string) => fetchApi(`/api/projects/${id}/join-requests`),
+  approveJoinRequest: (id: string, requestId: number) => fetchApi(`/api/projects/${id}/join-requests/${requestId}/approve`, { method: 'POST' }),
+  rejectJoinRequest: (id: string, requestId: number) => fetchApi(`/api/projects/${id}/join-requests/${requestId}/reject`, { method: 'POST' }),
 }

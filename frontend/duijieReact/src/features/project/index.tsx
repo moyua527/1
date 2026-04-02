@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { Plus, FolderKanban, Loader2, Download } from 'lucide-react'
+import { Plus, FolderKanban, Loader2, Download, Search, Copy } from 'lucide-react'
 import { projectApi } from './services/api'
 import { can } from '../../stores/permissions'
 import { useProjects, useInvalidate } from '../../hooks/useApi'
@@ -46,6 +46,12 @@ export default function ProjectList() {
   const [form, setForm] = useState({ name: '', description: '' })
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [showJoin, setShowJoin] = useState(false)
+  const [joinCode, setJoinCode] = useState('')
+  const [joinResult, setJoinResult] = useState<any>(null)
+  const [joinSearching, setJoinSearching] = useState(false)
+  const [joinSubmitting, setJoinSubmitting] = useState(false)
+  const [joinMessage, setJoinMessage] = useState('')
   const nav = useNavigate()
   const { user, isMobile } = useOutletContext<{ user: any; isMobile?: boolean }>()
   const canCreate = can(user?.role || '', 'project:create')
@@ -74,6 +80,24 @@ export default function ProjectList() {
     else toast(r.message || '创建失败', 'error')
   }
 
+  const handleJoinSearch = async () => {
+    if (!joinCode.trim()) { toast('请输入项目ID', 'error'); return }
+    setJoinSearching(true); setJoinResult(null)
+    const r = await projectApi.searchByCode(joinCode.trim())
+    setJoinSearching(false)
+    if (r.success) setJoinResult(r.data)
+    else toast(r.message || '未找到该项目', 'error')
+  }
+
+  const handleJoinSubmit = async () => {
+    if (!joinResult) return
+    setJoinSubmitting(true)
+    const r = await projectApi.joinRequest(joinResult.id, joinMessage)
+    setJoinSubmitting(false)
+    if (r.success) { toast(r.message || '申请已提交', 'success'); setShowJoin(false); setJoinCode(''); setJoinResult(null); setJoinMessage('') }
+    else toast(r.message || '申请失败', 'error')
+  }
+
   return (
     <div>
       <PageHeader title="项目管理" subtitle={`共 ${filtered.length} 个项目`} actions={
@@ -81,6 +105,10 @@ export default function ProjectList() {
           <button onClick={() => { window.open('/api/projects/export', '_blank') }}
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500, cursor: 'pointer', width: isMobile ? '100%' : undefined }}>
             <Download size={14} /> 导出
+          </button>
+          <button onClick={() => { setShowJoin(true); setJoinCode(''); setJoinResult(null); setJoinMessage('') }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid var(--brand)', background: 'var(--bg-selected)', color: 'var(--brand)', fontSize: 13, fontWeight: 600, cursor: 'pointer', width: isMobile ? '100%' : undefined }}>
+            <Search size={14} /> 通过项目ID加入
           </button>
           {canCreate && <Button onClick={() => setShowCreate(true)} style={isMobile ? { width: '100%', justifyContent: 'center' } : undefined}><Plus size={16} /> 新建项目</Button>}
         </div>
@@ -111,7 +139,13 @@ export default function ProjectList() {
                 onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)')}
                 onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)')}>
                 <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: isMobile ? 8 : 12, marginBottom: 12 }}>
-                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: 'var(--text-heading)', wordBreak: 'break-word' }}>{p.name}</h3>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: 'var(--text-heading)', wordBreak: 'break-word' }}>{p.name}</h3>
+                    {p.join_code && <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'monospace', cursor: 'pointer' }}
+                      title="点击复制项目ID" onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(p.join_code); toast('已复制项目ID', 'success') }}>
+                      ID: {p.join_code} <Copy size={10} style={{ verticalAlign: 'middle' }} />
+                    </span>}
+                  </div>
                   <Badge color={st.color}>{st.label}</Badge>
                 </div>
                 {(p.internal_client_name || p.client_name) && (
@@ -151,6 +185,46 @@ export default function ProjectList() {
             <Button variant="secondary" onClick={() => setShowCreate(false)} style={isMobile ? { width: '100%', justifyContent: 'center' } : undefined}>取消</Button>
             <Button onClick={handleCreate} disabled={submitting} style={isMobile ? { width: '100%', justifyContent: 'center' } : undefined}>{submitting ? '创建中...' : '创建'}</Button>
           </div>
+        </div>
+      </Modal>
+
+      <Modal open={showJoin} onClose={() => setShowJoin(false)} title="通过项目ID加入">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Input placeholder="输入项目ID" value={joinCode} onChange={e => setJoinCode(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleJoinSearch()} style={{ flex: 1 }} />
+            <Button onClick={handleJoinSearch} disabled={joinSearching} style={{ whiteSpace: 'nowrap' }}>
+              {joinSearching ? <Loader2 size={14} className="spin" /> : <Search size={14} />} 搜索
+            </Button>
+          </div>
+
+          {joinResult && (
+            <div style={{ padding: 16, borderRadius: 10, background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)' }}>
+              <h4 style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{joinResult.name}</h4>
+              {joinResult.description && <p style={{ margin: '0 0 8px', fontSize: 13, color: 'var(--text-secondary)' }}>{joinResult.description}</p>}
+              <div style={{ display: 'flex', gap: 12, fontSize: 12, color: 'var(--text-tertiary)', flexWrap: 'wrap' }}>
+                <span>状态: {statusMap[joinResult.status]?.label || joinResult.status}</span>
+                <span>成员: {joinResult.member_count}人</span>
+                <span>创建者: {joinResult.creator_name}</span>
+              </div>
+
+              {joinResult.is_member ? (
+                <p style={{ margin: '12px 0 0', fontSize: 13, color: 'var(--color-green)', fontWeight: 500 }}>✓ 你已是该项目成员</p>
+              ) : joinResult.has_pending_request ? (
+                <p style={{ margin: '12px 0 0', fontSize: 13, color: 'var(--color-yellow)', fontWeight: 500 }}>⏳ 你已提交过加入申请，请等待审核</p>
+              ) : (
+                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <textarea value={joinMessage} onChange={e => setJoinMessage(e.target.value)} rows={2}
+                    placeholder="申请留言（选填）" style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', resize: 'vertical', fontFamily: 'inherit', background: 'var(--bg-primary)', color: 'var(--text-body)' }} />
+                  <Button onClick={handleJoinSubmit} disabled={joinSubmitting} style={{ alignSelf: 'flex-end' }}>
+                    {joinSubmitting ? '提交中...' : '申请加入'}
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {!joinResult && <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: 0, textAlign: 'center' }}>输入项目ID后点击搜索，找到项目即可申请加入</p>}
         </div>
       </Modal>
     </div>

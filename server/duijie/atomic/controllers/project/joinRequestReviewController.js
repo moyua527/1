@@ -4,12 +4,12 @@ const { broadcast } = require('../../utils/broadcast');
 // 审批项目加入申请 (approve / reject)
 module.exports = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { requestId } = req.params;
     const action = req.path.includes('approve') ? 'approved' : 'rejected';
 
     const [rows] = await db.query(
       "SELECT jr.*, p.name AS project_name FROM duijie_project_join_requests jr LEFT JOIN duijie_projects p ON p.id = jr.project_id WHERE jr.id = ? AND jr.status = 'pending'",
-      [id]
+      [requestId]
     );
     if (rows.length === 0) return res.status(404).json({ success: false, message: '申请不存在或已处理' });
 
@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
 
     await db.query(
       'UPDATE duijie_project_join_requests SET status = ?, reviewed_by = ?, reviewed_at = NOW() WHERE id = ?',
-      [action, req.userId, id]
+      [action, req.userId, requestId]
     );
 
     if (action === 'approved') {

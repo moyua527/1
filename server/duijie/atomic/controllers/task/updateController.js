@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
       await notify(oldTask.created_by, 'task_status', '任务状态变更', `任务「${oldTask.title}」状态变为「${statusLabel[req.body.status] || req.body.status}」`, `/tasks`);
     }
 
-    broadcast('task', 'updated', { id: taskId, userId: req.userId });
+    broadcast('task', 'updated', { id: taskId, project_id: oldTask?.project_id, userId: req.userId });
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });

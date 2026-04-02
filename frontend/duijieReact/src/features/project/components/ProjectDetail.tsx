@@ -21,6 +21,7 @@ import MilestoneTab from './MilestoneTab'
 import MembersSection from './MembersSection'
 import { ManageMembersModal, ManageClientMembersModal, MemberInfoModal, ClientInfoModal } from './ProjectModals'
 import useLiveData from '../../../hooks/useLiveData'
+import { onSocket } from '../../ui/smartSocket'
 
 const statusMap: Record<string, { label: string; color: string }> = {
   planning: { label: '规划中', color: 'blue' },
@@ -116,20 +117,30 @@ export default function ProjectDetail() {
     setProjectLoading(false)
   }, [id])
 
-  useLiveData(['project', 'task'], loadProject)
+  useLiveData(['project'], loadProject)
 
-  const loadTasks = () => {
+  const loadTasks = useCallback(() => {
     if (!id) return
     taskApi.list(id).then(r => { if (r.success) setTasks(r.data || []) })
     milestoneApi.list(id).then(r => { if (r.success) setMilestones(r.data || []) })
-  }
+  }, [id])
+
+  useEffect(() => {
+    if (!id) return
+    const off = onSocket('data_changed', (payload: any) => {
+      if (payload?.entity !== 'task') return
+      if (payload?.project_id && String(payload.project_id) !== String(id)) return
+      loadTasks()
+    })
+    return off
+  }, [id, loadTasks])
 
   useEffect(() => {
     if (!id) return
     setProject(null)
     loadProject()
     loadTasks()
-  }, [id, loadProject])
+  }, [id, loadProject, loadTasks])
 
   if (projectLoading) return <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}>加载中...</div>
   if (projectError) return (

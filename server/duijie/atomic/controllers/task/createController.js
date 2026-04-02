@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
         );
       }
     }
-    broadcast('task', 'created', { id, userId: req.userId });
+    broadcast('task', 'created', { id, project_id: req.body.project_id, userId: req.userId });
     res.json({ success: true, data: { id } });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });

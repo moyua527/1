@@ -14,6 +14,10 @@ const pag = projectAccessGuard();
 router.post('/projects', auth, V.createProject, validate, require('../controllers/project/createController'));
 router.get('/projects/team-users', auth, require('../controllers/project/teamUsersController'));
 router.get('/projects/export', auth, require('../controllers/project/exportController'));
+// 项目加入码搜索
+router.get('/projects/search-by-code', auth, require('../controllers/project/searchByCodeController'));
+// 项目加入申请
+router.post('/projects/join-request', auth, require('../controllers/project/joinRequestController'));
 // 项目关联客户企业审批流程 (放在 :id 路由之前)
 router.get('/projects/client-requests', auth, require('../controllers/project/clientRequestListController'));
 router.get('/projects/client-requests/sent', auth, require('../controllers/project/clientRequestSentController'));
@@ -32,5 +36,9 @@ router.get('/projects/:id/client-available-users', auth, pag, require('../contro
 router.post('/projects/:id/client-members', auth, pag, projectPermGuard('can_manage_members'), require('../controllers/project/addClientMemberController'));
 router.delete('/projects/:id/client-members/:userId', auth, pag, projectPermGuard('can_manage_members'), require('../controllers/project/removeClientMemberController'));
 router.post('/projects/:id/client-request', auth, pag, require('../controllers/project/clientRequestController'));
+// 项目加入请求管理
+router.get('/projects/:id/join-requests', auth, pag, require('../controllers/project/joinRequestListController'));
+router.post('/projects/:id/join-requests/:requestId/approve', auth, pag, projectPermGuard('can_manage_members'), require('../controllers/project/joinRequestReviewController'));
+router.post('/projects/:id/join-requests/:requestId/reject', auth, pag, projectPermGuard('can_manage_members'), require('../controllers/project/joinRequestReviewController'));
 
 module.exports = router;
