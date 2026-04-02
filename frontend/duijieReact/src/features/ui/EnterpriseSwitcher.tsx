@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { Building2, Crown, Shield, Check, ChevronDown } from 'lucide-react'
+import { Building2, Crown, Shield, Check, ChevronDown, Plus, LogIn } from 'lucide-react'
 import useEnterpriseStore from '../../stores/useEnterpriseStore'
 
 export default function EnterpriseSwitcher() {
@@ -86,6 +86,18 @@ export default function EnterpriseSwitcher() {
                 </div>
               )
             })}
+            <div style={{ borderTop: '1px solid var(--border-secondary)', padding: '4px 0' }}>
+              <div onClick={() => { setEntDropdownOpen(false); navigate('/enterprise?action=create') }}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', cursor: 'pointer', fontSize: 12, color: 'var(--brand)', fontWeight: 500, transition: 'background 0.15s' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                <Plus size={12} /> 创建企业
+              </div>
+              <div onClick={() => { setEntDropdownOpen(false); navigate('/enterprise?action=join') }}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', cursor: 'pointer', fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500, transition: 'background 0.15s' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                <LogIn size={12} /> 加入企业
+              </div>
+            </div>
           </div>
         )}
       </div>

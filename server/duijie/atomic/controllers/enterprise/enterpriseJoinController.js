@@ -8,18 +8,31 @@ exports.joinEnterprise = async (req, res) => {
   try {
     const { enterprise_id, join_code } = req.body;
     const normalizedCode = (join_code || '').trim().toUpperCase();
-    if (!enterprise_id) return res.status(400).json({ success: false, message: '请选择要加入的企业' });
-    const [ent] = await db.query("SELECT id, name, join_code FROM duijie_clients WHERE id = ? AND client_type = 'company' AND is_deleted = 0", [enterprise_id]);
-    if (!ent[0]) return res.status(404).json({ success: false, message: '企业不存在' });
-    const [dup] = await db.query('SELECT id FROM duijie_client_members WHERE client_id = ? AND user_id = ? AND is_deleted = 0', [enterprise_id, req.userId]);
+    let enterpriseId = enterprise_id ? Number(enterprise_id) : null;
+    let enterprise = null;
+
+    if (enterpriseId) {
+      const [ent] = await db.query("SELECT id, name, join_code FROM duijie_clients WHERE id = ? AND client_type = 'company' AND is_deleted = 0", [enterpriseId]);
+      enterprise = ent[0] || null;
+      if (!enterprise) return res.status(404).json({ success: false, message: '企业不存在' });
+    } else if (normalizedCode) {
+      const [ent] = await db.query("SELECT id, name, join_code FROM duijie_clients WHERE join_code = ? AND client_type = 'company' AND is_deleted = 0 LIMIT 1", [normalizedCode]);
+      enterprise = ent[0] || null;
+      if (!enterprise) return res.status(400).json({ success: false, message: '推荐码无效，请确认后重试' });
+      enterpriseId = Number(enterprise.id);
+    }
+
+    if (!enterpriseId || !enterprise) return res.status(400).json({ success: false, message: '请选择要加入的企业' });
+
+    const [dup] = await db.query('SELECT id FROM duijie_client_members WHERE client_id = ? AND user_id = ? AND is_deleted = 0', [enterpriseId, req.userId]);
     if (dup[0]) return res.status(400).json({ success: false, message: '您已是该企业成员' });
-    const [pendingDup] = await db.query("SELECT id FROM duijie_join_requests WHERE client_id = ? AND user_id = ? AND status = 'pending'", [enterprise_id, req.userId]);
+    const [pendingDup] = await db.query("SELECT id FROM duijie_join_requests WHERE client_id = ? AND user_id = ? AND status = 'pending'", [enterpriseId, req.userId]);
     if (!normalizedCode) {
       if (pendingDup[0]) return res.status(400).json({ success: false, message: '您已提交申请，请等待审批' });
-      await db.query('INSERT INTO duijie_join_requests (client_id, user_id) VALUES (?, ?)', [enterprise_id, req.userId]);
-      return res.json({ success: true, message: `已向「${ent[0].name}」提交加入申请，请等待管理员审批`, data: { joinedDirectly: false } });
+      await db.query('INSERT INTO duijie_join_requests (client_id, user_id) VALUES (?, ?)', [enterpriseId, req.userId]);
+      return res.json({ success: true, message: `已向「${enterprise.name}」提交加入申请，请等待管理员审批`, data: { joinedDirectly: false } });
     }
-    if (!ent[0].join_code || ent[0].join_code !== normalizedCode) {
+    if (!enterprise.join_code || enterprise.join_code !== normalizedCode) {
       return res.status(400).json({ success: false, message: '推荐码无效，请确认后重试' });
     }
     const [user] = await db.query('SELECT nickname, username, phone, email FROM voice_users WHERE id = ?', [req.userId]);
@@ -27,27 +40,27 @@ exports.joinEnterprise = async (req, res) => {
     await withTransaction(async (conn) => {
       await conn.query(
         'INSERT INTO duijie_client_members (client_id, user_id, name, phone, email, created_by) VALUES (?, ?, ?, ?, ?, ?)',
-        [enterprise_id, req.userId, u.nickname || u.username || '', u.phone || null, u.email || null, req.userId]
+        [enterpriseId, req.userId, u.nickname || u.username || '', u.phone || null, u.email || null, req.userId]
       );
-      await conn.query('UPDATE voice_users SET active_enterprise_id = ? WHERE id = ? AND active_enterprise_id IS NULL', [enterprise_id, req.userId]);
+      await conn.query('UPDATE voice_users SET active_enterprise_id = ? WHERE id = ? AND active_enterprise_id IS NULL', [enterpriseId, req.userId]);
       if (pendingDup[0]) {
         await conn.query("UPDATE duijie_join_requests SET status = 'approved', handled_at = NOW(), handled_by = NULL WHERE id = ?", [pendingDup[0].id]);
       } else {
-        await conn.query("INSERT INTO duijie_join_requests (client_id, user_id, status, handled_at, handled_by) VALUES (?, ?, 'approved', NOW(), NULL)", [enterprise_id, req.userId]);
+        await conn.query("INSERT INTO duijie_join_requests (client_id, user_id, status, handled_at, handled_by) VALUES (?, ?, 'approved', NOW(), NULL)", [enterpriseId, req.userId]);
       }
     });
-    const managerIds = await getEnterpriseManagerUserIds(enterprise_id, req.userId);
-    await notifyMany(managerIds, 'join_via_code', '企业新增成员', `${u.nickname || u.username || '新成员'} 通过推荐码加入了企业「${ent[0].name}」`, '/enterprise');
+    const managerIds = await getEnterpriseManagerUserIds(enterpriseId, req.userId);
+    await notifyMany(managerIds, 'join_via_code', '企业新增成员', `${u.nickname || u.username || '新成员'} 通过推荐码加入了企业「${enterprise.name}」`, '/enterprise');
     await auditLog({
       userId: req.userId,
       username: u.username || u.nickname || '',
       action: 'join_by_code',
       entityType: 'enterprise',
-      entityId: enterprise_id,
-      detail: `通过推荐码加入企业「${ent[0].name}」`,
+      entityId: enterpriseId,
+      detail: `通过推荐码加入企业「${enterprise.name}」`,
       ip: req.ip,
     });
-    return res.json({ success: true, message: `已通过推荐码加入「${ent[0].name}」`, data: { joinedDirectly: true } });
+    return res.json({ success: true, message: `已通过推荐码加入「${enterprise.name}」`, data: { joinedDirectly: true } });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });
   }

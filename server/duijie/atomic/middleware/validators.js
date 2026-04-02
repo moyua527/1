@@ -103,8 +103,14 @@ exports.sendMessage = [
 
 // === Join enterprise ===
 exports.joinEnterprise = [
-  body('enterprise_id').isInt({ min: 1 }).withMessage('无效的企业ID'),
+  body('enterprise_id').optional({ values: 'falsy' }).isInt({ min: 1 }).withMessage('无效的企业ID'),
   body('join_code').optional({ values: 'falsy' }).trim().isLength({ min: 6, max: 20 }).withMessage('推荐码长度应为6到20位'),
+  body().custom((value) => {
+    const hasEnterpriseId = !!value?.enterprise_id;
+    const hasJoinCode = !!String(value?.join_code || '').trim();
+    if (!hasEnterpriseId && !hasJoinCode) throw new Error('请选择企业或输入推荐码');
+    return true;
+  }),
 ];
 
 exports.searchEnterprise = [

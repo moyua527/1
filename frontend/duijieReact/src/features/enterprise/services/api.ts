@@ -58,8 +58,9 @@ const enterpriseApi = {
   searchEnterprises: (name?: string) =>
     fetchApi(`/api/my-enterprise/search${name ? `?name=${encodeURIComponent(name)}` : ''}`),
 
-  join: (enterpriseId: number, joinCode?: string) => {
-    const payload: Record<string, any> = { enterprise_id: enterpriseId }
+  join: (enterpriseId?: number | null, joinCode?: string) => {
+    const payload: Record<string, any> = {}
+    if (enterpriseId) payload.enterprise_id = enterpriseId
     if (joinCode) payload.join_code = joinCode
     return fetchApi('/api/my-enterprise/join', { method: 'POST', body: JSON.stringify(payload) })
   },

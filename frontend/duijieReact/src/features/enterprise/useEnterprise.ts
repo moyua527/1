@@ -60,6 +60,18 @@ export function useEnterprise() {
   const joinSearchRequestRef = useRef(0)
   const joinSearchTimerRef = useRef<number | null>(null)
 
+  // 响应 URL 参数 action=create/join 自动打开弹窗
+  useEffect(() => {
+    const action = searchParams.get('action')
+    if (action === 'create') {
+      setCreateModalOpen(true)
+      setSearchParams({}, { replace: true })
+    } else if (action === 'join') {
+      setJoinModalOpen(true)
+      setSearchParams({}, { replace: true })
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   /** Invalidate enterprise data + sync global store */
   const refresh = () => {
     invalidate('enterprise')
@@ -255,9 +267,9 @@ export function useEnterprise() {
   }
   const handleJoin = async (entId?: number) => {
     const targetId = entId || selectedJoinEnterpriseId
-    if (!targetId) { toast('请先选择企业', 'error'); return }
-    setJoining(true)
     const normalizedCode = joinCode.trim().toUpperCase()
+    if (!targetId && !normalizedCode) { toast('请先选择企业或输入推荐码', 'error'); return }
+    setJoining(true)
     const r = await enterpriseApi.join(targetId, normalizedCode || undefined)
     setJoining(false)
     if (r.success) {

@@ -232,7 +232,6 @@ describe('Enterprise CRUD', () => {
 
     it('should reject invalid join code', async () => {
       const res = await authPost('/api/my-enterprise/join', joinUserToken, {
-        enterprise_id: testEntId,
         join_code: 'INVALID001',
       });
       expect(res.status).toBe(400);
@@ -241,7 +240,6 @@ describe('Enterprise CRUD', () => {
 
     it('should allow direct join with valid join code', async () => {
       const res = await authPost('/api/my-enterprise/join', joinUserToken, {
-        enterprise_id: testEntId,
         join_code: testJoinCode,
       });
       expect(res.status).toBe(200);

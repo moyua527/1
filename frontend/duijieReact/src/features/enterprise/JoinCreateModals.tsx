@@ -37,7 +37,8 @@ export default function JoinCreateModals({ joinModalOpen, setJoinModalOpen, join
   const showSearchDropdown = joinModalOpen && !searchMatchesSelected && (joinSearching || joinResults.length > 0 || !!normalizedJoinSearch)
   const requestStatus = selectedJoinEnterpriseId ? myRequests.find((r: any) => r.client_id === selectedJoinEnterpriseId)?.status : null
   const canDirectJoin = !!joinCode.trim()
-  const submitDisabled = joining || !selectedJoinEnterpriseId || (requestStatus === 'pending' && !canDirectJoin)
+  const canSubmitRequest = !!selectedJoinEnterpriseId
+  const submitDisabled = joining || (!canDirectJoin && !canSubmitRequest) || (requestStatus === 'pending' && !canDirectJoin)
   const submitText = canDirectJoin
     ? '验证推荐码并加入'
     : requestStatus === 'pending'
@@ -129,7 +130,7 @@ export default function JoinCreateModals({ joinModalOpen, setJoinModalOpen, join
                 </div>
               </div>
             ) : (
-              <div style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>请先从搜索结果中选择一个企业</div>
+              <div style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>可先搜索选择企业，或直接输入推荐码加入</div>
             )}
           </div>
           <div>
@@ -143,7 +144,7 @@ export default function JoinCreateModals({ joinModalOpen, setJoinModalOpen, join
               />
               <KeyRound size={16} color="#94a3b8" style={{ position: 'absolute', left: 12, top: 11 }} />
             </div>
-            <div style={{ marginTop: 6, fontSize: 12, color: 'var(--text-secondary)' }}>不填写则提交审批；填写正确推荐码则直接加入，企业后台会同步收到通知。</div>
+            <div style={{ marginTop: 6, fontSize: 12, color: 'var(--text-secondary)' }}>不填写则向已选企业提交审批；填写正确推荐码可直接加入，也可不先选择企业。</div>
           </div>
           {myRequests.filter((r: any) => r.status === 'pending').length > 0 && (
             <div>
