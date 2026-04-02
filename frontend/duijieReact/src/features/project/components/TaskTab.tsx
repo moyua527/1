@@ -14,13 +14,7 @@ const taskStatusMap: Record<string, { label: string; color: string }> = {
   accepted: { label: '验收通过', color: 'green' },
 }
 
-// 与后端 ALLOWED_TRANSITIONS 保持一致
-const ALLOWED_TRANSITIONS: Record<string, string[]> = {
-  todo: ['in_progress'],
-  in_progress: ['todo', 'pending_review'],
-  pending_review: ['in_progress', 'accepted'],
-  accepted: [],
-}
+const ALL_STATUSES = ['todo', 'in_progress', 'pending_review', 'accepted'] as const
 
 const section: React.CSSProperties = { background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16 }
 
@@ -40,6 +34,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
   const [deleteSelected, setDeleteSelected] = useState<Set<number>>(new Set())
   const [submitting, setSubmitting] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
+  const [previewImg, setPreviewImg] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -114,29 +109,40 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{t.title}</div>
                     {t.description && <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2 }}>{t.description}</div>}
+                    {t.created_at && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>创建: {new Date(t.created_at).toLocaleDateString('zh-CN')}</div>}
                     {t.due_date && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>截止: {t.due_date}</div>}
                     {t.attachments && t.attachments.length > 0 && (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
-                        {t.attachments.map((a: any) => (
-                          <a key={a.id} href={`/api/tasks/attachments/${a.id}/download`} target="_blank" rel="noreferrer"
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', background: 'var(--bg-selected)', borderRadius: 6, fontSize: 12, color: 'var(--brand)', textDecoration: 'none', border: '1px solid #dbeafe' }}
-                            onMouseEnter={e => { e.currentTarget.style.background = 'var(--brand-light-2)' }} onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-selected)' }}>
-                            {a.mime_type?.startsWith('image/') ? <Image size={12} /> : <Paperclip size={12} />}
-                            <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.original_name}</span>
-                            <Download size={10} />
-                          </a>
-                        ))}
+                        {t.attachments.map((a: any) => {
+                          const isImage = a.mime_type?.startsWith('image/')
+                          const url = `/api/tasks/attachments/${a.id}/download`
+                          if (isImage) {
+                            return (
+                              <div key={a.id} onClick={() => setPreviewImg(url)} style={{ cursor: 'pointer', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border-primary)', width: 80, height: 80, flexShrink: 0 }}>
+                                <img src={url} alt={a.original_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              </div>
+                            )
+                          }
+                          return (
+                            <a key={a.id} href={url} target="_blank" rel="noreferrer"
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', background: 'var(--bg-selected)', borderRadius: 6, fontSize: 12, color: 'var(--brand)', textDecoration: 'none', border: '1px solid #dbeafe' }}
+                              onMouseEnter={e => { e.currentTarget.style.background = 'var(--brand-light-2)' }} onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-selected)' }}>
+                              <Paperclip size={12} />
+                              <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.original_name}</span>
+                              <Download size={10} />
+                            </a>
+                          )
+                        })}
                       </div>
                     )}
                   </div>
-                  <select value={t.status} disabled={!canEdit || (ALLOWED_TRANSITIONS[t.status] || []).length === 0} onChange={async (e) => {
+                  <select value={t.status} disabled={!canEdit} onChange={async (e) => {
                     const r = await taskApi.move(String(t.id), e.target.value)
                     if (r.success) loadTasks()
                     else toast(r.message || '状态切换失败', 'error')
-                  }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border-primary)', fontSize: 13, color: 'var(--text-body)', cursor: canEdit && (ALLOWED_TRANSITIONS[t.status] || []).length > 0 ? 'pointer' : 'default', opacity: canEdit && (ALLOWED_TRANSITIONS[t.status] || []).length > 0 ? 1 : 0.6 }}>
-                    <option value={t.status}>{(taskStatusMap[t.status] || taskStatusMap.todo).label}</option>
-                    {(ALLOWED_TRANSITIONS[t.status] || []).map(s => (
-                      <option key={s} value={s}>{(taskStatusMap[s] || { label: s }).label}</option>
+                  }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border-primary)', fontSize: 13, color: 'var(--text-body)', cursor: canEdit ? 'pointer' : 'default', opacity: canEdit ? 1 : 0.6 }}>
+                    {ALL_STATUSES.map(s => (
+                      <option key={s} value={s}>{taskStatusMap[s].label}</option>
                     ))}
                   </select>
                   <Badge color={ts.color}>{ts.label}</Badge>
@@ -254,6 +260,13 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
           </>)}
         </div>
       </Modal>
+
+      {previewImg && (
+        <div onClick={() => setPreviewImg(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, cursor: 'zoom-out', padding: 24 }}>
+          <img src={previewImg} alt="预览" style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: 8, boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }} onClick={e => e.stopPropagation()} />
+          <button onClick={() => setPreviewImg(null)} style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%', width: 36, height: 36, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 20 }}>✕</button>
+        </div>
+      )}
     </>
   )
 }

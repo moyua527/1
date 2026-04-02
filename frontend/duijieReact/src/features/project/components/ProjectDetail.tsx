@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
-import { ArrowLeft, Trash2, AppWindow, ExternalLink, MoreVertical, Pencil } from 'lucide-react'
+import { ArrowLeft, Trash2, AppWindow, ExternalLink, MoreVertical, Pencil, Copy, UserPlus, Check, X } from 'lucide-react'
 import { can } from '../../../stores/permissions'
 import useEnterpriseStore from '../../../stores/useEnterpriseStore'
 import useProjectPerms from '../../../hooks/useProjectPerms'
@@ -52,7 +52,7 @@ export default function ProjectDetail() {
   const [milestones, setMilestones] = useState<any[]>([])
   const [selectedMember, setSelectedMember] = useState<any>(null)
   const [searchParams, setSearchParams] = useSearchParams()
-  const validTabs = ['overview', 'tasks', 'milestones', 'messages', 'app'] as const
+  const validTabs = ['overview', 'tasks', 'milestones', 'messages', 'app', 'join_requests'] as const
   type Tab = typeof validTabs[number]
   const urlTab = searchParams.get('tab') as Tab
   const tab: Tab = validTabs.includes(urlTab as any) ? urlTab! : 'overview'
@@ -75,6 +75,8 @@ export default function ProjectDetail() {
   const [showActionMenu, setShowActionMenu] = useState(false)
   const [showEditProject, setShowEditProject] = useState(false)
   const [editForm, setEditForm] = useState({ name: '', description: '', status: 'planning' })
+  const [joinRequests, setJoinRequests] = useState<any[]>([])
+  const [joinReqLoading, setJoinReqLoading] = useState(false)
 
   const openClientModal = (clientId: number) => {
     setClientModal(true)
@@ -124,6 +126,20 @@ export default function ProjectDetail() {
     taskApi.list(id).then(r => { if (r.success) setTasks(r.data || []) })
     milestoneApi.list(id).then(r => { if (r.success) setMilestones(r.data || []) })
   }, [id])
+
+  const loadJoinRequests = useCallback(() => {
+    if (!id) return
+    setJoinReqLoading(true)
+    projectApi.getJoinRequests(id).then(r => { setJoinRequests(r.success ? r.data || [] : []); setJoinReqLoading(false) })
+  }, [id])
+
+  const handleReviewJoinRequest = async (requestId: number, action: 'approve' | 'reject') => {
+    const r = action === 'approve'
+      ? await projectApi.approveJoinRequest(id!, requestId)
+      : await projectApi.rejectJoinRequest(id!, requestId)
+    if (r.success) { toast(action === 'approve' ? '已通过' : '已拒绝', 'success'); loadJoinRequests(); loadProject() }
+    else toast(r.message || '操作失败', 'error')
+  }
 
   useEffect(() => {
     if (!id) return
@@ -270,7 +286,7 @@ export default function ProjectDetail() {
       </Modal>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-        {([['overview','概览'],['tasks','任务'],['milestones','里程碑'],['messages','消息'], ...(project.app_url ? [['app', project.app_name || '应用']] : [])] as [string, string][]).map(([k,v]) => (
+        {([['overview','概览'],['tasks','任务'],['milestones','里程碑'],['messages','消息'], ...(project.app_url ? [['app', project.app_name || '应用']] : []), ...(canEdit ? [['join_requests', '加入申请']] : [])] as [string, string][]).map(([k,v]) => (
           <button key={k} onClick={() => setTab(k as any)} style={{
             padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500,
             background: tab === k ? 'var(--brand)' : 'var(--bg-tertiary)', color: tab === k ? 'var(--bg-primary)' : 'var(--text-secondary)',
