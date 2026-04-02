@@ -14,6 +14,14 @@ const taskStatusMap: Record<string, { label: string; color: string }> = {
   accepted: { label: '验收通过', color: 'green' },
 }
 
+// 与后端 ALLOWED_TRANSITIONS 保持一致
+const ALLOWED_TRANSITIONS: Record<string, string[]> = {
+  todo: ['in_progress'],
+  in_progress: ['todo', 'pending_review'],
+  pending_review: ['in_progress', 'accepted'],
+  accepted: [],
+}
+
 const section: React.CSSProperties = { background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16 }
 
 interface TaskTabProps {
@@ -121,14 +129,15 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                       </div>
                     )}
                   </div>
-                  <select value={t.status} disabled={!canEdit} onChange={async (e) => {
-                    await taskApi.move(String(t.id), e.target.value)
-                    loadTasks()
-                  }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border-primary)', fontSize: 13, color: 'var(--text-body)', cursor: canEdit ? 'pointer' : 'default', opacity: canEdit ? 1 : 0.6 }}>
-                    <option value="todo">待办</option>
-                    <option value="in_progress">进行中</option>
-                    <option value="pending_review">待验收</option>
-                    <option value="accepted">验收通过</option>
+                  <select value={t.status} disabled={!canEdit || (ALLOWED_TRANSITIONS[t.status] || []).length === 0} onChange={async (e) => {
+                    const r = await taskApi.move(String(t.id), e.target.value)
+                    if (r.success) loadTasks()
+                    else toast(r.message || '状态切换失败', 'error')
+                  }} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border-primary)', fontSize: 13, color: 'var(--text-body)', cursor: canEdit && (ALLOWED_TRANSITIONS[t.status] || []).length > 0 ? 'pointer' : 'default', opacity: canEdit && (ALLOWED_TRANSITIONS[t.status] || []).length > 0 ? 1 : 0.6 }}>
+                    <option value={t.status}>{(taskStatusMap[t.status] || taskStatusMap.todo).label}</option>
+                    {(ALLOWED_TRANSITIONS[t.status] || []).map(s => (
+                      <option key={s} value={s}>{(taskStatusMap[s] || { label: s }).label}</option>
+                    ))}
                   </select>
                   <Badge color={ts.color}>{ts.label}</Badge>
                 </div>

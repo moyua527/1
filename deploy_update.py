@@ -6,6 +6,18 @@ USER = 'root'
 REMOTE_BASE = '/opt/duijie'
 LOCAL_BASE = os.path.dirname(os.path.abspath(__file__))
 
+def ensure_remote_dir_tree(sftp, path):
+    parts = path.split('/')
+    current = ''
+    for part in parts:
+        if not part:
+            continue
+        current = f'{current}/{part}'
+        try:
+            sftp.stat(current)
+        except:
+            sftp.mkdir(current)
+
 def get_version():
     vf = os.path.join(LOCAL_BASE, 'version.json')
     if os.path.isfile(vf):
@@ -34,8 +46,7 @@ def run_cmd(ssh, cmd, desc='', fatal=False):
     return out
 
 def upload_dir(sftp, local_dir, remote_dir):
-    try: sftp.stat(remote_dir)
-    except: sftp.mkdir(remote_dir)
+    ensure_remote_dir_tree(sftp, remote_dir)
     for item in os.listdir(local_dir):
         local_path = os.path.join(local_dir, item)
         remote_path = f'{remote_dir}/{item}'
