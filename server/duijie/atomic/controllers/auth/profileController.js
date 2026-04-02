@@ -4,13 +4,12 @@ const bcrypt = require('bcryptjs');
 module.exports = async (req, res) => {
   try {
     const userId = req.userId;
-    const { nickname, email, phone, password } = req.body;
+    const { nickname, email, phone } = req.body;
     const fields = [];
     const values = [];
     if (nickname !== undefined) { fields.push('nickname = ?'); values.push(nickname); }
     if (email !== undefined) { fields.push('email = ?'); values.push(email || null); }
     if (phone !== undefined) { fields.push('phone = ?'); values.push(phone || null); }
-    if (password) { fields.push('password = ?'); values.push(await bcrypt.hash(password, 10)); }
     if (fields.length === 0) return res.status(400).json({ success: false, message: '无更新内容' });
     values.push(userId);
     await db.query(`UPDATE voice_users SET ${fields.join(', ')} WHERE id = ?`, values);

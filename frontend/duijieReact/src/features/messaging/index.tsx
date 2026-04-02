@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Send, MessageSquare, Search, Loader2, UserPlus, Users, Phone, X, UserCheck } from 'lucide-react'
+import { Send, MessageSquare, Search, Loader2, UserPlus, Users, Phone, X, UserCheck, LogOut, Check } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { onSocket } from '../ui/smartSocket'
 import Avatar from '../ui/Avatar'
 import { toast } from '../ui/Toast'
+import { confirm } from '../ui/ConfirmDialog'
 
 const roleLabel: Record<string, string> = { admin: '管理员', member: '成员' }
 
@@ -23,6 +24,16 @@ const friendApi = {
   requests: () => fetchApi('/api/friends/requests'),
   respond: (id: number, action: string) => fetchApi(`/api/friends/${id}/respond`, { method: 'PATCH', body: JSON.stringify({ action }) }),
   remove: (id: number) => fetchApi(`/api/friends/${id}`, { method: 'DELETE' }),
+}
+
+const groupApi = {
+  list: () => fetchApi('/api/groups'),
+  create: (name: string, member_ids: number[]) => fetchApi('/api/groups', { method: 'POST', body: JSON.stringify({ name, member_ids }) }),
+  detail: (id: number) => fetchApi(`/api/groups/${id}`),
+  history: (id: number) => fetchApi(`/api/groups/${id}/history`),
+  send: (id: number, content: string) => fetchApi(`/api/groups/${id}/send`, { method: 'POST', body: JSON.stringify({ content }) }),
+  recall: (groupId: number, msgId: number) => fetchApi(`/api/groups/${groupId}/messages/${msgId}/recall`, { method: 'PATCH' }),
+  leave: (id: number) => fetchApi(`/api/groups/${id}/leave`, { method: 'DELETE' }),
 }
 
 export default function Messaging() {
@@ -46,10 +57,24 @@ export default function Messaging() {
   const [searching, setSearching] = useState(false)
   const [requestingId, setRequestingId] = useState<number | null>(null)
 
+  // 群聊
+  const [groups, setGroups] = useState<any[]>([])
+  const [selectedGroup, setSelectedGroup] = useState<any>(null)
+  const selectedGroupRef = useRef<any>(null)
+  const [groupMessages, setGroupMessages] = useState<any[]>([])
+  const [showCreateGroup, setShowCreateGroup] = useState(false)
+  const [groupName, setGroupName] = useState('')
+  const [friendsList, setFriendsList] = useState<any[]>([])
+  const [selectedFriendIds, setSelectedFriendIds] = useState<number[]>([])
+  const [creatingGroup, setCreatingGroup] = useState(false)
+
   useEffect(() => { fetchApi('/api/auth/me').then(r => { if (r.success) setMe(r.data) }) }, [])
 
   const loadConversations = () => {
     dmApi.conversations().then(r => { if (r.success) setConversations(r.data || []) }).finally(() => setLoading(false))
+  }
+  const loadGroups = () => {
+    groupApi.list().then(r => { if (r.success) setGroups(r.data || []) })
   }
   const loadFriends = () => {
     friendApi.requests().then(r => { if (r.success) setFriendRequests(r.data || []) })
@@ -57,25 +82,34 @@ export default function Messaging() {
 
   const pullMessages = () => {
     const sel = selectedRef.current
+    const grp = selectedGroupRef.current
     if (sel) {
       dmApi.history(sel.id).then(r => {
         if (r.success) setMessages(r.data || [])
         setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
         loadConversations(); window.dispatchEvent(new Event('dm-read'))
       })
-    } else { loadConversations(); window.dispatchEvent(new Event('dm-read')) }
+    } else if (grp) {
+      groupApi.history(grp.id).then(r => {
+        if (r.success) setGroupMessages(r.data || [])
+        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+        loadGroups()
+      })
+    } else { loadConversations(); loadGroups(); window.dispatchEvent(new Event('dm-read')) }
   }
 
   useEffect(() => {
-    loadConversations(); loadFriends()
+    loadConversations(); loadFriends(); loadGroups()
     const offDm = onSocket('new_dm', pullMessages)
-    const offReconnect = onSocket('reconnect', () => { loadConversations(); pullMessages() })
-    const t = setInterval(loadConversations, 60000)
-    return () => { clearInterval(t); offDm(); offReconnect() }
+    const offGroup = onSocket('new_group_msg', pullMessages)
+    const offReconnect = onSocket('reconnect', () => { loadConversations(); loadGroups(); pullMessages() })
+    const t = setInterval(() => { loadConversations(); loadGroups() }, 60000)
+    return () => { clearInterval(t); offDm(); offGroup(); offReconnect() }
   }, [])
 
   const selectUser = (user: any) => {
     setSelectedUser(user); selectedRef.current = user
+    setSelectedGroup(null); selectedGroupRef.current = null
     dmApi.history(user.id).then(r => {
       if (r.success) setMessages(r.data || [])
       setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
@@ -90,21 +124,51 @@ export default function Messaging() {
     }, 5000)
   }
 
+  const selectGroup = (group: any) => {
+    setSelectedGroup(group); selectedGroupRef.current = group
+    setSelectedUser(null); selectedRef.current = null
+    groupApi.history(group.id).then(r => {
+      if (r.success) setGroupMessages(r.data || [])
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+      loadGroups()
+    })
+    if (pollRef.current) clearInterval(pollRef.current)
+    pollRef.current = setInterval(() => {
+      groupApi.history(group.id).then(r => {
+        if (r.success) setGroupMessages(r.data || [])
+        loadGroups()
+      })
+    }, 5000)
+  }
+
   useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current) }, [])
 
   const handleSend = async () => {
-    if (!input.trim() || !selectedUser) return
+    if (!input.trim()) return
     setSending(true)
-    const r = await dmApi.send(selectedUser.id, input.trim())
-    setSending(false)
-    if (r.success) {
-      setInput('')
-      dmApi.history(selectedUser.id).then(r => {
-        if (r.success) setMessages(r.data || [])
-        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
-      })
-      loadConversations()
-    } else toast(r.message || '发送失败', 'error')
+    if (selectedGroup) {
+      const r = await groupApi.send(selectedGroup.id, input.trim())
+      setSending(false)
+      if (r.success) {
+        setInput('')
+        groupApi.history(selectedGroup.id).then(r => {
+          if (r.success) setGroupMessages(r.data || [])
+          setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+        })
+        loadGroups()
+      } else toast(r.message || '发送失败', 'error')
+    } else if (selectedUser) {
+      const r = await dmApi.send(selectedUser.id, input.trim())
+      setSending(false)
+      if (r.success) {
+        setInput('')
+        dmApi.history(selectedUser.id).then(r => {
+          if (r.success) setMessages(r.data || [])
+          setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+        })
+        loadConversations()
+      } else toast(r.message || '发送失败', 'error')
+    } else { setSending(false) }
   }
 
   const totalUnread = conversations.reduce((s, c) => s + (c.unread_count || 0), 0)
@@ -134,7 +198,7 @@ export default function Messaging() {
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 80px)', background: 'var(--bg-primary)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
       {/* 左栏 */}
-      <div style={{ width: isMobile ? (selectedUser ? 0 : '100%') : 320, borderRight: '1px solid var(--border-primary)', display: 'flex', flexDirection: 'column', flexShrink: 0, overflow: 'hidden', transition: 'width 0.2s' }}>
+      <div style={{ width: isMobile ? ((selectedUser || selectedGroup) ? 0 : '100%') : 320, borderRight: '1px solid var(--border-primary)', display: 'flex', flexDirection: 'column', flexShrink: 0, overflow: 'hidden', transition: 'width 0.2s' }}>
         {/* 标题 + 操作按钮 */}
         <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--border-primary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-heading)', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -149,7 +213,7 @@ export default function Messaging() {
             </button>
             <button title="添加群"
               style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}
-              onClick={() => toast('群聊功能开发中', 'info')}>
+              onClick={() => { setShowCreateGroup(true); setGroupName(''); setSelectedFriendIds([]); friendApi.list().then(r => { if (r.success) setFriendsList(r.data || []) }) }}>
               <Users size={14} /> 添加群
             </button>
           </div>
@@ -182,15 +246,15 @@ export default function Messaging() {
         <div style={{ flex: 1, overflowY: 'auto' }}>
           {loading ? (
             <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)' }}><Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} /></div>
-          ) : conversations.length === 0 ? (
+          ) : conversations.length === 0 && groups.length === 0 ? (
             <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)', fontSize: 13 }}>暂无消息记录<br /><span style={{ fontSize: 12 }}>添加联系人后开始聊天</span></div>
-          ) : (
-            conversations.map(c => (
-              <div key={c.id} onClick={() => selectUser(c)}
+          ) : (<>
+            {conversations.map(c => (
+              <div key={`dm-${c.id}`} onClick={() => selectUser(c)}
                 style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid var(--border-secondary)',
-                  background: selectedUser?.id === c.id ? 'var(--bg-selected)' : 'transparent' }}
-                onMouseEnter={e => { if (selectedUser?.id !== c.id) e.currentTarget.style.background = 'var(--bg-hover)' }}
-                onMouseLeave={e => { if (selectedUser?.id !== c.id) e.currentTarget.style.background = selectedUser?.id === c.id ? 'var(--bg-selected)' : 'transparent' }}>
+                  background: selectedUser?.id === c.id && !selectedGroup ? 'var(--bg-selected)' : 'transparent' }}
+                onMouseEnter={e => { if (selectedUser?.id !== c.id || selectedGroup) e.currentTarget.style.background = 'var(--bg-hover)' }}
+                onMouseLeave={e => { e.currentTarget.style.background = selectedUser?.id === c.id && !selectedGroup ? 'var(--bg-selected)' : 'transparent' }}>
                 <Avatar name={c.nickname || c.username} size={40} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -203,8 +267,31 @@ export default function Messaging() {
                   </div>
                 </div>
               </div>
-            ))
-          )}
+            ))}
+            {groups.length > 0 && (
+              <>
+                <div style={{ padding: '6px 14px', fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', background: 'var(--bg-secondary)' }}>群聊</div>
+                {groups.map(g => (
+                  <div key={`grp-${g.id}`} onClick={() => selectGroup(g)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid var(--border-secondary)',
+                      background: selectedGroup?.id === g.id ? 'var(--bg-selected)' : 'transparent' }}
+                    onMouseEnter={e => { if (selectedGroup?.id !== g.id) e.currentTarget.style.background = 'var(--bg-hover)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = selectedGroup?.id === g.id ? 'var(--bg-selected)' : 'transparent' }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 16, fontWeight: 700, flexShrink: 0 }}>
+                      <Users size={20} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{g.name}</span>
+                        {g.last_time && <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{new Date(g.last_time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</span>}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.last_message || `${g.member_count}人`}</div>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+          </>)}
         </div>
       </div>
 
@@ -238,6 +325,72 @@ export default function Messaging() {
                       <div style={{ fontSize: 12, color: 'var(--text-tertiary)', fontStyle: 'italic', padding: '4px 0' }}>{isMine ? '你' : (selectedUser.nickname || selectedUser.username)}撤回了一条消息</div>
                     ) : (
                       <div style={{ position: 'relative', maxWidth: '70%' }} onDoubleClick={canRecall ? handleRecall : undefined}>
+                        <div style={{
+                          padding: '10px 14px', borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                          background: isMine ? 'var(--brand)' : 'var(--bg-tertiary)', color: isMine ? '#fff' : 'var(--text-heading)',
+                          fontSize: 14, lineHeight: 1.5, wordBreak: 'break-word', cursor: canRecall ? 'pointer' : 'default'
+                        }} title={canRecall ? '双击撤回' : undefined}>
+                          {m.content}
+                          <div style={{ fontSize: 10, marginTop: 4, opacity: 0.6, textAlign: 'right' }}>
+                            {new Date(m.created_at).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+              <div ref={chatEndRef} />
+            </div>
+            <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border-primary)', display: 'flex', gap: 8 }}>
+              <input value={input} onChange={e => setInput(e.target.value)} placeholder="输入消息..."
+                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
+                style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-secondary)', color: 'var(--text-body)' }} autoFocus />
+              <button onClick={handleSend} disabled={sending || !input.trim()}
+                style={{ background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 500, opacity: !input.trim() ? 0.5 : 1 }}>
+                <Send size={16} /> 发送
+              </button>
+            </div>
+          </>
+        ) : selectedGroup ? (
+          <>
+            <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--border-primary)', display: 'flex', alignItems: 'center', gap: 12 }}>
+              {isMobile && <button onClick={() => { setSelectedGroup(null); selectedGroupRef.current = null }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, padding: 4, color: 'var(--text-secondary)' }}>←</button>}
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
+                <Users size={18} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{selectedGroup.name}</div>
+                <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{selectedGroup.member_count}人</div>
+              </div>
+              <button onClick={async () => {
+                if (!(await confirm({ message: `确定退出群聊「${selectedGroup.name}」？`, danger: true }))) return
+                const r = await groupApi.leave(selectedGroup.id)
+                if (r.success) { toast('已退出群聊', 'success'); setSelectedGroup(null); selectedGroupRef.current = null; loadGroups() }
+                else toast(r.message || '退出失败', 'error')
+              }} title="退出群聊" style={{ background: 'none', border: '1px solid var(--border-primary)', borderRadius: 8, padding: '4px 8px', cursor: 'pointer', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
+                <LogOut size={14} /> 退出
+              </button>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {groupMessages.length === 0 && <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 13, padding: 40 }}>开始群聊对话</div>}
+              {groupMessages.map(m => {
+                const isMine = me && m.sender_id === me.id
+                const isRecalled = m.is_recalled
+                const canRecall = isMine && !isRecalled && (Date.now() - new Date(m.created_at).getTime()) < 2 * 60 * 1000
+                const handleGroupRecall = async () => {
+                  if (!canRecall) return
+                  const r = await groupApi.recall(selectedGroup.id, m.id)
+                  if (r.success) { toast('消息已撤回', 'success'); groupApi.history(selectedGroup.id).then(r => { if (r.success) setGroupMessages(r.data || []) }) }
+                  else toast(r.message || '撤回失败', 'error')
+                }
+                return (
+                  <div key={m.id} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
+                    {isRecalled ? (
+                      <div style={{ fontSize: 12, color: 'var(--text-tertiary)', fontStyle: 'italic', padding: '4px 0' }}>{isMine ? '你' : (m.sender_nickname || m.sender_username)}撤回了一条消息</div>
+                    ) : (
+                      <div style={{ position: 'relative', maxWidth: '70%' }} onDoubleClick={canRecall ? handleGroupRecall : undefined}>
+                        {!isMine && <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 2 }}>{m.sender_nickname || m.sender_username}</div>}
                         <div style={{
                           padding: '10px 14px', borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                           background: isMine ? 'var(--brand)' : 'var(--bg-tertiary)', color: isMine ? '#fff' : 'var(--text-heading)',

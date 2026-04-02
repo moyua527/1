@@ -54,5 +54,5 @@ export function uploadFile(path: string, formData: FormData) {
     credentials: 'include',
     headers: { ...authHeaders() },
     body: formData,
-  }).then(r => r.json())
+  }).then(parseApiResponse)
 }

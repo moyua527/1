@@ -118,7 +118,7 @@ export function useNotifications(category = 'all') {
   })
 }
 
-export function useUsers() {
+export function useUsers(enabled = true) {
   return useQuery<any[]>({
     queryKey: ['users'],
     queryFn: async () => {
@@ -126,6 +126,7 @@ export function useUsers() {
       if (!r.success) throw new Error(r.message)
       return r.data || []
     },
+    enabled,
   })
 }
 

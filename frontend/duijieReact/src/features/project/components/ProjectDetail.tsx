@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
-import { ArrowLeft, Trash2, AppWindow, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Trash2, AppWindow, ExternalLink, MoreVertical, Pencil } from 'lucide-react'
 import { can } from '../../../stores/permissions'
 import useEnterpriseStore from '../../../stores/useEnterpriseStore'
 import useProjectPerms from '../../../hooks/useProjectPerms'
@@ -71,6 +71,9 @@ export default function ProjectDetail() {
   const [availableClients, setAvailableClients] = useState<any[]>([])
   const [selectedClientId, setSelectedClientId] = useState('')
   const [settingClient, setSettingClient] = useState(false)
+  const [showActionMenu, setShowActionMenu] = useState(false)
+  const [showEditProject, setShowEditProject] = useState(false)
+  const [editForm, setEditForm] = useState({ name: '', description: '', status: 'planning' })
 
   const openClientModal = (clientId: number) => {
     setClientModal(true)
@@ -223,8 +226,37 @@ export default function ProjectDetail() {
             <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{isClientPerspective ? '对方企业' : '客户企业'}: {hasExternalEnterprise ? (isClientPerspective ? <span style={{ color: 'var(--text-heading)' }}>{otherEnterpriseName}</span> : <span onClick={() => project.client_id && openClientModal(project.client_id)} style={{ color: 'var(--brand)', cursor: 'pointer' }}>{otherEnterpriseName}</span>) : (<>{canEdit && <button onClick={openSetClient} style={{ fontSize: 12, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, textDecoration: 'underline' }}>设置</button>}{!canEdit && <span style={{ color: 'var(--text-heading)' }}>无</span>}</>)}</span>
           </div>
         </div>
-        {canDelete && <Button variant="danger" onClick={handleDelete}><Trash2 size={14} /> 删除</Button>}
+        {(canEdit || canDelete) && (
+          <div style={{ position: 'relative' }}>
+            <button onClick={() => setShowActionMenu(v => !v)} style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', borderRadius: 8, cursor: 'pointer', padding: '6px 8px', display: 'flex', alignItems: 'center', color: 'var(--text-secondary)' }}><MoreVertical size={18} /></button>
+            {showActionMenu && <>
+              <div style={{ position: 'fixed', inset: 0, zIndex: 99 }} onClick={() => setShowActionMenu(false)} />
+              <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)', borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 100, minWidth: 140, overflow: 'hidden' }}>
+                {canEdit && <button onClick={() => { setShowActionMenu(false); setEditForm({ name: project.name || '', description: project.description || '', status: project.status || 'planning' }); setShowEditProject(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Pencil size={14} /> 编辑项目</button>}
+                {canDelete && <button onClick={() => { setShowActionMenu(false); handleDelete() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#ef4444', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Trash2 size={14} /> 删除项目</button>}
+              </div>
+            </>}
+          </div>
+        )}
       </div>
+      {/* 编辑项目 Modal */}
+      <Modal open={showEditProject} onClose={() => setShowEditProject(false)} title="编辑项目">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div><label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>项目名称</label><Input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} placeholder="项目名称" /></div>
+          <div><label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>描述</label><textarea value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} placeholder="项目描述（可选）" rows={3} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', fontSize: 14, resize: 'vertical' }} /></div>
+          <div><label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>状态</label><select value={editForm.status} onChange={e => setEditForm(f => ({ ...f, status: e.target.value }))} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', fontSize: 14 }}>
+            {Object.entries(statusMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+          </select></div>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 8 }}>
+            <Button variant="secondary" onClick={() => setShowEditProject(false)}>取消</Button>
+            <Button onClick={async () => {
+              if (!editForm.name.trim()) { toast('请输入项目名称', 'error'); return }
+              const r = await projectApi.update(id!, { name: editForm.name.trim(), description: editForm.description.trim(), status: editForm.status })
+              if (r.success) { toast('已更新', 'success'); setShowEditProject(false); loadProject() } else toast(r.message || '更新失败', 'error')
+            }}>保存</Button>
+          </div>
+        </div>
+      </Modal>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
         {([['overview','概览'],['tasks','任务'],['milestones','里程碑'],['messages','消息'], ...(project.app_url ? [['app', project.app_name || '应用']] : [])] as [string, string][]).map(([k,v]) => (

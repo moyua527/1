@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DuiJie 使用指南</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Noto Sans SC', -apple-system, sans-serif; background: #f8fafc; }
+
+  .deck { width: 100vw; height: 100vh; position: relative; }
+  .slide { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; align-items: center;
+    opacity: 0; transform: translateX(50px); transition: opacity 0.45s ease, transform 0.45s ease; pointer-events: none; padding: 48px 72px; overflow-y: auto; }
+  .slide.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+
+  .progress { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, #3b82f6, #2563eb); transition: width 0.4s ease; z-index: 200; }
+  .page-num { position: fixed; bottom: 14px; right: 20px; color: #94a3b8; font-size: 13px; z-index: 200; }
+  .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 48px; background: #fff; border-top: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; gap: 12px; z-index: 200; }
+  .nav-bar button { padding: 6px 20px; border-radius: 8px; border: 1px solid #e2e8f0; background: #fff; color: #475569; font-size: 13px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .nav-bar button:hover { background: #f1f5f9; border-color: #cbd5e1; }
+  .nav-bar button.primary { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+  .nav-bar button.primary:hover { background: #2563eb; }
+  .nav-bar .page-info { color: #94a3b8; font-size: 13px; min-width: 60px; text-align: center; }
+
+  .inner { max-width: 960px; width: 100%; }
+  h1 { font-size: 42px; font-weight: 800; color: #0f172a; line-height: 1.2; letter-spacing: -1px; }
+  h2 { font-size: 32px; font-weight: 700; color: #0f172a; line-height: 1.25; margin-bottom: 24px; }
+  h3 { font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 8px; }
+  p { font-size: 16px; line-height: 1.7; color: #475569; }
+  .tag { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; letter-spacing: 0.3px; margin-bottom: 16px; }
+  .tag-blue { background: #eff6ff; color: #2563eb; }
+  .tag-green { background: #f0fdf4; color: #16a34a; }
+  .tag-purple { background: #faf5ff; color: #7c3aed; }
+  .tag-orange { background: #fff7ed; color: #ea580c; }
+  .tag-pink { background: #fdf2f8; color: #db2777; }
+  .tag-cyan { background: #ecfeff; color: #0891b2; }
+
+  /* Step list */
+  .steps { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
+  .step { display: flex; gap: 16px; align-items: flex-start; background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 20px; }
+  .step-num { width: 36px; height: 36px; border-radius: 10px; background: #eff6ff; color: #2563eb; font-weight: 700; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-num.green { background: #f0fdf4; color: #16a34a; }
+  .step-num.purple { background: #faf5ff; color: #7c3aed; }
+  .step-num.orange { background: #fff7ed; color: #ea580c; }
+  .step h3 { margin-bottom: 4px; }
+  .step p { font-size: 14px; color: #64748b; line-height: 1.5; }
+
+  /* Tip box */
+  .tip { background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 14px 18px; margin-top: 16px; display: flex; gap: 10px; align-items: flex-start; }
+  .tip-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .tip p { font-size: 13px; color: #92400e; line-height: 1.5; margin: 0; }
+  .tip-blue { background: #eff6ff; border-color: #bfdbfe; }
+  .tip-blue p { color: #1e40af; }
+
+  /* Feature cards */
+  .feat-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 8px; }
+  .feat { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 20px; }
+  .feat .f-icon { font-size: 28px; margin-bottom: 10px; }
+  .feat h3 { font-size: 16px; margin-bottom: 4px; }
+  .feat p { font-size: 13px; color: #64748b; line-height: 1.5; }
+
+  /* Sidebar mockup */
+  .sidebar-mock { display: flex; gap: 24px; margin-top: 12px; }
+  .sb-nav { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px; width: 200px; flex-shrink: 0; }
+  .sb-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; font-size: 14px; color: #475569; cursor: default; margin-bottom: 2px; }
+  .sb-item.active { background: #eff6ff; color: #2563eb; font-weight: 600; }
+  .sb-item .sb-icon { font-size: 16px; }
+  .sb-group { font-size: 11px; color: #94a3b8; font-weight: 600; padding: 8px 12px 4px; letter-spacing: 0.5px; }
+  .sb-content { flex: 1; background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 20px; }
+
+  /* Tab mock */
+  .tabs-mock { display: flex; gap: 4px; margin-bottom: 16px; }
+  .tab-m { padding: 6px 16px; border-radius: 8px; font-size: 13px; color: #64748b; cursor: default; }
+  .tab-m.active { background: #eff6ff; color: #2563eb; font-weight: 600; }
+
+  /* Key bindings */
+  .kbd { display: inline-block; padding: 2px 8px; border-radius: 6px; background: #f1f5f9; border: 1px solid #e2e8f0; font-size: 12px; font-weight: 600; color: #475569; font-family: monospace; }
+
+  /* Cover specific */
+  .s-cover { background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 50%, #faf5ff 100%); text-align: center; }
+  .s-cover .logo { font-size: 64px; font-weight: 900; color: #2563eb; margin-bottom: 12px; }
+
+  /* 3-col grid */
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 8px; }
+  .grid3 .feat { text-align: center; }
+
+  /* Animations */
+  .slide.active .fade-up { animation: fadeUp 0.5s ease forwards; }
+  .slide.active .fade-up-d1 { animation: fadeUp 0.5s 0.08s ease forwards; opacity: 0; }
+  .slide.active .fade-up-d2 { animation: fadeUp 0.5s 0.16s ease forwards; opacity: 0; }
+  .slide.active .fade-up-d3 { animation: fadeUp 0.5s 0.24s ease forwards; opacity: 0; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 800px) {
+    .slide { padding: 32px 24px; }
+    h1 { font-size: 28px; }
+    h2 { font-size: 24px; }
+    .feat-row, .grid3 { grid-template-columns: 1fr; }
+    .sidebar-mock { flex-direction: column; }
+    .sb-nav { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+<!-- 0: 封面 -->
+<div class="slide s-cover active">
+  <div class="inner" style="display:flex;flex-direction:column;align-items:center;">
+    <div class="logo fade-up">DuiJie</div>
+    <h1 class="fade-up-d1" style="margin-bottom:12px;">使用指南</h1>
+    <p class="fade-up-d2" style="font-size:20px;max-width:500px;text-align:center;margin-bottom:32px;">
+      从注册到高效协作，手把手教你使用平台的每一个功能
+    </p>
+    <div class="fade-up-d3" style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+      <span class="tag tag-blue" style="font-size:14px;padding:6px 18px;">📝 注册登录</span>
+      <span class="tag tag-green" style="font-size:14px;padding:6px 18px;">🏢 企业管理</span>
+      <span class="tag tag-purple" style="font-size:14px;padding:6px 18px;">📋 项目管理</span>
+      <span class="tag tag-orange" style="font-size:14px;padding:6px 18px;">✅ 任务看板</span>
+      <span class="tag tag-pink" style="font-size:14px;padding:6px 18px;">💬 即时通讯</span>
+      <span class="tag tag-cyan" style="font-size:14px;padding:6px 18px;">🎫 工单系统</span>
+    </div>
+  </div>
+</div>
+
+<!-- 1: 目录 -->
+<div class="slide">
+  <div class="inner">
+    <span class="tag tag-blue fade-up">目录</span>
+    <h2 class="fade-up-d1">指南内容</h2>
+    <div class="grid3 fade-up-d2">
+      <div class="feat"><div class="f-icon">📝</div><h3>注册与登录</h3><p>创建账号、登录平台</p></div>
+      <div class="feat"><div class="f-icon">🏢</div><h3>创建/加入企业</h3><p>组织架构、成员管理</p></div>
+      <div class="feat"><div class="f-icon">🏠</div><h3>仪表盘</h3><p>数据概览、快速入口</p></div>
+      <div class="feat"><div class="f-icon">📋</div><h3>项目管理</h3><p>创建项目、成员协作</p></div>
+      <div class="feat"><div class="f-icon">👥</div><h3>客户管理</h3><p>客户画像、跟进记录</p></div>
+      <div class="feat"><div class="f-icon">✅</div><h3>任务看板</h3><p>任务分配、状态管理</p></div>
+      <div class="feat"><div class="f-icon">💬</div><h3>消息与通讯</h3><p>聊天、好友、通知</p></div>
+      <div class="feat"><div class="f-icon">🎫</div><h3>工单系统</h3><p>提交问题、跟踪处理</p></div>
+      <div class="feat"><div class="f-icon">📁</div><h3>更多功能</h3><p>文件/日历/搜索/商机</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- 2: 注册与登录 -->
+<div class="slide">
+  <div class="inner">
+    <span class="tag tag-blue fade-up">第一步</span>
+    <h2 class="fade-up-d1">注册与登录</h2>
+    <div class="steps fade-up-d2">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div><h3>打开平台</h3><p>在浏览器中访问 DuiJie 平台地址，进入登录页面</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div><h3>点击「注册」标签</h3><p>在登录页面上方切换到注册选项卡，填写以下信息：<br><strong>用户名</strong>（唯一标识）、<strong>真实姓名</strong>、<strong>邮箱</strong>、<strong>手机号</strong>、<strong>密码</strong>（需包含大小写字母和数字）</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div><h3>注册成功后登录</h3><p>注册完成后自动跳转到登录页，输入用户名和密码即可登录进入仪表盘</p></div>
+      </div>
+    </div>
+    <div class="tip">
+      <div class="tip-icon">💡</div>
+      <p>如果企业管理员已创建你的账号，你可以直接使用分配的用户名和初始密码登录，登录后建议立即修改密码。</p>
+    </div>
+  </div>
+</div>
+
+<!-- 3: 创建/加入企业 -->
+<div class="slide">
+  <div class="inner">
+    <span class="tag tag-green fade-up">第二步</span>
+    <h2 class="fade-up-d1">创建或加入企业</h2>
+    <p class="fade-up-d1" style="margin-bottom:16px;">登录后，你需要先加入或创建一个企业组织，才能使用项目管理等核心功能。</p>
+    <div class="feat-row fade-up-d2">
+      <div class="feat" style="border-left: 3px solid #2563eb;">
+        <h3>🏢 创建企业</h3>
+        <div class="steps" style="margin-top:8px;">
+          <div class="step" style="padding:12px;"><div class="step-num" style="width:28px;height:28px;font-size:13px;">1</div><div><p>点击侧边栏 <strong>「企业管理」</strong></p></div></div>
+          <div class="step" style="padding:12px;"><div class="step-num" style="width:28px;height:28px;font-size:13px;">2</div><div><p>点击 <strong>「创建企业」</strong>，填写企业名称</p></div></div>
+          <div class="step" style="padding:12px;"><div class="step-num" style="width:28px;height:28px;font-size:13px;">3</div><div><p>创建成功后你自动成为 <strong>管理员</strong></p></div></div>
+        </div>
+      </div>
+      <div class="feat" style="border-left: 3px solid #16a34a;">
+        <h3>🤝 加入企业</h3>
+        <div class="steps" style="margin-top:8px;">
+          <div class="step" style="padding:12px;"><div class="step-num green" style="width:28px;height:28px;font-size:13px;">1</div><div><p>向企业管理员索取 <strong>邀请码</strong></p></div></div>
+          <div class="step" style="padding:12px;"><div class="step-num green" style="width:28px;height:28px;font-size:13px;">2</div><div><p>在企业管理页点击 <strong>「加入企业」</strong></p></div></div>
+          <div class="step" style="padding:12px;"><div class="step-num green" style="width:28px;height:28px;font-size:13px;">3</div><div><p>输入邀请码，加入后自动成为 <strong>成员</strong></p></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="tip">
+      <div class="tip-icon">💡</div>
+      <p>你可以同时加入多个企业，在顶部菜单中切换当前活跃企业。</p>
+    </div>
+  </div>
+</div>
+
+<!-- 4: 界面总览 -->
+<div class="slide">
+  <div class="inner">
+    <span class="tag tag-blue fade-up">熟悉界面</span>
+    <h2 class="fade-up-d1">平台界面总览</h2>
+    <div class="sidebar-mock fade-up-d2">
+      <div class="sb-nav">
+        <div class="sb-group">工作台</div>
+        <div class="sb-item active"><span class="sb-icon">🏠</span> 仪表盘</div>
+        <div class="sb-item"><span class="sb-icon">💬</span> 消息</div>
+        <div class="sb-item"><span class="sb-icon">📅</span> 日历日程</div>
+        <div class="sb-item"><span class="sb-icon">🔔</span> 通知中心</div>
+        <div class="sb-group">协作业务</div>
+        <div class="sb-item"><span class="sb-icon">📋</span> 项目管理</div>
+        <div class="sb-item"><span class="sb-icon">👥</span> 客户管理</div>
+        <div class="sb-item"><span class="sb-icon">💰</span> 商机管理</div>
+        <div class="sb-item"><span class="sb-icon">✅</span> 任务看板</div>
+        <div class="sb-item"><span class="sb-icon">🎫</span> 工单系统</div>
+        <div class="sb-item"><span class="sb-icon">📁</span> 文件管理</div>
+        <div class="sb-group">组织管理</div>
+        <div class="sb-item"><span class="sb-icon">🏢</span> 企业管理</div>
+      </div>
+      <div class="sb-content">
+        <h3 style="margin-bottom:12px;">📌 界面说明</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;gap:8px;align-items:flex-start;"><strong style="color:#2563eb;white-space:nowrap;">顶部栏：</strong><p style="margin:0;font-size:14px;">搜索框（<span class="kbd">Ctrl+K</span>）、通知铃铛、主题切换、个人菜单</p></div>
+          <div style="display:flex;gap:8px;align-items:flex-start;"><strong style="color:#2563eb;white-space:nowrap;">左侧栏：</strong><p style="margin:0;font-size:14px;">所有功能模块的导航入口，可点击底部按钮收起</p></div>
+          <div style="display:flex;gap:8px;align-items:flex-start;"><strong style="color:#2563eb;white-space:nowrap;">主内容：</strong><p style="margin:0;font-size:14px;">当前页面的主要操作区域</p></div>
+          <div style="display:flex;gap:8px;align-items:flex-start;"><strong style="color:#16a34a;white-space:nowrap;">仪表盘：</strong><p style="margin:0;font-size:14px;">登录后首页，显示项目数量、客户数、合同额、任务统计、数据趋势图等关键指标</p></div>
+        </div>
+        <div class="tip" style="margin-top:14px;">
+          <div class="tip-icon">💡</div>
+          <p style="font-size:12px;">手机端会自动切换为抽屉式导航，点击左上角图标展开菜单。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5: 项目管理 -->
+<div class="slide">
+  <div class="inner">
+    <span class="tag tag-purple fade-up">核心功能</span>
+    <h2 class="fade-up-d1">项目管理</h2>
+    <div class="steps fade-up-d2">
+      <div class="step">
+        <div class="step-num purple">1</div>
+        <div><h3>创建项目</h3><p>点击侧边栏 <strong>「项目管理」</strong> → 右上角 <strong>「新建项目」</strong><br>填写项目名称、描述，点击确认即可创建</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num purple">2</div>
+        <div><h3>关联客户企业（可选）</h3><p>进入项目详情 → 概览Tab → 点击客户企业旁的 <strong>「设置」</strong><br>搜索并选择对方企业，发送关联请求。对方在「企业管理 → 客户请求」中审批通过后完成关联</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num purple">3</div>
+        <div><h3>管理项目成员</h3><p>项目详情页的成员列表区域 → 点击 <strong>「管理成员」</strong><br>可添加本企业成员加入项目，并设置其角色（项目经理/成员/只读）</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num purple">4</div>
+        <div><h3>使用项目子功能</h3><p>项目详情内有多个 Tab 页签：<br>
+        <strong>概览</strong> — 项目状态、成员、基本信息<br>
+        <strong>任务</strong> — 项目内的任务列表和管理<br>
+        <strong>里程碑</strong> — 关键节点和阶段管理<br>
+        <strong>消息</strong> — 项目内实时聊天频道
+        </p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 6: 项目详情操作 -->
+<div class="slide">
+  <div class="inner">
+    <span class="tag tag-purple fade-up">项目管理</span>
+    <h2 class="fade-up-d1">项目详情页操作</h2>
+    <div class="feat-row fade-up-d2">
+      <div class="feat">
+        <div class="f-icon">📝</div>
+        <h3>编辑项目</h3>
+        <p>点击右上角 <strong>⋮ 菜单</strong> → 「编辑项目」<br>可修改项目名称、描述和状态（规划中/进行中/审核中/已完成/已暂停）</p>
+      </div>
+      <div class="feat">
+        <div class="f-icon">🏁</div>
+        <h3>里程碑管理</h3>
+        <p>在「里程碑」Tab 中点击 <strong>「新建里程碑」</strong><br>设置名称、目标日期，用于标记项目关键节点</p>
+      </div>
+      <div class="feat">
+        <div class="f-icon">💬</div>
+        <h3>项目消息</h3>
+        <p>切换到「消息」Tab，可以看到实时连接状态<br>直接在输入框中发送消息，所有项目成员都能看到</p>
+      </div>
+      <div class="feat">
+        <div class="f-icon">🔗</div>
+        <h3>应用链接</h3>
+        <p>如果项目关联了外部应用（如设计稿、代码仓库），会出现「应用」Tab，点击直接跳转</p>
+      </div>
+    </div>
+    <div class="tip">
+      <div class="tip-icon">💡</div>
+      <p>项目数据会实时同步 — 当其他成员修改了项目信息，你的页面会自动刷新，无需手动刷新。</p>
+    </div>
+  </div>
+</div>
+
+<!-- 7: 客户管理 -->
+<div class="slide">
+  <div class="inner">
+    <span class="tag tag-green fade-up">核心功能</span>
+    <h2 class="fade-up-d1">客户管理</h2>
+    <div class="steps fade-up-d2">
+      <div class="step">
+        <div class="step-num green">1</div>
+        <div><h3>添加客户</h3><p>侧边栏 <strong>「客户管理」</strong> → 右上角 <strong>「新增客户」</strong><br>输入客户企业名称和相关信息。如果对方已在平台注册，可以搜索并关联</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num green">2</div>
+        <div><h3>查看客户详情</h3><p>点击客户卡片进入详情页，包含以下面板：<br>
+        <strong>基本信息</strong> — 公司名称、地址、联系方式<br>
+        <strong>智能评分</strong> — 系统根据互动情况自动评分<br>
+        <strong>标签</strong> — 自定义标签分类（VIP/重点客户等）<br>
+        <strong>联系人</strong> — 客户方的联系人列表<br>
+        <strong>跟进记录</strong> — 与客户的沟通和跟进历史<br>
+        <strong>合同</strong> — 关联的合同信息和状态
+        </p></div>
+      </div>
+      <div class="step">
+        <div class="step-num green">3</div>
+        <div><h3>添加跟进记录</h3><p>在客户详情页的「跟进记录」面板，点击 <strong>「新增跟进」</strong><br>记录每次与客户的沟通内容、跟进类型和下次跟进时间</p></div>
+      </div>
+    </div>
+    <div class="tip">
+      <div class="tip-icon">💡</div>
+      <p>跟进记录会自动在日历中显示提醒，设置了下次跟进时间后不会遗忘。</p>
+    </div>
+  </div>
+</div>
+
+<!-- 8: 任务看板 -->
+<div class="slide">
+  <div class="inner">
+    <span class="tag tag-orange fade-up">核心功能</span>
+    <h2 class="fade-up-d1">任务看板</h2>
+    <p class="fade-up-d1" style="margin-bottom:16px;">任务看板采用四泳道设计，直观管理所有任务状态。</p>
+    <div class="feat-row fade-up-d2">
+      <div class="feat" style="text-align:center;border-top:3px solid #94a3b8;">
+        <h3 style="color:#64748b;">📥 待办</h3>
+        <p>新创建的任务<br>等待被领取执行</p>
+      </div>
+      <div class="feat" style="text-align:center;border-top:3px solid #3b82f6;">
+        <h3 style="color:#2563eb;">🔄 进行中</h3>
+        <p>正在执行的任务<br>有明确负责人</p>
+      </div>
+      <div class="feat" style="text-align:center;border-top:3px solid #f59e0b;">
+        <h3 style="color:#d97706;">👀 审核中</h3>
+        <p>已完成等待确认<br>需负责人验收</p>
+      </div>
+      <div class="feat" style="text-align:center;border-top:3px solid #22c55e;">
+        <h3 style="color:#16a34a;">✅ 已完成</h3>
+        <p>验收通过<br>归档完成</p>
+      </div>
+    </div>
+    <div class="steps fade-up-d3" style="margin-top:16px;">
+      <div class="step">
+        <div class="step-num orange">+</div>
+        <div><h3>创建任务</h3><p>点击 <strong>「新建任务」</strong>，填写标题、描述、优先级、截止日期、指派给谁</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num orange">⤵</div>
+        <div><h3>管理任务</h3><p>点击任务卡片查看详情和修改状态；使用顶部 <strong>搜索框</strong> 和 <strong>筛选器</strong> 快速定位任务</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 9: 消息与通讯 -->
+<div class="slide">
+  <div class="inner">
+    <span class="tag tag-pink fade-up">核心功能</span>
+    <h2 class="fade-up-d1">消息与通讯</h2>
+    <div class="feat-row fade-up-d2">
+      <div class="feat" style="border-left:3px solid #db2777;">
+        <h3>💬 私信聊天</h3>
+        <p>侧边栏点击 <strong>「消息」</strong> 进入消息中心</p>
+        <div class="steps" style="margin-top:8px;">
+          <div class="step" style="padding:10px;"><div style="font-size:13px;"><strong>添加好友</strong> — 点击「添加联系人」搜索用户添加</div></div>
+          <div class="step" style="padding:10px;"><div style="font-size:13px;"><strong>发送消息</strong> — 点击好友头像进入对话，底部输入框发送</div></div>
+          <div class="step" style="padding:10px;"><div style="font-size:13px;"><strong>消息实时</strong> — 消息即时送达，无需刷新页面</div></div>
+        </div>
+      </div>
+      <div class="feat" style="border-left:3px solid #7c3aed;">
+        <h3>📋 项目消息</h3>
+        <p>每个项目都有独立的聊天频道</p>
+        <div class="steps" style="margin-top:8px;">
+          <div class="step" style="padding:10px;"><div style="font-size:13px;"><strong>进入方式</strong> — 项目详情 → 「消息」Tab</div></div>
+          <div class="step" style="padding:10px;"><div style="font-size:13px;"><strong>可见范围</strong> — 仅项目成员可见</div></div>
+          <div class="step" style="padding:10px;"><div style="font-size:13px;"><strong>讨论场景</strong> — 项目进展沟通、问题讨论</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="feat-row fade-up-d3" style="margin-top:14px;">
+      <div class="feat">
+        <div class="f-icon">🔔</div>
+        <h3>通知中心</h3>
+        <p>顶部栏铃铛图标或侧边栏 <strong>「通知中心」</strong><br>按类别筛选：全部/项目/任务/审批/系统<br>点击「全部已读」清除未读标记</p>
+      </div>
+      <div class="feat">
+        <div class="f-icon">📅</div>
+        <h3>日历日程</h3>
+        <p>侧边栏 <strong>「日历日程」</strong> 查看月历视图<br>自动聚合：任务截止日期 + 客户跟进提醒<br>点击日期查看当天事项</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10: 工单系统 -->
+<div class="slide">
+  <div class="inner">
+    <span class="tag tag-cyan fade-up">核心功能</span>
+    <h2 class="fade-up-d1">工单系统</h2>
+    <p class="fade-up-d1" style="margin-bottom:16px;">用于提交需求、反馈问题、跟踪处理进度。</p>
+    <div class="steps fade-up-d2">
+      <div class="step">
+        <div class="step-num" style="background:#ecfeff;color:#0891b2;">1</div>
+        <div><h3>创建工单</h3><p>侧边栏 <strong>「工单系统」</strong> → 点击 <strong>「新建工单」</strong><br>填写标题、描述、关联项目、优先级（低/中/高/紧急），点击提交</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:#ecfeff;color:#0891b2;">2</div>
+        <div><h3>工单流转</h3><p>工单创建后状态为 <strong>「待处理」</strong>，管理员可分配给指定人员处理<br>处理人将工单状态依次推进：待处理 → <strong>处理中</strong> → <strong>已解决</strong> → <strong>已关闭</strong></p></div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:#ecfeff;color:#0891b2;">3</div>
+        <div><h3>回复与沟通</h3><p>在工单详情页底部，双方可以 <strong>添加回复</strong> 沟通问题细节和处理进展</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:#ecfeff;color:#0891b2;">4</div>
+        <div><h3>满意度评价</h3><p>工单关闭后，提交者可以对处理结果进行 <strong>满意度评价</strong>，形成服务质量闭环</p></div>
+      </div>
+    </div>
+    <div class="tip">
+      <div class="tip-icon">💡</div>
+      <p>使用顶部筛选器可按状态（全部/待处理/处理中/已解决/已关闭）快速定位工单。</p>
+    </div>
+  </div>
+</div>
+
+<!-- 11: 商机管理 + 文件管理 -->
+<div class="slide">
+  <div class="inner">
+    <span class="tag tag-orange fade-up">更多功能</span>
+    <h2 class="fade-up-d1">商机管理与文件管理</h2>
+    <div class="feat-row fade-up-d2">
+      <div class="feat" style="border-left:3px solid #ea580c;">
+        <div class="f-icon">💰</div>
+        <h3>商机管理</h3>
+        <p style="margin-bottom:12px;">跟踪从线索到成交的完整销售流程。</p>
+        <div class="steps">
+          <div class="step" style="padding:10px;"><div style="font-size:13px;">侧边栏 <strong>「商机管理」</strong> 查看概览：管道总额、赢单金额、赢单率</div></div>
+          <div class="step" style="padding:10px;"><div style="font-size:13px;">点击 <strong>「新建商机」</strong>，填写商机名称、关联客户、预计金额、阶段</div></div>
+          <div class="step" style="padding:10px;"><div style="font-size:13px;">商机阶段：初步接触 → 需求确认 → 方案报价 → 谈判 → 赢单/丢单</div></div>
+        </div>
+      </div>
+      <div class="feat" style="border-left:3px solid #0891b2;">
+        <div class="f-icon">📁</div>
+        <h3>文件管理</h3>
+        <p style="margin-bottom:12px;">集中管理项目交付文件和文档。</p>
+        <div class="steps">
+          <div class="step" style="padding:10px;"><div style="font-size:13px;">侧边栏 <strong>「文件管理」</strong> 查看所有项目文件</div></div>
+          <div class="step" style="padding:10px;"><div style="font-size:13px;">点击 <strong>「上传文件」</strong>，选择文件后自动上传归档</div></div>
+          <div class="step" style="padding:10px;"><div style="font-size:13px;">使用 <strong>类型筛选</strong> 快速查找：文档/图片/压缩包等</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 12: 企业管理 -->
+<div class="slide">
+  <div class="inner">
+    <span class="tag tag-green fade-up">管理功能</span>
+    <h2 class="fade-up-d1">企业管理（管理员）</h2>
+    <p class="fade-up-d1" style="margin-bottom:16px;">企业管理员可以在「企业管理」中进行以下操作：</p>
+    <div class="feat-row fade-up-d2">
+      <div class="feat">
+        <div class="f-icon">👥</div>
+        <h3>组织成员</h3>
+        <p>查看所有成员列表，添加新成员，调整角色权限（管理员/成员），移除成员</p>
+      </div>
+      <div class="feat">
+        <div class="f-icon">🏛️</div>
+        <h3>部门管理</h3>
+        <p>创建部门、编辑部门名称、分配成员到部门，构建组织架构</p>
+      </div>
+      <div class="feat">
+        <div class="f-icon">📋</div>
+        <h3>企业项目</h3>
+        <p>查看企业下的所有项目列表及其状态概览</p>
+      </div>
+      <div class="feat">
+        <div class="f-icon">🤝</div>
+        <h3>客户请求</h3>
+        <p>管理其他企业发来的关联请求：<br><strong>收到的请求</strong> — 审批通过或拒绝<br><strong>发出的请求</strong> — 查看请求状态</p>
+      </div>
+    </div>
+    <div class="tip">
+      <div class="tip-icon">💡</div>
+      <p>邀请新成员加入企业：在「组织成员」Tab 中复制邀请码分享给对方，对方注册后使用邀请码加入。</p>
+    </div>
+  </div>
+</div>
+
+<!-- 13: 快捷操作 -->
+<div class="slide">
+  <div class="inner">
+    <span class="tag tag-blue fade-up">效率提升</span>
+    <h2 class="fade-up-d1">快捷操作与实用技巧</h2>
+    <div class="grid3 fade-up-d2">
+      <div class="feat">
+        <div class="f-icon">🔍</div>
+        <h3>全局搜索</h3>
+        <p>按 <span class="kbd">Ctrl</span> + <span class="kbd">K</span><br>快速跳转到任意页面<br>或执行快捷操作</p>
+      </div>
+      <div class="feat">
+        <div class="f-icon">🌙</div>
+        <h3>深色模式</h3>
+        <p>点击顶部栏的 <strong>主题切换</strong> 按钮<br>在浅色/深色模式间切换<br>保护夜间用眼</p>
+      </div>
+      <div class="feat">
+        <div class="f-icon">📱</div>
+        <h3>移动端使用</h3>
+        <p>手机浏览器直接访问平台<br>界面自动适配小屏幕<br>也可下载 Android APP</p>
+      </div>
+      <div class="feat">
+        <div class="f-icon">👤</div>
+        <h3>个人设置</h3>
+        <p>点击右上角 <strong>头像</strong><br>修改个人信息、邮箱<br>手机号、密码等</p>
+      </div>
+      <div class="feat">
+        <div class="f-icon">📌</div>
+        <h3>收起导航</h3>
+        <p>点击侧边栏底部 <strong>「收起导航」</strong><br>获得更大的内容区域<br>再次点击展开</p>
+      </div>
+      <div class="feat">
+        <div class="f-icon">🔄</div>
+        <h3>实时同步</h3>
+        <p>数据自动实时更新<br>其他人的操作会立即<br>反映在你的页面上</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 14: 常见问题 -->
+<div class="slide">
+  <div class="inner">
+    <span class="tag tag-orange fade-up">常见问题</span>
+    <h2 class="fade-up-d1">FAQ</h2>
+    <div class="steps fade-up-d2">
+      <div class="step">
+        <div class="step-num orange">Q</div>
+        <div><h3>忘记密码怎么办？</h3><p>联系企业管理员重置密码，或使用手机号/邮箱验证码登录。</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num orange">Q</div>
+        <div><h3>如何切换企业？</h3><p>如果你加入了多个企业，点击顶部的企业名称即可切换当前活跃企业。</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num orange">Q</div>
+        <div><h3>项目里看不到某些功能？</h3><p>不同角色拥有不同权限。管理员可以看到所有功能，普通成员只能看到自己权限范围内的操作。如需更多权限，请联系管理员调整。</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num orange">Q</div>
+        <div><h3>消息没有收到通知？</h3><p>确保浏览器没有拦截通知权限。同时检查顶部栏铃铛图标是否有未读数字。</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num orange">Q</div>
+        <div><h3>如何关联对方企业到项目？</h3><p>进入项目详情 → 概览 → 客户企业旁点击「设置」→ 搜索企业 → 发送请求。对方管理员在「企业管理 → 客户请求 → 收到的请求」中审批通过即可。</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 15: 结尾 -->
+<div class="slide s-cover">
+  <div class="inner" style="display:flex;flex-direction:column;align-items:center;">
+    <div class="logo fade-up" style="font-size:48px;">DuiJie</div>
+    <h1 class="fade-up-d1" style="margin-bottom:16px;font-size:36px;">开始高效协作吧！</h1>
+    <p class="fade-up-d2" style="font-size:18px;max-width:500px;text-align:center;margin-bottom:24px;">
+      如有疑问，请联系企业管理员获取帮助
+    </p>
+    <div class="fade-up-d3" style="display:flex;gap:16px;">
+      <a href="http://160.202.253.143:8080" target="_blank" style="padding:12px 36px;border-radius:12px;background:#2563eb;color:#fff;font-size:16px;font-weight:600;text-decoration:none;">立即使用 →</a>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="progress" id="progress"></div>
+<div class="nav-bar">
+  <button onclick="go(current-1)">← 上一页</button>
+  <span class="page-info" id="pageInfo"></span>
+  <button class="primary" onclick="go(current+1)">下一页 →</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let current = 0;
+
+  function go(n) {
+    if (n < 0 || n >= total) return;
+    slides.forEach(s => s.classList.remove('active'));
+    current = n;
+    slides[current].classList.add('active');
+    document.getElementById('progress').style.width = ((current / (total - 1)) * 100) + '%';
+    document.getElementById('pageInfo').textContent = (current + 1) + ' / ' + total;
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'ArrowDown') { e.preventDefault(); go(current + 1); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); go(current - 1); }
+    if (e.key === 'Home') go(0);
+    if (e.key === 'End') go(total - 1);
+  });
+
+  let touchX = 0;
+  document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 50) dx < 0 ? go(current + 1) : go(current - 1);
+  });
+
+  go(0);
+</script>
+
+</body>
+</html>

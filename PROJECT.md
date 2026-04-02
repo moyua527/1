@@ -1,6 +1,6 @@
 # DuiJie（对接）— 客户项目对接平台
 
-> 版本：v1.1.55 | 最后更新：2026-04-01
+> 版本：v1.1.57 | 最后更新：2026-04-02
 >
 > 线上地址：http://160.202.253.143:8080
 
@@ -462,6 +462,7 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | POST | `/api/auth/logout` | 登出 | 公开 |
 | GET | `/api/auth/me` | 当前用户信息 | 认证 |
 | PUT | `/api/auth/profile` | 更新个人资料 | 认证 |
+| PUT | `/api/auth/change-password` | 修改密码（需手机验证码） | 认证 |
 | POST | `/api/auth/2fa/login/verify` | 登录二次验证（challenge_token + TOTP） | 公开 |
 | GET | `/api/auth/2fa/status` | 查询当前用户 2FA 状态 | 认证 |
 | POST | `/api/auth/2fa/setup` | 生成验证器密钥 | 认证 |

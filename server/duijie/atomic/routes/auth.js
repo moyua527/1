@@ -15,5 +15,6 @@ router.get('/auth/register-config', require('../controllers/auth/registerConfigC
 router.post('/auth/logout', require('../controllers/auth/logoutController'));
 router.get('/auth/me', auth, require('../controllers/auth/meController'));
 router.put('/auth/profile', auth, V.profile, validate, require('../controllers/auth/profileController'));
+router.put('/auth/change-password', auth, require('../controllers/auth/changePasswordController'));
 
 module.exports = router;

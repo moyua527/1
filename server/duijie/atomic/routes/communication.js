@@ -137,4 +137,152 @@ router.delete('/friends/:id', auth, async (req, res) => {
   }
 });
 
+// ========== Groups ==========
+
+// 创建群聊
+router.post('/groups', auth, async (req, res) => {
+  try {
+    const { name, member_ids } = req.body;
+    if (!name || !name.trim()) return res.status(400).json({ success: false, message: '请输入群名称' });
+    if (!member_ids || !Array.isArray(member_ids) || member_ids.length === 0) return res.status(400).json({ success: false, message: '请选择至少一个成员' });
+    const [result] = await db.query('INSERT INTO duijie_groups (name, created_by) VALUES (?, ?)', [name.trim(), req.userId]);
+    const groupId = result.insertId;
+    // 创建者自动加入为admin
+    await db.query('INSERT INTO duijie_group_members (group_id, user_id, role) VALUES (?, ?, ?)', [groupId, req.userId, 'admin']);
+    // 添加其他成员
+    const ids = [...new Set(member_ids.filter(id => Number(id) !== req.userId).map(Number))];
+    if (ids.length > 0) {
+      const vals = ids.map(uid => [groupId, uid, 'member']);
+      await db.query('INSERT IGNORE INTO duijie_group_members (group_id, user_id, role) VALUES ?', [vals]);
+    }
+    res.json({ success: true, data: { id: groupId, name: name.trim() } });
+  } catch (e) {
+    res.status(500).json({ success: false, message: '创建群聊失败' });
+  }
+});
+
+// 我的群聊列表
+router.get('/groups', auth, async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT g.id, g.name, g.created_by, g.created_at,
+              (SELECT COUNT(*) FROM duijie_group_members WHERE group_id = g.id) as member_count,
+              (SELECT gm2.content FROM duijie_group_messages gm2 WHERE gm2.group_id = g.id ORDER BY gm2.created_at DESC LIMIT 1) as last_message,
+              (SELECT gm2.created_at FROM duijie_group_messages gm2 WHERE gm2.group_id = g.id ORDER BY gm2.created_at DESC LIMIT 1) as last_time
+       FROM duijie_groups g
+       JOIN duijie_group_members gm ON g.id = gm.group_id AND gm.user_id = ?
+       ORDER BY last_time DESC, g.created_at DESC`,
+      [req.userId]
+    );
+    res.json({ success: true, data: rows });
+  } catch (e) {
+    res.status(500).json({ success: false, message: '获取群聊列表失败' });
+  }
+});
+
+// 群聊详情（成员列表）
+router.get('/groups/:id', auth, async (req, res) => {
+  try {
+    const [[group]] = await db.query('SELECT g.* FROM duijie_groups g JOIN duijie_group_members gm ON g.id = gm.group_id AND gm.user_id = ? WHERE g.id = ?', [req.userId, req.params.id]);
+    if (!group) return res.status(404).json({ success: false, message: '群聊不存在' });
+    const [members] = await db.query(
+      `SELECT gm.role, gm.joined_at, u.id, u.username, u.nickname, u.phone
+       FROM duijie_group_members gm JOIN voice_users u ON gm.user_id = u.id
+       WHERE gm.group_id = ? ORDER BY gm.role DESC, gm.joined_at ASC`,
+      [req.params.id]
+    );
+    res.json({ success: true, data: { ...group, members } });
+  } catch (e) {
+    res.status(500).json({ success: false, message: '获取群详情失败' });
+  }
+});
+
+// 群消息历史
+router.get('/groups/:id/history', auth, async (req, res) => {
+  try {
+    // 检查是否群成员
+    const [[member]] = await db.query('SELECT id FROM duijie_group_members WHERE group_id = ? AND user_id = ?', [req.params.id, req.userId]);
+    if (!member) return res.status(403).json({ success: false, message: '您不是群成员' });
+    const [rows] = await db.query(
+      `SELECT m.id, m.group_id, m.sender_id, m.content, m.is_recalled, m.created_at,
+              u.username as sender_username, u.nickname as sender_nickname
+       FROM duijie_group_messages m
+       JOIN voice_users u ON m.sender_id = u.id
+       WHERE m.group_id = ?
+       ORDER BY m.created_at ASC LIMIT 200`,
+      [req.params.id]
+    );
+    res.json({ success: true, data: rows });
+  } catch (e) {
+    res.status(500).json({ success: false, message: '获取消息失败' });
+  }
+});
+
+// 发送群消息
+router.post('/groups/:id/send', auth, async (req, res) => {
+  try {
+    const { content } = req.body;
+    if (!content || !content.trim()) return res.status(400).json({ success: false, message: '消息不能为空' });
+    const [[member]] = await db.query('SELECT id FROM duijie_group_members WHERE group_id = ? AND user_id = ?', [req.params.id, req.userId]);
+    if (!member) return res.status(403).json({ success: false, message: '您不是群成员' });
+    await db.query('INSERT INTO duijie_group_messages (group_id, sender_id, content) VALUES (?, ?, ?)', [req.params.id, req.userId, content.trim()]);
+    // 通过socket通知群成员
+    const [members] = await db.query('SELECT user_id FROM duijie_group_members WHERE group_id = ? AND user_id != ?', [req.params.id, req.userId]);
+    const io = req.app.get('io');
+    if (io) {
+      members.forEach(m => {
+        io.to(`user_${m.user_id}`).emit('new_group_msg', { group_id: Number(req.params.id), sender_id: req.userId });
+      });
+    }
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: '发送失败' });
+  }
+});
+
+// 撤回群消息
+router.patch('/groups/:id/messages/:msgId/recall', auth, async (req, res) => {
+  try {
+    const [[msg]] = await db.query('SELECT id, sender_id FROM duijie_group_messages WHERE id = ? AND group_id = ?', [req.params.msgId, req.params.id]);
+    if (!msg) return res.status(404).json({ success: false, message: '消息不存在' });
+    if (msg.sender_id !== req.userId) return res.status(403).json({ success: false, message: '只能撤回自己的消息' });
+    await db.query('UPDATE duijie_group_messages SET is_recalled = 1 WHERE id = ?', [req.params.msgId]);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: '撤回失败' });
+  }
+});
+
+// 添加群成员
+router.post('/groups/:id/members', auth, async (req, res) => {
+  try {
+    const { user_ids } = req.body;
+    if (!user_ids || !Array.isArray(user_ids) || user_ids.length === 0) return res.status(400).json({ success: false, message: '请选择成员' });
+    // 检查是否群成员
+    const [[member]] = await db.query('SELECT role FROM duijie_group_members WHERE group_id = ? AND user_id = ?', [req.params.id, req.userId]);
+    if (!member) return res.status(403).json({ success: false, message: '您不是群成员' });
+    const vals = user_ids.map(uid => [Number(req.params.id), Number(uid), 'member']);
+    await db.query('INSERT IGNORE INTO duijie_group_members (group_id, user_id, role) VALUES ?', [vals]);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: '添加成员失败' });
+  }
+});
+
+// 退出群聊
+router.delete('/groups/:id/leave', auth, async (req, res) => {
+  try {
+    await db.query('DELETE FROM duijie_group_members WHERE group_id = ? AND user_id = ?', [req.params.id, req.userId]);
+    // 如果群内没有成员了，删除群
+    const [[{ cnt }]] = await db.query('SELECT COUNT(*) as cnt FROM duijie_group_members WHERE group_id = ?', [req.params.id]);
+    if (cnt === 0) {
+      await db.query('DELETE FROM duijie_group_messages WHERE group_id = ?', [req.params.id]);
+      await db.query('DELETE FROM duijie_groups WHERE id = ?', [req.params.id]);
+    }
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: '退出失败' });
+  }
+});
+
 module.exports = router;

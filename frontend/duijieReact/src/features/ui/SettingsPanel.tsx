@@ -29,7 +29,7 @@ export default function SettingsPanel({ tab, onBack }: Props) {
   const role = user?.role || 'member'
 
   const [editingProfile, setEditingProfile] = useState(false)
-  const [profileForm, setProfileForm] = useState({ nickname: '', email: '', phone: '', password: '', confirmPassword: '' })
+  const [profileForm, setProfileForm] = useState({ nickname: '', email: '', phone: '' })
   const [savingProfile, setSavingProfile] = useState(false)
 
   const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>(() => {
@@ -44,7 +44,7 @@ export default function SettingsPanel({ tab, onBack }: Props) {
   }
 
   const startProfileEdit = () => {
-    if (user) setProfileForm({ nickname: user.nickname || '', email: user.email || '', phone: user.phone || '', password: '', confirmPassword: '' })
+    if (user) setProfileForm({ nickname: user.nickname || '', email: user.email || '', phone: user.phone || '' })
     setEditingProfile(true)
   }
 
@@ -53,11 +53,6 @@ export default function SettingsPanel({ tab, onBack }: Props) {
     if (profileForm.nickname.trim() && profileForm.nickname.trim() !== (user?.nickname || '')) body.nickname = profileForm.nickname.trim()
     if (profileForm.email.trim() !== (user?.email || '')) body.email = profileForm.email.trim()
     if (profileForm.phone.trim() !== (user?.phone || '')) body.phone = profileForm.phone.trim()
-    if (profileForm.password) {
-      if (profileForm.password.length < 6) return
-      if (profileForm.password !== profileForm.confirmPassword) return
-      body.password = profileForm.password
-    }
     if (Object.keys(body).length === 0) return
     setSavingProfile(true)
     const r = await fetchApi('/api/auth/profile', { method: 'PUT', body: JSON.stringify(body) })
@@ -121,8 +116,6 @@ export default function SettingsPanel({ tab, onBack }: Props) {
                 <Input label="昵称" value={profileForm.nickname} onChange={e => setProfileForm({ ...profileForm, nickname: e.target.value })} />
                 <Input label="邮箱" value={profileForm.email} onChange={e => setProfileForm({ ...profileForm, email: e.target.value })} />
                 <Input label="手机" value={profileForm.phone} onChange={e => setProfileForm({ ...profileForm, phone: e.target.value })} />
-                <Input label="新密码" type="password" placeholder="不修改留空" value={profileForm.password} onChange={e => setProfileForm({ ...profileForm, password: e.target.value })} />
-                {profileForm.password && <Input label="确认密码" type="password" value={profileForm.confirmPassword} onChange={e => setProfileForm({ ...profileForm, confirmPassword: e.target.value })} />}
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
                   <button onClick={() => setEditingProfile(false)} style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', fontSize: 12, cursor: 'pointer' }}>取消</button>
                   <button onClick={saveProfile} disabled={savingProfile} style={{ padding: '5px 12px', borderRadius: 6, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 12, cursor: 'pointer' }}>

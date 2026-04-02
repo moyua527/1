@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { User, Bell, Palette, Globe, Save, Copy, ArrowLeft, Check, Loader2 } from 'lucide-react'
+import { User, Bell, Palette, Globe, Save, Copy, ArrowLeft, Check, Loader2, Lock, Smartphone } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
@@ -53,14 +53,21 @@ export default function UserSettings() {
 
   // Account editing
   const [editing, setEditing] = useState(false)
-  const [form, setForm] = useState({ nickname: '', email: '', phone: '', password: '', confirmPassword: '' })
+  const [form, setForm] = useState({ nickname: '', email: '', phone: '' })
   const [saving, setSaving] = useState(false)
+
+  // Change password
+  const [pwForm, setPwForm] = useState({ code: '', newPwd: '', confirmPwd: '' })
+  const [pwSending, setPwSending] = useState(false)
+  const [pwCooldown, setPwCooldown] = useState(0)
+  const [pwSaving, setPwSaving] = useState(false)
+  const [pwDevCode, setPwDevCode] = useState('')
 
   // Notification prefs
   const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>(getNotifPrefs)
 
   const startEditing = () => {
-    if (user) setForm({ nickname: user.nickname || '', email: user.email || '', phone: user.phone || '', password: '', confirmPassword: '' })
+    if (user) setForm({ nickname: user.nickname || '', email: user.email || '', phone: user.phone || '' })
     setEditing(true)
   }
 
@@ -69,11 +76,6 @@ export default function UserSettings() {
     if (form.nickname.trim() && form.nickname.trim() !== (user?.nickname || '')) body.nickname = form.nickname.trim()
     if (form.email.trim() !== (user?.email || '')) body.email = form.email.trim()
     if (form.phone.trim() !== (user?.phone || '')) body.phone = form.phone.trim()
-    if (form.password) {
-      if (form.password.length < 6) { toast('密码至少6位', 'error'); return }
-      if (form.password !== form.confirmPassword) { toast('两次密码不一致', 'error'); return }
-      body.password = form.password
-    }
     if (Object.keys(body).length === 0) { toast('没有需要更新的内容', 'error'); return }
     setSaving(true)
     const r = await fetchApi('/api/auth/profile', { method: 'PUT', body: JSON.stringify(body) })
@@ -172,12 +174,6 @@ export default function UserSettings() {
                   <Input label="邮箱" placeholder="your@email.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
                   <Input label="手机号" placeholder="输入手机号" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
 
-                  <SectionTitle style={{ marginTop: 8 }}>修改密码</SectionTitle>
-                  <Input label="新密码（不修改请留空）" placeholder="至少6位" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
-                  {form.password && (
-                    <Input label="确认密码" placeholder="再次输入新密码" type="password" value={form.confirmPassword} onChange={e => setForm({ ...form, confirmPassword: e.target.value })} />
-                  )}
-
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
                     <Button variant="secondary" onClick={() => setEditing(false)}>取消</Button>
                     <Button onClick={handleSave} disabled={saving}>
@@ -204,6 +200,49 @@ export default function UserSettings() {
                     { label: '注册时间', value: user.created_at ? new Date(user.created_at).toLocaleDateString('zh-CN') : '-' },
                     { label: '用户ID', value: user.display_id || `#${user.id}` },
                   ]} />
+
+                  {/* 修改密码 */}
+                  <SectionTitle style={{ marginTop: 8 }}>修改密码</SectionTitle>
+                  {user.phone ? (
+                    <ChangePasswordBlock
+                      phone={user.phone}
+                      form={pwForm}
+                      setForm={setPwForm}
+                      sending={pwSending}
+                      cooldown={pwCooldown}
+                      saving={pwSaving}
+                      devCode={pwDevCode}
+                      onSendCode={async () => {
+                        setPwSending(true)
+                        const r = await fetchApi('/api/auth/send-code', { method: 'POST', body: JSON.stringify({ type: 'phone', target: user.phone }) })
+                        setPwSending(false)
+                        if (r.success) {
+                          toast('验证码已发送', 'success')
+                          if (r._dev_code) setPwDevCode(r._dev_code)
+                          setPwCooldown(60)
+                          const t = setInterval(() => setPwCooldown(c => { if (c <= 1) { clearInterval(t); return 0 } return c - 1 }), 1000)
+                        } else toast(r.message || '发送失败', 'error')
+                      }}
+                      onSubmit={async () => {
+                        if (!pwForm.code) { toast('请输入验证码', 'error'); return }
+                        if (pwForm.newPwd.length < 6) { toast('密码至少6位', 'error'); return }
+                        if (pwForm.newPwd !== pwForm.confirmPwd) { toast('两次密码不一致', 'error'); return }
+                        setPwSaving(true)
+                        const r = await fetchApi('/api/auth/change-password', { method: 'PUT', body: JSON.stringify({ code: pwForm.code, new_password: pwForm.newPwd }) })
+                        setPwSaving(false)
+                        if (r.success) {
+                          toast('密码修改成功', 'success')
+                          setPwForm({ code: '', newPwd: '', confirmPwd: '' })
+                          setPwDevCode('')
+                        } else toast(r.message || '修改失败', 'error')
+                      }}
+                    />
+                  ) : (
+                    <div style={{ fontSize: 13, color: 'var(--text-tertiary)', padding: '12px 0' }}>
+                      <Smartphone size={14} style={{ marginRight: 4, verticalAlign: -2 }} />
+                      请先在上方编辑资料中绑定手机号，才能修改密码
+                    </div>
+                  )}
 
                   {/* 邀请码 */}
                   {user.personal_invite_code && (
@@ -341,6 +380,74 @@ function ToggleSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
         left: on ? 21 : 3, transition: 'left 0.2s',
         boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
       }} />
+    </div>
+  )
+}
+
+function ChangePasswordBlock({ phone, form, setForm, sending, cooldown, saving, devCode, onSendCode, onSubmit }: {
+  phone: string
+  form: { code: string; newPwd: string; confirmPwd: string }
+  setForm: (f: { code: string; newPwd: string; confirmPwd: string }) => void
+  sending: boolean
+  cooldown: number
+  saving: boolean
+  devCode: string
+  onSendCode: () => void
+  onSubmit: () => void
+}) {
+  const masked = phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+        <Smartphone size={14} style={{ color: 'var(--text-tertiary)' }} />
+        验证手机号 <strong style={{ color: 'var(--text-heading)' }}>{masked}</strong> 后修改密码
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+        <div style={{ flex: 1 }}>
+          <Input label="验证码" placeholder="输入6位验证码" value={form.code} onChange={e => setForm({ ...form, code: e.target.value })} />
+        </div>
+        <button
+          onClick={onSendCode}
+          disabled={sending || cooldown > 0}
+          style={{
+            padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border-primary)',
+            background: cooldown > 0 ? 'var(--bg-tertiary)' : 'var(--brand)',
+            color: cooldown > 0 ? 'var(--text-tertiary)' : '#fff',
+            fontSize: 13, fontWeight: 500, cursor: cooldown > 0 ? 'default' : 'pointer',
+            whiteSpace: 'nowrap', height: 38, flexShrink: 0,
+          }}
+        >
+          {sending ? '发送中...' : cooldown > 0 ? `${cooldown}s` : '发送验证码'}
+        </button>
+      </div>
+      {devCode && (
+        <div style={{ fontSize: 11, color: 'var(--color-warning)', background: 'var(--bg-selected)', padding: '4px 8px', borderRadius: 6 }}>
+          开发环境验证码: <strong>{devCode}</strong>
+        </div>
+      )}
+
+      <Input label="新密码" type="password" placeholder="至少6位" value={form.newPwd} onChange={e => setForm({ ...form, newPwd: e.target.value })} />
+      {form.newPwd && (
+        <Input label="确认新密码" type="password" placeholder="再次输入新密码" value={form.confirmPwd} onChange={e => setForm({ ...form, confirmPwd: e.target.value })} />
+      )}
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+        <button
+          onClick={onSubmit}
+          disabled={saving || !form.code || !form.newPwd}
+          style={{
+            padding: '8px 20px', borderRadius: 8, border: 'none',
+            background: (!form.code || !form.newPwd) ? 'var(--bg-tertiary)' : 'var(--brand)',
+            color: (!form.code || !form.newPwd) ? 'var(--text-tertiary)' : '#fff',
+            fontSize: 13, fontWeight: 600, cursor: (!form.code || !form.newPwd) ? 'default' : 'pointer',
+            display: 'flex', alignItems: 'center', gap: 6,
+          }}
+        >
+          <Lock size={14} />
+          {saving ? '修改中...' : '确认修改密码'}
+        </button>
+      </div>
     </div>
   )
 }

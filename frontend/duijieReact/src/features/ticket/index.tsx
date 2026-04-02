@@ -31,7 +31,7 @@ export default function TicketPage() {
   const isStaff = can(user?.role || '', 'ticket:staff')
 
   const { data: tickets = [], isLoading: loading } = useTickets()
-  const { data: staffMembers = [] } = useUsers()
+  const { data: staffMembers = [] } = useUsers(isStaff)
   const invalidate = useInvalidate()
   const [selected, setSelected] = useState<any>(null)
   const [detailLoading, setDetailLoading] = useState(false)
