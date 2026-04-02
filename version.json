@@ -1,6 +1,6 @@
 {
-  "version": "1.1.60",
-  "versionCode": 60,
+  "version": "1.1.61",
+  "versionCode": 61,
   "minVersion": "1.0.0",
-  "changelog": "项目ID加入项目+加入申请审批+项目详情任务实时刷新"
+  "changelog": "项目时间显示精确到秒+任务附件预览下载修复+Socket连接修复"
 }

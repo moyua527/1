@@ -22,6 +22,7 @@ import MembersSection from './MembersSection'
 import { ManageMembersModal, ManageClientMembersModal, MemberInfoModal, ClientInfoModal } from './ProjectModals'
 import useLiveData from '../../../hooks/useLiveData'
 import { onSocket } from '../../ui/smartSocket'
+import { formatDateTime } from '../../../utils/datetime'
 
 const statusMap: Record<string, { label: string; color: string }> = {
   planning: { label: '规划中', color: 'blue' },
@@ -157,6 +158,10 @@ export default function ProjectDetail() {
     loadProject()
     loadTasks()
   }, [id, loadProject, loadTasks])
+
+  useEffect(() => {
+    if (tab === 'join_requests') loadJoinRequests()
+  }, [tab, loadJoinRequests])
 
   if (projectLoading) return <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}>加载中...</div>
   if (projectError) return (
@@ -341,7 +346,7 @@ export default function ProjectDetail() {
             </div>
             <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>我方企业</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{myEnterpriseName}</div></div>
             <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{isClientPerspective ? '对方企业' : '客户企业'}</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{hasExternalEnterprise ? (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>{isClientPerspective ? otherEnterpriseName : (project.client_id ? <span onClick={() => openClientModal(project.client_id)} style={{ color: 'var(--brand)', cursor: 'pointer' }}>{otherEnterpriseName}</span> : otherEnterpriseName)}{canEdit && !isClientPerspective && <button onClick={openSetClient} style={{ fontSize: 11, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>更换</button>}</span>) : (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>无{canEdit && <button onClick={openSetClient} style={{ fontSize: 11, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>设置</button>}</span>)}</div></div>
-            <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>创建时间</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.created_at ? new Date(project.created_at).toLocaleDateString('zh-CN') : '-'}</div></div>
+            <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>创建时间</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{formatDateTime(project.created_at)}</div></div>
             <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>任务数</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{tasks.length}</div></div>
           </div>
         </div>
@@ -472,6 +477,55 @@ export default function ProjectDetail() {
               {project.app_url ? '链接必须以 http:// 或 https:// 开头，请编辑修正' : '请在项目设置中添加应用链接'}
             </p>
           </div>
+        </div>
+      )}
+
+      {tab === 'join_requests' && (
+        <div style={section}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>加入申请</h3>
+            {project.join_code && (
+              <span style={{ fontSize: 12, color: 'var(--text-tertiary)', fontFamily: 'monospace', cursor: 'pointer', padding: '4px 10px', background: 'var(--bg-secondary)', borderRadius: 6, border: '1px solid var(--border-primary)' }}
+                title="点击复制项目ID" onClick={() => { navigator.clipboard.writeText(project.join_code); toast('已复制项目ID', 'success') }}>
+                项目ID: {project.join_code} <Copy size={10} style={{ verticalAlign: 'middle' }} />
+              </span>
+            )}
+          </div>
+          {joinReqLoading ? (
+            <p style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: 24 }}>加载中...</p>
+          ) : joinRequests.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-tertiary)' }}>
+              <UserPlus size={40} style={{ marginBottom: 8, opacity: 0.3 }} />
+              <p style={{ margin: 0, fontSize: 14 }}>暂无加入申请</p>
+              <p style={{ margin: '4px 0 0', fontSize: 12 }}>分享项目ID给他人，即可收到加入申请</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {joinRequests.map((req: any) => (
+                <div key={req.id} style={{ padding: 14, borderRadius: 10, background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: 150 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{req.user_name || req.user_phone}</div>
+                    {req.message && <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>{req.message}</div>}
+                    <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 4 }}>{formatDateTime(req.created_at)}</div>
+                  </div>
+                  {req.status === 'pending' ? (
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={() => handleReviewJoinRequest(req.id, 'approve')}
+                        style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 6, border: 'none', background: 'var(--color-green)', color: '#fff', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+                        <Check size={12} /> 通过
+                      </button>
+                      <button onClick={() => handleReviewJoinRequest(req.id, 'reject')}
+                        style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 6, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+                        <X size={12} /> 拒绝
+                      </button>
+                    </div>
+                  ) : (
+                    <Badge color={req.status === 'approved' ? 'green' : 'gray'}>{req.status === 'approved' ? '已通过' : '已拒绝'}</Badge>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

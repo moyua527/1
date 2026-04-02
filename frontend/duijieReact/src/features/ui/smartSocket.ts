@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client'
-import { getToken } from '../../bootstrap'
+import { BACKEND_URL, getToken } from '../../bootstrap'
 import { isCapacitor, SERVER_URL } from '../../utils/capacitor'
 
 type Listener = (payload?: any) => void
@@ -13,7 +13,11 @@ const listeners: Map<string, Set<Listener>> = new Map()
 function getSocket(): Socket {
   if (socket) return socket
 
-  socket = io(isCapacitor ? SERVER_URL : window.location.origin, {
+  const socketOrigin = isCapacitor
+    ? SERVER_URL
+    : (BACKEND_URL || window.location.origin)
+
+  socket = io(socketOrigin, {
     path: '/socket.io',
     withCredentials: true,
     reconnection: true,

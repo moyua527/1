@@ -2,6 +2,7 @@
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.1.61 | 2026-04-03 | 项目与任务时间展示统一精确到秒；任务附件改为直接走 `/uploads` 预览/下载；前端 Socket.IO 连接统一使用 `BACKEND_URL`，修复反向代理/非同源场景下的实时连接异常；后端附件下载接口补齐图片预览模式与文件缺失时的 404 返回。 |
 | v1.1.60 | 2026-04-03 | 项目协作增强：项目列表新增项目ID展示与一键复制，支持通过项目ID搜索项目并提交加入申请；后端新增项目加入申请搜索/提交/列表/审批接口并修正审批路由参数读取；项目详情页任务区改为按项目维度实时刷新任务变更，避免其他项目任务广播触发整页误刷新。 |
 | v1.1.59 | 2026-04-02 | **安全与工程化全面升级**：安全审计(移除auth query token/验证码端点限速3次60s/密码重置端点限速5次15min/文件上传名清理防路径遍历)；Nginx(Gzip压缩level6+Permissions-Policy头+uploads缓存)；PWA SW v5(缓存上限100条+自动清理)；Vite代码分割(vendor-react 166KB+vendor-ui 42KB独立chunk)；Socket.IO工程化(pingInterval/pingTimeout/maxHttpBufferSize+连接级事件速率限制60/min+未认证禁止join_project+auth_ok/auth_error反馈+连接计数/峰值监控)；优雅关闭(SIGTERM/SIGINT/uncaughtException→关闭HTTP/Socket.IO/DB连接池)；内存缓存工具(memoryCache.js Map+TTL+自动清理+前缀失效)；auth中间件用户查询30秒缓存+写操作自动失效；健康端点增强(进程内存/运行时间/WebSocket连接数)；请求ID跟踪(X-Request-Id头+响应计时+慢请求warn)；GitHub Actions部署工作流(deploy.yml手动触发SFTP部署)；ErrorBoundary增加返回首页按钮+颜色CSS变量；EnterpriseCard标签颜色CSS变量化 |
 | v1.1.58 | 2026-04-02 | 头像菜单企业切换器下拉列表底部添加「创建企业」和「加入企业」快捷入口，点击自动跳转企业管理页并打开对应弹窗 |

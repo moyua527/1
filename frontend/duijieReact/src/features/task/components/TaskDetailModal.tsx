@@ -5,6 +5,7 @@ import Modal from '../../ui/Modal'
 import { toast } from '../../ui/Toast'
 import { confirm } from '../../ui/ConfirmDialog'
 import { Paperclip, Download, Trash2, Upload, Calendar, User, Flag, AlignLeft, Loader2 } from 'lucide-react'
+import { formatDateTime } from '../../../utils/datetime'
 const fmtSize = (b: number) => b < 1024 ? b + 'B' : b < 1048576 ? (b / 1024).toFixed(1) + 'KB' : (b / 1048576).toFixed(1) + 'MB'
 
 const priorityOptions = [
@@ -199,7 +200,7 @@ export default function TaskDetailModal({ task, projectId, open, onClose, onUpda
         {task.creator_name && (
           <div style={{ fontSize: 12, color: 'var(--text-tertiary)', display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <span>创建人: {task.creator_name || task.creator_username}</span>
-            {task.created_at && <span>创建时间: {new Date(task.created_at).toLocaleString('zh-CN')}</span>}
+            {task.created_at && <span>创建时间: {formatDateTime(task.created_at)}</span>}
           </div>
         )}
 
