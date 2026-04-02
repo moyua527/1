@@ -4,6 +4,7 @@ module.exports = async (req, res) => {
   try {
     const role = req.userRole;
     const userId = req.userId;
+    const entId = req.activeEnterpriseId;
 
     const days = Math.min(Math.max(parseInt(req.query.days) || 30, 7), 365);
     const contractMonths = Math.min(Math.max(parseInt(req.query.contract_months) || 6, 1), 24);
@@ -11,7 +12,14 @@ module.exports = async (req, res) => {
     // 成员角色: 仅看参与项目关联的客户数据
     let clientFilter = '';
     let clientFilterParams = [];
-    if (role === 'member') {
+    if (entId) {
+      clientFilter = `AND c.id IN (
+        SELECT DISTINCT CASE WHEN p.client_id = ? THEN p.internal_client_id ELSE p.client_id END
+        FROM duijie_projects p
+        WHERE p.is_deleted = 0 AND (p.internal_client_id = ? OR p.client_id = ?)
+      ) AND c.id != ?`;
+      clientFilterParams = [entId, entId, entId, entId];
+    } else if (role === 'member') {
       clientFilter = `AND c.id IN (
         SELECT DISTINCT p.client_id FROM duijie_projects p
         WHERE p.is_deleted = 0 AND (p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?))

@@ -18,6 +18,12 @@ router.get('/health', async (req, res) => {
     status.database = 'disconnected';
     status.status = 'degraded';
   }
+  // 进程指标
+  const mem = process.memoryUsage();
+  status.memory = { rss: Math.round(mem.rss / 1024 / 1024) + 'MB', heap: Math.round(mem.heapUsed / 1024 / 1024) + 'MB' };
+  status.uptime = Math.round(process.uptime()) + 's';
+  // Socket.IO 连接数
+  try { const { getStats } = require('../../socket'); status.websocket = getStats(); } catch (_) {}
   const code = status.status === 'ok' ? 200 : 503;
   res.status(code).json(status);
 });

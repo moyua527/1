@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const db = require('../../../config/db');
 const findByUsername = require('../../repositories/auth/findByUsernameRepo');
-const { buildUserPayload, signAccessToken } = require('../../utils/authToken');
+const { buildUserPayload, signAccessToken, createRefreshToken } = require('../../utils/authToken');
 
 module.exports = async (username, password) => {
   const user = await findByUsername(username);
@@ -11,5 +11,6 @@ module.exports = async (username, password) => {
   if (user.is_active === 0) return { disabled: true };
   db.query('UPDATE voice_users SET last_login_at = NOW() WHERE id = ?', [user.id]).catch(() => {});
   const token = await signAccessToken(user);
-  return { token, user: buildUserPayload(user) };
+  const refreshToken = await createRefreshToken(user.id);
+  return { token, refreshToken, user: buildUserPayload(user) };
 };

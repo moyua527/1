@@ -9,9 +9,16 @@ module.exports = async (ticketId) => {
     findRepliesRepo(ticketId),
     findAttachmentsRepo(ticketId),
   ]);
-  const ticketAttachments = attachments.filter(a => !a.reply_id);
+  // 使用 Map 按 reply_id 分组附件，避免 O(M*N) 复杂度
+  const attachmentMap = new Map();
+  const ticketAttachments = [];
+  for (const a of attachments) {
+    if (!a.reply_id) { ticketAttachments.push(a); continue; }
+    if (!attachmentMap.has(a.reply_id)) attachmentMap.set(a.reply_id, []);
+    attachmentMap.get(a.reply_id).push(a);
+  }
   for (const r of replies) {
-    r.attachments = attachments.filter(a => a.reply_id === r.id);
+    r.attachments = attachmentMap.get(r.id) || [];
   }
   return { ...ticket, replies, attachments: ticketAttachments };
 };

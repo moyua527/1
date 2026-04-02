@@ -58,9 +58,9 @@ export default function EnterpriseCard({ ent, myRole, isOwner, canAdmin, entMenu
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-heading)' }}>{ent.name}</span>
-            {ent.company_type && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: '#e0e7ff', color: '#3730a3', fontWeight: 500 }}>{ent.company_type}</span>}
-            {ent.industry && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: '#f0fdf4', color: '#15803d', fontWeight: 500 }}>{ent.industry}</span>}
-            {ent.scale && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: '#fef3c7', color: '#92400e', fontWeight: 500 }}>{ent.scale}</span>}
+            {ent.company_type && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', fontWeight: 500 }}>{ent.company_type}</span>}
+            {ent.industry && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: 'var(--bg-tertiary)', color: 'var(--color-success, #15803d)', fontWeight: 500 }}>{ent.industry}</span>}
+            {ent.scale && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: 'var(--bg-tertiary)', color: 'var(--color-warning, #92400e)', fontWeight: 500 }}>{ent.scale}</span>}
             <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: roleConfig[myRole]?.bg, color: roleConfig[myRole]?.color, fontWeight: 600 }}>
               {myRole === 'creator' && <Crown size={10} style={{ marginRight: 3, verticalAlign: -1 }} />}
               {myRole === 'admin' && <Shield size={10} style={{ marginRight: 3, verticalAlign: -1 }} />}

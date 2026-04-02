@@ -12,7 +12,9 @@ const storage = multer.diskStorage({
   destination: path.join(__dirname, '../../uploads'),
   filename: (req, file, cb) => {
     const decoded = Buffer.from(file.originalname, 'latin1').toString('utf8');
-    cb(null, Date.now() + '-' + decoded);
+    // 安全：只保留文件名部分，移除路径遍历字符
+    const baseName = path.basename(decoded).replace(/[^a-zA-Z0-9\u4e00-\u9fa5._-]/g, '_');
+    cb(null, Date.now() + '-' + baseName);
   },
 });
 

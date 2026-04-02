@@ -16,9 +16,8 @@ exports.twoFactorCode = [
 ];
 
 exports.register = [
-  body('phone').optional().matches(/^\d{11}$/).withMessage('手机号格式不正确'),
-  body('email').optional().isEmail().withMessage('邮箱格式不正确'),
-  body('password').optional().isLength({ min: 6 }).withMessage('密码至少6位'),
+  body('username').trim().isLength({ min: 2, max: 30 }).withMessage('用户名长度 2-30 位'),
+  body('password').isLength({ min: 6 }).withMessage('密码至少6位'),
 ];
 
 exports.profile = [
@@ -158,13 +157,20 @@ exports.updateFollowUp = [
 
 // === Opportunities ===
 exports.createOpportunity = [
-  body('name').trim().notEmpty().withMessage('请输入商机名称').isLength({ max: 200 }).withMessage('名称不超过200字'),
+  body('title').optional({ values: 'falsy' }).trim().isLength({ max: 200 }).withMessage('标题不超过200字'),
+  body('name').optional({ values: 'falsy' }).trim().isLength({ max: 200 }).withMessage('名称不超过200字'),
   body('client_id').optional().isInt({ min: 1 }).withMessage('无效的客户ID'),
   body('amount').optional().isDecimal({ decimal_digits: '0,2' }).withMessage('金额格式不正确'),
+  body().custom((value) => {
+    const title = String(value?.title || value?.name || '').trim();
+    if (!title) throw new Error('请输入商机标题');
+    return true;
+  }),
 ];
 
 exports.updateOpportunity = [
   param('id').isInt({ min: 1 }).withMessage('无效的商机ID'),
+  body('title').optional({ values: 'falsy' }).trim().isLength({ max: 200 }).withMessage('标题不超过200字'),
   body('name').optional().trim().isLength({ max: 200 }).withMessage('名称不超过200字'),
   body('amount').optional().isDecimal({ decimal_digits: '0,2' }).withMessage('金额格式不正确'),
 ];

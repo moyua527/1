@@ -14,6 +14,17 @@ export default defineConfig({
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-ui': ['zustand', 'socket.io-client'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 500,
+  },
   server: {
     host: true,
     port: 1300,

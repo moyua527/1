@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback, DragEvent, ClipboardEvent } from 'react'
 import { fetchApi, uploadFile } from '../../../bootstrap'
 import Modal from '../../ui/Modal'
 import Input from '../../ui/Input'
 import Button from '../../ui/Button'
 import { toast } from '../../ui/Toast'
-import { Paperclip, X } from 'lucide-react'
+import { Paperclip, X, Upload } from 'lucide-react'
 
 const columns = [
   { key: 'todo', label: '待办' },
@@ -25,7 +25,33 @@ export default function TaskCreateModal({ open, onClose, onCreated, projects }: 
   const [createMembers, setCreateMembers] = useState<any[]>([])
   const [createFiles, setCreateFiles] = useState<File[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const dropRef = useRef<HTMLDivElement>(null)
+
+  const addFiles = useCallback((files: FileList | File[]) => {
+    setCreateFiles(prev => [...prev, ...Array.from(files)])
+  }, [])
+
+  const handleDragOver = useCallback((e: DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true) }, [])
+  const handleDragLeave = useCallback((e: DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false) }, [])
+  const handleDrop = useCallback((e: DragEvent) => {
+    e.preventDefault(); e.stopPropagation(); setIsDragging(false)
+    if (e.dataTransfer.files?.length) addFiles(e.dataTransfer.files)
+  }, [addFiles])
+
+  const handlePaste = useCallback((e: ClipboardEvent) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+    const files: File[] = []
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].kind === 'file') {
+        const f = items[i].getAsFile()
+        if (f) files.push(f)
+      }
+    }
+    if (files.length) { e.preventDefault(); addFiles(files) }
+  }, [addFiles])
 
   useEffect(() => {
     if (open) {
@@ -33,6 +59,19 @@ export default function TaskCreateModal({ open, onClose, onCreated, projects }: 
       setCreateFiles([])
     }
   }, [open, projects])
+
+  useEffect(() => {
+    if (!open) return
+    const onPaste = (e: Event) => {
+      const ce = e as globalThis.ClipboardEvent
+      const items = ce.clipboardData?.items; if (!items) return
+      const files: File[] = []
+      for (let i = 0; i < items.length; i++) { if (items[i].kind === 'file') { const f = items[i].getAsFile(); if (f) files.push(f) } }
+      if (files.length) { ce.preventDefault(); addFiles(files) }
+    }
+    document.addEventListener('paste', onPaste)
+    return () => document.removeEventListener('paste', onPaste)
+  }, [open, addFiles])
 
   useEffect(() => {
     if (createForm.project_id) {
@@ -116,12 +155,25 @@ export default function TaskCreateModal({ open, onClose, onCreated, projects }: 
           </div>
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>附件</label>
-          <input ref={fileRef} type="file" multiple hidden onChange={e => { if (e.target.files) setCreateFiles(prev => [...prev, ...Array.from(e.target.files!)]); if (fileRef.current) fileRef.current.value = '' }} />
-          <button onClick={() => fileRef.current?.click()}
-            style={{ width: '100%', padding: '8px 0', border: '1px dashed #cbd5e1', borderRadius: 8, background: 'var(--bg-secondary)', cursor: 'pointer', fontSize: 13, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-            <Paperclip size={14} /> 点击选择文件
-          </button>
+          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>附件（文件/图片）</label>
+          <input ref={fileRef} type="file" multiple hidden onChange={e => { if (e.target.files) addFiles(e.target.files); if (fileRef.current) fileRef.current.value = '' }} />
+          <div
+            ref={dropRef}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onPaste={handlePaste}
+            tabIndex={0}
+            onClick={() => fileRef.current?.click()}
+            style={{
+              width: '100%', padding: '20px 0', border: `2px dashed ${isDragging ? 'var(--brand)' : '#cbd5e1'}`,
+              borderRadius: 8, background: isDragging ? 'var(--bg-selected)' : 'var(--bg-secondary)', cursor: 'pointer',
+              fontSize: 13, color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.2s', outline: 'none',
+            }}>
+            <Upload size={20} color={isDragging ? 'var(--brand)' : '#94a3b8'} />
+            <span>{isDragging ? '松开即可添加文件' : '点击选择、拖入文件 或 Ctrl+V 粘贴'}</span>
+          </div>
           {createFiles.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 8 }}>
               {createFiles.map((f, i) => (

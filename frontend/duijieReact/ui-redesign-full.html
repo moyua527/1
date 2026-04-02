@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DuiJie 全站 UI 设计稿 v2 - 蓝白调和主题</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    /* 蓝白调和主题 - 背景全部带蓝调 */
+    --bg-app: #edf2fc;
+    --bg-card: #f7f9ff;
+    --bg-white: #ffffff;
+    --bg-hover: #eef3ff;
+    --bg-subtle: #e4ecfa;
+    --bg-input: #f4f7ff;
+    --bg-sidebar: linear-gradient(180deg, #eef4ff 0%, #f7f9ff 100%);
+    --border: #d4dfef;
+    --border-light: #e2eaf6;
+    --border-focus: #6a9dff;
+    /* 品牌蓝（柔和中蓝） */
+    --brand: #5b7ff5;
+    --brand-deep: #4668db;
+    --brand-hover: #4e6fe8;
+    --brand-soft: rgba(91,127,245,0.10);
+    --brand-softer: rgba(91,127,245,0.05);
+    --brand-grad: linear-gradient(135deg, #6b8cff 0%, #4668db 100%);
+    /* 文字 */
+    --text-primary: #1f2d4a;
+    --text-secondary: #5e7091;
+    --text-tertiary: #8fa3c0;
+    --text-on-brand: #ffffff;
+    /* 状态色 */
+    --green: #10b981;
+    --green-bg: #e8faf2;
+    --amber: #f59e0b;
+    --amber-bg: #fef9e8;
+    --purple: #8b5cf6;
+    --purple-bg: #f0ecff;
+    --red: #ef4444;
+    --red-bg: #fef0f0;
+    --blue-bg: #eef4ff;
+    --cyan: #06b6d4;
+    --cyan-bg: #ecfeff;
+    /* 通用 */
+    --radius: 16px;
+    --radius-sm: 10px;
+    --radius-xs: 6px;
+    --shadow-sm: 0 1px 2px rgba(30,60,120,0.04);
+    --shadow: 0 2px 8px rgba(30,60,120,0.06);
+    --shadow-md: 0 4px 16px rgba(30,60,120,0.08);
+    --shadow-lg: 0 8px 24px rgba(30,60,120,0.10);
+    --transition: all .18s ease;
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--bg-app); color: var(--text-primary); min-height: 100vh; font-size: 14px; }
+
+  /* === 顶部页面导航条 === */
+  .page-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 9999; background: var(--brand-grad); padding: 6px 16px; display: flex; gap: 4px; align-items: center; flex-wrap: wrap; backdrop-filter: blur(10px); }
+  .page-nav-label { color: rgba(255,255,255,0.6); font-size: 11px; font-weight: 700; letter-spacing: 1px; margin-right: 6px; text-transform: uppercase; }
+  .pn-btn { padding: 4px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.15); background: transparent; color: rgba(255,255,255,0.75); font-size: 11.5px; cursor: pointer; font-weight: 500; transition: var(--transition); white-space: nowrap; }
+  .pn-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+  .pn-btn.active { background: rgba(255,255,255,0.95); color: var(--brand-deep); font-weight: 700; border-color: transparent; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+
+  /* === 主布局 === */
+  .app { display: flex; min-height: 100vh; padding-top: 38px; }
+
+  /* === 侧边栏 === */
+  .sidebar { width: 220px; background: var(--bg-sidebar); border-right: 1px solid var(--border-light); position: fixed; top: 38px; bottom: 0; left: 0; overflow-y: auto; padding: 16px 0; }
+  .sidebar::-webkit-scrollbar { width: 0; }
+  .side-logo { padding: 0 20px 20px; display: flex; align-items: center; gap: 8px; }
+  .side-logo-icon { width: 32px; height: 32px; background: var(--brand-grad); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800; color: #fff; }
+  .side-logo-text { font-size: 20px; font-weight: 800; background: var(--brand-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .side-group { padding: 0 10px; margin-bottom: 18px; }
+  .side-group-label { font-size: 10px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; padding: 0 12px; margin-bottom: 6px; }
+  .side-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: var(--radius-sm); color: var(--text-secondary); font-size: 13px; cursor: pointer; transition: var(--transition); font-weight: 500; position: relative; }
+  .side-item:hover { background: var(--brand-soft); color: var(--brand); }
+  .side-item.active { background: var(--brand-soft); color: var(--brand); font-weight: 700; }
+  .side-item.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 20px; background: var(--brand); border-radius: 0 3px 3px 0; }
+  .side-icon { font-size: 16px; width: 20px; text-align: center; }
+
+  /* === 主内容区 === */
+  .main { flex: 1; margin-left: 220px; padding: 28px 36px; min-height: calc(100vh - 38px); }
+
+  /* === 页面标题 === */
+  .pg-head { margin-bottom: 24px; display: flex; align-items: flex-end; justify-content: space-between; }
+  .pg-head h1 { font-size: 24px; font-weight: 800; color: var(--text-primary); }
+  .pg-head p { color: var(--text-secondary); font-size: 13px; margin-top: 2px; }
+
+  /* === 统计卡片 === */
+  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .st-card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow-sm); transition: var(--transition); }
+  .st-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+  .st-label { font-size: 12px; color: var(--text-tertiary); font-weight: 600; margin-bottom: 6px; }
+  .st-val { font-size: 26px; font-weight: 800; color: var(--text-primary); }
+  .st-sub { font-size: 11.5px; color: var(--green); font-weight: 600; margin-top: 4px; }
+
+  /* === Tab胶囊 === */
+  .tabs { display: inline-flex; gap: 2px; margin-bottom: 20px; background: var(--bg-card); border-radius: 12px; padding: 3px; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm); }
+  .tab { padding: 7px 16px; border-radius: 9px; font-size: 12.5px; color: var(--text-secondary); cursor: pointer; font-weight: 500; transition: var(--transition); }
+  .tab:hover { color: var(--text-primary); background: var(--bg-hover); }
+  .tab.active { background: var(--brand); color: var(--text-on-brand); font-weight: 700; box-shadow: 0 2px 6px rgba(91,127,245,0.3); }
+  .tab .cnt { display: inline-block; padding: 1px 6px; border-radius: 6px; font-size: 10px; margin-left: 3px; background: rgba(0,0,0,0.05); font-weight: 600; }
+  .tab.active .cnt { background: rgba(255,255,255,0.25); }
+
+  /* === 搜索+操作栏 === */
+  .toolbar { display: flex; gap: 8px; margin-bottom: 18px; }
+  .search-in { flex: 1; padding: 9px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; background: var(--bg-input); color: var(--text-primary); outline: none; transition: var(--transition); }
+  .search-in:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--brand-soft); background: var(--bg-white); }
+  .btn { padding: 9px 18px; border-radius: var(--radius-sm); border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; gap: 5px; }
+  .btn-primary { background: var(--brand-grad); color: var(--text-on-brand); box-shadow: 0 2px 8px rgba(91,127,245,0.25); }
+  .btn-primary:hover { box-shadow: 0 4px 12px rgba(91,127,245,0.35); transform: translateY(-1px); }
+  .btn-outline { background: var(--bg-card); color: var(--text-secondary); border: 1px solid var(--border); }
+  .btn-outline:hover { background: var(--bg-hover); color: var(--text-primary); }
+  .btn-sm { padding: 5px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary); font-size: 12px; cursor: pointer; font-weight: 500; transition: var(--transition); }
+  .btn-sm:hover { background: var(--bg-hover); }
+  .btn-sm-brand { padding: 5px 12px; border-radius: 8px; border: none; background: var(--brand); color: #fff; font-size: 12px; cursor: pointer; font-weight: 600; }
+
+  /* === 卡片 === */
+  .card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-sm); margin-bottom: 14px; transition: var(--transition); }
+  .card:hover { box-shadow: var(--shadow); }
+  .card-hd { font-size: 14px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; }
+
+  /* === 项目卡片网格 === */
+  .grid3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+  .proj-card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow-sm); transition: var(--transition); cursor: pointer; }
+  .proj-card:hover { box-shadow: var(--shadow-md); border-color: var(--brand); transform: translateY(-2px); }
+  .proj-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+  .proj-desc { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .proj-meta { display: flex; gap: 10px; font-size: 11.5px; color: var(--text-tertiary); font-weight: 500; }
+  .prog-bar { height: 4px; background: var(--bg-subtle); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+  .prog-fill { height: 100%; background: var(--brand); border-radius: 2px; transition: width .3s; }
+
+  /* === 状态/标签 === */
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-ok { background: var(--green-bg); color: var(--green); }
+  .badge-warn { background: var(--amber-bg); color: var(--amber); }
+  .badge-info { background: var(--blue-bg); color: var(--brand); }
+  .badge-err { background: var(--red-bg); color: var(--red); }
+  .badge-purple { background: var(--purple-bg); color: var(--purple); }
+  .tag { font-size: 10.5px; padding: 2px 9px; border-radius: 20px; font-weight: 600; display: inline-block; }
+  .tag-blue { background: var(--blue-bg); color: var(--brand); }
+  .tag-purple { background: var(--purple-bg); color: var(--purple); }
+  .tag-green { background: var(--green-bg); color: var(--green); }
+  .tag-amber { background: var(--amber-bg); color: var(--amber); }
+  .tag-cyan { background: var(--cyan-bg); color: var(--cyan); }
+
+  /* === 表格 === */
+  .tbl { width: 100%; border-collapse: collapse; }
+  .tbl th { text-align: left; padding: 10px 14px; font-size: 11px; color: var(--text-tertiary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-light); background: var(--bg-hover); }
+  .tbl td { padding: 12px 14px; font-size: 13px; border-bottom: 1px solid var(--border-light); }
+  .tbl tr:hover td { background: var(--brand-softer); }
+
+  /* === 看板 === */
+  .kanban { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .k-col { background: var(--bg-subtle); border-radius: var(--radius); padding: 14px; min-height: 260px; }
+  .k-col-head { font-size: 12.5px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+  .k-cnt { font-size: 10.5px; background: var(--bg-card); padding: 2px 7px; border-radius: 6px; color: var(--text-tertiary); font-weight: 600; }
+  .k-card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 8px; cursor: grab; box-shadow: var(--shadow-sm); transition: var(--transition); }
+  .k-card:hover { box-shadow: var(--shadow); border-color: var(--brand); }
+  .k-title { font-size: 12.5px; font-weight: 600; margin-bottom: 4px; }
+  .k-meta { font-size: 11px; color: var(--text-tertiary); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+  .dot-r { background: var(--red); }
+  .dot-a { background: var(--amber); }
+  .dot-g { background: var(--green); }
+
+  /* === 聊天布局 === */
+  .chat-wrap { display: flex; height: 480px; border: 1px solid var(--border-light); border-radius: var(--radius); overflow: hidden; background: var(--bg-card); box-shadow: var(--shadow-sm); }
+  .chat-list { width: 260px; border-right: 1px solid var(--border-light); overflow-y: auto; background: var(--bg-card); }
+  .chat-list-search { padding: 10px; }
+  .ch-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; border-bottom: 1px solid var(--border-light); transition: var(--transition); }
+  .ch-item:hover { background: var(--bg-hover); }
+  .ch-item.active { background: var(--brand-soft); border-left: 3px solid var(--brand); }
+  .ch-av { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+  .ch-preview { flex: 1; min-width: 0; }
+  .ch-name { font-size: 13px; font-weight: 600; }
+  .ch-msg { font-size: 11.5px; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chat-main { flex: 1; display: flex; flex-direction: column; }
+  .chat-head { padding: 12px 18px; border-bottom: 1px solid var(--border-light); font-weight: 700; font-size: 14px; background: var(--bg-card); }
+  .chat-body { flex: 1; padding: 18px; overflow-y: auto; background: var(--bg-app); }
+  .bubble { max-width: 55%; padding: 10px 14px; border-radius: 14px; margin-bottom: 6px; font-size: 13px; line-height: 1.5; }
+  .bub-other { background: var(--bg-card); border: 1px solid var(--border-light); margin-right: auto; border-bottom-left-radius: 4px; }
+  .bub-self { background: var(--brand); color: #fff; margin-left: auto; border-bottom-right-radius: 4px; }
+  .chat-foot { display: flex; padding: 10px 14px; border-top: 1px solid var(--border-light); gap: 8px; background: var(--bg-card); }
+  .chat-foot input { flex: 1; padding: 9px 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; outline: none; background: var(--bg-input); }
+  .chat-foot input:focus { border-color: var(--border-focus); }
+
+  /* === 日历 === */
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .cal-hdr { text-align: center; font-size: 11px; font-weight: 700; color: var(--text-tertiary); padding: 8px; }
+  .cal-d { text-align: center; padding: 8px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: var(--transition); }
+  .cal-d:hover { background: var(--bg-subtle); }
+  .cal-today { background: var(--brand); color: #fff; font-weight: 700; border-radius: 50%; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; }
+  .cal-dot { width: 4px; height: 4px; background: var(--brand); border-radius: 50%; margin: 2px auto 0; }
+
+  /* === 通知 === */
+  .noti { display: flex; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border-light); transition: var(--transition); cursor: pointer; }
+  .noti:hover { background: var(--bg-hover); }
+  .noti-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--brand); margin-top: 6px; flex-shrink: 0; }
+  .noti-dot.read { background: var(--border); }
+  .noti-body { flex: 1; }
+  .noti-txt { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .noti-time { font-size: 11.5px; color: var(--text-tertiary); }
+
+  /* === 企业卡片 === */
+  .ent { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius); padding: 26px; box-shadow: var(--shadow-sm); margin-bottom: 16px; }
+  .ent-top { display: flex; gap: 18px; margin-bottom: 18px; }
+  .ent-av { width: 52px; height: 52px; border-radius: 14px; background: var(--brand-grad); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: #fff; flex-shrink: 0; }
+  .ent-name { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+  .ent-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+  .invite-row { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--blue-bg); border: 1px solid rgba(91,127,245,0.1); border-radius: 12px; margin-bottom: 18px; }
+  .invite-code { font-family: 'SF Mono', Consolas, monospace; font-size: 14px; font-weight: 700; padding: 5px 12px; background: var(--bg-white); border: 1px solid var(--border); border-radius: 8px; letter-spacing: 1.5px; }
+  .invite-label { flex: 1; font-size: 12.5px; color: var(--text-secondary); }
+  .mem-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
+  .mem-card { display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--bg-hover); border-radius: 12px; border: 1px solid transparent; transition: var(--transition); }
+  .mem-card:hover { background: var(--bg-card); border-color: var(--border); box-shadow: var(--shadow-sm); }
+  .mem-av { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; }
+  .mem-name { font-size: 13.5px; font-weight: 600; }
+  .mem-phone { font-size: 11.5px; color: var(--text-tertiary); }
+  .role-tag { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 700; }
+
+  /* === 图表占位 === */
+  .chart-ph { height: 180px; background: linear-gradient(135deg, var(--brand-soft), var(--blue-bg)); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-tertiary); font-size: 13px; }
+
+  /* === 登录/注册/忘记密码 === */
+  .auth-bg { background: linear-gradient(135deg, #dee8ff 0%, #eef3ff 50%, #f7f9ff 100%); min-height: 500px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius); padding: 40px; }
+  .auth-box { background: var(--bg-white); border-radius: 20px; padding: 40px; width: 380px; box-shadow: var(--shadow-lg); border: 1px solid var(--border-light); }
+  .auth-logo { text-align: center; margin-bottom: 24px; }
+  .auth-logo span { font-size: 28px; font-weight: 800; background: var(--brand-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .auth-title { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+  .auth-sub { font-size: 13px; color: var(--text-secondary); text-align: center; margin-bottom: 24px; }
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 12.5px; font-weight: 600; color: var(--text-secondary); margin-bottom: 5px; }
+  .form-input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13.5px; outline: none; background: var(--bg-input); transition: var(--transition); }
+  .form-input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--brand-soft); }
+  .btn-full { width: 100%; padding: 11px; border-radius: var(--radius-sm); border: none; font-size: 14px; font-weight: 700; cursor: pointer; background: var(--brand-grad); color: #fff; box-shadow: 0 4px 12px rgba(91,127,245,0.3); transition: var(--transition); }
+  .btn-full:hover { box-shadow: 0 6px 16px rgba(91,127,245,0.4); transform: translateY(-1px); }
+  .auth-link { font-size: 12.5px; color: var(--brand); text-align: center; display: block; margin-top: 16px; cursor: pointer; font-weight: 500; }
+
+  /* === 详情页头 === */
+  .detail-banner { background: var(--brand-grad); border-radius: var(--radius); padding: 28px 32px; color: #fff; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+  .detail-title { font-size: 22px; font-weight: 800; }
+  .detail-sub { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+  .detail-actions { display: flex; gap: 8px; }
+  .btn-white { padding: 8px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); color: #fff; font-size: 12.5px; cursor: pointer; font-weight: 600; backdrop-filter: blur(4px); }
+  .btn-white:hover { background: rgba(255,255,255,0.25); }
+
+  /* === 甘特图占位 === */
+  .gantt-ph { height: 200px; background: linear-gradient(90deg, var(--brand-soft) 20%, var(--blue-bg) 20%, var(--blue-bg) 45%, var(--green-bg) 45%, var(--green-bg) 70%, var(--amber-bg) 70%); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--text-tertiary); }
+
+  /* === 评分/进度 === */
+  .score-circle { width: 60px; height: 60px; border-radius: 50%; border: 4px solid var(--brand); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; color: var(--brand); }
+
+  /* === 时间线 === */
+  .timeline { position: relative; padding-left: 24px; }
+  .timeline::before { content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: var(--border-light); }
+  .tl-item { position: relative; margin-bottom: 16px; }
+  .tl-dot { position: absolute; left: -20px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: var(--brand); border: 2px solid var(--bg-card); }
+  .tl-time { font-size: 11px; color: var(--text-tertiary); margin-bottom: 2px; }
+  .tl-text { font-size: 13px; }
+
+  /* === 设置页 === */
+  .settings-layout { display: grid; grid-template-columns: 200px 1fr; gap: 16px; }
+  .settings-nav { }
+  .settings-nav-item { padding: 9px 14px; border-radius: var(--radius-sm); font-size: 13px; cursor: pointer; color: var(--text-secondary); font-weight: 500; margin-bottom: 2px; transition: var(--transition); }
+  .settings-nav-item:hover { background: var(--bg-hover); }
+  .settings-nav-item.active { background: var(--brand-soft); color: var(--brand); font-weight: 700; }
+
+  /* === 分页 === */
+  .pagination { display: flex; gap: 4px; align-items: center; justify-content: center; margin-top: 16px; }
+  .pg-btn { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12.5px; border: 1px solid var(--border-light); background: var(--bg-card); cursor: pointer; font-weight: 500; transition: var(--transition); color: var(--text-secondary); }
+  .pg-btn:hover { background: var(--bg-hover); }
+  .pg-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); font-weight: 700; }
+
+  /* === 页面区块 === */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .section-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .section-title { font-size: 14px; font-weight: 700; }
+
+  .flex-row { display: flex; gap: 14px; }
+  .flex-row > * { flex: 1; }
+
+  /* User avatar */
+  .user-bar { display: flex; align-items: center; gap: 10px; padding: 14px 20px; border-top: 1px solid var(--border-light); margin-top: auto; }
+  .user-av { width: 32px; height: 32px; border-radius: 8px; background: var(--brand-grad); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 700; }
+  .user-info { font-size: 12.5px; font-weight: 600; }
+  .user-role { font-size: 11px; color: var(--text-tertiary); }
+
+  /* === Profile Modal === */
+  .modal-overlay { background: rgba(30,50,90,0.3); backdrop-filter: blur(4px); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; min-height: 400px; margin-bottom: 16px; }
+  .modal-box { background: var(--bg-white); border-radius: 20px; padding: 28px; width: 420px; box-shadow: var(--shadow-lg); border: 1px solid var(--border-light); }
+  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+  .modal-close { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; color: var(--text-tertiary); transition: var(--transition); }
+  .modal-close:hover { background: var(--bg-subtle); color: var(--text-primary); }
+</style>
+</head>
+<body>
+
+<!-- 页面选择器 -->
+<div class="page-nav">
+  <span class="page-nav-label">Pages</span>
+  <button class="pn-btn active" onclick="go('dashboard')">仪表盘</button>
+  <button class="pn-btn" onclick="go('messages')">消息</button>
+  <button class="pn-btn" onclick="go('calendar')">日历</button>
+  <button class="pn-btn" onclick="go('notifications')">通知</button>
+  <button class="pn-btn" onclick="go('projects')">项目管理</button>
+  <button class="pn-btn" onclick="go('project-detail')">项目详情</button>
+  <button class="pn-btn" onclick="go('clients')">客户管理</button>
+  <button class="pn-btn" onclick="go('client-detail')">客户详情</button>
+  <button class="pn-btn" onclick="go('opportunities')">商机</button>
+  <button class="pn-btn" onclick="go('tasks')">任务看板</button>
+  <button class="pn-btn" onclick="go('tickets')">工单</button>
+  <button class="pn-btn" onclick="go('reports')">报表</button>
+  <button class="pn-btn" onclick="go('files')">文件</button>
+  <button class="pn-btn" onclick="go('enterprise')">企业管理</button>
+  <button class="pn-btn" onclick="go('users')">用户管理</button>
+  <button class="pn-btn" onclick="go('audit')">审计日志</button>
+  <button class="pn-btn" onclick="go('partners')">合作方</button>
+  <button class="pn-btn" onclick="go('settings')">系统配置</button>
+  <button class="pn-btn" onclick="go('user-settings')">个人设置</button>
+  <button class="pn-btn" onclick="go('login')">登录</button>
+  <button class="pn-btn" onclick="go('register')">注册</button>
+  <button class="pn-btn" onclick="go('forgot')">忘记密码</button>
+  <button class="pn-btn" onclick="go('modals')">弹窗集</button>
+</div>
+
+<div class="app">
+  <!-- 侧边栏 -->
+  <div class="sidebar" id="sidebar-area">
+    <div class="side-logo"><div class="side-logo-icon">D</div><div class="side-logo-text">DuiJie</div></div>
+    <div class="side-group">
+      <div class="side-group-label">工作台</div>
+      <div class="side-item active" id="nav-dashboard" onclick="go('dashboard')"><span class="side-icon">🏠</span>仪表盘</div>
+      <div class="side-item" id="nav-messages" onclick="go('messages')"><span class="side-icon">💬</span>消息</div>
+      <div class="side-item" id="nav-calendar" onclick="go('calendar')"><span class="side-icon">📅</span>日历日程</div>
+      <div class="side-item" id="nav-notifications" onclick="go('notifications')"><span class="side-icon">🔔</span>通知中心</div>
+    </div>
+    <div class="side-group">
+      <div class="side-group-label">协作业务</div>
+      <div class="side-item" id="nav-projects" onclick="go('projects')"><span class="side-icon">📁</span>项目管理</div>
+      <div class="side-item" id="nav-clients" onclick="go('clients')"><span class="side-icon">👥</span>客户管理</div>
+      <div class="side-item" id="nav-opportunities" onclick="go('opportunities')"><span class="side-icon">📈</span>商机管理</div>
+      <div class="side-item" id="nav-tasks" onclick="go('tasks')"><span class="side-icon">📋</span>任务看板</div>
+      <div class="side-item" id="nav-tickets" onclick="go('tickets')"><span class="side-icon">🎫</span>工单系统</div>
+      <div class="side-item" id="nav-reports" onclick="go('reports')"><span class="side-icon">📊</span>数据报表</div>
+      <div class="side-item" id="nav-files" onclick="go('files')"><span class="side-icon">📄</span>文件管理</div>
+    </div>
+    <div class="side-group">
+      <div class="side-group-label">组织管理</div>
+      <div class="side-item" id="nav-enterprise" onclick="go('enterprise')"><span class="side-icon">🏢</span>企业管理</div>
+      <div class="side-item" id="nav-users" onclick="go('users')"><span class="side-icon">👤</span>用户管理</div>
+    </div>
+    <div class="side-group">
+      <div class="side-group-label">系统</div>
+      <div class="side-item" id="nav-audit" onclick="go('audit')"><span class="side-icon">📜</span>审计日志</div>
+      <div class="side-item" id="nav-partners" onclick="go('partners')"><span class="side-icon">🤝</span>合作方管理</div>
+      <div class="side-item" id="nav-settings" onclick="go('settings')"><span class="side-icon">⚙️</span>系统配置</div>
+    </div>
+    <div class="user-bar">
+      <div class="user-av">张</div>
+      <div><div class="user-info">张三</div><div class="user-role">管理员</div></div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- ==================== 仪表盘 ==================== -->
+    <div class="page active" id="page-dashboard">
+      <div class="pg-head"><div><h1>仪表盘</h1><p>数据概览与工作台</p></div></div>
+      <div class="stats">
+        <div class="st-card"><div class="st-label">项目总数</div><div class="st-val">12</div><div class="st-sub">↑ 2 本月新增</div></div>
+        <div class="st-card"><div class="st-label">客户总数</div><div class="st-val">38</div><div class="st-sub">↑ 5 本月新增</div></div>
+        <div class="st-card"><div class="st-label">进行中任务</div><div class="st-val">67</div><div class="st-sub">↑ 12 本周</div></div>
+        <div class="st-card"><div class="st-label">合同金额</div><div class="st-val">¥86万</div><div class="st-sub">↑ 15% 月环比</div></div>
+        <div class="st-card"><div class="st-label">工单待办</div><div class="st-val">8</div><div class="st-sub" style="color:var(--amber)">⚠ 2 紧急</div></div>
+      </div>
+      <div class="flex-row">
+        <div class="card"><div class="card-hd">任务完成趋势</div><div class="chart-ph">📊 面积图 · 近30天</div></div>
+        <div class="card" style="max-width:280px"><div class="card-hd">任务状态</div><div class="chart-ph" style="height:180px">🥧 饼图</div></div>
+      </div>
+      <div class="flex-row" style="margin-top:14px">
+        <div class="card"><div class="card-hd">我的待办</div>
+          <div style="padding:9px 0;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:8px;font-size:13px"><span class="dot dot-r"></span>完成API对接文档<span style="margin-left:auto;font-size:11.5px;color:var(--red)">今天到期</span></div>
+          <div style="padding:9px 0;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:8px;font-size:13px"><span class="dot dot-a"></span>UI设计评审<span style="margin-left:auto;font-size:11.5px;color:var(--amber)">明天到期</span></div>
+          <div style="padding:9px 0;display:flex;align-items:center;gap:8px;font-size:13px"><span class="dot dot-g"></span>数据库优化方案<span style="margin-left:auto;font-size:11.5px;color:var(--text-tertiary)">后天</span></div>
+        </div>
+        <div class="card"><div class="card-hd">最近活动</div>
+          <div class="timeline">
+            <div class="tl-item"><div class="tl-dot"></div><div class="tl-time">2小时前</div><div class="tl-text">张三 创建了项目 <b>移动端App</b></div></div>
+            <div class="tl-item"><div class="tl-dot"></div><div class="tl-time">3小时前</div><div class="tl-text">李四 完成了任务 <b>接口文档编写</b></div></div>
+            <div class="tl-item"><div class="tl-dot"></div><div class="tl-time">5小时前</div><div class="tl-text">王五 添加了客户 <b>科技公司</b></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 消息 ==================== -->
+    <div class="page" id="page-messages">
+      <div class="pg-head"><div><h1>消息</h1><p>站内消息与群组聊天</p></div></div>
+      <div class="chat-wrap">
+        <div class="chat-list">
+          <div class="chat-list-search"><input class="search-in" placeholder="🔍 搜索联系人..." style="width:100%"></div>
+          <div class="ch-item active"><div class="ch-av" style="background:var(--brand)">张</div><div class="ch-preview"><div class="ch-name">张三</div><div class="ch-msg">好的，明天开会讨论一下</div></div></div>
+          <div class="ch-item"><div class="ch-av" style="background:var(--green)">李</div><div class="ch-preview"><div class="ch-name">李四</div><div class="ch-msg">文件已发送，请查收</div></div></div>
+          <div class="ch-item"><div class="ch-av" style="background:var(--purple)">项</div><div class="ch-preview"><div class="ch-name">项目A群组</div><div class="ch-msg">王五: 进度更新了</div></div></div>
+          <div class="ch-item"><div class="ch-av" style="background:var(--amber)">赵</div><div class="ch-preview"><div class="ch-name">赵六</div><div class="ch-msg">收到，谢谢</div></div></div>
+        </div>
+        <div class="chat-main">
+          <div class="chat-head">张三 <span style="font-weight:400;color:var(--text-tertiary);font-size:12px;margin-left:8px">在线</span></div>
+          <div class="chat-body">
+            <div class="bubble bub-other">你好，项目进展怎么样了？</div>
+            <div class="bubble bub-self">正在推进中，预计周五出初版</div>
+            <div class="bubble bub-other">好的，明天开会讨论一下</div>
+          </div>
+          <div class="chat-foot"><input placeholder="输入消息..." /><button class="btn btn-primary">发送</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 日历 ==================== -->
+    <div class="page" id="page-calendar">
+      <div class="pg-head"><div><h1>日历日程</h1><p>任务与跟进日程安排</p></div></div>
+      <div class="flex-row">
+        <div class="card" style="flex:2">
+          <div class="card-hd">2026年4月 <div><button class="btn-sm">◀ 上月</button> <button class="btn-sm">今天</button> <button class="btn-sm">下月 ▶</button></div></div>
+          <div class="cal-grid">
+            <div class="cal-hdr">日</div><div class="cal-hdr">一</div><div class="cal-hdr">二</div><div class="cal-hdr">三</div><div class="cal-hdr">四</div><div class="cal-hdr">五</div><div class="cal-hdr">六</div>
+            <div class="cal-d" style="color:var(--text-tertiary)">29</div><div class="cal-d" style="color:var(--text-tertiary)">30</div><div class="cal-d" style="color:var(--text-tertiary)">31</div><div class="cal-d">1</div><div class="cal-d"><span class="cal-today">2</span><div class="cal-dot"></div></div><div class="cal-d">3</div><div class="cal-d">4</div>
+            <div class="cal-d">5</div><div class="cal-d">6</div><div class="cal-d">7<div class="cal-dot"></div></div><div class="cal-d">8</div><div class="cal-d">9</div><div class="cal-d">10<div class="cal-dot"></div></div><div class="cal-d">11</div>
+            <div class="cal-d">12</div><div class="cal-d">13</div><div class="cal-d">14</div><div class="cal-d">15<div class="cal-dot"></div></div><div class="cal-d">16</div><div class="cal-d">17</div><div class="cal-d">18</div>
+            <div class="cal-d">19</div><div class="cal-d">20</div><div class="cal-d">21</div><div class="cal-d">22</div><div class="cal-d">23<div class="cal-dot"></div></div><div class="cal-d">24</div><div class="cal-d">25</div>
+          </div>
+        </div>
+        <div class="card" style="flex:1">
+          <div class="card-hd">今日日程</div>
+          <div style="padding:10px;background:var(--brand-soft);border-left:3px solid var(--brand);border-radius:8px;margin-bottom:8px"><div style="font-size:12.5px;font-weight:600">10:00 项目例会</div><div style="font-size:11.5px;color:var(--text-tertiary)">移动端App · 会议室301</div></div>
+          <div style="padding:10px;background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:8px;margin-bottom:8px"><div style="font-size:12.5px;font-weight:600">14:00 客户回访</div><div style="font-size:11.5px;color:var(--text-tertiary)">科技公司 · 电话</div></div>
+          <div style="padding:10px;background:var(--green-bg);border-left:3px solid var(--green);border-radius:8px"><div style="font-size:12.5px;font-weight:600">16:00 设计评审</div><div style="font-size:11.5px;color:var(--text-tertiary)">UI改版 · 线上</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 通知 ==================== -->
+    <div class="page" id="page-notifications">
+      <div class="pg-head"><div><h1>通知中心</h1><p>系统通知与消息提醒</p></div></div>
+      <div class="tabs">
+        <div class="tab active">全部 <span class="cnt">8</span></div>
+        <div class="tab">项目</div>
+        <div class="tab">任务</div>
+        <div class="tab">审批</div>
+        <div class="tab">系统</div>
+      </div>
+      <div class="card" style="padding:0">
+        <div class="noti"><div class="noti-dot"></div><div class="noti-body"><div class="noti-txt">张三 邀请你加入项目 <b>移动端App开发</b></div><div class="noti-time">10分钟前</div></div><button class="btn-sm-brand">接受</button></div>
+        <div class="noti"><div class="noti-dot"></div><div class="noti-body"><div class="noti-txt">任务 <b>API接口开发</b> 已到期，请尽快处理</div><div class="noti-time">1小时前</div></div></div>
+        <div class="noti"><div class="noti-dot read"></div><div class="noti-body"><div class="noti-txt">李四 回复了你的工单 <b>#1023</b></div><div class="noti-time">3小时前</div></div></div>
+        <div class="noti"><div class="noti-dot read"></div><div class="noti-body"><div class="noti-txt">系统更新：新增商机管理模块</div><div class="noti-time">昨天</div></div></div>
+      </div>
+    </div>
+
+    <!-- ==================== 项目管理 ==================== -->
+    <div class="page" id="page-projects">
+      <div class="pg-head"><div><h1>项目管理</h1><p>管理所有项目与进度跟踪</p></div><button class="btn btn-primary">+ 新建项目</button></div>
+      <div class="toolbar">
+        <input class="search-in" placeholder="🔍 搜索项目名称...">
+        <button class="btn btn-outline">全部状态 ▾</button>
+        <button class="btn btn-outline">排序 ▾</button>
+      </div>
+      <div class="grid3">
+        <div class="proj-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span class="badge badge-ok">进行中</span><span style="font-size:11px;color:var(--text-tertiary)">2026/3/15</span></div>
+          <div class="proj-name">移动端App开发</div>
+          <div class="proj-desc">基于React Native开发iOS和Android双端应用，集成推送通知和离线存储功能</div>
+          <div class="proj-meta"><span>👤 5人</span><span>📋 12任务</span><span style="color:var(--brand);font-weight:600">60%</span></div>
+          <div class="prog-bar"><div class="prog-fill" style="width:60%"></div></div>
+        </div>
+        <div class="proj-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span class="badge badge-ok">进行中</span><span style="font-size:11px;color:var(--text-tertiary)">2026/3/20</span></div>
+          <div class="proj-name">后台管理系统</div>
+          <div class="proj-desc">企业级后台管理平台，包含权限管理、数据报表和审批流程</div>
+          <div class="proj-meta"><span>👤 3人</span><span>📋 8任务</span><span style="color:var(--brand);font-weight:600">35%</span></div>
+          <div class="prog-bar"><div class="prog-fill" style="width:35%"></div></div>
+        </div>
+        <div class="proj-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span class="badge badge-warn">规划中</span><span style="font-size:11px;color:var(--text-tertiary)">2026/4/1</span></div>
+          <div class="proj-name">数据中台建设</div>
+          <div class="proj-desc">搭建统一数据平台，实现数据采集、存储、分析一体化</div>
+          <div class="proj-meta"><span>👤 2人</span><span>📋 3任务</span><span style="color:var(--brand);font-weight:600">10%</span></div>
+          <div class="prog-bar"><div class="prog-fill" style="width:10%"></div></div>
+        </div>
+        <div class="proj-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span class="badge badge-info">已完成</span><span style="font-size:11px;color:var(--text-tertiary)">2026/2/28</span></div>
+          <div class="proj-name">官网上线</div>
+          <div class="proj-desc">企业官方网站设计与开发、SEO优化</div>
+          <div class="proj-meta"><span>👤 4人</span><span>📋 15任务</span><span style="color:var(--green);font-weight:600">100%</span></div>
+          <div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--green)"></div></div>
+        </div>
+      </div>
+      <div class="pagination"><div class="pg-btn">‹</div><div class="pg-btn active">1</div><div class="pg-btn">2</div><div class="pg-btn">3</div><div class="pg-btn">›</div></div>
+    </div>
+
+    <!-- ==================== 项目详情 ==================== -->
+    <div class="page" id="page-project-detail">
+      <div class="detail-banner">
+        <div><div class="detail-title">移动端App开发</div><div class="detail-sub">React Native · 5 成员 · 60% 完成</div></div>
+        <div class="detail-actions"><button class="btn-white">📋 任务</button><button class="btn-white">👥 成员</button><button class="btn-white">⚙️ 设置</button></div>
+      </div>
+      <div class="tabs">
+        <div class="tab active">概览</div>
+        <div class="tab">里程碑 <span class="cnt">3</span></div>
+        <div class="tab">任务 <span class="cnt">12</span></div>
+        <div class="tab">成员 <span class="cnt">5</span></div>
+        <div class="tab">消息</div>
+        <div class="tab">文件</div>
+      </div>
+      <div class="flex-row">
+        <div class="card"><div class="card-hd">项目甘特图</div><div class="gantt-ph">📊 甘特图 · 3个里程碑 · 12个任务</div></div>
+      </div>
+      <div class="flex-row" style="margin-top:14px">
+        <div class="card"><div class="card-hd">里程碑</div>
+          <div style="padding:10px 0;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:10px"><span class="badge badge-ok">已完成</span><b style="font-size:13px">需求分析</b><span style="margin-left:auto;font-size:12px;color:var(--text-tertiary)">3/1 - 3/10</span></div>
+          <div style="padding:10px 0;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:10px"><span class="badge badge-info">进行中</span><b style="font-size:13px">开发实现</b><span style="margin-left:auto;font-size:12px;color:var(--text-tertiary)">3/11 - 4/15</span></div>
+          <div style="padding:10px 0;display:flex;align-items:center;gap:10px"><span class="badge badge-warn">待开始</span><b style="font-size:13px">测试上线</b><span style="margin-left:auto;font-size:12px;color:var(--text-tertiary)">4/16 - 4/30</span></div>
+        </div>
+        <div class="card"><div class="card-hd">项目成员</div>
+          <div class="mem-grid">
+            <div class="mem-card"><div class="mem-av" style="background:linear-gradient(135deg,#5b7ff5,#4668db)">张</div><div><div class="mem-name">张三</div><div class="mem-phone">项目负责人</div></div></div>
+            <div class="mem-card"><div class="mem-av" style="background:linear-gradient(135deg,var(--green),#059669)">李</div><div><div class="mem-name">李四</div><div class="mem-phone">前端开发</div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 客户管理 ==================== -->
+    <div class="page" id="page-clients">
+      <div class="pg-head"><div><h1>客户管理</h1><p>客户信息与跟进记录</p></div><button class="btn btn-primary">+ 新建客户</button></div>
+      <div class="tabs">
+        <div class="tab active">全部 <span class="cnt">38</span></div>
+        <div class="tab">潜在</div>
+        <div class="tab">意向</div>
+        <div class="tab">签约</div>
+        <div class="tab">合作中</div>
+      </div>
+      <div class="toolbar">
+        <input class="search-in" placeholder="🔍 搜索客户名称或联系方式...">
+        <button class="btn btn-outline">标签 ▾</button>
+        <button class="btn btn-outline">📥 导入</button>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="tbl">
+          <thead><tr><th>客户名称</th><th>类型</th><th>阶段</th><th>对接人</th><th>联系电话</th><th>标签</th><th>最近跟进</th></tr></thead>
+          <tbody>
+            <tr><td><b>科技有限公司</b></td><td><span class="tag tag-blue">企业</span></td><td><span class="badge badge-ok">合作中</span></td><td>张三</td><td>138****8888</td><td><span class="tag tag-cyan">VIP</span></td><td>2天前</td></tr>
+            <tr><td><b>创新工作室</b></td><td><span class="tag tag-purple">个人</span></td><td><span class="badge badge-warn">意向</span></td><td>李四</td><td>139****9999</td><td><span class="tag tag-amber">新客</span></td><td>5天前</td></tr>
+            <tr><td><b>数字传媒集团</b></td><td><span class="tag tag-blue">企业</span></td><td><span class="badge badge-ok">签约</span></td><td>王五</td><td>137****7777</td><td><span class="tag tag-green">重点</span></td><td>1周前</td></tr>
+            <tr><td><b>智慧教育</b></td><td><span class="tag tag-blue">企业</span></td><td><span class="badge badge-purple">潜在</span></td><td>张三</td><td>135****5555</td><td></td><td>2周前</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination"><div class="pg-btn">‹</div><div class="pg-btn active">1</div><div class="pg-btn">2</div><div class="pg-btn">3</div><div class="pg-btn">4</div><div class="pg-btn">›</div></div>
+    </div>
+
+    <!-- ==================== 客户详情 ==================== -->
+    <div class="page" id="page-client-detail">
+      <div class="detail-banner">
+        <div><div class="detail-title">科技有限公司</div><div class="detail-sub">企业客户 · 合作中 · 对接人: 张三</div></div>
+        <div class="detail-actions"><button class="btn-white">✏️ 编辑</button><button class="btn-white">📞 联系</button></div>
+      </div>
+      <div class="tabs">
+        <div class="tab active">基本信息</div>
+        <div class="tab">联系人</div>
+        <div class="tab">跟进记录 <span class="cnt">6</span></div>
+        <div class="tab">合同</div>
+        <div class="tab">评分</div>
+        <div class="tab">关联企业</div>
+      </div>
+      <div class="flex-row">
+        <div class="card" style="flex:2">
+          <div class="card-hd">客户信息</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div><div style="font-size:11.5px;color:var(--text-tertiary);margin-bottom:2px">公司名称</div><div style="font-size:13.5px;font-weight:600">科技有限公司</div></div>
+            <div><div style="font-size:11.5px;color:var(--text-tertiary);margin-bottom:2px">行业</div><div style="font-size:13.5px">互联网/IT</div></div>
+            <div><div style="font-size:11.5px;color:var(--text-tertiary);margin-bottom:2px">联系电话</div><div style="font-size:13.5px">138-8888-8888</div></div>
+            <div><div style="font-size:11.5px;color:var(--text-tertiary);margin-bottom:2px">邮箱</div><div style="font-size:13.5px">contact@tech.com</div></div>
+            <div><div style="font-size:11.5px;color:var(--text-tertiary);margin-bottom:2px">地址</div><div style="font-size:13.5px">北京市海淀区中关村大街1号</div></div>
+            <div><div style="font-size:11.5px;color:var(--text-tertiary);margin-bottom:2px">客户标签</div><div><span class="tag tag-cyan" style="margin-right:4px">VIP</span><span class="tag tag-green">重点</span></div></div>
+          </div>
+        </div>
+        <div class="card" style="flex:1">
+          <div class="card-hd">客户评分</div>
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px"><div class="score-circle">85</div><div><div style="font-size:13px;font-weight:600">优质客户</div><div style="font-size:11.5px;color:var(--text-tertiary)">基于6个维度综合评分</div></div></div>
+          <div style="font-size:12px;color:var(--text-secondary)">合作意愿: <b>90</b> · 付款记录: <b>85</b> · 活跃度: <b>80</b></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd">跟进记录</div>
+        <div class="timeline">
+          <div class="tl-item"><div class="tl-dot"></div><div class="tl-time">2026/4/1 10:30</div><div class="tl-text">电话沟通，确认合同细节 <span class="tag tag-blue" style="margin-left:6px">电话</span></div></div>
+          <div class="tl-item"><div class="tl-dot"></div><div class="tl-time">2026/3/28 14:00</div><div class="tl-text">发送合同初稿 <span class="tag tag-green" style="margin-left:6px">邮件</span></div></div>
+          <div class="tl-item"><div class="tl-dot"></div><div class="tl-time">2026/3/25 09:00</div><div class="tl-text">首次拜访，介绍产品方案 <span class="tag tag-purple" style="margin-left:6px">拜访</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 商机管理 ==================== -->
+    <div class="page" id="page-opportunities">
+      <div class="pg-head"><div><h1>商机管理</h1><p>销售管道与商机跟踪</p></div><button class="btn btn-primary">+ 新建商机</button></div>
+      <div class="stats" style="grid-template-columns:repeat(3,1fr)">
+        <div class="st-card"><div class="st-label">管道总额</div><div class="st-val">¥320万</div></div>
+        <div class="st-card"><div class="st-label">赢单金额</div><div class="st-val">¥86万</div></div>
+        <div class="st-card"><div class="st-label">赢单率</div><div class="st-val">32%</div></div>
+      </div>
+      <div class="kanban">
+        <div class="k-col"><div class="k-col-head">线索 <span class="k-cnt">3</span></div>
+          <div class="k-card"><div class="k-title">新零售数字化</div><div class="k-meta">¥50万 · 科技公司 · 张三</div></div>
+          <div class="k-card"><div class="k-title">供应链系统</div><div class="k-meta">¥30万 · 物流集团 · 李四</div></div>
+          <div class="k-card"><div class="k-title">内部OA</div><div class="k-meta">¥15万 · 教育机构 · 王五</div></div>
+        </div>
+        <div class="k-col"><div class="k-col-head">需求验证 <span class="k-cnt">2</span></div>
+          <div class="k-card"><div class="k-title">CRM定制开发</div><div class="k-meta">¥80万 · 金融公司 · 张三</div></div>
+          <div class="k-card"><div class="k-title">ERP集成</div><div class="k-meta">¥60万 · 制造企业 · 李四</div></div>
+        </div>
+        <div class="k-col"><div class="k-col-head">方案报价 <span class="k-cnt">1</span></div>
+          <div class="k-card"><div class="k-title">移动端改版</div><div class="k-meta">¥25万 · 教育机构 · 王五</div></div>
+        </div>
+        <div class="k-col" style="background:var(--green-bg)"><div class="k-col-head" style="color:var(--green)">赢单 <span class="k-cnt">2</span></div>
+          <div class="k-card"><div class="k-title">OA系统建设</div><div class="k-meta">¥45万 · 制造企业 · ✅</div></div>
+          <div class="k-card"><div class="k-title">官网项目</div><div class="k-meta">¥41万 · 传媒集团 · ✅</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 任务看板 ==================== -->
+    <div class="page" id="page-tasks">
+      <div class="pg-head"><div><h1>任务看板</h1><p>拖拽式任务管理与分配</p></div><button class="btn btn-primary">+ 新建任务</button></div>
+      <div class="toolbar">
+        <input class="search-in" placeholder="🔍 搜索任务...">
+        <button class="btn btn-outline">全部项目 ▾</button>
+        <button class="btn btn-outline">优先级 ▾</button>
+        <button class="btn btn-outline">指派人 ▾</button>
+      </div>
+      <div class="kanban">
+        <div class="k-col"><div class="k-col-head">待办 <span class="k-cnt">4</span></div>
+          <div class="k-card"><div class="k-title"><span class="dot dot-r"></span>API接口开发</div><div class="k-meta">📁 移动端App · 👤 张三 · ⏰ 4/3</div></div>
+          <div class="k-card"><div class="k-title"><span class="dot dot-a"></span>数据库设计</div><div class="k-meta">📁 后台管理 · 👤 李四 · ⏰ 4/5</div></div>
+          <div class="k-card"><div class="k-title"><span class="dot dot-g"></span>文档整理</div><div class="k-meta">📁 数据中台 · 👤 王五</div></div>
+          <div class="k-card"><div class="k-title"><span class="dot dot-a"></span>原型设计</div><div class="k-meta">📁 移动端App · 👤 赵六</div></div>
+        </div>
+        <div class="k-col"><div class="k-col-head">进行中 <span class="k-cnt">2</span></div>
+          <div class="k-card"><div class="k-title"><span class="dot dot-r"></span>UI界面实现</div><div class="k-meta">📁 移动端App · 👤 张三</div></div>
+          <div class="k-card"><div class="k-title"><span class="dot dot-a"></span>权限模块</div><div class="k-meta">📁 后台管理 · 👤 李四</div></div>
+        </div>
+        <div class="k-col"><div class="k-col-head">待验收 <span class="k-cnt">1</span></div>
+          <div class="k-card"><div class="k-title"><span class="dot dot-a"></span>登录模块</div><div class="k-meta">📁 后台管理 · 👤 李四</div></div>
+        </div>
+        <div class="k-col" style="background:var(--green-bg)"><div class="k-col-head" style="color:var(--green)">已完成 <span class="k-cnt">5</span></div>
+          <div class="k-card"><div class="k-title"><span class="dot dot-g"></span>需求分析</div><div class="k-meta">📁 移动端App · ✅</div></div>
+          <div class="k-card"><div class="k-title"><span class="dot dot-g"></span>环境搭建</div><div class="k-meta">📁 后台管理 · ✅</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 工单系统 ==================== -->
+    <div class="page" id="page-tickets">
+      <div class="pg-head"><div><h1>工单系统</h1><p>问题跟踪与客户支持</p></div><button class="btn btn-primary">+ 新建工单</button></div>
+      <div class="tabs"><div class="tab active">全部</div><div class="tab">待处理</div><div class="tab">处理中</div><div class="tab">已解决</div><div class="tab">已关闭</div></div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="tbl">
+          <thead><tr><th>编号</th><th>标题</th><th>类型</th><th>优先级</th><th>状态</th><th>提交人</th><th>指派给</th><th>时间</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--brand);font-weight:600">#1024</td><td><b>系统登录异常</b></td><td><span class="tag tag-amber">问题</span></td><td><span class="dot dot-r"></span>高</td><td><span class="badge badge-err">待处理</span></td><td>客户A</td><td>张三</td><td>4/2</td></tr>
+            <tr><td style="color:var(--brand);font-weight:600">#1023</td><td><b>新增报表功能</b></td><td><span class="tag tag-blue">需求</span></td><td><span class="dot dot-a"></span>中</td><td><span class="badge badge-info">处理中</span></td><td>客户B</td><td>李四</td><td>4/1</td></tr>
+            <tr><td style="color:var(--brand);font-weight:600">#1022</td><td><b>数据导出格式问题</b></td><td><span class="tag tag-amber">问题</span></td><td><span class="dot dot-g"></span>低</td><td><span class="badge badge-ok">已解决</span></td><td>客户C</td><td>王五</td><td>3/30</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ==================== 数据报表 ==================== -->
+    <div class="page" id="page-reports">
+      <div class="pg-head"><div><h1>数据报表</h1><p>业务数据可视化分析</p></div><div><button class="btn btn-outline">📅 时间范围 ▾</button></div></div>
+      <div class="stats">
+        <div class="st-card"><div class="st-label">客户总数</div><div class="st-val">38</div><div class="st-sub">↑ 15%</div></div>
+        <div class="st-card"><div class="st-label">新增客户</div><div class="st-val">5</div><div class="st-sub">↑ 本月</div></div>
+        <div class="st-card"><div class="st-label">合同金额</div><div class="st-val">¥86万</div><div class="st-sub">↑ 23%</div></div>
+        <div class="st-card"><div class="st-label">转化率</div><div class="st-val">32%</div><div class="st-sub">↑ 5%</div></div>
+      </div>
+      <div class="flex-row">
+        <div class="card"><div class="card-hd">客户增长趋势</div><div class="chart-ph">📈 折线图 · 近12月</div></div>
+        <div class="card"><div class="card-hd">合同金额趋势</div><div class="chart-ph">📊 柱状图 · 近12月</div></div>
+      </div>
+      <div class="flex-row" style="margin-top:14px">
+        <div class="card"><div class="card-hd">渠道分布</div><div class="chart-ph">🥧 饼图 · 获客渠道</div></div>
+        <div class="card"><div class="card-hd">销售漏斗</div><div class="chart-ph">🔻 漏斗图</div></div>
+      </div>
+    </div>
+
+    <!-- ==================== 文件管理 ==================== -->
+    <div class="page" id="page-files">
+      <div class="pg-head"><div><h1>文件管理</h1><p>项目文档与文件存储</p></div><button class="btn btn-primary">📤 上传文件</button></div>
+      <div class="tabs"><div class="tab active">全部</div><div class="tab">文档</div><div class="tab">图片</div><div class="tab">视频</div><div class="tab">其他</div></div>
+      <div class="toolbar"><input class="search-in" placeholder="🔍 搜索文件名..."></div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="tbl">
+          <thead><tr><th>文件名</th><th>类型</th><th>大小</th><th>项目</th><th>上传者</th><th>时间</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td>📄 需求文档v2.docx</td><td>文档</td><td>2.3MB</td><td>移动端App</td><td>张三</td><td>4/2</td><td><button class="btn-sm">⬇️</button> <button class="btn-sm">👁️</button></td></tr>
+            <tr><td>🖼️ UI设计稿.png</td><td>图片</td><td>5.1MB</td><td>后台管理</td><td>李四</td><td>4/1</td><td><button class="btn-sm">⬇️</button> <button class="btn-sm">👁️</button></td></tr>
+            <tr><td>📊 数据报告.xlsx</td><td>文档</td><td>1.8MB</td><td>—</td><td>王五</td><td>3/30</td><td><button class="btn-sm">⬇️</button> <button class="btn-sm">👁️</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ==================== 企业管理 ==================== -->
+    <div class="page" id="page-enterprise">
+      <div class="pg-head"><div><h1>企业管理</h1><p>管理企业信息、部门与组织成员</p></div></div>
+      <div class="tabs">
+        <div class="tab active">组织成员 <span class="cnt">2</span></div>
+        <div class="tab">部门管理 <span class="cnt">0</span></div>
+        <div class="tab">组织架构</div>
+        <div class="tab">企业项目</div>
+        <div class="tab">角色管理 <span class="cnt">2</span></div>
+        <div class="tab">客户请求</div>
+      </div>
+      <div class="ent">
+        <div class="ent-top">
+          <div class="ent-av">壹</div>
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+              <span class="ent-name">壹</span>
+              <span class="tag tag-purple">个人独资</span>
+              <span class="tag tag-green">互联网/IT</span>
+              <span class="tag tag-amber">1-10人</span>
+              <span class="tag tag-blue">⭐ 创建者</span>
+            </div>
+            <div style="font-size:12.5px;color:var(--text-secondary)">📅 创建于 2026/4/2 14:22</div>
+          </div>
+          <div style="display:flex;gap:6px"><button class="btn-sm">✏️ 编辑</button><button class="btn-sm">⋯</button></div>
+        </div>
+        <div class="invite-row">
+          <span style="font-size:14px">🔗</span>
+          <span class="invite-label"><b>企业推荐码</b> · 分享给待加入成员</span>
+          <span class="invite-code">D580362FC4</span>
+          <button class="btn-sm">📋 复制</button>
+          <button class="btn-sm-brand">🔄 重置</button>
+        </div>
+        <div class="section-hd">
+          <div class="section-title">团队成员 <span style="font-size:11px;color:var(--text-tertiary);background:var(--bg-subtle);padding:2px 7px;border-radius:6px;margin-left:5px">2</span></div>
+          <button class="btn btn-outline" style="padding:6px 14px;font-size:12px">+ 添加成员</button>
+        </div>
+        <div class="mem-grid">
+          <div class="mem-card"><div class="mem-av" style="background:linear-gradient(135deg,#5b7ff5,#4668db)">用</div><div style="flex:1"><div class="mem-name">用户3579 <span class="role-tag" style="background:var(--purple-bg);color:var(--purple)">创建者</span></div><div class="mem-phone">📱 159****3579</div></div></div>
+          <div class="mem-card"><div class="mem-av" style="background:linear-gradient(135deg,#f97316,#ef4444)">用</div><div style="flex:1"><div class="mem-name">用户5727 <span class="role-tag" style="background:var(--amber-bg);color:var(--amber)">未分配</span></div><div class="mem-phone">📱 151****5727</div></div><div style="display:flex;gap:4px"><button class="btn-sm" style="padding:5px 8px">✏️</button><button class="btn-sm" style="padding:5px 8px;color:var(--red)">✕</button></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 用户管理 ==================== -->
+    <div class="page" id="page-users">
+      <div class="pg-head"><div><h1>用户管理</h1><p>管理系统用户与权限角色</p></div><button class="btn btn-primary">+ 添加用户</button></div>
+      <div class="toolbar">
+        <input class="search-in" placeholder="🔍 搜索用户名或手机号...">
+        <button class="btn btn-outline">角色 ▾</button>
+        <button class="btn btn-outline">🔗 邀请链接</button>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="tbl">
+          <thead><tr><th>用户</th><th>手机号</th><th>角色</th><th>企业</th><th>状态</th><th>注册时间</th><th>操作</th></tr></thead>
+          <tbody>
+            <tr><td><div style="display:flex;align-items:center;gap:8px"><div class="mem-av" style="width:30px;height:30px;font-size:11px;background:linear-gradient(135deg,#5b7ff5,#4668db)">张</div><b>张三</b></div></td><td>159****3579</td><td><span class="tag tag-purple">管理员</span></td><td>壹</td><td><span class="badge badge-ok">活跃</span></td><td>2026/3/15</td><td><button class="btn-sm">编辑</button></td></tr>
+            <tr><td><div style="display:flex;align-items:center;gap:8px"><div class="mem-av" style="width:30px;height:30px;font-size:11px;background:linear-gradient(135deg,var(--green),#059669)">李</div><b>李四</b></div></td><td>151****5727</td><td><span class="tag tag-blue">成员</span></td><td>壹</td><td><span class="badge badge-ok">活跃</span></td><td>2026/3/20</td><td><button class="btn-sm">编辑</button></td></tr>
+            <tr><td><div style="display:flex;align-items:center;gap:8px"><div class="mem-av" style="width:30px;height:30px;font-size:11px;background:linear-gradient(135deg,var(--amber),#ea580c)">王</div><b>王五</b></div></td><td>137****7777</td><td><span class="tag tag-green">成员</span></td><td>—</td><td><span class="badge badge-warn">待激活</span></td><td>2026/4/1</td><td><button class="btn-sm">编辑</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ==================== 审计日志 ==================== -->
+    <div class="page" id="page-audit">
+      <div class="pg-head"><div><h1>审计日志</h1><p>系统操作记录与安全审计</p></div><button class="btn btn-outline">📥 导出</button></div>
+      <div class="toolbar">
+        <input class="search-in" placeholder="🔍 搜索操作内容...">
+        <button class="btn btn-outline">操作类型 ▾</button>
+        <button class="btn btn-outline">用户 ▾</button>
+        <button class="btn btn-outline">📅 时间 ▾</button>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <table class="tbl">
+          <thead><tr><th>时间</th><th>用户</th><th>操作</th><th>模块</th><th>详情</th><th>IP</th></tr></thead>
+          <tbody>
+            <tr><td style="font-size:12px;color:var(--text-tertiary)">04/02 14:22</td><td><b>张三</b></td><td><span class="tag tag-blue">创建</span></td><td>企业</td><td>创建了企业 "壹"</td><td>192.168.1.1</td></tr>
+            <tr><td style="font-size:12px;color:var(--text-tertiary)">04/02 10:15</td><td><b>李四</b></td><td><span class="tag tag-green">更新</span></td><td>项目</td><td>更新了项目 "移动端App" 状态</td><td>192.168.1.2</td></tr>
+            <tr><td style="font-size:12px;color:var(--text-tertiary)">04/01 16:30</td><td><b>张三</b></td><td><span class="tag tag-amber">删除</span></td><td>任务</td><td>删除了任务 "旧版接口"</td><td>192.168.1.1</td></tr>
+            <tr><td style="font-size:12px;color:var(--text-tertiary)">04/01 09:00</td><td><b>系统</b></td><td><span class="tag tag-purple">系统</span></td><td>认证</td><td>JWT令牌刷新配置更新</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination"><div class="pg-btn">‹</div><div class="pg-btn active">1</div><div class="pg-btn">2</div><div class="pg-btn">…</div><div class="pg-btn">12</div><div class="pg-btn">›</div></div>
+    </div>
+
+    <!-- ==================== 合作方管理 ==================== -->
+    <div class="page" id="page-partners">
+      <div class="pg-head"><div><h1>合作方管理</h1><p>管理外部合作伙伴与应用</p></div><button class="btn btn-primary">+ 添加合作方</button></div>
+      <div class="grid3">
+        <div class="proj-card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <div style="width:42px;height:42px;border-radius:12px;background:var(--brand-grad);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px">A</div>
+            <div><div class="proj-name" style="margin:0">Alpha科技</div><div style="font-size:12px;color:var(--text-tertiary)">技术合作伙伴</div></div>
+          </div>
+          <div style="font-size:12.5px;color:var(--text-secondary);margin-bottom:8px">提供云计算基础设施与API集成服务</div>
+          <div style="display:flex;gap:5px"><span class="tag tag-blue">API</span><span class="tag tag-green">活跃</span></div>
+        </div>
+        <div class="proj-card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <div style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--green),#059669);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px">B</div>
+            <div><div class="proj-name" style="margin:0">Beta设计</div><div style="font-size:12px;color:var(--text-tertiary)">设计合作伙伴</div></div>
+          </div>
+          <div style="font-size:12.5px;color:var(--text-secondary);margin-bottom:8px">UI/UX设计与品牌咨询</div>
+          <div style="display:flex;gap:5px"><span class="tag tag-purple">设计</span><span class="tag tag-green">活跃</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 系统配置 ==================== -->
+    <div class="page" id="page-settings">
+      <div class="pg-head"><div><h1>系统配置</h1><p>平台全局设置与配置</p></div></div>
+      <div class="settings-layout">
+        <div class="settings-nav">
+          <div class="settings-nav-item active">基本设置</div>
+          <div class="settings-nav-item">安全设置</div>
+          <div class="settings-nav-item">通知设置</div>
+          <div class="settings-nav-item">集成配置</div>
+          <div class="settings-nav-item">数据管理</div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-hd">基本设置</div>
+            <div class="form-group"><label class="form-label">平台名称</label><input class="form-input" value="DuiJie 协作平台"></div>
+            <div class="form-group"><label class="form-label">平台描述</label><input class="form-input" value="企业级项目管理与客户关系管理平台"></div>
+            <div class="form-group"><label class="form-label">默认语言</label><input class="form-input" value="简体中文"></div>
+            <div class="form-group"><label class="form-label">时区</label><input class="form-input" value="Asia/Shanghai (UTC+8)"></div>
+            <div style="margin-top:16px"><button class="btn btn-primary">保存设置</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 个人设置 ==================== -->
+    <div class="page" id="page-user-settings">
+      <div class="pg-head"><div><h1>个人设置</h1><p>管理您的个人信息与偏好</p></div></div>
+      <div class="settings-layout">
+        <div class="settings-nav">
+          <div class="settings-nav-item active">个人信息</div>
+          <div class="settings-nav-item">安全设置</div>
+          <div class="settings-nav-item">通知偏好</div>
+          <div class="settings-nav-item">外观</div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-hd">个人信息</div>
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+              <div style="width:64px;height:64px;border-radius:16px;background:var(--brand-grad);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:24px">张</div>
+              <div><button class="btn-sm">📷 更换头像</button></div>
+            </div>
+            <div class="form-group"><label class="form-label">昵称</label><input class="form-input" value="张三"></div>
+            <div class="form-group"><label class="form-label">手机号</label><input class="form-input" value="159****3579" disabled style="opacity:0.6"></div>
+            <div class="form-group"><label class="form-label">邮箱</label><input class="form-input" value="zhangsan@example.com"></div>
+            <div style="margin-top:16px"><button class="btn btn-primary">保存修改</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 登录 ==================== -->
+    <div class="page" id="page-login">
+      <div class="auth-bg">
+        <div class="auth-box">
+          <div class="auth-logo"><span>DuiJie</span></div>
+          <div class="auth-title">欢迎回来</div>
+          <div class="auth-sub">登录您的账户继续工作</div>
+          <div class="form-group"><label class="form-label">手机号</label><input class="form-input" placeholder="请输入手机号"></div>
+          <div class="form-group"><label class="form-label">验证码</label>
+            <div style="display:flex;gap:8px"><input class="form-input" placeholder="输入验证码" style="flex:1"><button class="btn btn-outline" style="white-space:nowrap">获取验证码</button></div>
+          </div>
+          <button class="btn-full" style="margin-top:8px">登 录</button>
+          <div class="auth-link">还没有账户？立即注册</div>
+          <div class="auth-link" style="margin-top:4px;color:var(--text-tertiary)">忘记密码？</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 注册 ==================== -->
+    <div class="page" id="page-register">
+      <div class="auth-bg">
+        <div class="auth-box">
+          <div class="auth-logo"><span>DuiJie</span></div>
+          <div class="auth-title">创建账户</div>
+          <div class="auth-sub">加入 DuiJie 开启高效协作</div>
+          <div class="form-group"><label class="form-label">手机号</label><input class="form-input" placeholder="请输入手机号"></div>
+          <div class="form-group"><label class="form-label">验证码</label>
+            <div style="display:flex;gap:8px"><input class="form-input" placeholder="输入验证码" style="flex:1"><button class="btn btn-outline" style="white-space:nowrap">发送验证码</button></div>
+          </div>
+          <div class="form-group"><label class="form-label">密码</label><input class="form-input" type="password" placeholder="设置密码（至少6位）"></div>
+          <div class="form-group"><label class="form-label">企业推荐码 (可选)</label><input class="form-input" placeholder="输入推荐码自动加入企业"></div>
+          <button class="btn-full" style="margin-top:8px">注 册</button>
+          <div class="auth-link">已有账户？立即登录</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 忘记密码 ==================== -->
+    <div class="page" id="page-forgot">
+      <div class="auth-bg">
+        <div class="auth-box">
+          <div class="auth-logo"><span>DuiJie</span></div>
+          <div class="auth-title">重置密码</div>
+          <div class="auth-sub">输入手机号找回您的账户</div>
+          <div class="form-group"><label class="form-label">手机号</label><input class="form-input" placeholder="请输入注册手机号"></div>
+          <div class="form-group"><label class="form-label">验证码</label>
+            <div style="display:flex;gap:8px"><input class="form-input" placeholder="输入验证码" style="flex:1"><button class="btn btn-outline" style="white-space:nowrap">发送验证码</button></div>
+          </div>
+          <div class="form-group"><label class="form-label">新密码</label><input class="form-input" type="password" placeholder="设置新密码"></div>
+          <button class="btn-full" style="margin-top:8px">重 置 密 码</button>
+          <div class="auth-link">返回登录</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== 弹窗集合 ==================== -->
+    <div class="page" id="page-modals">
+      <div class="pg-head"><div><h1>弹窗 / 模态框集合</h1><p>所有交互弹窗的设计预览</p></div></div>
+
+      <!-- 创建项目弹窗 -->
+      <div class="modal-overlay">
+        <div class="modal-box" style="width:460px">
+          <div class="modal-title">新建项目 <span class="modal-close">✕</span></div>
+          <div class="form-group"><label class="form-label">项目名称</label><input class="form-input" placeholder="输入项目名称"></div>
+          <div class="form-group"><label class="form-label">项目描述</label><textarea class="form-input" style="height:80px;resize:vertical" placeholder="简要描述项目内容"></textarea></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="form-group"><label class="form-label">开始日期</label><input class="form-input" type="date"></div>
+            <div class="form-group"><label class="form-label">截止日期</label><input class="form-input" type="date"></div>
+          </div>
+          <div class="form-group"><label class="form-label">负责人</label><input class="form-input" placeholder="选择负责人..."></div>
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px"><button class="btn btn-outline">取消</button><button class="btn btn-primary">创建项目</button></div>
+        </div>
+      </div>
+
+      <!-- 创建任务弹窗 -->
+      <div class="modal-overlay">
+        <div class="modal-box" style="width:460px">
+          <div class="modal-title">新建任务 <span class="modal-close">✕</span></div>
+          <div class="form-group"><label class="form-label">任务名称</label><input class="form-input" placeholder="输入任务名称"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="form-group"><label class="form-label">所属项目</label><input class="form-input" placeholder="选择项目..."></div>
+            <div class="form-group"><label class="form-label">优先级</label><input class="form-input" placeholder="高 / 中 / 低"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="form-group"><label class="form-label">指派给</label><input class="form-input" placeholder="选择成员..."></div>
+            <div class="form-group"><label class="form-label">截止日期</label><input class="form-input" type="date"></div>
+          </div>
+          <div class="form-group"><label class="form-label">描述</label><textarea class="form-input" style="height:60px;resize:vertical" placeholder="任务描述..."></textarea></div>
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px"><button class="btn btn-outline">取消</button><button class="btn btn-primary">创建任务</button></div>
+        </div>
+      </div>
+
+      <!-- 创建客户弹窗 -->
+      <div class="modal-overlay">
+        <div class="modal-box" style="width:460px">
+          <div class="modal-title">新建客户 <span class="modal-close">✕</span></div>
+          <div class="form-group"><label class="form-label">客户名称</label><input class="form-input" placeholder="输入客户名称"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="form-group"><label class="form-label">客户类型</label><input class="form-input" placeholder="企业 / 个人"></div>
+            <div class="form-group"><label class="form-label">行业</label><input class="form-input" placeholder="选择行业..."></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="form-group"><label class="form-label">联系电话</label><input class="form-input" placeholder="手机号"></div>
+            <div class="form-group"><label class="form-label">邮箱</label><input class="form-input" placeholder="邮箱地址"></div>
+          </div>
+          <div class="form-group"><label class="form-label">地址</label><input class="form-input" placeholder="详细地址"></div>
+          <div class="form-group"><label class="form-label">备注</label><textarea class="form-input" style="height:50px;resize:vertical" placeholder="备注信息..."></textarea></div>
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px"><button class="btn btn-outline">取消</button><button class="btn btn-primary">创建客户</button></div>
+        </div>
+      </div>
+
+      <!-- 个人信息编辑弹窗 -->
+      <div class="modal-overlay">
+        <div class="modal-box">
+          <div class="modal-title">编辑个人信息 <span class="modal-close">✕</span></div>
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+            <div style="width:56px;height:56px;border-radius:14px;background:var(--brand-grad);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:20px">张</div>
+            <button class="btn-sm">📷 更换</button>
+          </div>
+          <div class="form-group"><label class="form-label">昵称</label><input class="form-input" value="张三"></div>
+          <div class="form-group"><label class="form-label">邮箱</label><input class="form-input" value="zhangsan@example.com"></div>
+          <div class="form-group"><label class="form-label">个性签名</label><input class="form-input" placeholder="一句话介绍自己"></div>
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px"><button class="btn btn-outline">取消</button><button class="btn btn-primary">保存</button></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function go(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.side-item').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.pn-btn').forEach(b => b.classList.remove('active'));
+  const page = document.getElementById('page-' + name);
+  if (page) page.classList.add('active');
+  const nav = document.getElementById('nav-' + name);
+  if (nav) nav.classList.add('active');
+  // highlight top btn
+  event.target.classList.add('active');
+  // hide sidebar for auth pages
+  const sb = document.getElementById('sidebar-area');
+  const ml = document.querySelector('.main');
+  if (['login','register','forgot'].includes(name)) {
+    sb.style.display = 'none';
+    ml.style.marginLeft = '0';
+  } else {
+    sb.style.display = '';
+    ml.style.marginLeft = '';
+  }
+}
+</script>
+</body>
+</html>

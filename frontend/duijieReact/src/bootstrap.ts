@@ -25,6 +25,34 @@ const HTTP_STATUS_MSG: Record<number, string> = {
   504: '网关超时，请稍后重试',
 }
 
+// Token 刷新状态管理（防止并发刷新）
+let refreshPromise: Promise<boolean> | null = null
+
+async function tryRefreshToken(): Promise<boolean> {
+  if (refreshPromise) return refreshPromise
+  refreshPromise = (async () => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      if (!res.ok) return false
+      const data = await res.json()
+      if (data.success && data.token) {
+        setToken(data.token)
+        return true
+      }
+      return false
+    } catch {
+      return false
+    } finally {
+      refreshPromise = null
+    }
+  })()
+  return refreshPromise
+}
+
 async function parseApiResponse(res: Response) {
   const contentType = res.headers.get('content-type') || ''
   if (!contentType.includes('application/json')) {
@@ -45,6 +73,18 @@ export async function fetchApi(path: string, options?: RequestInit) {
     headers: { 'Content-Type': 'application/json', ...authHeaders(), ...options?.headers },
     ...options,
   })
+  // 401 时自动尝试刷新 token 并重试一次
+  if (res.status === 401 && !path.includes('/auth/refresh') && !path.includes('/auth/login')) {
+    const refreshed = await tryRefreshToken()
+    if (refreshed) {
+      const retryRes = await fetch(`${BACKEND_URL}${path}`, {
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...authHeaders(), ...options?.headers },
+        ...options,
+      })
+      return parseApiResponse(retryRes)
+    }
+  }
   return parseApiResponse(res)
 }
 

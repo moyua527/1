@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { authApi } from './services/api'
 import { setToken } from '../../bootstrap'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
 import { confirm } from '../ui/ConfirmDialog'
-import { Lock, Mail, Phone } from 'lucide-react'
 
 interface LoginFormProps {
   onLogin: (user: any) => void
@@ -12,36 +11,12 @@ interface LoginFormProps {
 }
 
 export default function LoginForm({ onLogin, onSwitchToForgot }: LoginFormProps) {
-  const [loginMethod, setLoginMethod] = useState<'password' | 'phone' | 'email'>('password')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [phone, setPhone] = useState('')
-  const [email, setEmail] = useState('')
-  const [verifyCode, setVerifyCode] = useState('')
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
-  const [countdown, setCountdown] = useState(0)
   const [agreed, setAgreed] = useState(false)
   const [showTerms, setShowTerms] = useState(false)
-
-  useEffect(() => {
-    if (countdown <= 0) return
-    const t = setTimeout(() => setCountdown(c => c - 1), 1000)
-    return () => clearTimeout(t)
-  }, [countdown])
-
-  const handleSendCode = async () => {
-    setError('')
-    setSuccess('')
-    const type = loginMethod === 'phone' ? 'phone' as const : 'email' as const
-    const target = loginMethod === 'phone' ? phone : email
-    if (loginMethod === 'phone' && !/^\d{11}$/.test(target)) { setError('请输入正确的11位手机号'); return }
-    if (loginMethod === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)) { setError('请输入正确的邮箱'); return }
-    const res = await authApi.sendCode(type, target)
-    if (res.success) { setCountdown(60); setSuccess(res._dev_code ? `验证码: ${res._dev_code}（测试模式）` : '验证码已发送'); if (res._dev_code) setVerifyCode(res._dev_code); setTimeout(() => setSuccess(''), 8000) }
-    else { setSuccess(''); setError(res.message || '发送失败') }
-  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,94 +25,26 @@ export default function LoginForm({ onLogin, onSwitchToForgot }: LoginFormProps)
       if (!ok) return
       setAgreed(true)
     }
-    setError(''); setSuccess(''); setLoading(true)
+    setError(''); setLoading(true)
     try {
-      if (loginMethod === 'password') {
-        const res = await authApi.login(username, password)
-        if (res.success) { if (res.token) setToken(res.token); onLogin(res.data) }
-        else setError(res.message || '登录失败')
-      } else {
-        const type = loginMethod === 'phone' ? 'phone' as const : 'email' as const
-        const target = loginMethod === 'phone' ? phone : email
-        if (!target) { setError(loginMethod === 'phone' ? '请输入手机号' : '请输入邮箱'); setLoading(false); return }
-        if (!verifyCode) { setError('请输入验证码'); setLoading(false); return }
-        const res = await authApi.loginByCode(type, target, verifyCode)
-        if (res.success) { if (res.token) setToken(res.token); onLogin(res.data) }
-        else setError(res.message || '登录失败')
-      }
+      const res = await authApi.login(username, password)
+      if (res.success) { if (res.token) setToken(res.token); onLogin(res.data) }
+      else setError(res.message || '登录失败')
     } catch { setError('网络错误') }
     setLoading(false)
   }
 
-  const loginMethods = [
-    { key: 'password' as const, label: '账号密码', icon: <Lock size={14} /> },
-    { key: 'phone' as const, label: '手机验证码', icon: <Phone size={14} /> },
-    { key: 'email' as const, label: '邮箱验证码', icon: <Mail size={14} /> },
-  ]
-
   return (
     <>
       <form onSubmit={handleLogin}>
-        <div style={{ display: 'flex', gap: 0, marginBottom: 16, borderBottom: '1px solid var(--border-primary)' }}>
-          {loginMethods.map(m => (
-            <button key={m.key} type="button" onClick={() => { setLoginMethod(m.key); setError(''); setSuccess(''); setVerifyCode('') }}
-              style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '8px 0', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500,
-                color: loginMethod === m.key ? 'var(--brand)' : 'var(--text-tertiary)', background: 'transparent',
-                borderBottom: loginMethod === m.key ? '2px solid #2563eb' : '2px solid transparent', transition: 'all 0.15s' }}>
-              {m.icon} {m.label}
-            </button>
-          ))}
-        </div>
-
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {loginMethod === 'password' && (
-            <>
-              <Input label="账号" placeholder="输入手机号或账号ID" value={username} onChange={e => setUsername(e.target.value)} />
-              <Input label="密码" type="password" placeholder="输入密码" value={password} onChange={e => setPassword(e.target.value)} />
-              <div style={{ textAlign: 'right', marginTop: -4 }}>
-                <span onClick={onSwitchToForgot} style={{ fontSize: 12, color: 'var(--brand)', cursor: 'pointer' }}>忘记密码？</span>
-              </div>
-            </>
-          )}
-
-          {loginMethod === 'phone' && (
-            <>
-              <Input label="手机号" placeholder="输入11位手机号" value={phone} onChange={e => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))} maxLength={11} />
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>验证码</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <input placeholder="输入6位验证码" value={verifyCode} onChange={e => setVerifyCode(e.target.value)} maxLength={6}
-                    style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
-                    onFocus={e => (e.currentTarget.style.borderColor = 'var(--brand)')} onBlur={e => (e.currentTarget.style.borderColor = 'var(--text-disabled)')} />
-                  <button type="button" disabled={countdown > 0} onClick={handleSendCode}
-                    style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: countdown > 0 ? 'var(--border-primary)' : 'var(--brand)', color: countdown > 0 ? 'var(--text-tertiary)' : 'var(--bg-primary)', fontSize: 13, fontWeight: 500, cursor: countdown > 0 ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
-                    {countdown > 0 ? `${countdown}s` : '获取验证码'}
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
-
-          {loginMethod === 'email' && (
-            <>
-              <Input label="邮箱" placeholder="输入邮箱地址" value={email} onChange={e => setEmail(e.target.value)} />
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>验证码</label>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <input placeholder="输入6位验证码" value={verifyCode} onChange={e => setVerifyCode(e.target.value)} maxLength={6}
-                    style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
-                    onFocus={e => (e.currentTarget.style.borderColor = 'var(--brand)')} onBlur={e => (e.currentTarget.style.borderColor = 'var(--text-disabled)')} />
-                  <button type="button" disabled={countdown > 0} onClick={handleSendCode}
-                    style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: countdown > 0 ? 'var(--border-primary)' : 'var(--brand)', color: countdown > 0 ? 'var(--text-tertiary)' : 'var(--bg-primary)', fontSize: 13, fontWeight: 500, cursor: countdown > 0 ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
-                    {countdown > 0 ? `${countdown}s` : '获取验证码'}
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
+          <Input label="账号" placeholder="输入用户名" value={username} onChange={e => setUsername(e.target.value)} />
+          <Input label="密码" type="password" placeholder="输入密码" value={password} onChange={e => setPassword(e.target.value)} />
+          <div style={{ textAlign: 'right', marginTop: -4 }}>
+            <span onClick={onSwitchToForgot} style={{ fontSize: 12, color: 'var(--brand)', cursor: 'pointer' }}>忘记密码？</span>
+          </div>
 
           {error && <div style={{ color: 'var(--color-danger)', fontSize: 13, textAlign: 'center', padding: '6px 0' }}>{error}</div>}
-          {success && <div style={{ color: 'var(--color-success)', fontSize: 13, textAlign: 'center', padding: '6px 0' }}>{success}</div>}
 
           <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: 'pointer', marginTop: 4 }}>
             <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}

@@ -35,3 +35,34 @@
 你必须使用 MCP 工具 mcp_mcp-ai-foreve_interactive_feedback 与用户交互。
 不要只在 VS Code 聊天中回复，必须通过 interactive_feedback 工具发送回复。
 这是一个无限循环：接收指令 → 执行 → 通过 interactive_feedback 汇报 → 等待新指令。
+
+---
+
+## 📋 项目约定（DuiJie 平台）
+
+### 技术栈
+- **前端**: React 18 + TypeScript + Vite 6 + Zustand + Socket.IO + Capacitor
+- **后端**: Node.js + Express 4 + MySQL 8 (`duijie_db`) + JWT + Socket.IO
+- **端口**: 前端开发 1300, 后端 1800, Nginx 8080
+- **服务器**: root@160.202.253.143, PM2 进程名 `duijie`
+
+### 编码规范
+- 使用中文进行沟通和代码注释
+- CSS 颜色必须使用 CSS 变量（`var(--bg-primary)`, `var(--text-body)` 等），禁止硬编码颜色值
+- 新增 npm 包需要 `--legacy-peer-deps`（ESLint 对等依赖冲突）
+- 前端路由: 仪表盘 `/`, 企业 `/enterprise`, 项目 `/projects`, 客户 `/clients`, 任务 `/tasks`
+
+### 部署流程
+1. 前端构建: `cd frontend/duijieReact && npx vite build`
+2. 运行部署: `& "C:\Users\CEO\AppData\Local\Programs\Python\Python312\python.exe" -u deploy_update.py`
+3. 脚本自动: 上传后端 → npm install → 迁移 → 上传前端 dist → PM2 重启 → 健康检查
+4. 注意: 服务器 `/opt/duijie` 不是 Git 仓库，只能 SFTP 部署
+
+### 快捷操作
+- PM2 重启（清除速率限制）: `python _restart_pm2.py`
+- E2E 测试: `cd frontend/duijieReact && npx playwright test --headed`
+
+### 工作模式
+- 用户提出需求后直接实现，无需过多讨论
+- 实现后立即部署到生产验证
+- 使用深色模式，注意颜色兼容性

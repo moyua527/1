@@ -1,6 +1,6 @@
 {
-  "version": "1.1.55",
-  "versionCode": 55,
+  "version": "1.1.59",
+  "versionCode": 59,
   "minVersion": "1.0.0",
-  "changelog": "客户添加审批流程+搜索平台企业+企业管理客户请求Tab"
+  "changelog": "安全审计修复+WebSocket工程化+内存缓存+Nginx Gzip+PWA v5+代码分割+监控指标+GitHub Actions部署+请求ID跟踪+优雅关闭"
 }

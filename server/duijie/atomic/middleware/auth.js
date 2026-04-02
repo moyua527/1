@@ -2,19 +2,25 @@ const jwt = require('jsonwebtoken');
 const db = require('../../config/db');
 const logger = require('../../config/logger');
 const getJwtSecret = require('../repositories/auth/getJwtSecretRepo');
+const cache = require('../utils/memoryCache');
 
 async function getCurrentUser(userId) {
+  const cacheKey = `user:${userId}`;
+  const cached = cache.get(cacheKey);
+  if (cached) return cached;
   const [rows] = await db.query(
     'SELECT id, role, client_id, is_active, active_enterprise_id FROM voice_users WHERE id = ? AND is_deleted = 0 LIMIT 1',
     [userId]
   );
-  return rows[0] || null;
+  const user = rows[0] || null;
+  if (user) cache.set(cacheKey, user, 30000); // 30秒缓存
+  return user;
 }
 
 module.exports = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    const token = (authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null) || req.cookies?.token || req.query?.token;
+    const token = (authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null) || req.cookies?.token;
     if (!token) return res.status(401).json({ success: false, message: '未登录' });
     const secret = await getJwtSecret();
     const decoded = jwt.verify(token, secret);

@@ -1,6 +1,6 @@
 # DuiJie（对接）— 客户项目对接平台
 
-> 版本：v1.1.58 | 最后更新：2026-04-02
+> 版本：v1.1.59 | 最后更新：2026-04-02
 >
 > 线上地址：http://160.202.253.143:8080
 
@@ -27,7 +27,7 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | 进程管理 | PM2（生产环境） |
 | Web 服务器 | Nginx（反向代理） |
 | 容器化 | Docker + docker-compose |
-| CI/CD | GitHub Actions（APK 构建 + 后端测试） |
+| CI/CD | GitHub Actions（APK 构建 + 后端测试 + 生产部署） |
 
 ### 端口分配
 
@@ -270,7 +270,7 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 ### 3.16 PWA 离线支持
 
 - **Web App Manifest**：支持“添加到主屏幕”，standalone 模式运行，自定义图标和主题色
-- **Service Worker**：HTML导航 network-first（确保部署后立即生效）、哈希静态资源 cache-first、API/WebSocket 不缓存
+- **Service Worker v5**：HTML导航 network-first（确保部署后立即生效）、哈希静态资源 cache-first、API/WebSocket 不缓存、**缓存条目上限 100 条自动清理**
 - **离线降级**：网络不可用时从缓存加载页面，确保基本可用性
 - **自动更新**：新版本部署后自动清理旧缓存，`skipWaiting` + `clients.claim` 确保即时生效
 
@@ -407,16 +407,19 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 - **密码 bcrypt 哈希**：所有密码存储和验证均使用 bcrypt（兼容明文旧数据自动升级）
 - **TOTP 两步验证（2FA）**：支持用户在个人资料中生成验证器密钥、启用/关闭动态验证码校验；登录/验证码登录在密码或验证码校验成功后进入二次验证挑战流程
 - **登录暴力破解防护**：登录 15 分钟/10 次，注册 1 小时/5 次
-- **API 速率限制**：全局每 IP 每 15 分钟最多 300 次
+- **API 速率限制**：全局每 IP 每 15 分钟最多 600 次（MySQL 持久化存储，PM2 重启不丢失）
+- **端点级速率限制**：验证码发送 3 次/60秒（按手机号/邮箱）、找回密码 5 次/15分钟、重置密码 5 次/15分钟
 - **Helmet 安全响应头**：X-Content-Type-Options、X-Frame-Options、X-XSS-Protection
 - **CORS 白名单**：仅允许已知来源
 - **XSS 输入过滤**：所有 API 请求的 body/query 自动 sanitize
 - **Bot/爬虫检测**：封禁异常 User-Agent（scrapy/sqlmap/nikto 等）+ 攻击路径拦截
 - **错误信息脱敏**：生产环境不暴露内部错误详情
 - **SQL 参数化查询**：全部使用 `?` 占位符，防止 SQL 注入
-- **JWT 认证**：Bearer Token + HttpOnly Cookie 双模式
+- **JWT 认证**：Access Token（2小时）+ Refresh Token（30天，HttpOnly Cookie）双令牌模式，自动轮转，前端 401 自动刷新
 
 **Nginx 层防护：**
+- **Gzip 压缩**：level 6，覆盖 JS/CSS/JSON/SVG/XML，`gzip_vary` 启用
+- **Permissions-Policy 安全头**：禁用 camera/microphone/geolocation
 - **Nginx 限速**：API 每秒 10 次（burst 20），登录每秒 1 次（burst 3）
 - **连接数限制**：每 IP 最多 30 个并发连接
 - **隐藏服务器版本**：`server_tokens off`
@@ -426,6 +429,44 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 
 **服务器层防护：**
 - **fail2ban 自动封禁**：SSH 暴力破解（5次/10分钟→封 1小时）、Nginx 限速触发（10次/分钟→封 10分钟）、恶意爬虫（5次/分钟→封 24小时）
+
+### 3.29 可观测性与监控
+
+- **请求ID跟踪**：每个API请求自动生成 8 字节 hex Request ID，通过 `X-Request-Id` 响应头返回，日志格式 `POST /api/xxx 200 45ms [a1b2c3d4]`
+- **响应计时**：自动记录每个请求耗时，大于 2 秒标记为 warn 级别
+- **健康端点增强**：`GET /api/health` 返回数据库连接状态、进程内存（RSS/Heap）、运行时间、WebSocket 连接数/峰值连接数
+- **未捕获异常安全网**：`unhandledRejection` 记录日志但不退出、`uncaughtException` 记录日志后触发优雅关闭
+
+### 3.30 进程管理与优雅关闭
+
+- **优雅关闭**：收到 SIGTERM/SIGINT 信号后依次关闭 HTTP Server → Socket.IO → MySQL 连接池，10 秒强制退出
+- **PM2 进程管理**：`ecosystem.config.js` 配置内存限制、日志轮转、优雅关闭
+
+### 3.31 内存缓存系统
+
+- **工具类**：`atomic/utils/memoryCache.js`，Map + TTL 实现，全局单例，默认 60 秒 TTL
+- **功能**：get/set/del/invalidate（前缀批量删除）/clear，每分钟自动清理过期条目
+- **已应用**：auth 中间件用户查询缓存（30秒），profile/enterprise 写操作后自动失效
+
+### 3.32 WebSocket 工程化（Socket.IO）
+
+- **心跳配置**：`pingInterval: 25000`、`pingTimeout: 20000`、`maxHttpBufferSize: 1MB`
+- **连接级事件速率限制**：每连接每分钟最多 60 个事件，超出静默丢弃
+- **认证反馈**：`auth_ok` / `auth_error` 事件告知客户端认证结果
+- **权限控制**：未认证连接禁止 `join_project`
+- **连接监控**：实时连接计数 + 峰值连接数，通过 `/api/health` 暴露
+
+### 3.33 GitHub Actions 部署工作流
+
+- **文件**：`.github/workflows/deploy.yml`，手动触发（`workflow_dispatch`）
+- **流程**：Pre-deploy 测试（MySQL服务+迁移+npm test）→ 构建前端 → SFTP 上传后端/前端/Nginx → npm install → 迁移 → PM2 重启 → 健康检查
+- **跳过测试**：支持 `skip_tests` 输入参数直接部署
+- **所需 Secrets**：`SERVER_HOST`、`SERVER_USER`、`SERVER_PASSWORD`
+
+### 3.34 Vite 构建优化
+
+- **代码分割**：`manualChunks` 配置 `vendor-react`（React/ReactDOM/React Router，~166KB）和 `vendor-ui`（Zustand/Socket.IO Client，~42KB）独立 chunk
+- **缓存命中率**：vendor chunk 仅在依赖版本变化时失效，业务代码更新不影响 vendor 缓存
 
 ### 3.20 移动端适配
 
@@ -459,7 +500,8 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | GET | `/api/auth/register-config` | 注册配置（是否需要邀请码） | 公开 |
 | POST | `/api/auth/forgot-password` | 找回密码-发送验证码 | 公开 |
 | POST | `/api/auth/reset-password` | 找回密码-重置密码 | 公开 |
-| POST | `/api/auth/logout` | 登出 | 公开 |
+| POST | `/api/auth/logout` | 登出（清除所有refresh token） | 公开 |
+| POST | `/api/auth/refresh` | 刷新访问令牌（Refresh Token轮转） | 公开 |
 | GET | `/api/auth/me` | 当前用户信息 | 认证 |
 | PUT | `/api/auth/profile` | 更新个人资料 | 认证 |
 | PUT | `/api/auth/change-password` | 修改密码（需手机验证码） | 认证 |

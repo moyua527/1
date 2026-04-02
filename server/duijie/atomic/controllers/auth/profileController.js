@@ -1,5 +1,6 @@
 ﻿const db = require('../../../config/db');
 const bcrypt = require('bcryptjs');
+const cache = require('../../utils/memoryCache');
 
 module.exports = async (req, res) => {
   try {
@@ -13,6 +14,7 @@ module.exports = async (req, res) => {
     if (fields.length === 0) return res.status(400).json({ success: false, message: '无更新内容' });
     values.push(userId);
     await db.query(`UPDATE voice_users SET ${fields.join(', ')} WHERE id = ?`, values);
+    cache.del(`user:${userId}`);
     const [rows] = await db.query('SELECT id, username, nickname, email, phone, avatar, role, client_id, created_at FROM voice_users WHERE id = ?', [userId]);
     res.json({ success: true, data: rows[0] });
   } catch (e) {

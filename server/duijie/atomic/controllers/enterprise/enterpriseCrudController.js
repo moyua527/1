@@ -3,6 +3,7 @@ const { withTransaction } = require('../../utils/transaction');
 const { findMyEnterprises, findActiveEnterprise, isCreator, getEnterprisePerms, canManage, generateJoinCode } = require('./enterpriseHelpers');
 const { createDefaultRoles } = require('./enterpriseRoleController');
 const { auditLog } = require('../../utils/auditLog');
+const cache = require('../../utils/memoryCache');
 
 exports.getAll = async (req, res) => {
   try {
@@ -46,6 +47,7 @@ exports.create = async (req, res) => {
       [result.insertId, req.userId, u.nickname || u.username || '', u.phone || null, u.email || null, req.userId]
     );
     await db.query('UPDATE voice_users SET active_enterprise_id = ? WHERE id = ?', [result.insertId, req.userId]);
+    cache.del(`user:${req.userId}`);
     await createDefaultRoles(result.insertId, req.userId);
     res.json({ success: true, data: { id: result.insertId } });
   } catch (e) {

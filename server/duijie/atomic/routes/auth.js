@@ -13,6 +13,7 @@ router.post('/auth/reset-password', require('../controllers/auth/resetPasswordCo
 router.post('/auth/register', V.register, validate, require('../controllers/auth/registerController'));
 router.get('/auth/register-config', require('../controllers/auth/registerConfigController'));
 router.post('/auth/logout', require('../controllers/auth/logoutController'));
+router.post('/auth/refresh', require('../controllers/auth/refreshController'));
 router.get('/auth/me', auth, require('../controllers/auth/meController'));
 router.put('/auth/profile', auth, V.profile, validate, require('../controllers/auth/profileController'));
 router.put('/auth/change-password', auth, require('../controllers/auth/changePasswordController'));

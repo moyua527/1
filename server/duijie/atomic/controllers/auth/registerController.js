@@ -7,32 +7,17 @@ const generateInviteCode = require('../../utils/generateInviteCode');
 
 module.exports = async (req, res) => {
   try {
-    const { email, phone, verify_code, invite_token } = req.body;
-    if (!email && !phone) return res.status(400).json({ success: false, message: '请提供手机号或邮箱' });
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ success: false, message: '邮箱格式无效' });
-    if (phone && !/^\d{11}$/.test(phone)) return res.status(400).json({ success: false, message: '手机号格式无效' });
-    if (!verify_code) return res.status(400).json({ success: false, message: '请输入验证码' });
+    const { username: rawUsername, password, nickname: rawNickname, invite_token } = req.body;
+    if (!rawUsername || !password) return res.status(400).json({ success: false, message: '请输入用户名和密码' });
+    const trimUser = rawUsername.trim();
+    if (trimUser.length < 2 || trimUser.length > 30) return res.status(400).json({ success: false, message: '用户名长度 2-30 位' });
+    if (password.length < 6) return res.status(400).json({ success: false, message: '密码至少6位' });
 
-    // 验证码校验
-    const vcType = phone ? 'phone' : 'email';
-    const vcTarget = phone || email;
-    const [vcRows] = await db.query(
-      'SELECT id FROM verification_codes WHERE type = ? AND target = ? AND code = ? AND expires_at > NOW() AND used = 0 ORDER BY created_at DESC LIMIT 1',
-      [vcType, vcTarget, verify_code]
-    );
-    if (vcRows.length === 0) return res.status(400).json({ success: false, message: '验证码无效或已过期' });
+    // 检查用户名是否已存在
+    const [existing] = await db.query('SELECT id FROM voice_users WHERE username = ? AND is_deleted = 0', [trimUser]);
+    if (existing.length > 0) return res.status(400).json({ success: false, message: '该用户名已被注册' });
 
-    // 检查是否已注册
-    const checkField = phone ? 'phone' : 'email';
-    const checkValue = phone || email;
-    const [existing] = await db.query(`SELECT id FROM voice_users WHERE ${checkField} = ? AND is_deleted = 0`, [checkValue]);
-    if (existing.length > 0) return res.status(400).json({ success: false, message: phone ? '该手机号已注册' : '该邮箱已注册' });
-
-    // 自动生成用户信息
-    const username = phone || email.split('@')[0] + '_' + Date.now().toString(36);
-    const nickname = phone ? '用户' + phone.slice(-4) : email.split('@')[0];
-    // 生成随机密码，强制用户通过验证码登录或在设置中修改密码
-    const randomPwd = require('crypto').randomBytes(24).toString('base64url');
+    const nickname = (rawNickname || trimUser).slice(0, 50);
     const displayId = await generateDisplayId('000000', 0);
     const personalCode = await generateInviteCode();
 
@@ -51,11 +36,11 @@ module.exports = async (req, res) => {
       }
     }
 
+    const hashedPwd = await bcrypt.hash(password, 10);
     const newUserId = await withTransaction(async (conn) => {
-      await conn.query('UPDATE verification_codes SET used = 1 WHERE id = ?', [vcRows[0].id]);
       const [result] = await conn.query(
-        'INSERT INTO voice_users (username, password, nickname, email, phone, role, display_id, personal_invite_code, invited_by, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [username, await bcrypt.hash(randomPwd, 10), nickname, email || null, phone || null, assignedRole, displayId, personalCode, inviterId, isActive]
+        'INSERT INTO voice_users (username, password, nickname, role, display_id, personal_invite_code, invited_by, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [trimUser, hashedPwd, nickname, assignedRole, displayId, personalCode, inviterId, isActive]
       );
       if (invite_token) {
         await conn.query('UPDATE duijie_invite_links SET used_by = ? WHERE token = ? AND used_by IS NULL', [result.insertId, invite_token.trim()]);
@@ -76,7 +61,7 @@ module.exports = async (req, res) => {
       success: true,
       message: '注册成功！',
       token,
-      data: { id: newUserId, display_id: displayId, username, nickname, role: assignedRole }
+      data: { id: newUserId, display_id: displayId, username: trimUser, nickname, role: assignedRole }
     });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });

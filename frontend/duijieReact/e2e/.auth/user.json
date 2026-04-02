@@ -1,0 +1,35 @@
+{
+  "cookies": [
+    {
+      "name": "csrf_token",
+      "value": "67a326a03cbf1265338329a3a1d1b5574107f99af38413353ef18ded1f862cd5",
+      "domain": "160.202.253.143",
+      "path": "/",
+      "expires": 1775205427.398502,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Strict"
+    },
+    {
+      "name": "token",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwLCJyb2xlIjoibWVtYmVyIiwiY2xpZW50SWQiOm51bGwsImlhdCI6MTc3NTExOTAyNywiZXhwIjoxNzc1NzIzODI3fQ.03IifUuoRs_XVfReGfloi7fkF8qcG_T_bGw7oSJliX8",
+      "domain": "160.202.253.143",
+      "path": "/",
+      "expires": 1775723828.001428,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://160.202.253.143:8080",
+      "localStorage": [
+        {
+          "name": "cached_user",
+          "value": "{\"id\":10,\"username\":\"15911111111\",\"nickname\":\"迪迦\",\"avatar\":null,\"role\":\"member\",\"client_id\":null}"
+        }
+      ]
+    }
+  ]
+}
