@@ -280,8 +280,8 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
   }
 
   return (
-    <>
-      <div style={section}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <div style={{ ...section, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, marginBottom: 0, overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>任务列表</h3>
           {canEdit && <div ref={dropdownRef} style={{ position: 'relative' }}>
@@ -320,10 +320,11 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
         </div>
 
         {/* 工作流说明 */}
-        <div style={{ fontSize: 11, color: 'var(--text-disabled)', marginBottom: 10, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 11, color: 'var(--text-disabled)', marginBottom: 10, lineHeight: 1.5, flexShrink: 0 }}>
           流程: 已提出 → 负责人接受/提疑问 → 执行中 → 待验收 → 通过/驳回
         </div>
 
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
         {(() => {
           const filtered = statusFilter ? tasks.filter(t => t.status === statusFilter) : tasks
           return filtered.length === 0 ? <div style={{ color: 'var(--text-tertiary)', fontSize: 14 }}>暂无任务</div> : (
@@ -355,7 +356,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                       <div style={{ display: 'flex', gap: 12, marginTop: 2, flexWrap: 'wrap' }}>
                         {t.created_at && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>创建: {formatDateTime(t.created_at)}</span>}
                         {t.due_date && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>截止: {t.due_date}</span>}
-                        {t.assignee_name && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>负责人: {t.assignee_name}</span>}
+                        {(t.assignee_name || t.assigned_name) && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>负责人: {t.assignee_name || t.assigned_name}</span>}
                         {t.creator_name && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>创建者: {t.creator_name}</span>}
                       </div>
                       {t.attachments && t.attachments.length > 0 && (
@@ -428,6 +429,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
           </div>
         )
         })()}
+        </div>
       </div>
 
       {/* 审核要点模态框 */}
@@ -528,7 +530,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                   <Image size={14} /> 图片
                 </button>
                 <span style={{ flex: 1 }} />
-                <span style={{ fontSize: 11, color: 'var(--text-disabled)' }}>支持拖拽 / Ctrl+V 粘贴</span>@@
+                <span style={{ fontSize: 11, color: 'var(--text-disabled)' }}>支持拖拽 / Ctrl+V 粘贴</span>
               </div>
             </div>
           </div>
@@ -557,11 +559,11 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
       <Modal open={showDeleteTask} onClose={() => setShowDeleteTask(false)} title="删除任务" width={560}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {tasks.length === 0 ? <div style={{ color: 'var(--text-tertiary)', fontSize: 14, textAlign: 'center', padding: 20 }}>暂无任务</div> : (<>
-            <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>选择要移至回收站的任务：</div>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>选择要删除的任务（删除后可在回收站恢复）：</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 300, overflowY: 'auto' }}>
               {tasks.map((t: any) => (
-                <label key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: deleteSelected.has(t.id) ? '#fef2f2' : 'var(--bg-secondary)', borderRadius: 8, cursor: 'pointer', border: deleteSelected.has(t.id) ? '1px solid #fca5a5' : '1px solid transparent' }}>
-                  <input type="checkbox" checked={deleteSelected.has(t.id)} onChange={() => {
+                <label key={t.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px', background: deleteSelected.has(t.id) ? '#fef2f2' : 'var(--bg-secondary)', borderRadius: 8, cursor: 'pointer', border: deleteSelected.has(t.id) ? '1px solid #fca5a5' : '1px solid transparent' }}>
+                  <input type="checkbox" style={{ marginTop: 3 }} checked={deleteSelected.has(t.id)} onChange={() => {
                     setDeleteSelected(prev => {
                       const n = new Set(prev)
                       if (n.has(t.id)) n.delete(t.id)
@@ -569,9 +571,18 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                       return n
                     })
                   }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{t.title}</div>
-                    {t.due_date && <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>截止: {t.due_date}</div>}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)', wordBreak: 'break-word' }}>{t.title}</div>
+                      <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'monospace' }}>ID {t.id}</span>
+                    </div>
+                    {t.description && <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.description}</div>}
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 4 }}>
+                      {t.created_at && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>创建: {formatDateTime(t.created_at)}</span>}
+                      {t.due_date && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>截止: {t.due_date}</span>}
+                      {(t.assignee_name || t.assigned_name) && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>负责人: {t.assignee_name || t.assigned_name}</span>}
+                      {t.creator_name && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>创建者: {t.creator_name}</span>}
+                    </div>
                   </div>
                   <Badge color={(taskStatusMap[t.status] || taskStatusMap.submitted).color}>{(taskStatusMap[t.status] || taskStatusMap.submitted).label}</Badge>
                 </label>
@@ -584,12 +595,12 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                 <Button variant="danger" disabled={deleteSelected.size === 0 || submitting} onClick={async () => {
                   setSubmitting(true)
                   for (const tid of deleteSelected) await taskApi.remove(String(tid))
-                  toast(`已将 ${deleteSelected.size} 个任务移至回收站`, 'success')
+                  toast(`已删除 ${deleteSelected.size} 个任务`, 'success')
                   setShowDeleteTask(false)
                   setDeleteSelected(new Set())
                   loadTasks()
                   setSubmitting(false)
-                }}>{submitting ? '移动中...' : `移至回收站 (${deleteSelected.size})`}</Button>
+                }}>{submitting ? '删除中...' : `删除 (${deleteSelected.size})`}</Button>
               </div>
             </div>
           </>)}
@@ -637,6 +648,6 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
           <button onClick={() => setPreviewImg(null)} style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%', width: 36, height: 36, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 20 }}>✕</button>
         </div>
       )}
-    </>
+    </div>
   )
 }

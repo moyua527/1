@@ -308,7 +308,7 @@ export default function ProjectDetail() {
         ))}
       </div>
 
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingTop: 16 }}>
+      <div style={{ flex: 1, minHeight: 0, paddingTop: 16, ...(tab === 'tasks' ? { display: 'flex', flexDirection: 'column' as const, overflow: 'hidden' } : { overflowY: 'auto' as const }) }}>
       {tab === 'overview' && (<>
         <div style={section}>
           <div style={{ marginBottom: 16 }}>
