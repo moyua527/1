@@ -20,9 +20,10 @@ const NOTIF_ITEMS = [
 interface Props {
   tab: 'account' | 'appearance' | 'notification'
   onBack: () => void
+  isMobile?: boolean
 }
 
-export default function SettingsPanel({ tab, onBack }: Props) {
+export default function SettingsPanel({ tab, onBack, isMobile }: Props) {
   const { user, updateProfile } = useUserStore()
   const { mode, setMode } = useThemeStore()
   const { locale, setLocale } = useI18nStore()
@@ -64,10 +65,12 @@ export default function SettingsPanel({ tab, onBack }: Props) {
 
   return (
     <div style={{
-      width: 360, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)',
-      borderRadius: '12px 0 0 12px', boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+      width: isMobile ? '100%' : 360, background: 'var(--bg-primary)',
+      border: isMobile ? 'none' : '1px solid var(--border-primary)',
+      borderRadius: isMobile ? 0 : '12px 0 0 12px',
+      boxShadow: isMobile ? 'none' : '0 8px 24px rgba(0,0,0,0.12)',
       overflow: 'hidden', borderRight: 'none',
-      maxHeight: 'calc(100vh - 80px)', overflowY: 'auto',
+      maxHeight: isMobile ? '100%' : 'calc(100vh - 80px)', overflowY: 'auto',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', borderBottom: '1px solid var(--border-secondary)', cursor: 'pointer' }}
         onClick={() => { onBack(); setEditingProfile(false) }}>

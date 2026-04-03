@@ -7,11 +7,11 @@ module.exports = async (req, res) => {
     if (!project || !project.client_id) return res.json({ success: true, data: [] });
 
     const [rows] = await db.query(
-      `SELECT u.id, u.username, u.nickname, u.role, cm.name as member_name, cm.position
+      `SELECT u.id, u.username, u.nickname, u.role, cm.name as member_name, cm.position, cm.role as ent_role
        FROM duijie_client_members cm
        INNER JOIN voice_users u ON u.id = cm.user_id
        WHERE cm.client_id = ? AND cm.is_deleted = 0 AND u.is_deleted = 0
-       AND u.id NOT IN (SELECT user_id FROM duijie_project_members WHERE project_id = ?)
+       AND u.id NOT IN (SELECT user_id FROM duijie_project_members WHERE project_id = ? AND source = 'client')
        ORDER BY cm.name, u.nickname`,
       [project.client_id, id]
     );

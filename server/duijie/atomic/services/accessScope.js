@@ -204,18 +204,25 @@ async function getClientAccessStatus(userId, userRole, clientId) {
   if (!client) return 'missing';
   if (userRole === 'admin') return 'allowed';
 
-  // 企业范围隔离：客户必须与用户活跃企业有关联
+  // 企业范围隔离：客户必须与用户活跃企业有关联（项目关联或审批通过的客户请求）
   const activeEnterpriseId = await getUserActiveEnterpriseId(userId);
+  if (activeEnterpriseId && Number(clientId) === activeEnterpriseId) return 'allowed';
   if (activeEnterpriseId && Number(clientId) !== activeEnterpriseId) {
     const [[related]] = await db.query(
       `SELECT 1 FROM duijie_projects p
        WHERE p.is_deleted = 0
          AND (p.client_id = ? OR p.internal_client_id = ?)
          AND (p.internal_client_id = ? OR p.client_id = ?)
+       UNION
+       SELECT 1 FROM duijie_client_requests
+       WHERE status = 'approved'
+         AND ((from_enterprise_id = ? AND to_enterprise_id = ?) OR (from_enterprise_id = ? AND to_enterprise_id = ?))
        LIMIT 1`,
-      [clientId, clientId, activeEnterpriseId, activeEnterpriseId]
+      [clientId, clientId, activeEnterpriseId, activeEnterpriseId,
+       activeEnterpriseId, clientId, clientId, activeEnterpriseId]
     );
     if (!related) return 'forbidden';
+    return 'allowed';
   }
 
   const [[row]] = await db.query(

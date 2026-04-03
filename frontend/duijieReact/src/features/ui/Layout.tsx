@@ -121,13 +121,15 @@ export default function Layout() {
 
               {avatarMenuOpen && (
                 <div style={{
-                  position: 'absolute', top: 'calc(100% + 6px)', right: 0,
-                  display: 'flex', flexDirection: 'row', zIndex: 200,
+                  ...(isMobile && settingsTab
+                    ? { position: 'fixed' as const, top: 56, left: 0, right: 0, bottom: 0, zIndex: 200, background: 'var(--bg-primary)', overflow: 'auto' }
+                    : { position: 'absolute' as const, top: 'calc(100% + 6px)', right: 0, display: 'flex', flexDirection: 'row' as const, zIndex: 200 }
+                  ),
                 }}>
                   {settingsTab && (
-                    <SettingsPanel tab={settingsTab} onBack={() => setSettingsTab(null)} />
+                    <SettingsPanel tab={settingsTab} onBack={() => setSettingsTab(null)} isMobile={isMobile} />
                   )}
-                  <div style={{
+                  {!(isMobile && settingsTab) && <div style={{
                     width: 220, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)',
                     borderRadius: settingsTab ? '0 12px 12px 0' : 12,
                     boxShadow: '0 8px 24px rgba(0,0,0,0.12)', overflow: 'hidden',
@@ -180,7 +182,7 @@ export default function Layout() {
                         <LogOut size={15} /><span>退出登录</span>
                       </div>
                     </div>
-                  </div>
+                  </div>}
                 </div>
               )}
             </div>

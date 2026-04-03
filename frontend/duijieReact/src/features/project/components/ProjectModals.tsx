@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import { User, Mail, Shield, Building2, Phone, MapPin } from 'lucide-react'
+import { User, Mail, Shield, Building2, Phone, MapPin, Edit3, X as XIcon } from 'lucide-react'
+import useNicknameStore from '../../../stores/useNicknameStore'
+import useUserStore from '../../../stores/useUserStore'
 import Modal from '../../ui/Modal'
 import Avatar from '../../ui/Avatar'
 import Badge from '../../ui/Badge'
@@ -19,14 +21,16 @@ interface ManageMembersModalProps {
   members: any[]
   availableUsers: any[]
   enterpriseRoles?: any[]
+  projectRoles?: any[]
   onRefresh: () => void
   onRefreshAvailable: () => void
 }
 
-export function ManageMembersModal({ open, onClose, projectId, members, availableUsers, enterpriseRoles = [], onRefresh, onRefreshAvailable }: ManageMembersModalProps) {
+export function ManageMembersModal({ open, onClose, projectId, members, availableUsers, enterpriseRoles = [], projectRoles = [], onRefresh, onRefreshAvailable }: ManageMembersModalProps) {
+  const dn = useNicknameStore(s => s.getDisplayName)
   const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set())
   const [memberRole, setMemberRole] = useState('editor')
-  const [selectedEntRoleId, setSelectedEntRoleId] = useState<string>('')
+  const [selectedProjRoleId, setSelectedProjRoleId] = useState<string>('')
   const [memberSearch, setMemberSearch] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -39,21 +43,21 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {members.map((m: any) => (
                 <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--bg-secondary)', borderRadius: 8, border: '1px solid var(--border-primary)' }}>
-                  <Avatar name={m.nickname || m.username || '?'} size={28} />
+                  <Avatar name={dn(m.id, m.nickname || m.username || '?')} size={28} />
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{m.nickname || m.username}</div>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{dn(m.id, m.nickname || m.username)}</div>
                     <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{m.member_role === 'owner' ? '负责人' : m.member_role === 'editor' ? '编辑者' : '查看者'}</div>
                   </div>
-                  {m.member_role !== 'owner' && enterpriseRoles.length > 0 && (
-                    <select value={m.enterprise_role_id || ''}
+                  {m.member_role !== 'owner' && projectRoles.length > 0 && (
+                    <select value={m.project_role_id || ''}
                       onChange={async (e) => {
                         const rid = e.target.value ? Number(e.target.value) : null
-                        const r = await projectApi.updateMemberRole(projectId, String(m.pm_id), { enterprise_role_id: rid })
-                        if (r.success) { toast('角色已更新', 'success'); onRefresh() } else toast(r.message || '更新失败', 'error')
+                        const r = await projectApi.updateMemberRole(projectId, String(m.pm_id), { project_role_id: rid })
+                        if (r.success) { toast('项目角色已更新', 'success'); onRefresh() } else toast(r.message || '更新失败', 'error')
                       }}
                       style={{ padding: '3px 8px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 11, background: 'var(--bg-primary)', color: 'var(--text-body)', cursor: 'pointer' }}>
                       <option value="">无项目角色</option>
-                      {enterpriseRoles.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                      {projectRoles.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
                     </select>
                   )}
                   {m.member_role !== 'owner' && (
@@ -79,9 +83,9 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
                 onMouseEnter={e => { if (!checked) e.currentTarget.style.background = 'var(--bg-secondary)' }}
                 onMouseLeave={e => { if (!checked) e.currentTarget.style.background = 'transparent' }}>
                 <input type="checkbox" checked={checked} readOnly style={{ accentColor: 'var(--brand)', width: 16, height: 16, cursor: 'pointer' }} />
-                <Avatar name={u.nickname || u.username || '?'} size={28} />
+                <Avatar name={dn(u.id, u.nickname || u.username || '?')} size={28} />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{u.nickname || u.username}</div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{dn(u.id, u.nickname || u.username)}</div>
                   <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>@{u.username} · {sysRoleLabel[u.role] || u.role}</div>
                 </div>
               </div>
@@ -97,24 +101,26 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
               <option value="editor">编辑者</option>
               <option value="viewer">查看者</option>
             </select>
-            {enterpriseRoles.length > 0 && (
-              <select value={selectedEntRoleId} onChange={e => setSelectedEntRoleId(e.target.value)}
+            {projectRoles.length > 0 && (
+              <select value={selectedProjRoleId} onChange={e => setSelectedProjRoleId(e.target.value)}
                 style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
                 <option value="">无项目角色</option>
-                {enterpriseRoles.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                {projectRoles.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
               </select>
             )}
             {selectedUserIds.size > 0 && <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>已选 {selectedUserIds.size} 人</span>}
             <Button disabled={selectedUserIds.size === 0 || submitting} onClick={async () => {
               setSubmitting(true)
               let ok = 0
+              let lastErr = ''
               for (const uid of selectedUserIds) {
-                const r = await projectApi.addMember(projectId, { user_id: uid, role: memberRole, enterprise_role_id: selectedEntRoleId ? Number(selectedEntRoleId) : undefined })
+                const r = await projectApi.addMember(projectId, { user_id: uid, role: memberRole, project_role_id: selectedProjRoleId ? Number(selectedProjRoleId) : undefined })
                 if (r.success) ok++
+                else lastErr = r.message || '添加失败'
               }
               setSubmitting(false)
               if (ok > 0) { toast(`已添加 ${ok} 名成员`, 'success'); setSelectedUserIds(new Set()); onRefresh(); onRefreshAvailable() }
-              else toast('添加失败', 'error')
+              else toast(lastErr || '添加失败', 'error')
             }}>{submitting ? '添加中...' : `添加${selectedUserIds.size > 0 ? ` (${selectedUserIds.size})` : ''}`}</Button>
           </div>
         </div>
@@ -211,14 +217,39 @@ interface MemberInfoModalProps {
 }
 
 export function MemberInfoModal({ member, onClose }: MemberInfoModalProps) {
+  const currentUser = useUserStore(s => s.user)
+  const { getDisplayName, setNickname, removeNickname, map } = useNicknameStore()
+  const [editingNick, setEditingNick] = useState(false)
+  const [nickInput, setNickInput] = useState('')
+  const [nickSaving, setNickSaving] = useState(false)
+  const isSelf = member && currentUser && member.id === currentUser.id
+  const currentNick = member ? map[member.id] || '' : ''
+  const displayName = member ? getDisplayName(member.id, member.nickname || member.username) : ''
+
+  const handleSaveNick = async () => {
+    if (!member) return
+    setNickSaving(true)
+    if (nickInput.trim()) {
+      const ok = await setNickname(member.id, nickInput.trim())
+      if (ok) toast('备注名已设置', 'success')
+      else toast('设置失败', 'error')
+    } else {
+      const ok = await removeNickname(member.id)
+      if (ok) toast('备注名已清除', 'success')
+    }
+    setNickSaving(false)
+    setEditingNick(false)
+  }
+
   return (
-    <Modal open={!!member} onClose={onClose} title="成员信息">
+    <Modal open={!!member} onClose={() => { onClose(); setEditingNick(false) }} title="成员信息">
       {member && (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '8px 0' }}>
-          <Avatar name={member.nickname || member.username || '?'} size={64} />
+          <Avatar name={displayName} size={64} />
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-heading)' }}>{member.nickname || member.username}</div>
+            <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-heading)' }}>{displayName}</div>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>@{member.username}</div>
+            {currentNick && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>原名：{member.nickname || member.username}</div>}
           </div>
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12, background: 'var(--bg-secondary)', borderRadius: 10, padding: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -245,6 +276,30 @@ export function MemberInfoModal({ member, onClose }: MemberInfoModalProps) {
                 <Mail size={16} color="var(--text-secondary)" />
                 <span style={{ fontSize: 13, color: 'var(--text-secondary)', minWidth: 70 }}>昵称</span>
                 <span style={{ fontSize: 14, color: 'var(--text-heading)', fontWeight: 500 }}>{member.nickname}</span>
+              </div>
+            )}
+            {/* 备注名 */}
+            {!isSelf && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Edit3 size={16} color="var(--text-secondary)" />
+                <span style={{ fontSize: 13, color: 'var(--text-secondary)', minWidth: 70 }}>备注名</span>
+                {editingNick ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
+                    <input value={nickInput} onChange={e => setNickInput(e.target.value)} placeholder="输入备注名（留空则清除）"
+                      autoFocus onKeyDown={e => { if (e.key === 'Enter') handleSaveNick(); if (e.key === 'Escape') setEditingNick(false) }}
+                      style={{ flex: 1, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-body)' }} />
+                    <Button onClick={handleSaveNick} disabled={nickSaving} style={{ padding: '4px 10px', fontSize: 12 }}>{nickSaving ? '...' : '保存'}</Button>
+                    <button onClick={() => setEditingNick(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', display: 'flex', padding: 2 }}><XIcon size={14} /></button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
+                    <span style={{ fontSize: 14, color: currentNick ? 'var(--text-heading)' : 'var(--text-tertiary)', fontWeight: currentNick ? 500 : 400 }}>{currentNick || '未设置'}</span>
+                    <button onClick={() => { setNickInput(currentNick); setEditingNick(true) }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--brand)', fontSize: 12, fontWeight: 500, padding: '2px 6px' }}>
+                      {currentNick ? '修改' : '设置'}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

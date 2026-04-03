@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { Plus, FolderKanban, Loader2, Download, Search, Copy } from 'lucide-react'
+import { Plus, FolderKanban, Loader2, Download, Search, Copy, Trash2, RotateCcw } from 'lucide-react'
 import { projectApi } from './services/api'
 import { can } from '../../stores/permissions'
 import { useProjects, useInvalidate } from '../../hooks/useApi'
@@ -43,7 +43,7 @@ export default function ProjectList() {
   const { activeEnterpriseId } = useEnterpriseStore()
   const [showCreate, setShowCreate] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [form, setForm] = useState({ name: '', description: '', task_title_presets_text: '' })
+  const [form, setForm] = useState({ name: '', description: '', task_title_presets: [] as string[], newPreset: '' })
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [showJoin, setShowJoin] = useState(false)
@@ -52,6 +52,10 @@ export default function ProjectList() {
   const [joinSearching, setJoinSearching] = useState(false)
   const [joinSubmitting, setJoinSubmitting] = useState(false)
   const [joinMessage, setJoinMessage] = useState('')
+  const [showTrash, setShowTrash] = useState(false)
+  const [trashList, setTrashList] = useState<any[]>([])
+  const [trashLoading, setTrashLoading] = useState(false)
+  const [restoringId, setRestoringId] = useState<number | null>(null)
   const nav = useNavigate()
   const { user, isMobile } = useOutletContext<{ user: any; isMobile?: boolean }>()
   const canCreate = can(user?.role || '', 'project:create')
@@ -74,10 +78,9 @@ export default function ProjectList() {
   const handleCreate = async () => {
     if (!form.name.trim()) { toast('请输入项目名称', 'error'); return }
     setSubmitting(true)
-    const task_title_presets = form.task_title_presets_text.split(/\r?\n/).map(v => v.trim()).filter(Boolean)
-    const r = await projectApi.create({ name: form.name.trim(), description: form.description.trim(), task_title_presets })
+    const r = await projectApi.create({ name: form.name.trim(), description: form.description.trim(), task_title_presets: form.task_title_presets })
     setSubmitting(false)
-    if (r.success) { toast('项目创建成功', 'success'); setShowCreate(false); setForm({ name: '', description: '', task_title_presets_text: '' }); load() }
+    if (r.success) { toast('项目创建成功', 'success'); setShowCreate(false); setForm({ name: '', description: '', task_title_presets: [], newPreset: '' }); load() }
     else toast(r.message || '创建失败', 'error')
   }
 
@@ -106,6 +109,10 @@ export default function ProjectList() {
           <button onClick={() => { window.open('/api/projects/export', '_blank') }}
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500, cursor: 'pointer', width: isMobile ? '100%' : undefined }}>
             <Download size={14} /> 导出
+          </button>
+          <button onClick={async () => { setShowTrash(true); setTrashLoading(true); const r = await projectApi.trash(); setTrashLoading(false); if (r.success) setTrashList(r.data || []); else toast(r.message || '加载失败', 'error') }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500, cursor: 'pointer', width: isMobile ? '100%' : undefined }}>
+            <Trash2 size={14} /> 回收站
           </button>
           <button onClick={() => { setShowJoin(true); setJoinCode(''); setJoinResult(null); setJoinMessage('') }}
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid var(--brand)', background: 'var(--bg-selected)', color: 'var(--brand)', fontSize: 13, fontWeight: 600, cursor: 'pointer', width: isMobile ? '100%' : undefined }}>
@@ -183,8 +190,13 @@ export default function ProjectList() {
           </div>
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>固定功能名称</label>
-            <textarea value={form.task_title_presets_text} onChange={e => setForm({ ...form, task_title_presets_text: e.target.value })} rows={4} placeholder="每行一个功能名称，如：登录页\n订单管理\n用户中心"
-              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
+            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+              <input value={form.newPreset} onChange={e => setForm({ ...form, newPreset: e.target.value })} placeholder="输入功能名称" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); const v = form.newPreset.trim(); if (v && !form.task_title_presets.includes(v)) setForm(f => ({ ...f, task_title_presets: [...f.task_title_presets, v], newPreset: '' })) } }} style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', fontSize: 14 }} />
+              <Button variant="secondary" onClick={() => { const v = form.newPreset.trim(); if (v && !form.task_title_presets.includes(v)) setForm(f => ({ ...f, task_title_presets: [...f.task_title_presets, v], newPreset: '' })) }}>添加</Button>
+            </div>
+            {form.task_title_presets.length > 0 && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{form.task_title_presets.map((p, i) => (
+              <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 999, background: 'var(--bg-tertiary)', fontSize: 13, color: 'var(--text-body)' }}>{p}<button type="button" onClick={() => setForm(f => ({ ...f, task_title_presets: f.task_title_presets.filter((_, j) => j !== i) }))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text-tertiary)', fontSize: 14, lineHeight: 1 }} onMouseEnter={e => e.currentTarget.style.color = 'var(--color-danger)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}>×</button></span>
+            ))}</div>}
             <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>创建任务时可直接从这些固定功能名称中选择</div>
           </div>
           <p style={{ fontSize: 12, color: 'var(--text-tertiary)', margin: 0 }}>创建后可在项目详情中添加成员、关联应用等</p>
@@ -232,6 +244,41 @@ export default function ProjectList() {
           )}
 
           {!joinResult && <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: 0, textAlign: 'center' }}>输入项目ID后点击搜索，找到项目即可申请加入</p>}
+        </div>
+      </Modal>
+
+      {/* 项目回收站 */}
+      <Modal open={showTrash} onClose={() => setShowTrash(false)} title="项目回收站" width={560}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {trashLoading ? (
+            <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)' }}><Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} /></div>
+          ) : trashList.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 14 }}>回收站为空</div>
+          ) : (<>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>已删除的项目（点击恢复可还原）：</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 350, overflowY: 'auto' }}>
+              {trashList.map((p: any) => (
+                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: 'var(--bg-secondary)', borderRadius: 8, border: '1px solid transparent' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)', wordBreak: 'break-word' }}>{p.name}</div>
+                    {p.description && <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description}</div>}
+                    <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>ID {p.id}</div>
+                  </div>
+                  <button disabled={restoringId === p.id} onClick={async () => {
+                    setRestoringId(p.id)
+                    const r = await projectApi.restore(String(p.id))
+                    setRestoringId(null)
+                    if (r.success) { toast('项目已恢复', 'success'); setTrashList(prev => prev.filter(x => x.id !== p.id)); load() }
+                    else toast(r.message || '恢复失败', 'error')
+                  }} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 6, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', fontSize: 12, fontWeight: 500, cursor: 'pointer', flexShrink: 0 }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-tertiary)' }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-primary)' }}>
+                    <RotateCcw size={12} /> {restoringId === p.id ? '恢复中...' : '恢复'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>)}
         </div>
       </Modal>
     </div>

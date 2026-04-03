@@ -4,12 +4,14 @@ import { io, Socket } from 'socket.io-client'
 import { messageApi } from '../services/api'
 import Avatar from '../../ui/Avatar'
 import { isCapacitor, SERVER_URL } from '../../../utils/capacitor'
+import useNicknameStore from '../../../stores/useNicknameStore'
 
 const bubble: React.CSSProperties = { padding: '8px 12px', background: 'var(--bg-selected)', borderRadius: '12px 12px 12px 4px', maxWidth: '80%', fontSize: 14, color: 'var(--text-body)', lineHeight: 1.5 }
 
 interface Props { projectId: string }
 
 export default function MessagePanel({ projectId }: Props) {
+  const dn = useNicknameStore(s => s.getDisplayName)
   const [messages, setMessages] = useState<any[]>([])
   const [text, setText] = useState('')
   const [connected, setConnected] = useState(false)
@@ -115,9 +117,9 @@ export default function MessagePanel({ projectId }: Props) {
         {messages.length === 0 && !loadingMore && <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 13, padding: 20 }}>暂无消息</div>}
         {messages.map((m: any) => (
           <div key={m.id} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-            <Avatar name={m.sender_name || 'U'} size={28} />
+            <Avatar name={dn(m.sender_id, m.sender_name || 'U')} size={28} />
             <div>
-              <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 2 }}>{m.sender_name || '用户'} · {new Date(m.created_at).toLocaleString('zh-CN')}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 2 }}>{dn(m.sender_id, m.sender_name || '用户')} · {new Date(m.created_at).toLocaleString('zh-CN')}</div>
               <div style={bubble}>{m.content}</div>
             </div>
           </div>

@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { authApi } from '../features/auth/services/api'
 import { fetchApi, clearToken } from '../bootstrap'
 import useEnterpriseStore from './useEnterpriseStore'
+import useNicknameStore from './useNicknameStore'
 
 interface User {
   id: number
@@ -57,7 +58,7 @@ const useUserStore = create<UserState>((set, get) => ({
     writeCache(user)
     set({ user })
     if (user) {
-      setTimeout(() => useEnterpriseStore.getState().init(user.role), 0)
+      setTimeout(() => { useEnterpriseStore.getState().init(user.role); useNicknameStore.getState().init() }, 0)
     }
   },
 
@@ -68,6 +69,7 @@ const useUserStore = create<UserState>((set, get) => ({
       if (r.success) {
         writeCache(r.data)
         set({ user: r.data })
+        useNicknameStore.getState().init()
         if (r.data.role === 'admin') {
           set({ checking: false })
           useEnterpriseStore.getState().init(r.data.role)
@@ -111,6 +113,7 @@ const useUserStore = create<UserState>((set, get) => ({
     localStorage.removeItem('push_device_token')
     writeCache(null)
     useEnterpriseStore.getState().reset()
+    useNicknameStore.getState().reset()
     set({ user: null })
     window.location.href = '/'
   },

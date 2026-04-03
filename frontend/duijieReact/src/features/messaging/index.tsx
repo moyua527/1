@@ -6,6 +6,7 @@ import { onSocket } from '../ui/smartSocket'
 import Avatar from '../ui/Avatar'
 import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
+import useNicknameStore from '../../stores/useNicknameStore'
 
 const roleLabel: Record<string, string> = { admin: '管理员', member: '成员' }
 
@@ -48,6 +49,7 @@ export default function Messaging() {
   const selectedRef = useRef<any>(null)
   const pollRef = useRef<any>(null)
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
+  const dn = useNicknameStore(s => s.getDisplayName)
   const [me, setMe] = useState<any>(null)
 
   // 添加好友
@@ -227,9 +229,9 @@ export default function Messaging() {
             </div>
             {friendRequests.map(req => (
               <div key={req.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 14px', borderBottom: '1px solid var(--border-secondary)', background: 'var(--bg-secondary)' }}>
-                <Avatar name={req.nickname || req.username} size={32} />
+                <Avatar name={dn(req.user_id, req.nickname || req.username)} size={32} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-heading)' }}>{req.nickname || req.username}</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-heading)' }}>{dn(req.user_id, req.nickname || req.username)}</div>
                 </div>
                 <div style={{ display: 'flex', gap: 4 }}>
                   <button onClick={() => handleRespondRequest(req.id, 'accept')}
@@ -255,10 +257,10 @@ export default function Messaging() {
                   background: selectedUser?.id === c.id && !selectedGroup ? 'var(--bg-selected)' : 'transparent' }}
                 onMouseEnter={e => { if (selectedUser?.id !== c.id || selectedGroup) e.currentTarget.style.background = 'var(--bg-hover)' }}
                 onMouseLeave={e => { e.currentTarget.style.background = selectedUser?.id === c.id && !selectedGroup ? 'var(--bg-selected)' : 'transparent' }}>
-                <Avatar name={c.nickname || c.username} size={40} />
+                <Avatar name={dn(c.id, c.nickname || c.username)} size={40} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 14, fontWeight: c.unread_count > 0 ? 700 : 500, color: 'var(--text-heading)' }}>{c.nickname || c.username}</span>
+                    <span style={{ fontSize: 14, fontWeight: c.unread_count > 0 ? 700 : 500, color: 'var(--text-heading)' }}>{dn(c.id, c.nickname || c.username)}</span>
                     {c.last_time && <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{new Date(c.last_time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</span>}
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -301,9 +303,9 @@ export default function Messaging() {
           <>
             <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--border-primary)', display: 'flex', alignItems: 'center', gap: 12 }}>
               {isMobile && <button onClick={() => setSelectedUser(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, padding: 4, color: 'var(--text-secondary)' }}>←</button>}
-              <Avatar name={selectedUser.nickname || selectedUser.username} size={36} />
+              <Avatar name={dn(selectedUser.id, selectedUser.nickname || selectedUser.username)} size={36} />
               <div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{selectedUser.nickname || selectedUser.username}</div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{dn(selectedUser.id, selectedUser.nickname || selectedUser.username)}</div>
                 <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{roleLabel[selectedUser.role] || selectedUser.role}</div>
               </div>
             </div>
@@ -322,7 +324,7 @@ export default function Messaging() {
                 return (
                   <div key={m.id} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
                     {isRecalled ? (
-                      <div style={{ fontSize: 12, color: 'var(--text-tertiary)', fontStyle: 'italic', padding: '4px 0' }}>{isMine ? '你' : (selectedUser.nickname || selectedUser.username)}撤回了一条消息</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-tertiary)', fontStyle: 'italic', padding: '4px 0' }}>{isMine ? '你' : dn(selectedUser.id, selectedUser.nickname || selectedUser.username)}撤回了一条消息</div>
                     ) : (
                       <div style={{ position: 'relative', maxWidth: '70%' }} onDoubleClick={canRecall ? handleRecall : undefined}>
                         <div style={{
@@ -387,10 +389,10 @@ export default function Messaging() {
                 return (
                   <div key={m.id} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
                     {isRecalled ? (
-                      <div style={{ fontSize: 12, color: 'var(--text-tertiary)', fontStyle: 'italic', padding: '4px 0' }}>{isMine ? '你' : (m.sender_nickname || m.sender_username)}撤回了一条消息</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-tertiary)', fontStyle: 'italic', padding: '4px 0' }}>{isMine ? '你' : dn(m.sender_id, m.sender_nickname || m.sender_username)}撤回了一条消息</div>
                     ) : (
                       <div style={{ position: 'relative', maxWidth: '70%' }} onDoubleClick={canRecall ? handleGroupRecall : undefined}>
-                        {!isMine && <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 2 }}>{m.sender_nickname || m.sender_username}</div>}
+                        {!isMine && <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 2 }}>{dn(m.sender_id, m.sender_nickname || m.sender_username)}</div>}
                         <div style={{
                           padding: '10px 14px', borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                           background: isMine ? 'var(--brand)' : 'var(--bg-tertiary)', color: isMine ? '#fff' : 'var(--text-heading)',
@@ -531,9 +533,9 @@ export default function Messaging() {
                         }}>
                           {isSelected && <Check size={14} color="#fff" />}
                         </div>
-                        <Avatar name={f.nickname || f.username} size={32} />
+                        <Avatar name={dn(f.id, f.nickname || f.username)} size={32} />
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.nickname || f.username}</div>
+                          <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{dn(f.id, f.nickname || f.username)}</div>
                         </div>
                       </div>
                     )

@@ -5,6 +5,7 @@ import Button from '../ui/Button'
 import Modal from '../ui/Modal'
 import useIsMobile from '../ui/useIsMobile'
 import { section, creatorRoleConfig } from './constants'
+import useNicknameStore from '../../stores/useNicknameStore'
 
 interface Props {
   members: any[]
@@ -26,6 +27,7 @@ const detailLabel: React.CSSProperties = { fontSize: 13, color: 'var(--text-tert
 const detailValue: React.CSSProperties = { fontSize: 14, color: 'var(--text-heading)', fontWeight: 500, wordBreak: 'break-all' }
 
 export default function MemberList({ members, departments, roles = [], isOwner, canAdmin, getDeptName, getRoleName, getRoleColor, openAddMember, openEditMember, handleDeleteMember, handleRoleChange }: Props) {
+  const dn = useNicknameStore(s => s.getDisplayName)
   const [viewingMember, setViewingMember] = useState<any>(null)
   const isMobile = useIsMobile()
 
@@ -53,10 +55,10 @@ export default function MemberList({ members, departments, roles = [], isOwner, 
               onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'; (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--text-disabled)' }}
               onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = 'none'; (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border-primary)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                <Avatar name={m.name} size={40} />
+                <Avatar name={m.user_id ? dn(m.user_id, m.name) : m.name} size={40} />
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{m.name}</span>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{m.user_id ? dn(m.user_id, m.name) : m.name}</span>
                     {isCreatorMember && (
                       <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: creatorRoleConfig.bg, color: creatorRoleConfig.color, fontWeight: 600 }}>
                         <Crown size={9} style={{ marginRight: 2, verticalAlign: -1 }} />{creatorRoleConfig.label}
@@ -109,10 +111,10 @@ export default function MemberList({ members, departments, roles = [], isOwner, 
           return (
             <div>
               <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', gap: 14, paddingBottom: 16, borderBottom: '1px solid var(--border-primary)', marginBottom: 4 }}>
-                <Avatar name={viewingMember.name} size={56} />
+                <Avatar name={viewingMember.user_id ? dn(viewingMember.user_id, viewingMember.name) : viewingMember.name} size={56} />
                 <div style={{ minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: 'var(--text-heading)', wordBreak: 'break-all' }}>{viewingMember.name}</span>
+                    <span style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: 'var(--text-heading)', wordBreak: 'break-all' }}>{viewingMember.user_id ? dn(viewingMember.user_id, viewingMember.name) : viewingMember.name}</span>
                     {isCreatorM && (
                       <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, background: creatorRoleConfig.bg, color: creatorRoleConfig.color, fontWeight: 600 }}>
                         <Crown size={10} style={{ marginRight: 3, verticalAlign: -1 }} />{creatorRoleConfig.label}

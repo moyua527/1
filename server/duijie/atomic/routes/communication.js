@@ -33,6 +33,54 @@ router.delete('/notifications/cleanup', auth, require('../controllers/notificati
 router.post('/notifications/devices', auth, require('../controllers/notification/registerDeviceController'));
 router.post('/notifications/devices/unregister', auth, require('../controllers/notification/unregisterDeviceController'));
 
+// ========== User Nicknames (备注名) ==========
+
+// 获取我设置的所有备注名
+router.get('/nicknames', auth, async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT target_user_id, nickname FROM user_nicknames WHERE user_id = ?',
+      [req.userId]
+    );
+    const map = {};
+    rows.forEach(r => { map[r.target_user_id] = r.nickname });
+    res.json({ success: true, data: map });
+  } catch (e) {
+    res.status(500).json({ success: false, message: '获取备注名失败' });
+  }
+});
+
+// 设置/更新备注名
+router.put('/nicknames/:targetUserId', auth, async (req, res) => {
+  try {
+    const targetUserId = Number(req.params.targetUserId);
+    const { nickname } = req.body;
+    if (!nickname || !nickname.trim()) return res.status(400).json({ success: false, message: '备注名不能为空' });
+    if (targetUserId === req.userId) return res.status(400).json({ success: false, message: '不能给自己设置备注名' });
+    await db.query(
+      `INSERT INTO user_nicknames (user_id, target_user_id, nickname) VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE nickname = VALUES(nickname)`,
+      [req.userId, targetUserId, nickname.trim()]
+    );
+    res.json({ success: true, message: '备注名已设置' });
+  } catch (e) {
+    res.status(500).json({ success: false, message: '设置备注名失败' });
+  }
+});
+
+// 删除备注名
+router.delete('/nicknames/:targetUserId', auth, async (req, res) => {
+  try {
+    await db.query(
+      'DELETE FROM user_nicknames WHERE user_id = ? AND target_user_id = ?',
+      [req.userId, Number(req.params.targetUserId)]
+    );
+    res.json({ success: true, message: '备注名已删除' });
+  } catch (e) {
+    res.status(500).json({ success: false, message: '删除备注名失败' });
+  }
+});
+
 // Friends
 // 搜索用户（手机号）
 router.get('/friends/search', auth, async (req, res) => {

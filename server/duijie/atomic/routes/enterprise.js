@@ -36,6 +36,10 @@ router.put('/my-enterprise/members/:id', auth, V.updateMember, validate, myEntCt
 router.put('/my-enterprise/members/:id/role', auth, V.updateMemberRole, validate, myEntCtrl.updateMemberRole);
 router.delete('/my-enterprise/members/:id', auth, myEntCtrl.removeMember);
 
+// Enterprise Profile (合作企业资料)
+const profileCtrl = require('../controllers/enterprise/enterpriseProfileController');
+router.get('/enterprises/:id/profile', auth, profileCtrl.getProfile);
+
 // Enterprise Roles
 router.get('/my-enterprise/roles', auth, myEntCtrl.listRoles);
 router.post('/my-enterprise/roles', auth, myEntCtrl.createRole);

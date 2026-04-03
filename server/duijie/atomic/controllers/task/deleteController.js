@@ -3,8 +3,9 @@ const { broadcast } = require('../../utils/broadcast');
 
 module.exports = async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT project_id FROM duijie_tasks WHERE id = ? AND is_deleted = 0', [req.params.id]);
+    const [rows] = await db.query('SELECT project_id, status FROM duijie_tasks WHERE id = ? AND is_deleted = 0', [req.params.id]);
     if (!rows[0]) return res.status(404).json({ success: false, message: '任务不存在' });
+    if (rows[0].status === 'accepted') return res.status(400).json({ success: false, message: '验收通过的任务不能删除' });
     await db.query('UPDATE duijie_tasks SET is_deleted = 1 WHERE id = ?', [req.params.id]);
     broadcast('task', 'deleted', { id: req.params.id, project_id: rows[0].project_id, userId: req.userId });
     res.json({ success: true });

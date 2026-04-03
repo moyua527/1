@@ -2,6 +2,7 @@ const createProject = require('../../services/project/createProject');
 const db = require('../../../config/db');
 const { broadcast } = require('../../utils/broadcast');
 const { withTransaction } = require('../../utils/transaction');
+const { createDefaultRoles } = require('./projectRoleController');
 
 module.exports = async (req, res) => {
   try {
@@ -22,6 +23,8 @@ module.exports = async (req, res) => {
       );
       return projectId;
     });
+
+    createDefaultRoles(id, req.userId).catch(() => {});
 
     broadcast('project', 'created', { id, userId: req.userId });
     res.json({ success: true, data: { id } });

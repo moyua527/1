@@ -1,18 +1,14 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { BACKEND_URL } from '../../bootstrap'
-import { taskApi } from './services/api'
 import { useTasks, useProjects, useInvalidate } from '../../hooks/useApi'
-import { useQueryClient } from '@tanstack/react-query'
 import useLiveData from '../../hooks/useLiveData'
 import Badge from '../ui/Badge'
-import { toast } from '../ui/Toast'
-import { Plus, GripVertical, Paperclip, Download, Search } from 'lucide-react'
+import { Plus, Paperclip, Download, Search } from 'lucide-react'
 import TaskDetailModal from './components/TaskDetailModal'
 import TaskCreateModal from './components/TaskCreateModal'
 import { can } from '../../stores/permissions'
 
-interface Task { id: number; title: string; description?: string; status: string; priority: string; project_id: number; project_name?: string; due_date?: string; assignee_name?: string }
 
 const columns = [
   { key: 'submitted', label: '已提出', color: 'var(--brand)', bg: 'var(--bg-selected)' },
@@ -30,8 +26,7 @@ const priorityMap: Record<string, { label: string; color: string }> = {
   urgent: { label: '紧急', color: 'red' },
 }
 
-const colStyle: React.CSSProperties = { flex: 1, minWidth: 280, borderRadius: 12, padding: 12, minHeight: 400 }
-const taskCard: React.CSSProperties = { background: 'var(--bg-primary)', borderRadius: 10, padding: 14, marginBottom: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', cursor: 'grab', border: '1px solid var(--border-primary)', transition: 'box-shadow 0.15s' }
+const isImageFile = (name: string) => /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(name)
 
 export default function TaskBoard() {
   const { user } = useOutletContext<{ user: any }>()
@@ -39,7 +34,7 @@ export default function TaskBoard() {
   const [filterProject, setFilterProject] = useState<string>('')
   const [searchText, setSearchText] = useState('')
   const [filterPriority, setFilterPriority] = useState<string>('')
-  const [dragOverCol, setDragOverCol] = useState<string | null>(null)
+  const [filterStatus, setFilterStatus] = useState<string>('')
   const [selectedTask, setSelectedTask] = useState<any>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
 
@@ -49,8 +44,6 @@ export default function TaskBoard() {
   const invalidate = useInvalidate()
   const reload = () => invalidate('tasks')
 
-  const qc = useQueryClient()
-
   useLiveData(['task'], () => invalidate('tasks'))
 
   const filtered = allTasks.filter(t => {
@@ -59,17 +52,9 @@ export default function TaskBoard() {
       if (!(t.title || '').toLowerCase().includes(s) && !(t.assigned_name || '').toLowerCase().includes(s) && !(t.project_name || '').toLowerCase().includes(s)) return false
     }
     if (filterPriority && t.priority !== filterPriority) return false
+    if (filterStatus && t.status !== filterStatus) return false
     return true
   })
-
-  const handleMove = async (taskId: number, newStatus: string) => {
-    setDragOverCol(null)
-    const qk = ['tasks', filterProject || undefined]
-    const prev = qc.getQueryData<Task[]>(qk)
-    qc.setQueryData<Task[]>(qk, old => old?.map(t => t.id === taskId ? { ...t, status: newStatus } : t))
-    const r = await taskApi.move(String(taskId), newStatus)
-    if (!r.success) { qc.setQueryData(qk, prev); toast(r.message || '移动失败', 'error') }
-  }
 
   return (
     <div>
@@ -99,6 +84,11 @@ export default function TaskBoard() {
             <option value="medium">中</option>
             <option value="low">低</option>
           </select>
+          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none', color: filterStatus ? 'var(--text-heading)' : 'var(--text-tertiary)' }}>
+            <option value="">全部状态</option>
+            {columns.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+          </select>
           {canAddTask && (
             <button onClick={() => setShowCreateModal(true)}
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, background: 'var(--brand)', color: 'var(--bg-primary)', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>
@@ -108,57 +98,67 @@ export default function TaskBoard() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 16, overflowX: 'auto', paddingBottom: 8 }}>
-        {columns.map(col => {
-          const colTasks = filtered.filter(t => t.status === col.key)
-          const isOver = dragOverCol === col.key
+      {/* 卡片网格布局 */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, paddingBottom: 8 }}>
+        {filtered.length === 0 && (
+          <div style={{ width: '100%', textAlign: 'center', padding: 40, color: 'var(--text-disabled)', fontSize: 14 }}>暂无任务</div>
+        )}
+        {filtered.map(task => {
+          const pr = priorityMap[task.priority] || priorityMap.medium
+          const st = columns.find(c => c.key === task.status)
+          const imgs = ((task as any).attachments || []).filter((a: any) => isImageFile(a.original_name || a.filename))
+          const files = ((task as any).attachments || []).filter((a: any) => !isImageFile(a.original_name || a.filename))
           return (
-            <div key={col.key} style={{ ...colStyle, background: isOver ? col.bg : 'var(--bg-secondary)', border: isOver ? `2px dashed ${col.color}` : '2px solid transparent' }}
-              onDragOver={e => { e.preventDefault(); setDragOverCol(col.key) }}
-              onDragLeave={() => setDragOverCol(null)}
-              onDrop={e => { const tid = e.dataTransfer.getData('taskId'); if (tid) handleMove(Number(tid), col.key) }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, padding: '0 4px' }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: col.color }} />
-                <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-body)' }}>{col.label}</span>
-                <span style={{ fontSize: 12, color: 'var(--text-tertiary)', background: 'var(--border-primary)', borderRadius: 10, padding: '1px 8px', marginLeft: 'auto' }}>{colTasks.length}</span>
+            <div key={task.id} style={{
+              width: 280, background: 'var(--bg-primary)', borderRadius: 10, padding: 14,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.06)', cursor: 'pointer',
+              border: '1px solid var(--border-primary)', transition: 'box-shadow 0.15s',
+            }}
+              onClick={() => setSelectedTask(task)}
+              onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)')}
+              onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)')}>
+              {/* 标题 + 状态 */}
+              <div style={{ display: 'flex', alignItems: 'start', gap: 8, marginBottom: 4 }}>
+                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)', flex: 1 }}>{task.title}</div>
+                {st && (
+                  <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: st.bg, color: st.color, fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0, border: `1px solid ${st.color}30` }}>{st.label}</span>
+                )}
               </div>
-              {colTasks.map(task => {
-                const pr = priorityMap[task.priority] || priorityMap.medium
-                return (
-                  <div key={task.id} style={{ ...taskCard, cursor: 'grab' }} draggable
-                    onClick={() => setSelectedTask(task)}
-                    onDragStart={e => e.dataTransfer.setData('taskId', String(task.id))}
-                    onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)')}
-                    onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)')}>
-                    <div style={{ display: 'flex', alignItems: 'start', gap: 6 }}>
-                      <GripVertical size={14} color="#cbd5e1" style={{ marginTop: 2, flexShrink: 0 }} />
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)', marginBottom: 4 }}>{task.title}</div>
-                        {task.project_name && !filterProject && (
-                          <div style={{ fontSize: 11, color: 'var(--brand)', background: 'var(--bg-selected)', borderRadius: 4, padding: '1px 6px', display: 'inline-block', marginBottom: 4 }}>{task.project_name}</div>
-                        )}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                          <Badge color={pr.color}>{pr.label}</Badge>
-                          {task.due_date && <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>截止 {task.due_date.slice(0, 10)}</span>}
-                          {task.assigned_name && <span style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 2 }}><span style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--brand)', display: 'inline-block' }} />{task.assigned_name}</span>}
-                          {(task as any).attachments?.length > 0 && <span style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 2 }}><Paperclip size={10} />{(task as any).attachments.length}</span>}
-                        </div>
-                        {(task as any).attachments?.length > 0 && (
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
-                            {(task as any).attachments.map((a: any) => (
-                              <a key={a.id} href={`${BACKEND_URL}/uploads/${a.filename}`} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}
-                                style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '2px 8px', borderRadius: 4, background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', fontSize: 10, color: 'var(--text-body)', textDecoration: 'none' }}>
-                                <Paperclip size={9} color="var(--text-secondary)" /> {a.original_name} <Download size={9} color="var(--brand)" />
-                              </a>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-              {colTasks.length === 0 && <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-disabled)', fontSize: 13 }}>拖拽任务到此列</div>}
+              {/* 描述内容 */}
+              {task.description && (
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6, lineHeight: 1.5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as any }}>{task.description}</div>
+              )}
+              {/* 项目名 + 优先级 + 负责人 */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
+                {task.project_name && !filterProject && (
+                  <span style={{ fontSize: 11, color: 'var(--brand)', background: 'var(--bg-selected)', borderRadius: 4, padding: '1px 6px' }}>{task.project_name}</span>
+                )}
+                <Badge color={pr.color}>{pr.label}</Badge>
+                {task.assigned_name && <span style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 2 }}><span style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--brand)', display: 'inline-block' }} />{task.assigned_name}</span>}
+                {task.due_date && <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>截止 {task.due_date.slice(0, 10)}</span>}
+              </div>
+              {/* 图片缩略图 */}
+              {imgs.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 4 }}>
+                  {imgs.map((a: any) => (
+                    <a key={a.id} href={`${BACKEND_URL}/uploads/${a.filename}`} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>
+                      <img src={`${BACKEND_URL}/uploads/${a.filename}`} alt={a.original_name}
+                        style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border-primary)', display: 'block' }} />
+                    </a>
+                  ))}
+                </div>
+              )}
+              {/* 非图片附件 */}
+              {files.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                  {files.map((a: any) => (
+                    <a key={a.id} href={`${BACKEND_URL}/uploads/${a.filename}`} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}
+                      style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '2px 8px', borderRadius: 4, background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', fontSize: 10, color: 'var(--text-body)', textDecoration: 'none' }}>
+                      <Paperclip size={9} color="var(--text-secondary)" /> {a.original_name} <Download size={9} color="var(--brand)" />
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
           )
         })}

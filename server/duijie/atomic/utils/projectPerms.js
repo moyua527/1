@@ -26,12 +26,18 @@ async function getProjectPerms(userId, projectId) {
   }
 
   const [[member]] = await db.query(
-    `SELECT pm.role, pm.enterprise_role_id, pm.source,
-            er.can_manage_members, er.can_manage_roles,
-            er.can_create_project, er.can_edit_project, er.can_delete_project,
-            er.can_manage_client, er.can_view_report, er.can_manage_task
+    `SELECT pm.role, pm.enterprise_role_id, pm.project_role_id, pm.source,
+            er.can_manage_members AS er_can_manage_members, er.can_manage_roles AS er_can_manage_roles,
+            er.can_create_project AS er_can_create_project, er.can_edit_project AS er_can_edit_project,
+            er.can_delete_project AS er_can_delete_project, er.can_manage_client AS er_can_manage_client,
+            er.can_view_report AS er_can_view_report, er.can_manage_task AS er_can_manage_task,
+            pr.can_manage_members AS pr_can_manage_members, pr.can_manage_roles AS pr_can_manage_roles,
+            pr.can_edit_project AS pr_can_edit_project, pr.can_delete_project AS pr_can_delete_project,
+            pr.can_manage_client AS pr_can_manage_client, pr.can_view_report AS pr_can_view_report,
+            pr.can_manage_task AS pr_can_manage_task
      FROM duijie_project_members pm
      LEFT JOIN enterprise_roles er ON er.id = pm.enterprise_role_id AND er.is_deleted = 0
+     LEFT JOIN project_roles pr ON pr.id = pm.project_role_id AND pr.is_deleted = 0
      WHERE pm.project_id = ? AND pm.user_id = ?`,
     [projectId, userId]
   );
@@ -62,26 +68,73 @@ async function getProjectPerms(userId, projectId) {
     return null;
   }
 
-  if (member.enterprise_role_id && member.can_edit_project !== null) {
+  // 优先级1：项目角色（project_role_id）
+  if (member.project_role_id && member.pr_can_edit_project !== null) {
     return {
       projectRole: member.role,
       source: member.source,
+      projectRoleId: member.project_role_id,
       enterpriseRoleId: member.enterprise_role_id,
-      can_manage_members: !!member.can_manage_members,
-      can_manage_roles: !!member.can_manage_roles,
-      can_create_project: !!member.can_create_project,
-      can_edit_project: !!member.can_edit_project,
-      can_delete_project: !!member.can_delete_project,
-      can_manage_client: !!member.can_manage_client,
-      can_view_report: !!member.can_view_report,
-      can_manage_task: !!member.can_manage_task,
+      can_manage_members: !!member.pr_can_manage_members,
+      can_manage_roles: !!member.pr_can_manage_roles,
+      can_create_project: false,
+      can_edit_project: !!member.pr_can_edit_project,
+      can_delete_project: !!member.pr_can_delete_project,
+      can_manage_client: !!member.pr_can_manage_client,
+      can_view_report: !!member.pr_can_view_report,
+      can_manage_task: !!member.pr_can_manage_task,
+    };
+  }
+
+  // 优先级2：企业角色（enterprise_role_id）
+  if (member.enterprise_role_id && member.er_can_edit_project !== null) {
+    return {
+      projectRole: member.role,
+      source: member.source,
+      projectRoleId: null,
+      enterpriseRoleId: member.enterprise_role_id,
+      can_manage_members: !!member.er_can_manage_members,
+      can_manage_roles: !!member.er_can_manage_roles,
+      can_create_project: !!member.er_can_create_project,
+      can_edit_project: !!member.er_can_edit_project,
+      can_delete_project: !!member.er_can_delete_project,
+      can_manage_client: !!member.er_can_manage_client,
+      can_view_report: !!member.er_can_view_report,
+      can_manage_task: !!member.er_can_manage_task,
     };
   }
 
   const isOwner = member.role === 'owner';
+
+  // 如果是企业 creator/admin，即使项目角色不是 owner 也应有管理权限
+  if (!isOwner && activeEnterpriseId) {
+    const [[entMember]] = await db.query(
+      "SELECT role FROM duijie_client_members WHERE client_id = ? AND user_id = ? AND role IN ('creator','admin') AND is_deleted = 0 LIMIT 1",
+      [activeEnterpriseId, userId]
+    );
+    if (entMember) {
+      return {
+        projectRole: member.role,
+        source: member.source,
+        projectRoleId: null,
+        enterpriseRoleId: null,
+        enterpriseManager: true,
+        can_manage_members: true,
+        can_manage_roles: false,
+        can_create_project: true,
+        can_edit_project: true,
+        can_delete_project: entMember.role === 'creator',
+        can_manage_client: true,
+        can_view_report: true,
+        can_manage_task: true,
+      };
+    }
+  }
+
   return {
     projectRole: member.role,
     source: member.source,
+    projectRoleId: null,
     enterpriseRoleId: null,
     can_manage_members: isOwner,
     can_manage_roles: isOwner,

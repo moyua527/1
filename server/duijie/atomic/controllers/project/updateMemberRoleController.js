@@ -4,7 +4,7 @@ const { broadcast } = require('../../utils/broadcast');
 module.exports = async (req, res) => {
   try {
     const { id, memberId } = req.params;
-    const { role, enterprise_role_id } = req.body;
+    const { role, enterprise_role_id, project_role_id } = req.body;
 
     const [[member]] = await db.query(
       'SELECT * FROM duijie_project_members WHERE id = ? AND project_id = ?',
@@ -23,6 +23,10 @@ module.exports = async (req, res) => {
     if (enterprise_role_id !== undefined) {
       sets.push('enterprise_role_id = ?');
       vals.push(enterprise_role_id || null);
+    }
+    if (project_role_id !== undefined) {
+      sets.push('project_role_id = ?');
+      vals.push(project_role_id || null);
     }
     if (!sets.length) return res.json({ success: true });
 

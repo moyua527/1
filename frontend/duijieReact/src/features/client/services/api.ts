@@ -45,6 +45,8 @@ export const clientApi = {
   outgoingRequests: () => fetchApi('/api/client-requests/outgoing'),
   approveRequest: (id: number) => fetchApi(`/api/client-requests/${id}/approve`, { method: 'POST' }),
   rejectRequest: (id: number) => fetchApi(`/api/client-requests/${id}/reject`, { method: 'POST' }),
+  // Enterprise Profile (合作企业资料)
+  enterpriseProfile: (id: string) => fetchApi(`/api/enterprises/${id}/profile`),
   // Opportunities
   opportunities: () => fetchApi('/api/opportunities'),
   createOpportunity: (data: any) => fetchApi('/api/opportunities', { method: 'POST', body: JSON.stringify(data) }),

@@ -24,6 +24,9 @@ router.get('/projects/client-requests/sent', auth, require('../controllers/proje
 router.post('/projects/client-requests/:id/approve', auth, require('../controllers/project/clientRequestApproveController'));
 router.post('/projects/client-requests/:id/reject', auth, require('../controllers/project/clientRequestRejectController'));
 router.get('/projects', auth, projectStaff, require('../controllers/project/listController'));
+// 项目回收站
+router.get('/projects/trash', auth, projectStaff, require('../controllers/project/trashController'));
+router.patch('/projects/:id/restore', auth, projectStaff, require('../controllers/project/restoreController'));
 router.get('/projects/:id', auth, projectStaff, require('../controllers/project/detailController'));
 router.get('/projects/:id/task-title-options', auth, pag, projectPermGuard('can_manage_task'), require('../controllers/project/taskTitleOptionsController'));
 router.post('/projects/:id/task-title-history', auth, pag, projectPermGuard('can_manage_task'), require('../controllers/project/rememberTaskTitleController'));
@@ -36,6 +39,12 @@ router.post('/projects/:id/members', auth, pag, projectPermGuard('can_manage_mem
 router.put('/projects/:id/members/:memberId', auth, pag, projectPermGuard('can_manage_members'), require('../controllers/project/updateMemberRoleController'));
 router.delete('/projects/:id/members/:userId', auth, pag, projectPermGuard('can_manage_members'), require('../controllers/project/removeMemberController'));
 router.get('/projects/:id/my-perms', auth, require('../controllers/project/myPermsController'));
+// 项目角色管理
+const projectRoleCtrl = require('../controllers/project/projectRoleController');
+router.get('/projects/:id/roles', auth, pag, projectRoleCtrl.list);
+router.post('/projects/:id/roles', auth, pag, projectPermGuard('can_manage_roles'), projectRoleCtrl.create);
+router.put('/projects/:id/roles/:roleId', auth, pag, projectPermGuard('can_manage_roles'), projectRoleCtrl.update);
+router.delete('/projects/:id/roles/:roleId', auth, pag, projectPermGuard('can_manage_roles'), projectRoleCtrl.remove);
 router.get('/projects/:id/client-available-users', auth, pag, require('../controllers/project/clientAvailableUsersController'));
 router.post('/projects/:id/client-members', auth, pag, projectPermGuard('can_manage_members'), require('../controllers/project/addClientMemberController'));
 router.delete('/projects/:id/client-members/:userId', auth, pag, projectPermGuard('can_manage_members'), require('../controllers/project/removeClientMemberController'));

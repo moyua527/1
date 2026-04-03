@@ -561,9 +561,12 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
           {tasks.length === 0 ? <div style={{ color: 'var(--text-tertiary)', fontSize: 14, textAlign: 'center', padding: 20 }}>暂无任务</div> : (<>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>选择要删除的任务（删除后可在回收站恢复）：</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 300, overflowY: 'auto' }}>
-              {tasks.map((t: any) => (
-                <label key={t.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px', background: deleteSelected.has(t.id) ? '#fef2f2' : 'var(--bg-secondary)', borderRadius: 8, cursor: 'pointer', border: deleteSelected.has(t.id) ? '1px solid #fca5a5' : '1px solid transparent' }}>
-                  <input type="checkbox" style={{ marginTop: 3 }} checked={deleteSelected.has(t.id)} onChange={() => {
+              {tasks.map((t: any) => {
+                const isAccepted = t.status === 'accepted'
+                return (
+                <label key={t.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px', background: isAccepted ? 'var(--bg-tertiary)' : deleteSelected.has(t.id) ? '#fef2f2' : 'var(--bg-secondary)', borderRadius: 8, cursor: isAccepted ? 'not-allowed' : 'pointer', border: deleteSelected.has(t.id) ? '1px solid #fca5a5' : '1px solid transparent', opacity: isAccepted ? 0.55 : 1 }}>
+                  <input type="checkbox" style={{ marginTop: 3 }} checked={deleteSelected.has(t.id)} disabled={isAccepted} onChange={() => {
+                    if (isAccepted) return
                     setDeleteSelected(prev => {
                       const n = new Set(prev)
                       if (n.has(t.id)) n.delete(t.id)
@@ -586,7 +589,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                   </div>
                   <Badge color={(taskStatusMap[t.status] || taskStatusMap.submitted).color}>{(taskStatusMap[t.status] || taskStatusMap.submitted).label}</Badge>
                 </label>
-              ))}
+              )})}
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
               <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>已选 {deleteSelected.size} 项</span>

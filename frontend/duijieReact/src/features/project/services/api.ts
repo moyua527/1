@@ -11,8 +11,8 @@ export const projectApi = {
   remove: (id: string) => fetchApi(`/api/projects/${id}`, { method: 'DELETE' }),
   teamUsers: () => fetchApi('/api/projects/team-users'),
   availableUsers: (id: string) => fetchApi(`/api/projects/${id}/available-users`),
-  addMember: (id: string, data: { user_id: number; role: string; enterprise_role_id?: number }) => fetchApi(`/api/projects/${id}/members`, { method: 'POST', body: JSON.stringify(data) }),
-  updateMemberRole: (id: string, memberId: string, data: { role?: string; enterprise_role_id?: number | null }) => fetchApi(`/api/projects/${id}/members/${memberId}`, { method: 'PUT', body: JSON.stringify(data) }),
+  addMember: (id: string, data: { user_id: number; role: string; enterprise_role_id?: number; project_role_id?: number }) => fetchApi(`/api/projects/${id}/members`, { method: 'POST', body: JSON.stringify(data) }),
+  updateMemberRole: (id: string, memberId: string, data: { role?: string; enterprise_role_id?: number | null; project_role_id?: number | null }) => fetchApi(`/api/projects/${id}/members/${memberId}`, { method: 'PUT', body: JSON.stringify(data) }),
   removeMember: (id: string, userId: string) => fetchApi(`/api/projects/${id}/members/${userId}`, { method: 'DELETE' }),
   myPerms: (id: string) => fetchApi(`/api/projects/${id}/my-perms`),
   clientAvailableUsers: (id: string) => fetchApi(`/api/projects/${id}/client-available-users`),
@@ -34,4 +34,12 @@ export const projectApi = {
   updateTaskTitlePresets: (id: string, presets: string[]) => fetchApi(`/api/projects/${id}/task-title-presets`, { method: 'PATCH', body: JSON.stringify({ presets }) }),
   approveJoinRequest: (id: string, requestId: number) => fetchApi(`/api/projects/${id}/join-requests/${requestId}/approve`, { method: 'POST' }),
   rejectJoinRequest: (id: string, requestId: number) => fetchApi(`/api/projects/${id}/join-requests/${requestId}/reject`, { method: 'POST' }),
+  // 项目回收站
+  trash: () => fetchApi('/api/projects/trash'),
+  restore: (id: string) => fetchApi(`/api/projects/${id}/restore`, { method: 'PATCH' }),
+  // 项目角色管理
+  listRoles: (id: string) => fetchApi(`/api/projects/${id}/roles`),
+  createRole: (id: string, form: Record<string, any>) => fetchApi(`/api/projects/${id}/roles`, { method: 'POST', body: JSON.stringify(form) }),
+  updateRole: (id: string, roleId: number, form: Record<string, any>) => fetchApi(`/api/projects/${id}/roles/${roleId}`, { method: 'PUT', body: JSON.stringify(form) }),
+  removeRole: (id: string, roleId: number) => fetchApi(`/api/projects/${id}/roles/${roleId}`, { method: 'DELETE' }),
 }

@@ -1,5 +1,6 @@
 ﻿const db = require('../../../config/db');
 const logger = require('../../../config/logger');
+const { sendVerificationCode } = require('../../../config/mailer');
 
 module.exports = async (req, res) => {
   try {
@@ -35,10 +36,15 @@ module.exports = async (req, res) => {
       [type, target, code]
     );
 
-    // TODO: integrate actual SMS/email sending service (e.g. aliyun SMS / SMTP)
-    logger.info(`验证码已生成 ${type}: ${target}`);
+    // Send via email (SMTP) or log for phone (SMS not yet integrated)
+    if (type === 'email') {
+      const sent = await sendVerificationCode(target, code, '登录');
+      if (!sent) logger.warn(`邮件发送失败，验证码仍已入库: ${target}`);
+    } else {
+      logger.info(`短信验证码（SMS 未集成）: ${target} -> ${code}`);
+    }
 
-    res.json({ success: true, message: '验证码已发送', _dev_code: code });
+    res.json({ success: true, message: '验证码已发送', ...(process.env.NODE_ENV !== 'production' ? { _dev_code: code } : {}) });
   } catch (e) {
     logger.error(`sendCode: ${e.message}`);
     res.status(500).json({ success: false, message: '服务器内部错误' });

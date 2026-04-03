@@ -1,4 +1,5 @@
 import Avatar from '../../ui/Avatar'
+import useNicknameStore from '../../../stores/useNicknameStore'
 
 const section: React.CSSProperties = { background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16 }
 
@@ -14,6 +15,7 @@ interface MembersSectionProps {
 }
 
 export default function MembersSection({ myTeamTitle, otherTeamTitle, myMembers, otherMembers, showOtherTeam = true, canEditMyTeam, onManageMyMembers, onSelectMember }: MembersSectionProps) {
+  const dn = useNicknameStore(s => s.getDisplayName)
   return (
     <div style={section}>
       <h3 style={{ margin: '0 0 12px', fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>项目成员</h3>
@@ -28,11 +30,12 @@ export default function MembersSection({ myTeamTitle, otherTeamTitle, myMembers,
             {myMembers.map((m: any) => (
               <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--bg-secondary)', borderRadius: 8, border: '1px solid var(--border-primary)', cursor: 'pointer' }}
                 onClick={() => onSelectMember(m)}>
-                <Avatar name={m.nickname || m.username || '?'} size={28} />
+                <Avatar name={dn(m.id, m.nickname || m.username || '?')} size={28} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)' }}>{m.nickname || m.username}</span>
-                    {m.enterprise_role_name && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: m.enterprise_role_color || 'var(--border-primary)', color: 'var(--bg-primary)', fontWeight: 500, whiteSpace: 'nowrap' }}>{m.enterprise_role_name}</span>}
+                    <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)' }}>{dn(m.id, m.nickname || m.username)}</span>
+                    {m.project_role_name && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: m.project_role_color || 'var(--border-primary)', color: 'var(--bg-primary)', fontWeight: 500, whiteSpace: 'nowrap' }}>{m.project_role_name}</span>}
+                    {!m.project_role_name && m.enterprise_role_name && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: m.enterprise_role_color || 'var(--border-primary)', color: 'var(--bg-primary)', fontWeight: 500, whiteSpace: 'nowrap' }}>{m.enterprise_role_name}</span>}
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{m.member_role === 'owner' ? '负责人' : m.member_role === 'editor' ? '编辑者' : '查看者'}</div>
                 </div>
@@ -50,9 +53,9 @@ export default function MembersSection({ myTeamTitle, otherTeamTitle, myMembers,
               {otherMembers.map((m: any) => (
                 <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#f0fdf4', borderRadius: 8, border: '1px solid #dcfce7', cursor: 'pointer' }}
                   onClick={() => onSelectMember(m)}>
-                  <Avatar name={m.nickname || m.username || '?'} size={28} />
+                  <Avatar name={dn(m.id, m.nickname || m.username || '?')} size={28} />
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)' }}>{m.nickname || m.username}</div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)' }}>{dn(m.id, m.nickname || m.username)}</div>
                     <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>查看者</div>
                   </div>
                 </div>

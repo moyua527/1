@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
 import { ArrowLeft, Trash2, AppWindow, ExternalLink, MoreVertical, Pencil, Copy, UserPlus, Check, X } from 'lucide-react'
 import { can } from '../../../stores/permissions'
@@ -47,6 +47,7 @@ export default function ProjectDetail() {
   const canEdit = platformCanEdit || !!projectPerms?.can_edit_project
   const canDelete = platformCanDelete || !!projectPerms?.can_delete_project
   const [project, setProject] = useState<any>(null)
+  const projectRef = useRef<any>(null)
   const [projectLoading, setProjectLoading] = useState(true)
   const [projectError, setProjectError] = useState('')
   const [tasks, setTasks] = useState<any[]>([])
@@ -68,6 +69,7 @@ export default function ProjectDetail() {
   const [clientModal, setClientModal] = useState(false)
   const [clientData, setClientData] = useState<any>(null)
   const [enterpriseRoles, setEnterpriseRoles] = useState<any[]>([])
+  const [projectRoles, setProjectRoles] = useState<any[]>([])
   const activeEnterpriseId = useEnterpriseStore(s => s.activeEnterpriseId)
   const [showSetClient, setShowSetClient] = useState(false)
   const [availableClients, setAvailableClients] = useState<any[]>([])
@@ -75,7 +77,7 @@ export default function ProjectDetail() {
   const [settingClient, setSettingClient] = useState(false)
   const [showActionMenu, setShowActionMenu] = useState(false)
   const [showEditProject, setShowEditProject] = useState(false)
-  const [editForm, setEditForm] = useState({ name: '', description: '', status: 'planning', task_title_presets_text: '' })
+  const [editForm, setEditForm] = useState({ name: '', description: '', status: 'planning', task_title_presets: [] as string[], newPreset: '' })
   const [joinRequests, setJoinRequests] = useState<any[]>([])
   const [joinReqLoading, setJoinReqLoading] = useState(false)
 
@@ -87,7 +89,6 @@ export default function ProjectDetail() {
 
   const loadProject = useCallback(async () => {
     if (!id) return
-    setProjectLoading(true)
     setProjectError('')
 
     let message = '项目加载失败，请稍后重试'
@@ -98,6 +99,7 @@ export default function ProjectDetail() {
           new Promise<any>(resolve => setTimeout(() => resolve({ success: false, status: 408, message: '项目加载超时，请重试' }), PROJECT_DETAIL_TIMEOUT_MS)),
         ])
         if (r.success && r.data) {
+          projectRef.current = r.data
           setProject(r.data)
           setProjectError('')
           setProjectLoading(false)
@@ -115,8 +117,10 @@ export default function ProjectDetail() {
       }
     }
 
-    setProject(null)
-    setProjectError(message)
+    if (!projectRef.current) {
+      setProject(null)
+      setProjectError(message)
+    }
     setProjectLoading(false)
   }, [id])
 
@@ -155,7 +159,6 @@ export default function ProjectDetail() {
   useEffect(() => {
     if (!id) return
     const timer = window.setTimeout(() => {
-      setProject(null)
       loadProject()
       loadTasks()
     }, 0)
@@ -194,9 +197,9 @@ export default function ProjectDetail() {
   const otherTeamTitle = `对方团队（${otherEnterpriseName}）`
 
   const handleDelete = async () => {
-    if (!(await confirm({ message: '确定删除此项目？', danger: true }))) return
+    if (!(await confirm({ message: '确定将此项目移到回收站？可在项目列表的回收站中恢复。', danger: true }))) return
     const r = await projectApi.remove(id!)
-    if (r.success) { toast('项目已删除', 'success'); nav('/projects') }
+    if (r.success) { toast('项目已移至回收站', 'success'); nav('/projects') }
     else toast(r.message || '删除失败', 'error')
   }
 
@@ -242,10 +245,15 @@ export default function ProjectDetail() {
     fetchApi('/api/my-enterprise/roles').then(r => { if (r.success) setEnterpriseRoles(r.data || []) }).catch(() => {})
   }
 
+  const loadProjectRoles = () => {
+    projectApi.listRoles(id!).then(r => { if (r.success) setProjectRoles(r.data || []) }).catch(() => {})
+  }
+
   const openManageMembers = () => {
     setShowAddMember(true)
     refreshAvailableUsers()
     loadEnterpriseRoles()
+    loadProjectRoles()
   }
 
   const openManageClientMembers = () => {
@@ -271,7 +279,7 @@ export default function ProjectDetail() {
             {showActionMenu && <>
               <div style={{ position: 'fixed', inset: 0, zIndex: 99 }} onClick={() => setShowActionMenu(false)} />
               <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)', borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 100, minWidth: 140, overflow: 'hidden' }}>
-                {canEdit && <button onClick={() => { setShowActionMenu(false); setEditForm({ name: project.name || '', description: project.description || '', status: project.status || 'planning', task_title_presets_text: Array.isArray(project.task_title_presets) ? project.task_title_presets.join('\n') : '' }); setShowEditProject(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Pencil size={14} /> 编辑项目</button>}
+                {canEdit && <button onClick={() => { setShowActionMenu(false); setEditForm({ name: project.name || '', description: project.description || '', status: project.status || 'planning', task_title_presets: Array.isArray(project.task_title_presets) ? [...project.task_title_presets] : [], newPreset: '' }); setShowEditProject(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Pencil size={14} /> 编辑项目</button>}
                 {canDelete && <button onClick={() => { setShowActionMenu(false); handleDelete() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#ef4444', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Trash2 size={14} /> 删除项目</button>}
               </div>
             </>}
@@ -283,7 +291,15 @@ export default function ProjectDetail() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div><label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>项目名称</label><Input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} placeholder="项目名称" /></div>
           <div><label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>描述</label><textarea value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} placeholder="项目描述（可选）" rows={3} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', fontSize: 14, resize: 'vertical' }} /></div>
-          <div><label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>固定功能名称</label><textarea value={editForm.task_title_presets_text} onChange={e => setEditForm(f => ({ ...f, task_title_presets_text: e.target.value }))} placeholder="每行一个功能名称，如：登录页\n用户管理\n消息中心" rows={4} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', fontSize: 14, resize: 'vertical' }} /><div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>任务创建时可直接下拉选择这些固定功能名称</div></div>
+          <div><label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>固定功能名称</label>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+              <input value={editForm.newPreset} onChange={e => setEditForm(f => ({ ...f, newPreset: e.target.value }))} placeholder="输入功能名称" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); const v = editForm.newPreset.trim(); if (v && !editForm.task_title_presets.includes(v)) setEditForm(f => ({ ...f, task_title_presets: [...f.task_title_presets, v], newPreset: '' })) } }} style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', fontSize: 14 }} />
+              <Button variant="secondary" onClick={() => { const v = editForm.newPreset.trim(); if (v && !editForm.task_title_presets.includes(v)) setEditForm(f => ({ ...f, task_title_presets: [...f.task_title_presets, v], newPreset: '' })) }}>添加</Button>
+            </div>
+            {editForm.task_title_presets.length > 0 && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{editForm.task_title_presets.map((p, i) => (
+              <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 999, background: 'var(--bg-tertiary)', fontSize: 13, color: 'var(--text-body)' }}>{p}<button type="button" onClick={() => setEditForm(f => ({ ...f, task_title_presets: f.task_title_presets.filter((_, j) => j !== i) }))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text-tertiary)', fontSize: 14, lineHeight: 1 }} onMouseEnter={e => e.currentTarget.style.color = 'var(--color-danger)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}>×</button></span>
+            ))}</div>}
+            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>任务创建时可直接下拉选择这些固定功能名称</div></div>
           <div><label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>状态</label><select value={editForm.status} onChange={e => setEditForm(f => ({ ...f, status: e.target.value }))} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', fontSize: 14 }}>
             {Object.entries(statusMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
           </select></div>
@@ -291,8 +307,7 @@ export default function ProjectDetail() {
             <Button variant="secondary" onClick={() => setShowEditProject(false)}>取消</Button>
             <Button onClick={async () => {
               if (!editForm.name.trim()) { toast('请输入项目名称', 'error'); return }
-              const task_title_presets = editForm.task_title_presets_text.split(/\r?\n/).map(v => v.trim()).filter(Boolean)
-              const r = await projectApi.update(id!, { name: editForm.name.trim(), description: editForm.description.trim(), status: editForm.status, task_title_presets })
+              const r = await projectApi.update(id!, { name: editForm.name.trim(), description: editForm.description.trim(), status: editForm.status, task_title_presets: editForm.task_title_presets })
               if (r.success) { toast('已更新', 'success'); setShowEditProject(false); loadProject() } else toast(r.message || '更新失败', 'error')
             }}>保存</Button>
           </div>
@@ -435,6 +450,7 @@ export default function ProjectDetail() {
           members={internalMembers}
           availableUsers={availableUsers}
           enterpriseRoles={enterpriseRoles}
+          projectRoles={projectRoles}
           onRefresh={loadProject}
           onRefreshAvailable={refreshAvailableUsers}
         />
@@ -538,6 +554,7 @@ export default function ProjectDetail() {
           )}
         </div>
       )}
+
 
       <Modal open={showSetClient} onClose={() => setShowSetClient(false)} title={hasExternalEnterprise ? '更换客户企业' : '关联客户企业'}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

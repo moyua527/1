@@ -9,7 +9,7 @@ import MemberList from './MemberList'
 import DepartmentList from './DepartmentList'
 import OrgTree from './OrgTree'
 import JoinRequests from './JoinRequests'
-import RoleList from './RoleList'
+import EnterpriseRoleTab from './EnterpriseRoleTab'
 import EnterpriseProjects from './EnterpriseProjects'
 import ClientRequests from './ClientRequests'
 import AdminAllEnterprises from './AdminAllEnterprises'
@@ -101,7 +101,7 @@ export default function Enterprise() {
       {h.tab === 'projects' && <EnterpriseProjects />}
 
       {h.tab === 'roles' && (
-        <RoleList
+        <EnterpriseRoleTab
           roles={h.roles} isOwner={h.isOwner} canManageRoles={h.canManageRoles}
           onCreateRole={h.handleCreateRole} onUpdateRole={h.handleUpdateRole} onDeleteRole={h.handleDeleteRole}
         />
