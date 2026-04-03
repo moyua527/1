@@ -53,5 +53,7 @@ router.post('/projects/:id/client-request', auth, pag, require('../controllers/p
 router.get('/projects/:id/join-requests', auth, pag, require('../controllers/project/joinRequestListController'));
 router.post('/projects/:id/join-requests/:requestId/approve', auth, pag, projectPermGuard('can_manage_members'), require('../controllers/project/joinRequestReviewController'));
 router.post('/projects/:id/join-requests/:requestId/reject', auth, pag, projectPermGuard('can_manage_members'), require('../controllers/project/joinRequestReviewController'));
+// 项目成员邀请（任何成员可发起，需管理审批）
+router.post('/projects/:id/invite', auth, pag, require('../controllers/project/inviteMemberController'));
 
 module.exports = router;

@@ -34,6 +34,8 @@ export const projectApi = {
   updateTaskTitlePresets: (id: string, presets: string[]) => fetchApi(`/api/projects/${id}/task-title-presets`, { method: 'PATCH', body: JSON.stringify({ presets }) }),
   approveJoinRequest: (id: string, requestId: number) => fetchApi(`/api/projects/${id}/join-requests/${requestId}/approve`, { method: 'POST' }),
   rejectJoinRequest: (id: string, requestId: number) => fetchApi(`/api/projects/${id}/join-requests/${requestId}/reject`, { method: 'POST' }),
+  // 成员邀请（任何项目成员可发起，需审批）
+  inviteMember: (id: string, data: { user_id: number; message?: string }) => fetchApi(`/api/projects/${id}/invite`, { method: 'POST', body: JSON.stringify(data) }),
   // 项目回收站
   trash: () => fetchApi('/api/projects/trash'),
   restore: (id: string) => fetchApi(`/api/projects/${id}/restore`, { method: 'PATCH' }),

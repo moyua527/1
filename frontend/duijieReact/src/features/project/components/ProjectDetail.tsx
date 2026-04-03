@@ -80,6 +80,10 @@ export default function ProjectDetail() {
   const [editForm, setEditForm] = useState({ name: '', description: '', status: 'planning', task_title_presets: [] as string[], newPreset: '' })
   const [joinRequests, setJoinRequests] = useState<any[]>([])
   const [joinReqLoading, setJoinReqLoading] = useState(false)
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [inviteAvailable, setInviteAvailable] = useState<any[]>([])
+  const [inviteSearch, setInviteSearch] = useState('')
+  const [invitingId, setInvitingId] = useState<number | null>(null)
 
   const openClientModal = (clientId: number) => {
     setClientModal(true)
@@ -261,6 +265,23 @@ export default function ProjectDetail() {
     refreshClientAvailableUsers()
   }
 
+  const openInviteModal = () => {
+    setShowInviteModal(true)
+    setInviteSearch('')
+    setInvitingId(null)
+    projectApi.availableUsers(id!).then(r => { if (r.success) setInviteAvailable(r.data || []) })
+  }
+
+  const handleInvite = async (userId: number) => {
+    setInvitingId(userId)
+    const r = await projectApi.inviteMember(id!, { user_id: userId })
+    setInvitingId(null)
+    if (r.success) {
+      toast('邀请已发送，等待项目管理审批', 'success')
+      setInviteAvailable(prev => prev.filter(u => u.id !== userId))
+    } else toast(r.message || '邀请失败', 'error')
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px - 48px)', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
@@ -440,6 +461,7 @@ export default function ProjectDetail() {
           showOtherTeam={hasExternalEnterprise}
           canEditMyTeam={canEdit}
           onManageMyMembers={isClientPerspective ? openManageClientMembers : openManageMembers}
+          onInviteMember={openInviteModal}
           onSelectMember={setSelectedMember}
         />
 
@@ -464,6 +486,31 @@ export default function ProjectDetail() {
           onRefresh={loadProject}
           onRefreshAvailable={refreshClientAvailableUsers}
         />
+
+        {/* 邀请成员模态框 */}
+        <Modal open={showInviteModal} onClose={() => setShowInviteModal(false)} title="邀请成员加入项目">
+          <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 12 }}>邀请企业成员加入此项目，需要项目管理审批后生效</div>
+          <Input placeholder="搜索用户名或昵称" value={inviteSearch} onChange={e => setInviteSearch(e.target.value)} />
+          <div style={{ maxHeight: 300, overflowY: 'auto', marginTop: 12 }}>
+            {inviteAvailable.filter(u => {
+              if (!inviteSearch) return true
+              const s = inviteSearch.toLowerCase()
+              return (u.nickname || '').toLowerCase().includes(s) || (u.username || '').toLowerCase().includes(s) || (u.member_name || '').toLowerCase().includes(s)
+            }).map(u => (
+              <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border-secondary)' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)' }}>{u.member_name || u.nickname || u.username}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>@{u.username} · {u.ent_role === 'creator' ? '创建者' : u.ent_role === 'admin' ? '管理员' : '成员'}</div>
+                </div>
+                <button onClick={() => handleInvite(u.id)} disabled={invitingId === u.id}
+                  style={{ padding: '4px 12px', borderRadius: 6, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 12, cursor: 'pointer', opacity: invitingId === u.id ? 0.6 : 1 }}>
+                  {invitingId === u.id ? '邀请中...' : '邀请'}
+                </button>
+              </div>
+            ))}
+            {inviteAvailable.length === 0 && <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 13 }}>没有可邀请的成员</div>}
+          </div>
+        </Modal>
       </>)}
 
       {tab === 'tasks' && <TaskTab tasks={tasks} canEdit={canEdit} projectId={id!} loadTasks={loadTasks} />}

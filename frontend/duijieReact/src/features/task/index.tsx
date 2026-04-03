@@ -99,9 +99,9 @@ export default function TaskBoard() {
       </div>
 
       {/* 卡片网格布局 */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, paddingBottom: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12, paddingBottom: 8 }}>
         {filtered.length === 0 && (
-          <div style={{ width: '100%', textAlign: 'center', padding: 40, color: 'var(--text-disabled)', fontSize: 14 }}>暂无任务</div>
+          <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 40, color: 'var(--text-disabled)', fontSize: 14 }}>暂无任务</div>
         )}
         {filtered.map(task => {
           const pr = priorityMap[task.priority] || priorityMap.medium
@@ -110,7 +110,7 @@ export default function TaskBoard() {
           const files = ((task as any).attachments || []).filter((a: any) => !isImageFile(a.original_name || a.filename))
           return (
             <div key={task.id} style={{
-              width: 280, background: 'var(--bg-primary)', borderRadius: 10, padding: 14,
+              background: 'var(--bg-primary)', borderRadius: 10, padding: 14,
               boxShadow: '0 1px 3px rgba(0,0,0,0.06)', cursor: 'pointer',
               border: '1px solid var(--border-primary)', transition: 'box-shadow 0.15s',
             }}
