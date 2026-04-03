@@ -577,7 +577,10 @@ export default function ProjectDetail() {
               {joinRequests.map((req: any) => (
                 <div key={req.id} style={{ padding: 14, borderRadius: 10, background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                   <div style={{ flex: 1, minWidth: 150 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{req.user_name || req.user_phone}</div>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{req.nickname || req.phone || req.username}</div>
+                    {req.invite_type === 'member' && req.inviter_name && (
+                      <div style={{ fontSize: 11, color: 'var(--brand)', marginTop: 2 }}>由 {req.inviter_name} 邀请</div>
+                    )}
                     {req.message && <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>{req.message}</div>}
                     <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 4 }}>{formatDateTime(req.created_at)}</div>
                   </div>
