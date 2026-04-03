@@ -8,18 +8,27 @@ import { toast } from '../../ui/Toast'
 import { confirm } from '../../ui/ConfirmDialog'
 
 const PROJECT_PERMISSIONS = [
-  { key: 'can_manage_members', label: '管理成员', desc: '添加、编辑、移除项目成员' },
-  { key: 'can_manage_roles', label: '管理角色', desc: '创建、编辑、删除项目角色并分配' },
-  { key: 'can_edit_project', label: '编辑项目', desc: '修改项目信息' },
+  { key: 'can_edit_project', label: '编辑项目', desc: '修改项目名称/描述/状态' },
   { key: 'can_delete_project', label: '删除项目', desc: '删除项目' },
-  { key: 'can_manage_client', label: '管理客户', desc: '管理项目关联客户' },
+  { key: 'can_set_client', label: '设置客户企业', desc: '设置/更换客户企业' },
+  { key: 'can_add_member', label: '添加成员', desc: '添加内部成员' },
+  { key: 'can_remove_member', label: '移除成员', desc: '移除内部成员' },
+  { key: 'can_update_member_role', label: '更新成员角色', desc: '更改成员角色' },
+  { key: 'can_manage_client_member', label: '管理客户方成员', desc: '添加/移除客户方成员' },
+  { key: 'can_approve_join', label: '审批加入申请', desc: '审批/拒绝加入申请' },
+  { key: 'can_manage_roles', label: '管理角色', desc: '创建/编辑/删除角色' },
+  { key: 'can_create_task', label: '创建任务', desc: '创建新任务' },
+  { key: 'can_delete_task', label: '删除任务', desc: '删除任务' },
+  { key: 'can_manage_task_flow', label: '任务状态流转', desc: '接受/提交/审核等操作' },
+  { key: 'can_manage_task_preset', label: '管理任务预设', desc: '管理任务标题预设' },
+  { key: 'can_manage_milestone', label: '管理里程碑', desc: '创建/编辑/完成/删除里程碑' },
   { key: 'can_view_report', label: '查看报表', desc: '查看项目数据报表' },
-  { key: 'can_manage_task', label: '管理任务', desc: '创建和管理任务' },
+  { key: 'can_manage_app', label: '管理应用', desc: '添加/编辑/移除关联应用' },
 ] as const
 
 const ROLE_COLORS = ['#2563eb', '#9333ea', '#059669', '#d97706', '#dc2626', '#0891b2', '#7c3aed', '#64748b']
 
-const emptyForm = { name: '', color: '#2563eb', can_manage_members: false, can_manage_roles: false, can_edit_project: false, can_delete_project: false, can_manage_client: false, can_view_report: false, can_manage_task: false }
+const emptyForm: Record<string, any> = { name: '', color: '#2563eb', ...Object.fromEntries(PROJECT_PERMISSIONS.map(p => [p.key, false])) }
 
 interface Props {
   projectId: string
@@ -52,10 +61,7 @@ export default function ProjectRoleList({ projectId, canEdit }: Props) {
     setEditing(r)
     setForm({
       name: r.name || '', color: r.color || '#64748b',
-      can_manage_members: !!r.can_manage_members, can_manage_roles: !!r.can_manage_roles,
-      can_edit_project: !!r.can_edit_project, can_delete_project: !!r.can_delete_project,
-      can_manage_client: !!r.can_manage_client, can_view_report: !!r.can_view_report,
-      can_manage_task: !!r.can_manage_task,
+      ...Object.fromEntries(PROJECT_PERMISSIONS.map(p => [p.key, !!r[p.key]])),
     })
     setModalOpen(true)
   }

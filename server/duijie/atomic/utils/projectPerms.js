@@ -129,11 +129,6 @@ async function getProjectPerms(userId, projectId) {
     });
     return perms;
   }
-      can_manage_client: !!member.er_can_manage_client,
-      can_view_report: !!member.er_can_view_report,
-      can_manage_task: !!member.er_can_manage_task,
-    };
-  }
 
   const isOwner = member.role === 'owner';
   const isEditor = member.role === 'editor';

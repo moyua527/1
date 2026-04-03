@@ -5,14 +5,23 @@ export interface ProjectPerms {
   projectRole: string
   source: string
   enterpriseRoleId: number | null
-  can_manage_members: boolean
-  can_manage_roles: boolean
   can_create_project: boolean
   can_edit_project: boolean
   can_delete_project: boolean
-  can_manage_client: boolean
+  can_set_client: boolean
+  can_add_member: boolean
+  can_remove_member: boolean
+  can_update_member_role: boolean
+  can_manage_client_member: boolean
+  can_approve_join: boolean
+  can_manage_roles: boolean
+  can_create_task: boolean
+  can_delete_task: boolean
+  can_manage_task_flow: boolean
+  can_manage_task_preset: boolean
+  can_manage_milestone: boolean
   can_view_report: boolean
-  can_manage_task: boolean
+  can_manage_app: boolean
 }
 
 /**

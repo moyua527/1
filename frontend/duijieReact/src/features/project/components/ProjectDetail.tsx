@@ -44,8 +44,13 @@ export default function ProjectDetail() {
   const platformCanEdit = can(role, 'project:edit')
   const platformCanDelete = can(role, 'project:delete')
   const { perms: projectPerms } = useProjectPerms(id)
-  const canEdit = platformCanEdit || !!projectPerms?.can_edit_project
-  const canDelete = platformCanDelete || !!projectPerms?.can_delete_project
+  const isAdmin = role === 'admin'
+  const canEdit = isAdmin || platformCanEdit || !!projectPerms?.can_edit_project
+  const canDelete = isAdmin || platformCanDelete || !!projectPerms?.can_delete_project
+  const canAddMember = isAdmin || !!projectPerms?.can_add_member
+  const canApproveJoin = isAdmin || !!projectPerms?.can_approve_join
+  const canManageMilestone = isAdmin || !!projectPerms?.can_manage_milestone
+  const canCreateTask = isAdmin || !!projectPerms?.can_create_task
   const [project, setProject] = useState<any>(null)
   const projectRef = useRef<any>(null)
   const inviteTimerRef = useRef<any>(null)
@@ -351,7 +356,7 @@ export default function ProjectDetail() {
       </Modal>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 0, flexWrap: 'wrap', flexShrink: 0 }}>
-        {([['overview','概览'],['tasks','任务'],['milestones','里程碑'],['messages','消息'], ...(project.app_url ? [['app', project.app_name || '应用']] : []), ...(canEdit ? [['join_requests', '加入申请']] : [])] as [string, string][]).map(([k,v]) => (
+        {([['overview','概览'],['tasks','任务'],['milestones','里程碑'],['messages','消息'], ...(project.app_url ? [['app', project.app_name || '应用']] : []), ...(canApproveJoin ? [['join_requests', '加入申请']] : [])] as [string, string][]).map(([k,v]) => (
           <button key={k} onClick={() => setTab(k as any)} style={{
             padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500,
             background: tab === k ? 'var(--brand)' : 'var(--bg-tertiary)', color: tab === k ? 'var(--bg-primary)' : 'var(--text-secondary)',
@@ -474,7 +479,7 @@ export default function ProjectDetail() {
           myMembers={myMembers}
           otherMembers={otherMembers}
           showOtherTeam={hasExternalEnterprise}
-          canEditMyTeam={canEdit}
+          canEditMyTeam={canAddMember}
           onManageMyMembers={isClientPerspective ? openManageClientMembers : openManageMembers}
           onInviteMember={openInviteModal}
           onSelectMember={setSelectedMember}
@@ -526,9 +531,9 @@ export default function ProjectDetail() {
         </Modal>
       </>)}
 
-      {tab === 'tasks' && <TaskTab tasks={tasks} canEdit={canEdit} projectId={id!} loadTasks={loadTasks} />}
+      {tab === 'tasks' && <TaskTab tasks={tasks} canEdit={canCreateTask} projectId={id!} loadTasks={loadTasks} />}
 
-      {tab === 'milestones' && <MilestoneTab milestones={milestones} projectId={id!} canEdit={canEdit} onRefresh={loadTasks} />}
+      {tab === 'milestones' && <MilestoneTab milestones={milestones} projectId={id!} canEdit={canManageMilestone} onRefresh={loadTasks} />}
 
       {tab === 'messages' && <div style={section}><MessagePanel projectId={id!} /></div>}
 
