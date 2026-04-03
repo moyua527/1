@@ -15,6 +15,12 @@ module.exports = async (req, res) => {
 
     const request = rows[0];
 
+    // 删除该用户在此项目的旧已处理记录（避免唯一键冲突）
+    await db.query(
+      "DELETE FROM duijie_project_join_requests WHERE project_id = ? AND user_id = ? AND status = ? AND id != ?",
+      [request.project_id, request.user_id, action, requestId]
+    );
+
     await db.query(
       'UPDATE duijie_project_join_requests SET status = ?, reviewed_by = ?, reviewed_at = NOW() WHERE id = ?',
       [action, req.userId, requestId]

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { BACKEND_URL } from '../../../bootstrap'
 import Modal from '../../ui/Modal'
 import Badge from '../../ui/Badge'
@@ -36,6 +37,7 @@ interface Props {
 }
 
 export default function TaskDetailModal({ task, open, onClose }: Props) {
+  const [previewImg, setPreviewImg] = useState<string | null>(null)
   if (!task) return null
 
   const st = statusMap[task.status] || statusMap.submitted
@@ -45,6 +47,7 @@ export default function TaskDetailModal({ task, open, onClose }: Props) {
   const files = attachments.filter((a: any) => !isImageFile(a.original_name || a.filename))
 
   return (
+    <>
     <Modal open={open} onClose={onClose} title="任务详情" width={560}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* 标题 */}
@@ -87,10 +90,9 @@ export default function TaskDetailModal({ task, open, onClose }: Props) {
             <div style={{ ...lbl, marginBottom: 8 }}><Paperclip size={14} /> 图片 ({imgs.length})</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {imgs.map((a: any) => (
-                <a key={a.id} href={`${BACKEND_URL}/uploads/${a.filename}`} target="_blank" rel="noreferrer">
-                  <img src={`${BACKEND_URL}/uploads/${a.filename}`} alt={a.original_name}
-                    style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border-primary)', display: 'block' }} />
-                </a>
+                <img key={a.id} src={`${BACKEND_URL}/uploads/${a.filename}`} alt={a.original_name}
+                  onClick={() => setPreviewImg(`${BACKEND_URL}/uploads/${a.filename}`)}
+                  style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border-primary)', display: 'block', cursor: 'pointer' }} />
               ))}
             </div>
           </div>
@@ -131,5 +133,14 @@ export default function TaskDetailModal({ task, open, onClose }: Props) {
         </div>
       </div>
     </Modal>
+
+      {/* 图片预览 */}
+      {previewImg && (
+        <div onClick={() => setPreviewImg(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, cursor: 'zoom-out', padding: 24 }}>
+          <img src={previewImg} alt="预览" style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: 8, boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }} onClick={e => e.stopPropagation()} />
+          <button onClick={() => setPreviewImg(null)} style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%', width: 36, height: 36, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 20 }}>✕</button>
+        </div>
+      )}
+    </>
   )
 }
