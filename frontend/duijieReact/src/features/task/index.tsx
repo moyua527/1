@@ -37,6 +37,7 @@ export default function TaskBoard() {
   const [filterStatus, setFilterStatus] = useState<string>('')
   const [selectedTask, setSelectedTask] = useState<any>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [previewImg, setPreviewImg] = useState<string | null>(null)
 
   const { data: allTasks = [], isLoading: _tasksLoading } = useTasks(filterProject || undefined)
   const { data: projectsData = [] } = useProjects()
@@ -141,10 +142,9 @@ export default function TaskBoard() {
               {imgs.length > 0 && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 4 }}>
                   {imgs.map((a: any) => (
-                    <a key={a.id} href={`${BACKEND_URL}/uploads/${a.filename}`} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>
-                      <img src={`${BACKEND_URL}/uploads/${a.filename}`} alt={a.original_name}
-                        style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border-primary)', display: 'block' }} />
-                    </a>
+                    <img key={a.id} src={`${BACKEND_URL}/uploads/${a.filename}`} alt={a.original_name}
+                      onClick={e => { e.stopPropagation(); setPreviewImg(`${BACKEND_URL}/uploads/${a.filename}`) }}
+                      style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border-primary)', display: 'block', cursor: 'pointer' }} />
                   ))}
                 </div>
               )}
@@ -173,6 +173,14 @@ export default function TaskBoard() {
       />
 
       <TaskCreateModal open={showCreateModal} onClose={() => setShowCreateModal(false)} onCreated={reload} projects={projects} />
+
+      {/* 图片预览 */}
+      {previewImg && (
+        <div onClick={() => setPreviewImg(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, cursor: 'zoom-out', padding: 24 }}>
+          <img src={previewImg} alt="预览" style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: 8, boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }} onClick={e => e.stopPropagation()} />
+          <button onClick={() => setPreviewImg(null)} style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%', width: 36, height: 36, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 20 }}>✕</button>
+        </div>
+      )}
     </div>
   )
 }

@@ -50,8 +50,8 @@ module.exports = async (req, res) => {
 
     for (const owner of owners) {
       await db.query(
-        "INSERT INTO duijie_notifications (user_id, type, title, content, related_id, related_type) VALUES (?, 'project_join', ?, ?, ?, 'project')",
-        [owner.user_id, `${inviterName} 邀请 ${inviteeName} 加入项目`, `项目: ${project.name}`, projectId]
+        "INSERT INTO duijie_notifications (user_id, type, title, content) VALUES (?, 'project_join', ?, ?)",
+        [owner.user_id, `${inviterName} 邀请 ${inviteeName} 加入项目`, `项目: ${project.name}`]
       );
     }
 
