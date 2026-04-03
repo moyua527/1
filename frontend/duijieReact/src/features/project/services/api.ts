@@ -36,6 +36,8 @@ export const projectApi = {
   rejectJoinRequest: (id: string, requestId: number) => fetchApi(`/api/projects/${id}/join-requests/${requestId}/reject`, { method: 'POST' }),
   // 成员邀请（任何项目成员可发起，需审批）
   inviteMember: (id: string, data: { user_id: number; message?: string }) => fetchApi(`/api/projects/${id}/invite`, { method: 'POST', body: JSON.stringify(data) }),
+  // 搜索可邀请用户（全局）
+  searchUsersForInvite: (id: string, q: string) => fetchApi(`/api/projects/${id}/search-users?q=${encodeURIComponent(q)}`),
   // 项目回收站
   trash: () => fetchApi('/api/projects/trash'),
   restore: (id: string) => fetchApi(`/api/projects/${id}/restore`, { method: 'PATCH' }),

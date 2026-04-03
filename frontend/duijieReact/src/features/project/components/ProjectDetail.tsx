@@ -48,6 +48,7 @@ export default function ProjectDetail() {
   const canDelete = platformCanDelete || !!projectPerms?.can_delete_project
   const [project, setProject] = useState<any>(null)
   const projectRef = useRef<any>(null)
+  const inviteTimerRef = useRef<any>(null)
   const [projectLoading, setProjectLoading] = useState(true)
   const [projectError, setProjectError] = useState('')
   const [tasks, setTasks] = useState<any[]>([])
@@ -84,6 +85,7 @@ export default function ProjectDetail() {
   const [inviteAvailable, setInviteAvailable] = useState<any[]>([])
   const [inviteSearch, setInviteSearch] = useState('')
   const [invitingId, setInvitingId] = useState<number | null>(null)
+  const [inviteSearching, setInviteSearching] = useState(false)
 
   const openClientModal = (clientId: number) => {
     setClientModal(true)
@@ -269,7 +271,20 @@ export default function ProjectDetail() {
     setShowInviteModal(true)
     setInviteSearch('')
     setInvitingId(null)
-    projectApi.availableUsers(id!).then(r => { if (r.success) setInviteAvailable(r.data || []) })
+    setInviteAvailable([])
+    setInviteSearching(false)
+  }
+
+  const handleInviteSearch = (q: string) => {
+    setInviteSearch(q)
+    if (inviteTimerRef.current) clearTimeout(inviteTimerRef.current)
+    if (!q.trim()) { setInviteAvailable([]); setInviteSearching(false); return }
+    setInviteSearching(true)
+    inviteTimerRef.current = setTimeout(async () => {
+      const r = await projectApi.searchUsersForInvite(id!, q.trim())
+      setInviteSearching(false)
+      if (r.success) setInviteAvailable(r.data || [])
+    }, 400)
   }
 
   const handleInvite = async (userId: number) => {
@@ -489,18 +504,15 @@ export default function ProjectDetail() {
 
         {/* 邀请成员模态框 */}
         <Modal open={showInviteModal} onClose={() => setShowInviteModal(false)} title="邀请成员加入项目">
-          <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 12 }}>邀请企业成员加入此项目，需要项目管理审批后生效</div>
-          <Input placeholder="搜索用户名或昵称" value={inviteSearch} onChange={e => setInviteSearch(e.target.value)} />
+          <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 12 }}>通过ID、昵称或手机号搜索用户并邀请，需项目管理审批后生效</div>
+          <Input placeholder="输入用户ID、昵称或手机号搜索" value={inviteSearch} onChange={e => handleInviteSearch(e.target.value)} />
           <div style={{ maxHeight: 300, overflowY: 'auto', marginTop: 12 }}>
-            {inviteAvailable.filter(u => {
-              if (!inviteSearch) return true
-              const s = inviteSearch.toLowerCase()
-              return (u.nickname || '').toLowerCase().includes(s) || (u.username || '').toLowerCase().includes(s) || (u.member_name || '').toLowerCase().includes(s)
-            }).map(u => (
+            {inviteSearching && <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 13 }}>搜索中...</div>}
+            {!inviteSearching && inviteAvailable.map(u => (
               <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border-secondary)' }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)' }}>{u.member_name || u.nickname || u.username}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>@{u.username} · {u.ent_role === 'creator' ? '创建者' : u.ent_role === 'admin' ? '管理员' : '成员'}</div>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)' }}>{u.nickname || '用户'}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>ID: {u.display_id || u.id}{u.phone ? ` · ${u.phone}` : ''}</div>
                 </div>
                 <button onClick={() => handleInvite(u.id)} disabled={invitingId === u.id}
                   style={{ padding: '4px 12px', borderRadius: 6, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 12, cursor: 'pointer', opacity: invitingId === u.id ? 0.6 : 1 }}>
@@ -508,7 +520,8 @@ export default function ProjectDetail() {
                 </button>
               </div>
             ))}
-            {inviteAvailable.length === 0 && <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 13 }}>没有可邀请的成员</div>}
+            {!inviteSearching && inviteSearch && inviteAvailable.length === 0 && <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 13 }}>未找到匹配用户</div>}
+            {!inviteSearching && !inviteSearch && <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 13 }}>请输入用户ID或昵称进行搜索</div>}
           </div>
         </Modal>
       </>)}
@@ -587,7 +600,7 @@ export default function ProjectDetail() {
                   {req.status === 'pending' ? (
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button onClick={() => handleReviewJoinRequest(req.id, 'approve')}
-                        style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 6, border: 'none', background: 'var(--color-green)', color: '#fff', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+                        style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 6, border: 'none', background: '#22c55e', color: '#fff', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
                         <Check size={12} /> 通过
                       </button>
                       <button onClick={() => handleReviewJoinRequest(req.id, 'reject')}

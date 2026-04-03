@@ -1,7 +1,7 @@
 import { BACKEND_URL } from '../../../bootstrap'
 import Modal from '../../ui/Modal'
 import Badge from '../../ui/Badge'
-import { Paperclip, Download, Calendar, User, Flag, AlignLeft } from 'lucide-react'
+import { Paperclip, Download, Calendar, Flag, AlignLeft } from 'lucide-react'
 import { formatDateTime } from '../../../utils/datetime'
 
 const fmtSize = (b: number) => b < 1024 ? b + 'B' : b < 1048576 ? (b / 1024).toFixed(1) + 'KB' : (b / 1048576).toFixed(1) + 'MB'
@@ -73,17 +73,13 @@ export default function TaskDetailModal({ task, open, onClose }: Props) {
           </div>
         </div>
 
-        {/* 指派人 + 截止日期 */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <div>
-            <div style={lbl}><User size={14} /> 指派人</div>
-            <div style={valStyle}>{task.assigned_name || '未指派'}</div>
-          </div>
+        {/* 截止日期 */}
+        {task.due_date && (
           <div>
             <div style={lbl}><Calendar size={14} /> 截止日期</div>
-            <div style={valStyle}>{task.due_date ? task.due_date.slice(0, 10) : '无'}</div>
+            <div style={valStyle}>{task.due_date.slice(0, 10)}</div>
           </div>
-        </div>
+        )}
 
         {/* 图片附件 */}
         {imgs.length > 0 && (

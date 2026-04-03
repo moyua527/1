@@ -55,5 +55,7 @@ router.post('/projects/:id/join-requests/:requestId/approve', auth, pag, project
 router.post('/projects/:id/join-requests/:requestId/reject', auth, pag, projectPermGuard('can_manage_members'), require('../controllers/project/joinRequestReviewController'));
 // 项目成员邀请（任何成员可发起，需管理审批）
 router.post('/projects/:id/invite', auth, pag, require('../controllers/project/inviteMemberController'));
+// 搜索可邀请用户（全局搜索，通过ID/昵称/手机号）
+router.get('/projects/:id/search-users', auth, pag, require('../controllers/project/searchUsersForInviteController'));
 
 module.exports = router;
