@@ -1,10 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
-import { fetchApi, uploadFile, BACKEND_URL } from '../../../bootstrap'
-import { taskApi } from '../services/api'
+import { BACKEND_URL } from '../../../bootstrap'
 import Modal from '../../ui/Modal'
-import { toast } from '../../ui/Toast'
-import { confirm } from '../../ui/ConfirmDialog'
-import { Paperclip, Download, Trash2, Upload, Calendar, User, Flag, AlignLeft, Loader2 } from 'lucide-react'
+import { Paperclip, Download, Calendar, User, Flag, AlignLeft } from 'lucide-react'
 import { formatDateTime } from '../../../utils/datetime'
 const fmtSize = (b: number) => b < 1024 ? b + 'B' : b < 1048576 ? (b / 1024).toFixed(1) + 'KB' : (b / 1048576).toFixed(1) + 'MB'
 
@@ -25,14 +21,14 @@ const statusOptions = [
 ]
 
 const label: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }
-const field: React.CSSProperties = { width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-primary)', boxSizing: 'border-box' as const }
+const val: React.CSSProperties = { fontSize: 14, color: 'var(--text-heading)', padding: '6px 0', lineHeight: 1.6 }
 
 interface Props {
   task: any
   projectId: string
   open: boolean
   onClose: () => void
-  onUpdated: () => void
+  onUpdated?: () => void
 }
 
 export default function TaskDetailModal({ task, projectId, open, onClose, onUpdated }: Props) {

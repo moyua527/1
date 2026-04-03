@@ -1,5 +1,5 @@
 const db = require('../../../config/db');
-const { broadcast } = require('../../../socket/state');
+const { broadcast } = require('../../utils/broadcast');
 
 module.exports = async (req, res) => {
   try {
