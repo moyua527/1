@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
-import { ArrowLeft, Trash2, AppWindow, ExternalLink, MoreVertical, Pencil, Copy, UserPlus, Check, X } from 'lucide-react'
+import { ArrowLeft, Trash2, AppWindow, ExternalLink, MoreVertical, Pencil } from 'lucide-react'
 import { can } from '../../../stores/permissions'
 import useEnterpriseStore from '../../../stores/useEnterpriseStore'
 import useProjectPerms from '../../../hooks/useProjectPerms'
@@ -12,7 +12,6 @@ import { milestoneApi } from '../../milestone/services/api'
 import Button from '../../ui/Button'
 import Badge from '../../ui/Badge'
 import Input from '../../ui/Input'
-import ProgressBar from '../../ui/ProgressBar'
 import MessagePanel from '../../message/components/MessagePanel'
 import { confirm } from '../../ui/ConfirmDialog'
 import { toast } from '../../ui/Toast'
@@ -23,6 +22,11 @@ import { ManageMembersModal, ManageClientMembersModal, MemberInfoModal, ClientIn
 import useLiveData from '../../../hooks/useLiveData'
 import { onSocket } from '../../ui/smartSocket'
 import { formatDateTime } from '../../../utils/datetime'
+import EditProjectModal from './EditProjectModal'
+import SetClientModal from './SetClientModal'
+import InviteMemberModal from './InviteMemberModal'
+import JoinRequestsTab from './JoinRequestsTab'
+import AppTab from './AppTab'
 
 const statusMap: Record<string, { label: string; color: string }> = {
   planning: { label: '规划中', color: 'blue' },
@@ -53,7 +57,6 @@ export default function ProjectDetail() {
   const canCreateTask = isAdmin || !!projectPerms?.can_create_task
   const [project, setProject] = useState<any>(null)
   const projectRef = useRef<any>(null)
-  const inviteTimerRef = useRef<any>(null)
   const [projectLoading, setProjectLoading] = useState(true)
   const [projectError, setProjectError] = useState('')
   const [tasks, setTasks] = useState<any[]>([])
@@ -78,19 +81,9 @@ export default function ProjectDetail() {
   const [projectRoles, setProjectRoles] = useState<any[]>([])
   const activeEnterpriseId = useEnterpriseStore(s => s.activeEnterpriseId)
   const [showSetClient, setShowSetClient] = useState(false)
-  const [availableClients, setAvailableClients] = useState<any[]>([])
-  const [selectedClientId, setSelectedClientId] = useState('')
-  const [settingClient, setSettingClient] = useState(false)
   const [showActionMenu, setShowActionMenu] = useState(false)
   const [showEditProject, setShowEditProject] = useState(false)
-  const [editForm, setEditForm] = useState({ name: '', description: '', status: 'planning', task_title_presets: [] as string[], newPreset: '' })
-  const [joinRequests, setJoinRequests] = useState<any[]>([])
-  const [joinReqLoading, setJoinReqLoading] = useState(false)
   const [showInviteModal, setShowInviteModal] = useState(false)
-  const [inviteAvailable, setInviteAvailable] = useState<any[]>([])
-  const [inviteSearch, setInviteSearch] = useState('')
-  const [invitingId, setInvitingId] = useState<number | null>(null)
-  const [inviteSearching, setInviteSearching] = useState(false)
 
   const openClientModal = (clientId: number) => {
     setClientModal(true)
@@ -143,20 +136,6 @@ export default function ProjectDetail() {
     milestoneApi.list(id).then(r => { if (r.success) setMilestones(r.data || []) })
   }, [id])
 
-  const loadJoinRequests = useCallback(() => {
-    if (!id) return
-    setJoinReqLoading(true)
-    projectApi.getJoinRequests(id).then(r => { setJoinRequests(r.success ? r.data || [] : []); setJoinReqLoading(false) })
-  }, [id])
-
-  const handleReviewJoinRequest = async (requestId: number, action: 'approve' | 'reject') => {
-    const r = action === 'approve'
-      ? await projectApi.approveJoinRequest(id!, requestId)
-      : await projectApi.rejectJoinRequest(id!, requestId)
-    if (r.success) { toast(action === 'approve' ? '已通过' : '已拒绝', 'success'); loadJoinRequests(); loadProject() }
-    else toast(r.message || '操作失败', 'error')
-  }
-
   useEffect(() => {
     if (!id) return
     const off = onSocket('data_changed', (payload: any) => {
@@ -175,14 +154,6 @@ export default function ProjectDetail() {
     }, 0)
     return () => window.clearTimeout(timer)
   }, [id, loadProject, loadTasks])
-
-  useEffect(() => {
-    if (tab !== 'join_requests') return
-    const timer = window.setTimeout(() => {
-      loadJoinRequests()
-    }, 0)
-    return () => window.clearTimeout(timer)
-  }, [tab, loadJoinRequests])
 
   if (projectLoading) return <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}>加载中...</div>
   if (projectError) return (
@@ -214,41 +185,6 @@ export default function ProjectDetail() {
     else toast(r.message || '删除失败', 'error')
   }
 
-  const openSetClient = () => {
-    setSelectedClientId('')
-    setShowSetClient(true)
-    // 获取平台上所有企业（排除本企业），用于选择要关联的客户企业
-    fetchApi('/api/clients').then(r => {
-      if (r.success) {
-        const companies = (r.data || []).filter((c: any) => c.client_type === 'company')
-        setAvailableClients(companies)
-      }
-    })
-  }
-
-  const handleSetClient = async () => {
-    if (!selectedClientId) { toast('请选择客户企业', 'error'); return }
-    setSettingClient(true)
-    // 发送关联请求而非直接设置
-    const r = await projectApi.sendClientRequest(id!, { to_enterprise_id: Number(selectedClientId) })
-    setSettingClient(false)
-    if (r.success) {
-      toast('关联请求已发送，等待对方审批', 'success')
-      setShowSetClient(false)
-    } else toast(r.message || '发送失败', 'error')
-  }
-
-  const handleRemoveClient = async () => {
-    setSettingClient(true)
-    const r = await projectApi.update(id!, { client_id: null })
-    setSettingClient(false)
-    if (r.success) {
-      toast('已取消关联', 'success')
-      setShowSetClient(false)
-      loadProject()
-    } else toast(r.message || '操作失败', 'error')
-  }
-
   const refreshAvailableUsers = () => { projectApi.availableUsers(id!).then(r => { if (r.success) setAvailableUsers(r.data || []) }) }
   const refreshClientAvailableUsers = () => { projectApi.clientAvailableUsers(id!).then(r => { if (r.success) setClientAvailableUsers(r.data || []) }) }
 
@@ -272,36 +208,6 @@ export default function ProjectDetail() {
     refreshClientAvailableUsers()
   }
 
-  const openInviteModal = () => {
-    setShowInviteModal(true)
-    setInviteSearch('')
-    setInvitingId(null)
-    setInviteAvailable([])
-    setInviteSearching(false)
-  }
-
-  const handleInviteSearch = (q: string) => {
-    setInviteSearch(q)
-    if (inviteTimerRef.current) clearTimeout(inviteTimerRef.current)
-    if (!q.trim()) { setInviteAvailable([]); setInviteSearching(false); return }
-    setInviteSearching(true)
-    inviteTimerRef.current = setTimeout(async () => {
-      const r = await projectApi.searchUsersForInvite(id!, q.trim())
-      setInviteSearching(false)
-      if (r.success) setInviteAvailable(r.data || [])
-    }, 400)
-  }
-
-  const handleInvite = async (userId: number) => {
-    setInvitingId(userId)
-    const r = await projectApi.inviteMember(id!, { user_id: userId })
-    setInvitingId(null)
-    if (r.success) {
-      toast('邀请已发送，等待项目管理审批', 'success')
-      setInviteAvailable(prev => prev.filter(u => u.id !== userId))
-    } else toast(r.message || '邀请失败', 'error')
-  }
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px - 48px)', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
@@ -311,7 +217,7 @@ export default function ProjectDetail() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
             <Badge color={st.color}>{st.label}</Badge>
             <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>我方企业: <span style={{ color: 'var(--text-heading)' }}>{myEnterpriseName}</span></span>
-            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{isClientPerspective ? '对方企业' : '客户企业'}: {hasExternalEnterprise ? (isClientPerspective ? <span style={{ color: 'var(--text-heading)' }}>{otherEnterpriseName}</span> : <span onClick={() => project.client_id && openClientModal(project.client_id)} style={{ color: 'var(--brand)', cursor: 'pointer' }}>{otherEnterpriseName}</span>) : (<>{canEdit && <button onClick={openSetClient} style={{ fontSize: 12, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, textDecoration: 'underline' }}>设置</button>}{!canEdit && <span style={{ color: 'var(--text-heading)' }}>无</span>}</>)}</span>
+            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{isClientPerspective ? '对方企业' : '客户企业'}: {hasExternalEnterprise ? (isClientPerspective ? <span style={{ color: 'var(--text-heading)' }}>{otherEnterpriseName}</span> : <span onClick={() => project.client_id && openClientModal(project.client_id)} style={{ color: 'var(--brand)', cursor: 'pointer' }}>{otherEnterpriseName}</span>) : (<>{canEdit && <button onClick={() => setShowSetClient(true)} style={{ fontSize: 12, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, textDecoration: 'underline' }}>设置</button>}{!canEdit && <span style={{ color: 'var(--text-heading)' }}>无</span>}</>)}</span>
           </div>
         </div>
         {(canEdit || canDelete) && (
@@ -320,40 +226,19 @@ export default function ProjectDetail() {
             {showActionMenu && <>
               <div style={{ position: 'fixed', inset: 0, zIndex: 99 }} onClick={() => setShowActionMenu(false)} />
               <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)', borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 100, minWidth: 140, overflow: 'hidden' }}>
-                {canEdit && <button onClick={() => { setShowActionMenu(false); setEditForm({ name: project.name || '', description: project.description || '', status: project.status || 'planning', task_title_presets: Array.isArray(project.task_title_presets) ? [...project.task_title_presets] : [], newPreset: '' }); setShowEditProject(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Pencil size={14} /> 编辑项目</button>}
+                {canEdit && <button onClick={() => { setShowActionMenu(false); setShowEditProject(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Pencil size={14} /> 编辑项目</button>}
                 {canDelete && <button onClick={() => { setShowActionMenu(false); handleDelete() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#ef4444', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Trash2 size={14} /> 删除项目</button>}
               </div>
             </>}
           </div>
         )}
       </div>
-      {/* 编辑项目 Modal */}
-      <Modal open={showEditProject} onClose={() => setShowEditProject(false)} title="编辑项目">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div><label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>项目名称</label><Input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} placeholder="项目名称" /></div>
-          <div><label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>描述</label><textarea value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} placeholder="项目描述（可选）" rows={3} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', fontSize: 14, resize: 'vertical' }} /></div>
-          <div><label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>固定功能名称</label>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-              <input value={editForm.newPreset} onChange={e => setEditForm(f => ({ ...f, newPreset: e.target.value }))} placeholder="输入功能名称" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); const v = editForm.newPreset.trim(); if (v && !editForm.task_title_presets.includes(v)) setEditForm(f => ({ ...f, task_title_presets: [...f.task_title_presets, v], newPreset: '' })) } }} style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', fontSize: 14 }} />
-              <Button variant="secondary" onClick={() => { const v = editForm.newPreset.trim(); if (v && !editForm.task_title_presets.includes(v)) setEditForm(f => ({ ...f, task_title_presets: [...f.task_title_presets, v], newPreset: '' })) }}>添加</Button>
-            </div>
-            {editForm.task_title_presets.length > 0 && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{editForm.task_title_presets.map((p, i) => (
-              <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 999, background: 'var(--bg-tertiary)', fontSize: 13, color: 'var(--text-body)' }}>{p}<button type="button" onClick={() => setEditForm(f => ({ ...f, task_title_presets: f.task_title_presets.filter((_, j) => j !== i) }))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text-tertiary)', fontSize: 14, lineHeight: 1 }} onMouseEnter={e => e.currentTarget.style.color = 'var(--color-danger)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}>×</button></span>
-            ))}</div>}
-            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>任务创建时可直接下拉选择这些固定功能名称</div></div>
-          <div><label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>状态</label><select value={editForm.status} onChange={e => setEditForm(f => ({ ...f, status: e.target.value }))} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', fontSize: 14 }}>
-            {Object.entries(statusMap).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-          </select></div>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 8 }}>
-            <Button variant="secondary" onClick={() => setShowEditProject(false)}>取消</Button>
-            <Button onClick={async () => {
-              if (!editForm.name.trim()) { toast('请输入项目名称', 'error'); return }
-              const r = await projectApi.update(id!, { name: editForm.name.trim(), description: editForm.description.trim(), status: editForm.status, task_title_presets: editForm.task_title_presets })
-              if (r.success) { toast('已更新', 'success'); setShowEditProject(false); loadProject() } else toast(r.message || '更新失败', 'error')
-            }}>保存</Button>
-          </div>
-        </div>
-      </Modal>
+      <EditProjectModal open={showEditProject} project={project} onClose={() => setShowEditProject(false)}
+        onSave={async (data) => {
+          const r = await projectApi.update(id!, data)
+          if (r.success) { toast('已更新', 'success'); loadProject(); return true }
+          toast(r.message || '更新失败', 'error'); return false
+        }} />
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 0, flexWrap: 'wrap', flexShrink: 0 }}>
         {([['overview','概览'],['tasks','任务'],['milestones','里程碑'],['messages','消息'], ...(project.app_url ? [['app', project.app_name || '应用']] : []), ...(canApproveJoin ? [['join_requests', '加入申请']] : [])] as [string, string][]).map(([k,v]) => (
@@ -367,11 +252,6 @@ export default function ProjectDetail() {
       <div style={{ flex: 1, minHeight: 0, paddingTop: 16, ...(tab === 'tasks' ? { display: 'flex', flexDirection: 'column' as const, overflow: 'hidden' } : { overflowY: 'auto' as const }) }}>
       {tab === 'overview' && (<>
         <div style={section}>
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>进度</div>
-            <ProgressBar value={project.progress || 0} />
-            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>{project.progress || 0}%</div>
-          </div>
           {project.description && <div style={{ marginBottom: 16 }}><div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>描述</div><div style={{ fontSize: 14, color: 'var(--text-body)', lineHeight: 1.6 }}>{project.description}</div></div>}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
             <div>
@@ -411,7 +291,7 @@ export default function ProjectDetail() {
               )}
             </div>
             <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>我方企业</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{myEnterpriseName}</div></div>
-            <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{isClientPerspective ? '对方企业' : '客户企业'}</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{hasExternalEnterprise ? (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>{isClientPerspective ? otherEnterpriseName : (project.client_id ? <span onClick={() => openClientModal(project.client_id)} style={{ color: 'var(--brand)', cursor: 'pointer' }}>{otherEnterpriseName}</span> : otherEnterpriseName)}{canEdit && !isClientPerspective && <button onClick={openSetClient} style={{ fontSize: 11, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>更换</button>}</span>) : (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>无{canEdit && <button onClick={openSetClient} style={{ fontSize: 11, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>设置</button>}</span>)}</div></div>
+            <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{isClientPerspective ? '对方企业' : '客户企业'}</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{hasExternalEnterprise ? (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>{isClientPerspective ? otherEnterpriseName : (project.client_id ? <span onClick={() => openClientModal(project.client_id)} style={{ color: 'var(--brand)', cursor: 'pointer' }}>{otherEnterpriseName}</span> : otherEnterpriseName)}{canEdit && !isClientPerspective && <button onClick={() => setShowSetClient(true)} style={{ fontSize: 11, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>更换</button>}</span>) : (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>无{canEdit && <button onClick={() => setShowSetClient(true)} style={{ fontSize: 11, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>设置</button>}</span>)}</div></div>
             <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>创建时间</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{formatDateTime(project.created_at)}</div></div>
             <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>任务数</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{tasks.length}</div></div>
           </div>
@@ -481,7 +361,7 @@ export default function ProjectDetail() {
           showOtherTeam={hasExternalEnterprise}
           canEditMyTeam={canAddMember}
           onManageMyMembers={isClientPerspective ? openManageClientMembers : openManageMembers}
-          onInviteMember={openInviteModal}
+          onInviteMember={() => setShowInviteModal(true)}
           onSelectMember={setSelectedMember}
         />
 
@@ -507,28 +387,7 @@ export default function ProjectDetail() {
           onRefreshAvailable={refreshClientAvailableUsers}
         />
 
-        {/* 邀请成员模态框 */}
-        <Modal open={showInviteModal} onClose={() => setShowInviteModal(false)} title="邀请成员加入项目">
-          <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 12 }}>通过ID、昵称或手机号搜索用户并邀请，需项目管理审批后生效</div>
-          <Input placeholder="输入用户ID、昵称或手机号搜索" value={inviteSearch} onChange={e => handleInviteSearch(e.target.value)} />
-          <div style={{ maxHeight: 300, overflowY: 'auto', marginTop: 12 }}>
-            {inviteSearching && <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 13 }}>搜索中...</div>}
-            {!inviteSearching && inviteAvailable.map(u => (
-              <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border-secondary)' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)' }}>{u.nickname || '用户'}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>ID: {u.display_id || u.id}{u.phone ? ` · ${u.phone}` : ''}</div>
-                </div>
-                <button onClick={() => handleInvite(u.id)} disabled={invitingId === u.id}
-                  style={{ padding: '4px 12px', borderRadius: 6, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 12, cursor: 'pointer', opacity: invitingId === u.id ? 0.6 : 1 }}>
-                  {invitingId === u.id ? '邀请中...' : '邀请'}
-                </button>
-              </div>
-            ))}
-            {!inviteSearching && inviteSearch && inviteAvailable.length === 0 && <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 13 }}>未找到匹配用户</div>}
-            {!inviteSearching && !inviteSearch && <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 13 }}>请输入用户ID或昵称进行搜索</div>}
-          </div>
-        </Modal>
+        <InviteMemberModal open={showInviteModal} projectId={id!} onClose={() => setShowInviteModal(false)} />
       </>)}
 
       {tab === 'tasks' && <TaskTab tasks={tasks} canEdit={canCreateTask} projectId={id!} loadTasks={loadTasks} />}
@@ -537,120 +396,23 @@ export default function ProjectDetail() {
 
       {tab === 'messages' && <div style={section}><MessagePanel projectId={id!} /></div>}
 
-      {tab === 'app' && project.app_url && /^https?:\/\/.+/.test(project.app_url) && (
-        <div style={section}>
-          <div style={{ borderRadius: 12, border: '1px solid #dbeafe', background: 'linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 24px', gap: 16 }}>
-            <div style={{ width: 72, height: 72, borderRadius: 18, background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', boxShadow: '0 4px 16px rgba(37,99,235,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <AppWindow size={36} color="#fff" />
-            </div>
-            <h4 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: 'var(--text-heading)' }}>{project.app_name || '应用'}</h4>
-            <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)', textAlign: 'center', maxWidth: 360 }}>
-              点击下方按钮在新窗口中打开应用
-            </p>
-            <a href={project.app_url} target="_blank" rel="noreferrer"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 32px', background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', color: 'var(--bg-primary)', borderRadius: 12, fontSize: 15, textDecoration: 'none', fontWeight: 600, marginTop: 8, boxShadow: '0 4px 16px rgba(37,99,235,0.3)', transition: 'all 0.2s' }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(37,99,235,0.4)' }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(37,99,235,0.3)' }}>
-              <ExternalLink size={16} /> 打开应用
-            </a>
-          </div>
-        </div>
-      )}
+      {tab === 'app' && <AppTab project={project} />}
 
-      {tab === 'app' && (!project.app_url || !/^https?:\/\/.+/.test(project.app_url)) && (
-        <div style={section}>
-          <div style={{ borderRadius: 12, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 24px', gap: 12 }}>
-            <AppWindow size={40} color="var(--text-tertiary)" />
-            <p style={{ margin: 0, fontSize: 15, color: 'var(--text-secondary)', fontWeight: 500 }}>
-              {project.app_url ? '应用链接无效' : '该项目未配置应用'}
-            </p>
-            <p style={{ margin: 0, fontSize: 13, color: 'var(--text-tertiary)' }}>
-              {project.app_url ? '链接必须以 http:// 或 https:// 开头，请编辑修正' : '请在项目设置中添加应用链接'}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {tab === 'join_requests' && (
-        <div style={section}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>加入申请</h3>
-            {project.join_code && (
-              <span style={{ fontSize: 12, color: 'var(--text-tertiary)', fontFamily: 'monospace', cursor: 'pointer', padding: '4px 10px', background: 'var(--bg-secondary)', borderRadius: 6, border: '1px solid var(--border-primary)' }}
-                title="点击复制项目ID" onClick={() => { navigator.clipboard.writeText(project.join_code); toast('已复制项目ID', 'success') }}>
-                项目ID: {project.join_code} <Copy size={10} style={{ verticalAlign: 'middle' }} />
-              </span>
-            )}
-          </div>
-          {joinReqLoading ? (
-            <p style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: 24 }}>加载中...</p>
-          ) : joinRequests.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-tertiary)' }}>
-              <UserPlus size={40} style={{ marginBottom: 8, opacity: 0.3 }} />
-              <p style={{ margin: 0, fontSize: 14 }}>暂无加入申请</p>
-              <p style={{ margin: '4px 0 0', fontSize: 12 }}>分享项目ID给他人，即可收到加入申请</p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {joinRequests.map((req: any) => (
-                <div key={req.id} style={{ padding: 14, borderRadius: 10, background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                  <div style={{ flex: 1, minWidth: 150 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{req.nickname || req.phone || req.username}</div>
-                    {req.invite_type === 'member' && req.inviter_name && (
-                      <div style={{ fontSize: 11, color: 'var(--brand)', marginTop: 2 }}>由 {req.inviter_name} 邀请</div>
-                    )}
-                    {req.message && <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>{req.message}</div>}
-                    <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 4 }}>{formatDateTime(req.created_at)}</div>
-                  </div>
-                  {req.status === 'pending' ? (
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button onClick={() => handleReviewJoinRequest(req.id, 'approve')}
-                        style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 6, border: 'none', background: '#22c55e', color: '#fff', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
-                        <Check size={12} /> 通过
-                      </button>
-                      <button onClick={() => handleReviewJoinRequest(req.id, 'reject')}
-                        style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 6, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
-                        <X size={12} /> 拒绝
-                      </button>
-                    </div>
-                  ) : (
-                    <Badge color={req.status === 'approved' ? 'green' : 'gray'}>{req.status === 'approved' ? '已通过' : '已拒绝'}</Badge>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      {tab === 'join_requests' && <JoinRequestsTab projectId={id!} joinCode={project.join_code} onRefresh={loadProject} />}
 
 
-      <Modal open={showSetClient} onClose={() => setShowSetClient(false)} title={hasExternalEnterprise ? '更换客户企业' : '关联客户企业'}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 6 }}>选择客户企业</label>
-            <select value={selectedClientId} onChange={e => setSelectedClientId(e.target.value)}
-              style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--text-disabled)', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
-              <option value="">请选择企业</option>
-              {availableClients.map((c: any) => (
-                <option key={c.id} value={c.id}>{c.name}{c.company ? ` (${c.company})` : ''}</option>
-              ))}
-            </select>
-            {availableClients.length === 0 && (
-              <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 6 }}>暂无可关联的企业</div>
-            )}
-            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 8 }}>发送关联请求后，需要对方企业管理员审批同意才可完成关联</div>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-            {hasExternalEnterprise && (
-              <Button variant="secondary" onClick={handleRemoveClient} disabled={settingClient}>取消关联</Button>
-            )}
-            <Button variant="secondary" onClick={() => setShowSetClient(false)}>取消</Button>
-            <Button onClick={handleSetClient} disabled={settingClient || !selectedClientId}>
-              {settingClient ? '发送中...' : '发送关联请求'}
-            </Button>
-          </div>
-        </div>
-      </Modal>
+      <SetClientModal open={showSetClient} hasExternalEnterprise={hasExternalEnterprise}
+        onClose={() => setShowSetClient(false)}
+        onSendRequest={async (clientId) => {
+          const r = await projectApi.sendClientRequest(id!, { to_enterprise_id: clientId })
+          if (r.success) { toast('关联请求已发送，等待对方审批', 'success'); return true }
+          toast(r.message || '发送失败', 'error'); return false
+        }}
+        onRemoveClient={async () => {
+          const r = await projectApi.update(id!, { client_id: null })
+          if (r.success) { toast('已取消关联', 'success'); loadProject(); return true }
+          toast(r.message || '操作失败', 'error'); return false
+        }} />
 
       <MemberInfoModal member={selectedMember} onClose={() => setSelectedMember(null)} />
       <ClientInfoModal open={clientModal} onClose={() => setClientModal(false)} clientData={clientData} />
