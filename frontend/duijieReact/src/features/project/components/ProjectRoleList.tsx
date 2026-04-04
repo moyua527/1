@@ -152,9 +152,17 @@ export default function ProjectRoleList({ canEdit, projectId }: Props) {
     if (!form.name.trim()) { toast('请输入角色名称', 'error'); return }
     setSaving(true)
     try {
-      const r = editing
-        ? (projectId ? await projectApi.updateRole(projectId, editing.id, form) : await projectApi.updateEntRole(editing.id, form))
-        : (projectId ? await projectApi.createRole(projectId, form) : await projectApi.createEntRole(form))
+      let r
+      if (editing) {
+        const isEntRole = editing.enterprise_id && !editing.project_id
+        r = isEntRole
+          ? await projectApi.updateEntRole(editing.id, form)
+          : await projectApi.updateRole(projectId!, editing.id, form)
+      } else {
+        r = projectId
+          ? await projectApi.createRole(projectId, form)
+          : await projectApi.createEntRole(form)
+      }
       if (r.success) {
         toast(editing ? '角色已更新' : '角色已创建', 'success')
         setModalOpen(false)
@@ -163,9 +171,12 @@ export default function ProjectRoleList({ canEdit, projectId }: Props) {
     } finally { setSaving(false) }
   }
 
-  const handleDelete = async (roleId: number) => {
+  const handleDelete = async (role: any) => {
     if (!(await confirm({ message: '确定删除该角色？', danger: true }))) return
-    const r = projectId ? await projectApi.removeRole(projectId, roleId) : await projectApi.removeEntRole(roleId)
+    const isEntRole = role.enterprise_id && !role.project_id
+    const r = isEntRole
+      ? await projectApi.removeEntRole(role.id)
+      : await projectApi.removeRole(projectId!, role.id)
     if (r.success) { toast('角色已删除', 'success'); loadRoles() }
     else toast(r.message || '删除失败', 'error')
   }
@@ -208,7 +219,7 @@ export default function ProjectRoleList({ canEdit, projectId }: Props) {
                     {r.is_default ? <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 3, background: 'var(--bg-tertiary)', color: 'var(--text-tertiary)' }}>默认</span> : null}
                   </div>
                   {editMode && !r.is_default && (
-                    <button onClick={(e) => { e.stopPropagation(); handleDelete(r.id) }}
+                    <button onClick={(e) => { e.stopPropagation(); handleDelete(r) }}
                       style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', background: 'var(--color-danger)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', padding: 0, boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>
                       <Trash2 size={10} />
                     </button>

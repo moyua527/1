@@ -1,6 +1,6 @@
 {
-  "version": "1.1.73.7",
+  "version": "1.1.73.8",
   "versionCode": 73,
   "minVersion": "1.0.0",
-  "changelog": "邀请功能并入管理弹窗，含搜索邀请和复制邀请链接"
+  "changelog": "修复编辑/删除企业级共享角色时报「角色不存在」的bug"
 }
