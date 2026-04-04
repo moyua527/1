@@ -74,7 +74,18 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
       const r = await projectApi.detail(projectId)
       if (r.success && r.data?.join_code) {
         const link = `${window.location.origin}/join/${r.data.join_code}`
-        await navigator.clipboard.writeText(link)
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(link)
+        } else {
+          const ta = document.createElement('textarea')
+          ta.value = link
+          ta.style.position = 'fixed'
+          ta.style.left = '-9999px'
+          document.body.appendChild(ta)
+          ta.select()
+          document.execCommand('copy')
+          document.body.removeChild(ta)
+        }
         toast('邀请链接已复制', 'success')
       } else toast('该项目暂无邀请码', 'error')
     } catch { toast('复制失败', 'error') }
