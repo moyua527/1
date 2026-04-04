@@ -1,6 +1,6 @@
 {
-  "version": "1.1.74.2",
+  "version": "1.1.74.3",
   "versionCode": 73,
   "minVersion": "1.0.0",
-  "changelog": "加入申请tab去掉邀请码和链接按钮，概览页新增项目ID显示（点击可复制）"
+  "changelog": "通过项目ID加入支持数据库ID和邀请码双重搜索"
 }
