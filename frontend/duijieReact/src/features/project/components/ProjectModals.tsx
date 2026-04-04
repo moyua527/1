@@ -71,9 +71,9 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
 
   const copyInviteLink = async () => {
     try {
-      const r = await projectApi.detail(projectId)
-      if (r.success && r.data?.join_code) {
-        const link = `${window.location.origin}/join/${r.data.join_code}`
+      const r = await projectApi.generateInviteToken(projectId)
+      if (r.success && r.data?.token) {
+        const link = `${window.location.origin}/join/${r.data.token}`
         if (navigator.clipboard && window.isSecureContext) {
           await navigator.clipboard.writeText(link)
         } else {
@@ -86,8 +86,8 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
           document.execCommand('copy')
           document.body.removeChild(ta)
         }
-        toast('邀请链接已复制', 'success')
-      } else toast('该项目暂无邀请码', 'error')
+        toast('邀请链接已复制（一次性链接）', 'success')
+      } else toast(r.message || '生成邀请链接失败', 'error')
     } catch { toast('复制失败', 'error') }
   }
 

@@ -20,7 +20,7 @@ export default function LoginPage({ onLogin }: Props) {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #eff6ff 0%, #f1f5f9 50%, #faf5ff 100%)', padding: 16, fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" }}>
-      <div style={{ background: 'var(--bg-primary)', borderRadius: 16, padding: '36px 32px', width: 400, maxWidth: '100%', boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}>
+      <div style={{ background: 'var(--bg-primary)', borderRadius: 16, padding: '36px 32px', width: 400, maxWidth: '100%', boxShadow: '0 4px 24px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', height: 600 }}>
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div style={{ fontSize: 28, fontWeight: 700, color: 'var(--brand)', letterSpacing: -0.5 }}>DuiJie</div>
           <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 4 }}>项目对接平台</div>
@@ -46,9 +46,11 @@ export default function LoginPage({ onLogin }: Props) {
           </div>
         )}
 
-        {mode === 'login' && <LoginForm onLogin={onLogin} onSwitchToForgot={() => setMode('forgot')} />}
-        {mode === 'register' && <RegisterForm onRegistered={onLogin} onSwitchToLogin={() => setMode('login')} inviteToken={inviteToken} />}
-        {mode === 'forgot' && <ForgotPasswordForm onBack={() => setMode('login')} />}
+        <div style={{ flex: 1 }}>
+          {mode === 'login' && <LoginForm onLogin={onLogin} onSwitchToForgot={() => setMode('forgot')} />}
+          {mode === 'register' && <RegisterForm onRegistered={onLogin} onSwitchToLogin={() => setMode('login')} inviteToken={inviteToken} />}
+          {mode === 'forgot' && <ForgotPasswordForm onBack={() => setMode('login')} />}
+        </div>
       </div>
     </div>
   )

@@ -30,7 +30,6 @@ module.exports = async (req, res) => {
       [project_id, req.userId, (message || '').slice(0, 500)]
     );
 
-    // 通知项目 owner
     const [owners] = await db.query(
       "SELECT user_id FROM duijie_project_members WHERE project_id = ? AND role = 'owner'",
       [project_id]
@@ -38,12 +37,13 @@ module.exports = async (req, res) => {
     const [applicant] = await db.query('SELECT nickname, username FROM voice_users WHERE id = ?', [req.userId]);
     const applicantName = applicant[0]?.nickname || applicant[0]?.username || '用户';
 
-    for (const owner of owners) {
-      await db.query(
-        "INSERT INTO duijie_notifications (user_id, type, title, content) VALUES (?, 'project_join', ?, ?)",
-        [owner.user_id, '项目加入申请', `${applicantName} 申请加入项目「${proj[0].name}」`]
-      );
-    }
+    const { notifyMany } = require('../../utils/notify');
+    await notifyMany(
+      owners.map(o => o.user_id),
+      'join_request',
+      '项目加入申请',
+      `${applicantName} 申请加入项目「${proj[0].name}」`
+    );
 
     broadcast('project', 'join_request', { project_id, userId: req.userId });
     res.json({ success: true, message: '申请已提交，等待项目管理员审批' });

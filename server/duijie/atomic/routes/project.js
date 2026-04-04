@@ -18,6 +18,8 @@ router.get('/projects/export', auth, require('../controllers/project/exportContr
 router.get('/projects/search-by-code', auth, require('../controllers/project/searchByCodeController'));
 // 项目加入申请
 router.post('/projects/join-request', auth, require('../controllers/project/joinRequestController'));
+// 通过邀请令牌直接加入项目
+router.post('/projects/join-by-invite', auth, require('../controllers/project/joinByInviteController'));
 // 项目关联客户企业审批流程 (放在 :id 路由之前)
 router.get('/projects/client-requests', auth, require('../controllers/project/clientRequestListController'));
 router.get('/projects/client-requests/sent', auth, require('../controllers/project/clientRequestSentController'));
@@ -55,6 +57,8 @@ router.post('/projects/:id/join-requests/:requestId/approve', auth, pag, project
 router.post('/projects/:id/join-requests/:requestId/reject', auth, pag, projectPermGuard('can_reject_join'), require('../controllers/project/joinRequestReviewController'));
 // 项目成员邀请（任何成员可发起，需管理审批）
 router.post('/projects/:id/invite', auth, pag, require('../controllers/project/inviteMemberController'));
+// 生成一次性邀请令牌
+router.post('/projects/:id/invite-token', auth, pag, require('../controllers/project/generateInviteTokenController'));
 // 搜索可邀请用户（全局搜索，通过ID/昵称/手机号）
 router.get('/projects/:id/search-users', auth, pag, require('../controllers/project/searchUsersForInviteController'));
 

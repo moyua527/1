@@ -1,6 +1,7 @@
 import { io, Socket } from 'socket.io-client'
 import { BACKEND_URL, getToken } from '../../bootstrap'
 import { isCapacitor, SERVER_URL } from '../../utils/capacitor'
+import { playNotificationSound } from '../../utils/notificationSound'
 
 type Listener = (payload?: any) => void
 
@@ -45,8 +46,8 @@ function getSocket(): Socket {
     }
   })
 
-  socket.on('new_dm', (payload: any) => emit('new_dm', payload))
-  socket.on('new_notification', (payload: any) => emit('new_notification', payload))
+  socket.on('new_dm', (payload: any) => { playNotificationSound(); emit('new_dm', payload) })
+  socket.on('new_notification', (payload: any) => { playNotificationSound(); emit('new_notification', payload) })
   socket.on('data_changed', (payload: any) => emit('data_changed', payload))
 
   socket.on('disconnect', () => {

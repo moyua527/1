@@ -27,6 +27,8 @@ export const projectApi = {
   // 项目加入码
   searchByCode: (code: string) => fetchApi(`/api/projects/search-by-code?code=${encodeURIComponent(code)}`),
   joinRequest: (project_id: number, message?: string) => fetchApi('/api/projects/join-request', { method: 'POST', body: JSON.stringify({ project_id, message }) }),
+  joinByInvite: (token: string) => fetchApi('/api/projects/join-by-invite', { method: 'POST', body: JSON.stringify({ token }) }),
+  generateInviteToken: (id: string) => fetchApi(`/api/projects/${id}/invite-token`, { method: 'POST' }),
   getJoinRequests: (id: string) => fetchApi(`/api/projects/${id}/join-requests`),
   taskTitleOptions: (id: string) => fetchApi(`/api/projects/${id}/task-title-options`),
   rememberTaskTitle: (id: string, title: string) => fetchApi(`/api/projects/${id}/task-title-history`, { method: 'POST', body: JSON.stringify({ title }) }),

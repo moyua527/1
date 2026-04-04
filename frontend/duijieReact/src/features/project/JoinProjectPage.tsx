@@ -40,12 +40,24 @@ export default function JoinProjectPage() {
     if (!project) return
     setJoining(true)
     try {
-      const r = await projectApi.joinRequest(project.id)
-      if (r.success) {
-        toast('申请已提交，等待项目管理员审批', 'success')
-        setProject({ ...project, has_pending_request: true })
+      if (project.is_invite_token && project.invite_token) {
+        const r = await projectApi.joinByInvite(project.invite_token)
+        if (r.success) {
+          toast('已成功加入项目', 'success')
+          useEnterpriseStore.getState().setHasProjects(true)
+          nav(`/projects/${r.data?.project_id || project.id}`)
+          return
+        } else {
+          toast(r.message || '加入失败', 'error')
+        }
       } else {
-        toast(r.message || '申请失败', 'error')
+        const r = await projectApi.joinRequest(project.id)
+        if (r.success) {
+          toast('申请已提交，等待项目管理员审批', 'success')
+          setProject({ ...project, has_pending_request: true })
+        } else {
+          toast(r.message || '申请失败', 'error')
+        }
       }
     } catch {
       toast('操作失败', 'error')
@@ -109,10 +121,17 @@ export default function JoinProjectPage() {
                   <Clock size={16} /> 申请已提交，等待项目管理员审批
                 </div>
               ) : (
-                <Button onClick={handleJoin} disabled={joining} style={{ width: '100%' }}>
-                  <ArrowRight size={16} style={{ marginRight: 4 }} />
-                  {joining ? '申请中...' : '申请加入此项目'}
-                </Button>
+                <>
+                  {project.is_invite_token && (
+                    <div style={{ fontSize: 13, color: 'var(--color-success, #22c55e)', marginBottom: 8, textAlign: 'center' }}>
+                      这是一次性邀请链接，点击下方按钮直接加入
+                    </div>
+                  )}
+                  <Button onClick={handleJoin} disabled={joining} style={{ width: '100%' }}>
+                    <ArrowRight size={16} style={{ marginRight: 4 }} />
+                    {joining ? '加入中...' : (project.is_invite_token ? '直接加入此项目' : '申请加入此项目')}
+                  </Button>
+                </>
               )}
             </>
           )}

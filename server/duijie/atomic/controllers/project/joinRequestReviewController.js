@@ -33,11 +33,14 @@ module.exports = async (req, res) => {
       );
     }
 
-    // 通知申请人
     const resultText = action === 'approved' ? '已通过' : '已被拒绝';
-    await db.query(
-      "INSERT INTO duijie_notifications (user_id, type, title, content) VALUES (?, 'project_join', ?, ?)",
-      [request.user_id, '项目加入申请' + resultText, `你的加入项目「${request.project_name}」的申请${resultText}`]
+    const notifyType = action === 'approved' ? 'join_approved' : 'join_rejected';
+    const { notify } = require('../../utils/notify');
+    await notify(
+      request.user_id,
+      notifyType,
+      '项目加入申请' + resultText,
+      `你的加入项目「${request.project_name}」的申请${resultText}`
     );
 
     broadcast('project', 'join_' + action, { project_id: request.project_id, userId: request.user_id });

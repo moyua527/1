@@ -83,6 +83,7 @@ export default function ProjectDetail() {
   const [showSetClient, setShowSetClient] = useState(false)
   const [showActionMenu, setShowActionMenu] = useState(false)
   const [showEditProject, setShowEditProject] = useState(false)
+  const [pendingJoinCount, setPendingJoinCount] = useState(0)
 
   const openClientModal = (clientId: number) => {
     setClientModal(true)
@@ -129,6 +130,13 @@ export default function ProjectDetail() {
 
   useLiveData(['project'], loadProject)
 
+  const loadPendingJoinCount = useCallback(() => {
+    if (!id) return
+    projectApi.getJoinRequests(id).then(r => {
+      if (r.success) setPendingJoinCount((r.data || []).filter((req: any) => req.status === 'pending').length)
+    })
+  }, [id])
+
   const loadTasks = useCallback(() => {
     if (!id) return
     taskApi.list(id).then(r => { if (r.success) setTasks(r.data || []) })
@@ -150,9 +158,10 @@ export default function ProjectDetail() {
     const timer = window.setTimeout(() => {
       loadProject()
       loadTasks()
+      loadPendingJoinCount()
     }, 0)
     return () => window.clearTimeout(timer)
-  }, [id, loadProject, loadTasks])
+  }, [id, loadProject, loadTasks, loadPendingJoinCount])
 
   if (projectLoading) return <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}>加载中...</div>
   if (projectError) return (
@@ -245,9 +254,16 @@ export default function ProjectDetail() {
       <div style={{ display: 'flex', gap: 8, marginBottom: 0, flexWrap: 'wrap', flexShrink: 0 }}>
         {([['overview','概览'],['tasks','任务'],['milestones','里程碑'],['messages','消息'], ...(project.app_url ? [['app', project.app_name || '应用']] : []), ...((isOwner || canManageRole) ? [['roles', '角色管理']] : []), ...(canApproveJoin ? [['join_requests', '加入申请']] : [])] as [string, string][]).map(([k,v]) => (
           <button key={k} onClick={() => setTab(k as any)} style={{
-            padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500,
+            padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500, position: 'relative',
             background: tab === k ? 'var(--brand)' : 'var(--bg-tertiary)', color: tab === k ? 'var(--bg-primary)' : 'var(--text-secondary)',
-          }}>{v}</button>
+          }}>
+            {v}
+            {k === 'join_requests' && pendingJoinCount > 0 && (
+              <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 18, height: 18, borderRadius: 9, background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px', lineHeight: 1 }}>
+                {pendingJoinCount}
+              </span>
+            )}
+          </button>
         ))}
       </div>
 
@@ -399,7 +415,7 @@ export default function ProjectDetail() {
 
       {tab === 'roles' && <ProjectRoleList canEdit={isOwner || canManageRole} projectId={id!} />}
 
-      {tab === 'join_requests' && <JoinRequestsTab projectId={id!} joinCode={project.join_code} onRefresh={loadProject} />}
+      {tab === 'join_requests' && <JoinRequestsTab projectId={id!} joinCode={project.join_code} onRefresh={() => { loadProject(); loadPendingJoinCount() }} />}
 
 
       <SetClientModal open={showSetClient} hasExternalEnterprise={hasExternalEnterprise}

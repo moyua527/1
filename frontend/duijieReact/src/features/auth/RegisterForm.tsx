@@ -95,7 +95,7 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>
-              邮箱 *
+              邮箱账号
             </label>
             {emailVerified ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, background: 'var(--bg-success, #f0fdf4)', border: '1px solid var(--color-success, #22c55e)' }}>
@@ -106,7 +106,10 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
             ) : (
               <>
                 <Input placeholder="输入邮箱地址" value={email} onChange={e => { setEmail(e.target.value); setEmailVerified(false) }} />
-                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4, marginTop: 12 }}>
+                  邮箱验证码
+                </label>
+                <div style={{ display: 'flex', gap: 8 }}>
                   <input placeholder="输入6位验证码" value={emailCode} onChange={e => setEmailCode(e.target.value)} maxLength={6}
                     style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
                     onFocus={e => (e.currentTarget.style.borderColor = 'var(--brand)')} onBlur={e => (e.currentTarget.style.borderColor = 'var(--border-primary)')} />
