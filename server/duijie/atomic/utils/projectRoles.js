@@ -53,7 +53,7 @@ const DEFAULT_PROJECT_ROLE_PRESETS = [
     ...Object.fromEntries(PROJECT_ROLE_FIELDS.map(f => [f, 1])),
   },
   {
-    role_key: 'editor', name: '编辑者', color: '#059669', sort_order: 1, is_default: 1,
+    role_key: 'editor', name: '项目编辑', color: '#059669', sort_order: 1, is_default: 1,
     ...Object.fromEntries(PROJECT_ROLE_FIELDS.map(f => [f, 0])),
     // 任务创建
     can_create_task: 1, can_create_task_with_attachment: 1,
@@ -73,7 +73,7 @@ const DEFAULT_PROJECT_ROLE_PRESETS = [
     can_view_title_options: 1, can_record_title_history: 1, can_delete_title_history: 1, can_edit_title_presets: 1,
   },
   {
-    role_key: 'viewer', name: '查看者', color: '#64748b', sort_order: 2, is_default: 1,
+    role_key: 'viewer', name: '项目查看', color: '#64748b', sort_order: 2, is_default: 1,
     ...Object.fromEntries(PROJECT_ROLE_FIELDS.map(f => [f, 0])),
   },
 ];
