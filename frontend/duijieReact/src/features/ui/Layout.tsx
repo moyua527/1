@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { Menu, X, LogOut, User, ChevronRight, ChevronLeft, Palette, Bell, Settings, Search } from 'lucide-react'
+import { Menu, X, LogOut, User, ChevronRight, ChevronLeft, Palette, Bell, Settings, Search, HelpCircle } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
 import { can } from '../../stores/permissions'
@@ -13,6 +13,7 @@ import ProfileModal from './ProfileModal'
 import ThemeToggle from './ThemeToggle'
 import SettingsPanel from './SettingsPanel'
 import EnterpriseSwitcher from './EnterpriseSwitcher'
+import UserGuide from './UserGuide'
 import { navItems, navItemsByGroup } from '../../data/routeManifest'
 
 const SIDEBAR_W = 228
@@ -28,6 +29,7 @@ export default function Layout() {
   const [settingsTab, setSettingsTab] = useState<null | 'account' | 'appearance' | 'notification'>(null)
   const avatarMenuRef = useRef<HTMLDivElement>(null)
   const [dmUnread, setDmUnread] = useState(0)
+  const [guideOpen, setGuideOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const role = user?.role || 'member'
@@ -36,6 +38,15 @@ export default function Layout() {
   const currentNav = NAV_ITEMS.find(n => n.path === '/' ? location.pathname === '/' : location.pathname.startsWith(n.path))
 
   useEffect(() => { if (isMobile) setMobileMenuOpen(false) }, [location.pathname, isMobile])
+
+  useEffect(() => {
+    if (!user) return
+    const key = `guide_done_${user.id}`
+    if (!localStorage.getItem(key)) {
+      const t = setTimeout(() => setGuideOpen(true), 800)
+      return () => clearTimeout(t)
+    }
+  }, [user])
 
   const dmLastFetch = useRef(0)
   const loadDmUnread = () => {
@@ -251,8 +262,22 @@ export default function Layout() {
               ))}
             </nav>
 
+            <div style={{ padding: '4px 8px 0', flexShrink: 0 }}>
+              <button onClick={() => setGuideOpen(true)}
+                title="新手引导"
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'center', justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+                  gap: 8, padding: sidebarCollapsed ? '8px 0' : '8px 10px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                  background: 'transparent', color: 'var(--text-tertiary)', fontSize: 12, transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                <HelpCircle size={16} />
+                {!sidebarCollapsed && <span>新手引导</span>}
+              </button>
+            </div>
             {/* 侧边栏折叠按钮 */}
-            <div style={{ padding: '8px', borderTop: '1px solid var(--border-secondary)', flexShrink: 0 }}>
+            <div style={{ padding: '4px 8px 8px', borderTop: '1px solid var(--border-secondary)', flexShrink: 0 }}>
               <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
@@ -305,6 +330,10 @@ export default function Layout() {
         </main>
       </div>
 
+      <UserGuide open={guideOpen} onClose={() => {
+        setGuideOpen(false)
+        if (user) localStorage.setItem(`guide_done_${user.id}`, '1')
+      }} />
       <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} user={user} onProfileUpdated={updateProfile} />
     </div>
   )

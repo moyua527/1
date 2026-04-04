@@ -1,6 +1,6 @@
 {
-  "version": "1.1.81",
-  "versionCode": 88,
+  "version": "1.1.82",
+  "versionCode": 89,
   "minVersion": "1.0.0",
-  "changelog": "项目概览左右两栏布局，项目成员只显示头像，点击头像查看信息"
+  "changelog": "新手引导功能：步骤式教程覆盖创建项目到团队沟通，新用户首次登录自动弹出"
 }
