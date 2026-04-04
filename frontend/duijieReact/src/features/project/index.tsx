@@ -7,7 +7,7 @@ import { useProjects, useInvalidate } from '../../hooks/useApi'
 import useEnterpriseStore from '../../stores/useEnterpriseStore'
 import Button from '../ui/Button'
 import Badge from '../ui/Badge'
-import ProgressBar from '../ui/ProgressBar'
+
 import Modal from '../ui/Modal'
 import Input from '../ui/Input'
 import { toast } from '../ui/Toast'
@@ -171,9 +171,7 @@ export default function ProjectList() {
                     })()}
                   </div>
                 )}
-                {p.description && <div style={{ fontSize: 13, color: 'var(--text-tertiary)', marginBottom: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: isMobile ? 'normal' : 'nowrap', wordBreak: 'break-word' }}>{p.description}</div>}
-                <ProgressBar value={p.progress || 0} />
-                <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 6 }}>进度 {p.progress || 0}%</div>
+                {p.description && <div style={{ fontSize: 13, color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: isMobile ? 'normal' : 'nowrap', wordBreak: 'break-word' }}>{p.description}</div>}
               </div>
             )
           })}
