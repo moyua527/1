@@ -1,6 +1,6 @@
 {
-  "version": "1.1.82",
-  "versionCode": 89,
+  "version": "1.1.82.1",
+  "versionCode": 90,
   "minVersion": "1.0.0",
-  "changelog": "新手引导功能：步骤式教程覆盖创建项目到团队沟通，新用户首次登录自动弹出"
+  "changelog": "成员头像列表末尾添加'+'邀请按钮"
 }

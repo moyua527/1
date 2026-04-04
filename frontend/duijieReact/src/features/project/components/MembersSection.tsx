@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Plus } from 'lucide-react'
 import Avatar from '../../ui/Avatar'
 import useNicknameStore from '../../../stores/useNicknameStore'
 
@@ -60,6 +61,21 @@ export default function MembersSection({ myMembers, canEditMyTeam, onManageMyMem
             </div>
           )
         })}
+        {canEditMyTeam && (
+          <div title="添加成员"
+            onClick={onManageMyMembers}
+            style={{
+              width: 38, height: 38, borderRadius: '50%',
+              border: '2px dashed var(--border-primary)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', transition: 'all 0.15s', color: 'var(--text-tertiary)',
+              background: 'var(--bg-secondary)',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--brand)'; e.currentTarget.style.color = 'var(--brand)'; e.currentTarget.style.background = 'var(--bg-tertiary)' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-primary)'; e.currentTarget.style.color = 'var(--text-tertiary)'; e.currentTarget.style.background = 'var(--bg-secondary)' }}>
+            <Plus size={18} />
+          </div>
+        )}
       </div>
       {hiddenCount > 0 && (
         <button onClick={() => setExpanded(v => !v)}
