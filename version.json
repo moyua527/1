@@ -1,6 +1,6 @@
 {
-  "version": "1.1.73.3",
+  "version": "1.1.73.4",
   "versionCode": 73,
   "minVersion": "1.0.0",
-  "changelog": "角色卡片直接显示编辑和删除按钮"
+  "changelog": "点击角色卡片直接打开编辑弹窗"
 }

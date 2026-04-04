@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, Edit3, Trash2, Users, Check } from 'lucide-react'
+import { Plus, Trash2, Users, Check } from 'lucide-react'
 import Button from '../../ui/Button'
 import Modal from '../../ui/Modal'
 import Input from '../../ui/Input'
@@ -189,7 +189,7 @@ export default function ProjectRoleList({ canEdit, projectId }: Props) {
               const isSelected = expandedId === r.id
               return (
                 <div key={r.id} style={{ position: 'relative' }}>
-                  <div onClick={() => setExpandedId(isSelected ? null : r.id)}
+                  <div onClick={() => canEdit ? openEdit(r) : setExpandedId(isSelected ? null : r.id)}
                     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 16px', borderRadius: 10,
                       border: isSelected ? `2px solid ${r.color || '#64748b'}` : '2px solid var(--border-primary)',
                       background: isSelected ? `${r.color || '#64748b'}08` : 'var(--bg-primary)',
@@ -205,19 +205,11 @@ export default function ProjectRoleList({ canEdit, projectId }: Props) {
                     </div>
                     {r.is_default ? <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 3, background: 'var(--bg-tertiary)', color: 'var(--text-tertiary)' }}>默认</span> : null}
                   </div>
-                  {canEdit && (
-                    <div style={{ position: 'absolute', top: 4, right: 4, display: 'flex', gap: 2 }}>
-                      <button onClick={(e) => { e.stopPropagation(); openEdit(r) }}
-                        style={{ width: 22, height: 22, borderRadius: 4, background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', padding: 0 }}>
-                        <Edit3 size={11} />
-                      </button>
-                      {!r.is_default && (
-                        <button onClick={(e) => { e.stopPropagation(); handleDelete(r.id) }}
-                          style={{ width: 22, height: 22, borderRadius: 4, background: '#fef2f2', border: '1px solid #fecaca', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-danger)', padding: 0 }}>
-                          <Trash2 size={11} />
-                        </button>
-                      )}
-                    </div>
+                  {canEdit && !r.is_default && (
+                    <button onClick={(e) => { e.stopPropagation(); handleDelete(r.id) }}
+                      style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: 4, background: '#fef2f2', border: '1px solid #fecaca', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-danger)', padding: 0 }}>
+                      <Trash2 size={11} />
+                    </button>
                   )}
                 </div>
               )
@@ -233,11 +225,8 @@ export default function ProjectRoleList({ canEdit, projectId }: Props) {
               <div style={{ marginTop: 12, border: '1px solid var(--border-primary)', borderRadius: 10, padding: 16, borderLeft: `3px solid ${r.color || '#64748b'}` }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
                   <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{r.name} — {permCount}/{ALL_PERM_KEYS.length} 权限</span>
-                  {canEdit && (
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <button onClick={() => openEdit(r)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 2, display: 'flex' }}><Edit3 size={14} /></button>
-                      {!r.is_default && <button onClick={() => handleDelete(r.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', padding: 2, display: 'flex' }}><Trash2 size={14} /></button>}
-                    </div>
+                  {canEdit && !r.is_default && (
+                    <button onClick={() => handleDelete(r.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', padding: 2, display: 'flex' }}><Trash2 size={14} /></button>
                   )}
                 </div>
                 {permCount === 0 ? (
