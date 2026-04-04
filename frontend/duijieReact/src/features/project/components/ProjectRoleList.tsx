@@ -287,9 +287,9 @@ export default function ProjectRoleList({ canEdit, projectId }: Props) {
         const permCount = ALL_PERM_KEYS.filter(k => !!viewRole[k]).length
         return (
           <Modal open={!!viewRole} onClose={() => setViewRole(null)} title={`${viewRole.name} — ${permCount}/${ALL_PERM_KEYS.length} 权限`} width={480}>
-            <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+            <div style={{ height: 400, overflowY: 'auto' }}>
               {permCount === 0 ? (
-                <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-tertiary)', fontSize: 14 }}>该角色暂无任何权限</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)', fontSize: 14 }}>该角色暂无任何权限</div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   {PERM_GROUPS.filter(g => g.items.some(p => !!viewRole[p.key])).map(g => (
