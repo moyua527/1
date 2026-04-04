@@ -36,6 +36,12 @@ const cardStyle: React.CSSProperties = {
   cursor: 'pointer', transition: 'box-shadow 0.15s',
 }
 
+function fmtDate(d: string | null | undefined) {
+  if (!d) return '-'
+  const dt = new Date(d)
+  return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`
+}
+
 export default function ProjectList() {
   const { data: projects = [], isLoading: loading } = useProjects()
   const invalidate = useInvalidate()
@@ -152,7 +158,12 @@ export default function ProjectList() {
                   </div>
                   <Badge color={st.color}>{st.label}</Badge>
                 </div>
-                {p.description && <div style={{ fontSize: 13, color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: isMobile ? 'normal' : 'nowrap', wordBreak: 'break-word' }}>{p.description}</div>}
+                {p.description && <div style={{ fontSize: 13, color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: isMobile ? 'normal' : 'nowrap', wordBreak: 'break-word', marginBottom: 8 }}>{p.description}</div>}
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 12, color: 'var(--text-tertiary)' }}>
+                  {p.created_by_name && <span>创建者: {p.created_by_name}</span>}
+                  <span>创建: {fmtDate(p.created_at)}</span>
+                  <span>更新: {fmtDate(p.updated_at)}</span>
+                </div>
               </div>
             )
           })}

@@ -1,6 +1,6 @@
 {
-  "version": "1.1.78",
-  "versionCode": 80,
+  "version": "1.1.78.1",
+  "versionCode": 81,
   "minVersion": "1.0.0",
-  "changelog": "项目与企业彻底解耦：项目完全独立，任何人都能被邀请进任何项目，不再受企业隔离限制"
+  "changelog": "项目卡片显示创建者、创建时间和最后修改时间"
 }
