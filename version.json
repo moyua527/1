@@ -1,6 +1,6 @@
 {
-  "version": "1.1.80",
-  "versionCode": 86,
+  "version": "1.1.80.1",
+  "versionCode": 87,
   "minVersion": "1.0.0",
-  "changelog": "用户头像上传，点击头像显示个人信息弹窗可修改，下拉菜单头像区域跳转个人信息"
+  "changelog": "账号与安全标签重构为纯密码/安全设置，个人信息移至个人资料弹窗"
 }
