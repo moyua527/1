@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { Plus, FolderKanban, Loader2, Download, Search, Copy, Trash2, RotateCcw } from 'lucide-react'
+import { Plus, FolderKanban, Loader2, Download, Search, Copy, Trash2, RotateCcw, Upload, Link, MoreVertical } from 'lucide-react'
 import { projectApi } from './services/api'
 import { can } from '../../stores/permissions'
 import { useProjects, useInvalidate } from '../../hooks/useApi'
@@ -60,6 +60,10 @@ export default function ProjectList() {
   const [trashList, setTrashList] = useState<any[]>([])
   const [trashLoading, setTrashLoading] = useState(false)
   const [restoringId, setRestoringId] = useState<number | null>(null)
+  const [showMenu, setShowMenu] = useState(false)
+  const [showJoinLink, setShowJoinLink] = useState(false)
+  const [inviteLink, setInviteLink] = useState('')
+  const [joinLinkSubmitting, setJoinLinkSubmitting] = useState(false)
   const nav = useNavigate()
   const { user, isMobile } = useOutletContext<{ user: any; isMobile?: boolean }>()
   const canCreate = can(user?.role || '', 'project:create')
@@ -95,6 +99,18 @@ export default function ProjectList() {
     else toast(r.message || '未找到该项目', 'error')
   }
 
+  const handleJoinByLink = async () => {
+    if (!inviteLink.trim()) { toast('请输入邀请链接', 'error'); return }
+    let token = inviteLink.trim()
+    const match = token.match(/[?&]token=([^&]+)/)
+    if (match) token = match[1]
+    setJoinLinkSubmitting(true)
+    const r = await projectApi.joinByInvite(token)
+    setJoinLinkSubmitting(false)
+    if (r.success) { toast(r.message || '加入成功', 'success'); setShowJoinLink(false); setInviteLink(''); load() }
+    else toast(r.message || '加入失败', 'error')
+  }
+
   const handleJoinSubmit = async () => {
     if (!joinResult) return
     setJoinSubmitting(true)
@@ -107,20 +123,24 @@ export default function ProjectList() {
   return (
     <div>
       <PageHeader title="项目管理" subtitle={`共 ${filtered.length} 个项目`} actions={
-        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: 8, width: isMobile ? '100%' : undefined }}>
-          <button onClick={() => { window.open('/api/projects/export', '_blank') }}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500, cursor: 'pointer', width: isMobile ? '100%' : undefined }}>
-            <Download size={14} /> 导出
+        <div style={{ position: 'relative' }}>
+          <button onClick={() => setShowMenu(v => !v)}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: '1px solid var(--brand)', background: 'var(--brand)', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+            <MoreVertical size={16} /> 操作
           </button>
-          <button onClick={async () => { setShowTrash(true); setTrashLoading(true); const r = await projectApi.trash(); setTrashLoading(false); if (r.success) setTrashList(r.data || []); else toast(r.message || '加载失败', 'error') }}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', fontSize: 13, fontWeight: 500, cursor: 'pointer', width: isMobile ? '100%' : undefined }}>
-            <Trash2 size={14} /> 回收站
-          </button>
-          <button onClick={() => { setShowJoin(true); setJoinCode(''); setJoinResult(null); setJoinMessage('') }}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1px solid var(--brand)', background: 'var(--bg-selected)', color: 'var(--brand)', fontSize: 13, fontWeight: 600, cursor: 'pointer', width: isMobile ? '100%' : undefined }}>
-            <Search size={14} /> 通过项目ID加入
-          </button>
-          {canCreate && <Button onClick={() => setShowCreate(true)} style={isMobile ? { width: '100%', justifyContent: 'center' } : undefined}><Plus size={16} /> 新建项目</Button>}
+          {showMenu && <>
+            <div style={{ position: 'fixed', inset: 0, zIndex: 99 }} onClick={() => setShowMenu(false)} />
+            <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 6, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 100, minWidth: 180, overflow: 'hidden' }}>
+              {canCreate && <button onClick={() => { setShowMenu(false); setShowCreate(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Plus size={15} /> 新建项目</button>}
+              <button onClick={() => { setShowMenu(false); setShowJoin(true); setJoinCode(''); setJoinResult(null); setJoinMessage('') }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Search size={15} /> 通过项目ID加入</button>
+              <button onClick={() => { setShowMenu(false); setShowJoinLink(true); setInviteLink('') }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Link size={15} /> 通过邀请链接加入</button>
+              <div style={{ height: 1, background: 'var(--border-primary)', margin: '2px 8px' }} />
+              <button onClick={() => { setShowMenu(false); window.open('/api/projects/export', '_blank') }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Download size={15} /> 导出项目</button>
+              <button onClick={() => { setShowMenu(false); toast('导入功能即将上线', 'info') }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Upload size={15} /> 导入项目</button>
+              <div style={{ height: 1, background: 'var(--border-primary)', margin: '2px 8px' }} />
+              <button onClick={async () => { setShowMenu(false); setShowTrash(true); setTrashLoading(true); const r = await projectApi.trash(); setTrashLoading(false); if (r.success) setTrashList(r.data || []); else toast(r.message || '加载失败', 'error') }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Trash2 size={15} /> 回收站</button>
+            </div>
+          </>}
         </div>
       } />
 
@@ -269,6 +289,18 @@ export default function ProjectList() {
               ))}
             </div>
           </>)}
+        </div>
+      </Modal>
+
+      <Modal open={showJoinLink} onClose={() => setShowJoinLink(false)} title="通过邀请链接加入">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <Input label="邀请链接" placeholder="粘贴邀请链接" value={inviteLink} onChange={e => setInviteLink(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleJoinByLink()} />
+          <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: 0 }}>粘贴项目管理员生成的邀请链接，即可直接加入项目</p>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <Button variant="secondary" onClick={() => setShowJoinLink(false)}>取消</Button>
+            <Button onClick={handleJoinByLink} disabled={joinLinkSubmitting}>{joinLinkSubmitting ? '加入中...' : '加入项目'}</Button>
+          </div>
         </div>
       </Modal>
     </div>

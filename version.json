@@ -1,6 +1,6 @@
 {
-  "version": "1.1.78.1",
-  "versionCode": 81,
+  "version": "1.1.78.2",
+  "versionCode": 82,
   "minVersion": "1.0.0",
-  "changelog": "项目卡片显示创建者、创建时间和最后修改时间"
+  "changelog": "项目管理页右上角操作合并为下拉菜单，新增通过邀请链接加入项目功能"
 }
