@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, Trash2, Users, Check } from 'lucide-react'
+import { Plus, Trash2, Users, Check, Settings } from 'lucide-react'
 import Button from '../../ui/Button'
 import Modal from '../../ui/Modal'
 import Input from '../../ui/Input'
@@ -123,6 +123,7 @@ export default function ProjectRoleList({ canEdit, projectId }: Props) {
   const [form, setForm] = useState({ ...emptyForm })
   const [saving, setSaving] = useState(false)
   const [expandedId, setExpandedId] = useState<number | null>(null)
+  const [editMode, setEditMode] = useState(false)
 
   const loadRoles = useCallback(async () => {
     const r = projectId ? await projectApi.listRoles(projectId) : await projectApi.listEntRoles()
@@ -175,23 +176,26 @@ export default function ProjectRoleList({ canEdit, projectId }: Props) {
     <div style={{ background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>项目角色</h3>
-        {canEdit && <Button onClick={openCreate}><Plus size={14} /> 新建角色</Button>}
+        {canEdit && (
+          <Button variant={editMode ? 'primary' : 'secondary'} onClick={() => setEditMode(!editMode)}>
+            <Settings size={14} /> {editMode ? '完成' : '编辑'}
+          </Button>
+        )}
       </div>
 
-      {roles.length === 0 ? (
+      {roles.length === 0 && !editMode ? (
         <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-tertiary)', fontSize: 14 }}>暂无自定义角色</div>
       ) : (
         <>
-          {/* 角色方块网格 */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
             {roles.map((r: any) => {
               const permCount = ALL_PERM_KEYS.filter(k => !!r[k]).length
               const isSelected = expandedId === r.id
               return (
                 <div key={r.id} style={{ position: 'relative' }}>
-                  <div onClick={() => canEdit ? openEdit(r) : setExpandedId(isSelected ? null : r.id)}
+                  <div onClick={() => editMode ? openEdit(r) : setExpandedId(isSelected ? null : r.id)}
                     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 16px', borderRadius: 10,
-                      border: isSelected ? `2px solid ${r.color || '#64748b'}` : '2px solid var(--border-primary)',
+                      border: isSelected ? `2px solid ${r.color || '#64748b'}` : editMode ? '2px dashed var(--border-primary)' : '2px solid var(--border-primary)',
                       background: isSelected ? `${r.color || '#64748b'}08` : 'var(--bg-primary)',
                       cursor: 'pointer', transition: 'all 0.15s', minWidth: 90 }}>
                     <div style={{ width: 36, height: 36, borderRadius: '50%', background: r.color || '#64748b',
@@ -205,15 +209,23 @@ export default function ProjectRoleList({ canEdit, projectId }: Props) {
                     </div>
                     {r.is_default ? <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 3, background: 'var(--bg-tertiary)', color: 'var(--text-tertiary)' }}>默认</span> : null}
                   </div>
-                  {canEdit && !r.is_default && (
+                  {editMode && !r.is_default && (
                     <button onClick={(e) => { e.stopPropagation(); handleDelete(r.id) }}
-                      style={{ position: 'absolute', top: 4, right: 4, width: 22, height: 22, borderRadius: 4, background: '#fef2f2', border: '1px solid #fecaca', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-danger)', padding: 0 }}>
-                      <Trash2 size={11} />
+                      style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', background: 'var(--color-danger)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', padding: 0, boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>
+                      <Trash2 size={10} />
                     </button>
                   )}
                 </div>
               )
             })}
+            {editMode && (
+              <div onClick={openCreate}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '12px 16px', borderRadius: 10,
+                  border: '2px dashed var(--brand)', background: 'var(--bg-primary)', cursor: 'pointer', transition: 'all 0.15s', minWidth: 90, minHeight: 90, color: 'var(--brand)' }}>
+                <Plus size={24} />
+                <span style={{ fontSize: 12, fontWeight: 500 }}>新增角色</span>
+              </div>
+            )}
           </div>
 
           {/* 选中角色的详情面板 */}
