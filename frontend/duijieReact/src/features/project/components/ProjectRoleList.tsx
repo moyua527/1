@@ -199,7 +199,7 @@ export default function ProjectRoleList({ projectId, canEdit }: Props) {
                 )}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                {PERM_GROUPS.map(g => g.items.filter(p => !!r[p.key]).map(p => (
+                {PERM_GROUPS.flatMap(g => g.items.filter(p => !!r[p.key]).map(p => (
                   <span key={p.key} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 3,
                     background: '#f0fdf4', color: 'var(--color-success)' }}>
                     <Check size={10} /> {p.label}
@@ -247,9 +247,9 @@ export default function ProjectRoleList({ projectId, canEdit }: Props) {
                         const on = !!(form as any)[p.key]
                         return (
                           <button key={p.key} onClick={() => setForm({ ...form, [p.key]: !on })}
-                            style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid', cursor: 'pointer', transition: 'all 0.15s',
+                            style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid', cursor: 'pointer', transition: 'all 0.15s', display: 'inline-flex', alignItems: 'center', gap: 3,
                               borderColor: on ? 'var(--brand)' : 'var(--border-primary)', background: on ? '#eff6ff' : 'var(--bg-primary)', color: on ? 'var(--brand)' : 'var(--text-secondary)' }}>
-                            {on ? <Check size={10} style={{ marginRight: 3, verticalAlign: -1 }} /> : null}{p.label}
+                            {on && <Check size={10} />}<span>{p.label}</span>
                           </button>
                         )
                       })}
