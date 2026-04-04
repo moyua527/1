@@ -1,6 +1,6 @@
 {
-  "version": "1.1.73.5",
+  "version": "1.1.73.6",
   "versionCode": 73,
   "minVersion": "1.0.0",
-  "changelog": "角色管理编辑模式：新增/编辑/删除统一入口"
+  "changelog": "点击角色卡片弹窗查看权限，固定大小可滚动"
 }

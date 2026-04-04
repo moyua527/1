@@ -122,8 +122,8 @@ export default function ProjectRoleList({ canEdit, projectId }: Props) {
   const [editing, setEditing] = useState<any>(null)
   const [form, setForm] = useState({ ...emptyForm })
   const [saving, setSaving] = useState(false)
-  const [expandedId, setExpandedId] = useState<number | null>(null)
   const [editMode, setEditMode] = useState(false)
+  const [viewRole, setViewRole] = useState<any>(null)
 
   const loadRoles = useCallback(async () => {
     const r = projectId ? await projectApi.listRoles(projectId) : await projectApi.listEntRoles()
@@ -190,14 +190,12 @@ export default function ProjectRoleList({ canEdit, projectId }: Props) {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
             {roles.map((r: any) => {
               const permCount = ALL_PERM_KEYS.filter(k => !!r[k]).length
-              const isSelected = expandedId === r.id
               return (
                 <div key={r.id} style={{ position: 'relative' }}>
-                  <div onClick={() => editMode ? openEdit(r) : setExpandedId(isSelected ? null : r.id)}
+                  <div onClick={() => editMode ? openEdit(r) : setViewRole(r)}
                     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 16px', borderRadius: 10,
-                      border: isSelected ? `2px solid ${r.color || '#64748b'}` : editMode ? '2px dashed var(--border-primary)' : '2px solid var(--border-primary)',
-                      background: isSelected ? `${r.color || '#64748b'}08` : 'var(--bg-primary)',
-                      cursor: 'pointer', transition: 'all 0.15s', minWidth: 90 }}>
+                      border: editMode ? '2px dashed var(--border-primary)' : '2px solid var(--border-primary)',
+                      background: 'var(--bg-primary)', cursor: 'pointer', transition: 'all 0.15s', minWidth: 90 }}>
                     <div style={{ width: 36, height: 36, borderRadius: '50%', background: r.color || '#64748b',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 14, fontWeight: 700 }}>
                       {r.name.charAt(0)}
@@ -227,41 +225,6 @@ export default function ProjectRoleList({ canEdit, projectId }: Props) {
               </div>
             )}
           </div>
-
-          {/* 选中角色的详情面板 */}
-          {expandedId && (() => {
-            const r = roles.find((x: any) => x.id === expandedId)
-            if (!r) return null
-            const permCount = ALL_PERM_KEYS.filter(k => !!r[k]).length
-            return (
-              <div style={{ marginTop: 12, border: '1px solid var(--border-primary)', borderRadius: 10, padding: 16, borderLeft: `3px solid ${r.color || '#64748b'}` }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{r.name} — {permCount}/{ALL_PERM_KEYS.length} 权限</span>
-                  {canEdit && !r.is_default && (
-                    <button onClick={() => handleDelete(r.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', padding: 2, display: 'flex' }}><Trash2 size={14} /></button>
-                  )}
-                </div>
-                {permCount === 0 ? (
-                  <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>该角色暂无任何权限</span>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {PERM_GROUPS.filter(g => g.items.some(p => !!r[p.key])).map(g => (
-                      <div key={g.title}>
-                        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>{g.title}</div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                          {g.items.filter(p => !!r[p.key]).map(p => (
-                            <span key={p.key} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 3, background: '#f0fdf4', color: 'var(--color-success)' }}>
-                              <Check size={10} /> {p.label}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )
-          })()}
         </>
       )}
 
@@ -319,6 +282,34 @@ export default function ProjectRoleList({ canEdit, projectId }: Props) {
           </div>
         </div>
       </Modal>
+
+      {viewRole && (() => {
+        const permCount = ALL_PERM_KEYS.filter(k => !!viewRole[k]).length
+        return (
+          <Modal open={!!viewRole} onClose={() => setViewRole(null)} title={`${viewRole.name} — ${permCount}/${ALL_PERM_KEYS.length} 权限`} width={480}>
+            <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+              {permCount === 0 ? (
+                <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-tertiary)', fontSize: 14 }}>该角色暂无任何权限</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {PERM_GROUPS.filter(g => g.items.some(p => !!viewRole[p.key])).map(g => (
+                    <div key={g.title}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>{g.title}</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        {g.items.filter(p => !!viewRole[p.key]).map(p => (
+                          <span key={p.key} style={{ fontSize: 12, padding: '3px 10px', borderRadius: 5, display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f0fdf4', color: 'var(--color-success)' }}>
+                            <Check size={11} /> {p.label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Modal>
+        )
+      })()}
     </div>
   )
 }
