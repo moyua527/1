@@ -27,26 +27,24 @@ interface ManageMembersModalProps {
 
 function parseRoleValue(val: string): { role: string; project_role_id?: number } {
   if (val.startsWith('proj-')) return { role: 'editor', project_role_id: Number(val.slice(5)) }
-  return { role: val || 'editor' }
+  return { role: 'editor' }
 }
 
 function getMemberRoleValue(m: any): string {
   if (m.project_role_id) return `proj-${m.project_role_id}`
-  return m.member_role === 'viewer' ? 'viewer' : 'editor'
+  return ''
 }
 
 export function ManageMembersModal({ open, onClose, projectId, members, availableUsers, projectRoles = [], onRefresh, onRefreshAvailable }: ManageMembersModalProps) {
   const dn = useNicknameStore(s => s.getDisplayName)
   const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set())
-  const [selectedRole, setSelectedRole] = useState('editor')
+  const [selectedRole, setSelectedRole] = useState('')
   const [memberSearch, setMemberSearch] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   const roleOptions = (
     <>
-      <option value="editor">编辑者</option>
-      <option value="viewer">查看者</option>
-      {projectRoles.length > 0 && <option disabled>──────────</option>}
+      <option value="">选择角色</option>
       {projectRoles.map((r: any) => <option key={r.id} value={`proj-${r.id}`}>{r.name}</option>)}
     </>
   )
@@ -275,9 +273,7 @@ export function MemberInfoModal({ member, onClose }: MemberInfoModalProps) {
               ) : member.project_role_name ? (
                 <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 4, background: member.project_role_color || 'var(--brand)', color: 'var(--bg-primary)', fontWeight: 500 }}>{member.project_role_name}</span>
               ) : (
-                <Badge color={member.member_role === 'editor' ? 'green' : 'gray'}>
-                  {member.member_role === 'editor' ? '编辑者' : '查看者'}
-                </Badge>
+                <Badge color="gray">成员</Badge>
               )}
             </div>
             {member.nickname && (

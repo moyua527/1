@@ -43,7 +43,7 @@ export default function MembersSection({ myTeamTitle, otherTeamTitle, myMembers,
                   <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
                     {m.member_role === 'owner' ? '负责人' : m.project_role_name ? (
                       <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: m.project_role_color || 'var(--brand)', color: 'var(--bg-primary)', fontWeight: 500 }}>{m.project_role_name}</span>
-                    ) : (m.member_role === 'editor' ? '编辑者' : '查看者')}
+                    ) : '成员'}
                   </div>
                 </div>
               </div>
