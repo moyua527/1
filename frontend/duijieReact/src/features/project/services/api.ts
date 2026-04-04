@@ -40,6 +40,26 @@ export const projectApi = {
   inviteMember: (id: string, data: { user_id: number; message?: string }) => fetchApi(`/api/projects/${id}/invite`, { method: 'POST', body: JSON.stringify(data) }),
   // 搜索可邀请用户（全局）
   searchUsersForInvite: (id: string, q: string) => fetchApi(`/api/projects/${id}/search-users?q=${encodeURIComponent(q)}`),
+  exportCsv: async () => {
+    const token = localStorage.getItem('token')
+    const res = await fetch('/api/projects/export', { headers: { Authorization: `Bearer ${token}` } })
+    if (!res.ok) return false
+    const blob = await res.blob()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `projects_${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+    return true
+  },
+  importCsv: async (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    const token = localStorage.getItem('token')
+    const res = await fetch('/api/projects/import', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData })
+    return res.json()
+  },
   // 项目回收站
   trash: () => fetchApi('/api/projects/trash'),
   restore: (id: string) => fetchApi(`/api/projects/${id}/restore`, { method: 'PATCH' }),

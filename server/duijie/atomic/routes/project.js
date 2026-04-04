@@ -14,6 +14,9 @@ const pag = projectAccessGuard();
 router.post('/projects', auth, V.createProject, validate, require('../controllers/project/createController'));
 router.get('/projects/team-users', auth, require('../controllers/project/teamUsersController'));
 router.get('/projects/export', auth, require('../controllers/project/exportController'));
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+router.post('/projects/import', auth, upload.single('file'), require('../controllers/project/importController'));
 // 项目加入码搜索
 router.get('/projects/search-by-code', auth, require('../controllers/project/searchByCodeController'));
 // 项目加入申请
