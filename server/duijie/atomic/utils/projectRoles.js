@@ -182,7 +182,7 @@ async function findEnterpriseProjectRole(enterpriseId, roleId, conn = db) {
   return rows[0] || null;
 }
 
-async function resolveProjectRoleId(projectId, legacyRole = 'editor', requestedRoleId = null, conn = db) {
+async function resolveProjectRoleId(projectId, legacyRole = 'viewer', requestedRoleId = null, conn = db) {
   if (requestedRoleId) {
     const [rows] = await conn.query('SELECT * FROM project_roles WHERE id = ? AND is_deleted = 0 LIMIT 1', [requestedRoleId]);
     return rows[0] ? rows[0].id : null;
