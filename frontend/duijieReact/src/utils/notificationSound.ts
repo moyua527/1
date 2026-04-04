@@ -1,64 +1,79 @@
-let audioCtx: AudioContext | null = null
-let unlocked = false
+let audioElement: HTMLAudioElement | null = null
 let lastPlayTime = 0
-const MIN_INTERVAL = 2000
+const MIN_INTERVAL = 1500
 
-function unlockAudio() {
-  if (unlocked) return
-  try {
-    if (!audioCtx) audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume()
-    }
-    const buf = audioCtx.createBuffer(1, 1, 22050)
-    const src = audioCtx.createBufferSource()
-    src.buffer = buf
-    src.connect(audioCtx.destination)
-    src.start(0)
-    unlocked = true
-  } catch { /* silent */ }
+function writeStr(view: DataView, offset: number, str: string) {
+  for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i))
 }
 
-document.addEventListener('click', unlockAudio, { capture: true })
-document.addEventListener('touchstart', unlockAudio, { capture: true })
-document.addEventListener('keydown', unlockAudio, { capture: true })
+function buildWav(): string {
+  const rate = 44100
+  const dur = 0.35
+  const n = Math.floor(rate * dur)
+  const headerSize = 44
+  const dataSize = n * 2
+  const buf = new ArrayBuffer(headerSize + dataSize)
+  const v = new DataView(buf)
+
+  writeStr(v, 0, 'RIFF')
+  v.setUint32(4, headerSize + dataSize - 8, true)
+  writeStr(v, 8, 'WAVE')
+  writeStr(v, 12, 'fmt ')
+  v.setUint32(16, 16, true)
+  v.setUint16(20, 1, true)
+  v.setUint16(22, 1, true)
+  v.setUint32(24, rate, true)
+  v.setUint32(28, rate * 2, true)
+  v.setUint16(32, 2, true)
+  v.setUint16(34, 16, true)
+  writeStr(v, 36, 'data')
+  v.setUint32(40, dataSize, true)
+
+  for (let i = 0; i < n; i++) {
+    const t = i / rate
+    const env = Math.exp(-t * 12) * (1 - Math.exp(-t * 500))
+    const sig =
+      Math.sin(2 * Math.PI * 880 * t) * 0.45 +
+      Math.sin(2 * Math.PI * 1318.5 * t) * 0.30 +
+      Math.sin(2 * Math.PI * 1760 * t) * 0.15 +
+      Math.sin(2 * Math.PI * 2640 * t) * 0.10
+    v.setInt16(headerSize + i * 2, Math.max(-32768, Math.min(32767, sig * env * 32767 | 0)), true)
+  }
+
+  const bytes = new Uint8Array(buf)
+  let bin = ''
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i])
+  return 'data:audio/wav;base64,' + btoa(bin)
+}
+
+function ensureAudio() {
+  if (audioElement) return
+  audioElement = new Audio(buildWav())
+  audioElement.volume = 0.8
+  audioElement.load()
+}
+
+function warmUp() {
+  ensureAudio()
+  if (!audioElement) return
+  const p = audioElement.play()
+  if (p) p.then(() => { audioElement!.pause(); audioElement!.currentTime = 0 }).catch(() => {})
+}
+
+if (typeof document !== 'undefined') {
+  const opts = { capture: true } as const
+  ;['click', 'touchstart', 'keydown'].forEach(e => document.addEventListener(e, warmUp, opts))
+}
 
 export function playNotificationSound() {
   const now = Date.now()
   if (now - lastPlayTime < MIN_INTERVAL) return
   lastPlayTime = now
 
-  if (!audioCtx || audioCtx.state === 'suspended') {
-    unlockAudio()
-    if (!audioCtx || audioCtx.state !== 'running') return
-  }
+  ensureAudio()
+  if (!audioElement) return
 
-  try {
-    const t = audioCtx.currentTime
-
-    const gain = audioCtx.createGain()
-    gain.connect(audioCtx.destination)
-    gain.gain.setValueAtTime(0.4, t)
-    gain.gain.linearRampToValueAtTime(0.3, t + 0.1)
-    gain.gain.linearRampToValueAtTime(0, t + 0.5)
-
-    const osc1 = audioCtx.createOscillator()
-    osc1.type = 'sine'
-    osc1.frequency.setValueAtTime(880, t)
-    osc1.connect(gain)
-    osc1.start(t)
-    osc1.stop(t + 0.2)
-
-    const gain2 = audioCtx.createGain()
-    gain2.connect(audioCtx.destination)
-    gain2.gain.setValueAtTime(0.35, t + 0.2)
-    gain2.gain.linearRampToValueAtTime(0, t + 0.5)
-
-    const osc2 = audioCtx.createOscillator()
-    osc2.type = 'sine'
-    osc2.frequency.setValueAtTime(1174.66, t + 0.2)
-    osc2.connect(gain2)
-    osc2.start(t + 0.2)
-    osc2.stop(t + 0.5)
-  } catch { /* silent */ }
+  audioElement.currentTime = 0
+  const p = audioElement.play()
+  if (p) p.catch(() => {})
 }
