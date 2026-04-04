@@ -24,7 +24,6 @@ import { onSocket } from '../../ui/smartSocket'
 import { formatDateTime } from '../../../utils/datetime'
 import EditProjectModal from './EditProjectModal'
 import SetClientModal from './SetClientModal'
-import InviteMemberModal from './InviteMemberModal'
 import JoinRequestsTab from './JoinRequestsTab'
 import AppTab from './AppTab'
 import ProjectRoleList from './ProjectRoleList'
@@ -84,7 +83,6 @@ export default function ProjectDetail() {
   const [showSetClient, setShowSetClient] = useState(false)
   const [showActionMenu, setShowActionMenu] = useState(false)
   const [showEditProject, setShowEditProject] = useState(false)
-  const [showInviteModal, setShowInviteModal] = useState(false)
 
   const openClientModal = (clientId: number) => {
     setClientModal(true)
@@ -358,7 +356,6 @@ export default function ProjectDetail() {
           showOtherTeam={hasExternalEnterprise}
           canEditMyTeam={canAddMember}
           onManageMyMembers={isClientPerspective ? openManageClientMembers : openManageMembers}
-          onInviteMember={() => setShowInviteModal(true)}
           onSelectMember={setSelectedMember}
         />
 
@@ -383,7 +380,6 @@ export default function ProjectDetail() {
           onRefreshAvailable={refreshClientAvailableUsers}
         />
 
-        <InviteMemberModal open={showInviteModal} projectId={id!} onClose={() => setShowInviteModal(false)} />
       </>)}
 
       {tab === 'tasks' && <TaskTab tasks={tasks} canEdit={canCreateTask} projectId={id!} loadTasks={loadTasks} />}

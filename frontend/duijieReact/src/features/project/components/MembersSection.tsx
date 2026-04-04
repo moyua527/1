@@ -11,11 +11,10 @@ interface MembersSectionProps {
   showOtherTeam?: boolean
   canEditMyTeam: boolean
   onManageMyMembers: () => void
-  onInviteMember?: () => void
   onSelectMember: (member: any) => void
 }
 
-export default function MembersSection({ myTeamTitle, otherTeamTitle, myMembers, otherMembers, showOtherTeam = true, canEditMyTeam, onManageMyMembers, onInviteMember, onSelectMember }: MembersSectionProps) {
+export default function MembersSection({ myTeamTitle, otherTeamTitle, myMembers, otherMembers, showOtherTeam = true, canEditMyTeam, onManageMyMembers, onSelectMember }: MembersSectionProps) {
   const dn = useNicknameStore(s => s.getDisplayName)
   return (
     <div style={section}>
@@ -24,12 +23,8 @@ export default function MembersSection({ myTeamTitle, otherTeamTitle, myMembers,
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
             <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--brand)' }}>{myTeamTitle}</span>
-            <div style={{ display: 'flex', gap: 8 }}>
-              {onInviteMember && <button onClick={onInviteMember}
-                style={{ fontSize: 12, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>邀请</button>}
-              {canEditMyTeam && <button onClick={onManageMyMembers}
-                style={{ fontSize: 12, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>管理</button>}
-            </div>
+            {canEditMyTeam && <button onClick={onManageMyMembers}
+              style={{ fontSize: 12, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>管理</button>}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {myMembers.map((m: any) => (

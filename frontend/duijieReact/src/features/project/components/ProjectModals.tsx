@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { User, Mail, Shield, Building2, Phone, MapPin, Edit3, X as XIcon } from 'lucide-react'
 import useNicknameStore from '../../../stores/useNicknameStore'
 import useUserStore from '../../../stores/useUserStore'
@@ -41,6 +41,44 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
   const [selectedRole, setSelectedRole] = useState('')
   const [memberSearch, setMemberSearch] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [inviteSearch, setInviteSearch] = useState('')
+  const [inviteResults, setInviteResults] = useState<any[]>([])
+  const [inviteSearching, setInviteSearching] = useState(false)
+  const [invitingId, setInvitingId] = useState<number | null>(null)
+  const inviteTimerRef = useRef<any>(null)
+
+  const handleInviteSearch = (q: string) => {
+    setInviteSearch(q)
+    if (inviteTimerRef.current) clearTimeout(inviteTimerRef.current)
+    if (!q.trim()) { setInviteResults([]); setInviteSearching(false); return }
+    setInviteSearching(true)
+    inviteTimerRef.current = setTimeout(async () => {
+      const r = await projectApi.searchUsersForInvite(projectId, q.trim())
+      setInviteSearching(false)
+      if (r.success) setInviteResults(r.data || [])
+    }, 400)
+  }
+
+  const handleInvite = async (userId: number) => {
+    setInvitingId(userId)
+    const r = await projectApi.inviteMember(projectId, { user_id: userId })
+    setInvitingId(null)
+    if (r.success) {
+      toast('邀请已发送，等待审批', 'success')
+      setInviteResults(prev => prev.filter(u => u.id !== userId))
+    } else toast(r.message || '邀请失败', 'error')
+  }
+
+  const copyInviteLink = async () => {
+    try {
+      const r = await projectApi.detail(projectId)
+      if (r.success && r.data?.join_code) {
+        const link = `${window.location.origin}/join/${r.data.join_code}`
+        await navigator.clipboard.writeText(link)
+        toast('邀请链接已复制', 'success')
+      } else toast('该项目暂无邀请码', 'error')
+    } catch { toast('复制失败', 'error') }
+  }
 
   const roleOptions = (
     <>
@@ -130,6 +168,34 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
               if (ok > 0) { toast(`已添加 ${ok} 名成员`, 'success'); setSelectedUserIds(new Set()); onRefresh(); onRefreshAvailable() }
               else toast(lastErr || '添加失败', 'error')
             }}>{submitting ? '添加中...' : `添加${selectedUserIds.size > 0 ? ` (${selectedUserIds.size})` : ''}`}</Button>
+          </div>
+        </div>
+
+        <div style={{ borderTop: '1px solid var(--border-primary)', paddingTop: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-body)' }}>邀请外部用户</label>
+            <button onClick={copyInviteLink}
+              style={{ fontSize: 12, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, textDecoration: 'underline' }}>
+              复制邀请链接
+            </button>
+          </div>
+          <Input placeholder="输入用户ID、昵称或手机号搜索" value={inviteSearch} onChange={e => handleInviteSearch(e.target.value)} />
+          <div style={{ maxHeight: 150, overflowY: 'auto', marginTop: 8 }}>
+            {inviteSearching && <div style={{ textAlign: 'center', padding: 12, color: 'var(--text-tertiary)', fontSize: 13 }}>搜索中...</div>}
+            {!inviteSearching && inviteResults.map(u => (
+              <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: '1px solid var(--border-secondary)' }}>
+                <Avatar name={u.nickname || '用户'} size={28} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)' }}>{u.nickname || '用户'}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>ID: {u.display_id || u.id}{u.phone ? ` · ${u.phone}` : ''}</div>
+                </div>
+                <button onClick={() => handleInvite(u.id)} disabled={invitingId === u.id}
+                  style={{ padding: '4px 12px', borderRadius: 6, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 12, cursor: 'pointer', opacity: invitingId === u.id ? 0.6 : 1, whiteSpace: 'nowrap' }}>
+                  {invitingId === u.id ? '...' : '邀请'}
+                </button>
+              </div>
+            ))}
+            {!inviteSearching && inviteSearch && inviteResults.length === 0 && <div style={{ textAlign: 'center', padding: 12, color: 'var(--text-tertiary)', fontSize: 13 }}>未找到用户</div>}
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 {
-  "version": "1.1.73.6",
+  "version": "1.1.73.7",
   "versionCode": 73,
   "minVersion": "1.0.0",
-  "changelog": "点击角色卡片弹窗查看权限，固定大小可滚动"
+  "changelog": "邀请功能并入管理弹窗，含搜索邀请和复制邀请链接"
 }
