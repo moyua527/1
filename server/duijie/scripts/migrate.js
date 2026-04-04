@@ -48,8 +48,9 @@ function isIgnorableMigrationError(error) {
     'ER_DUP_KEYNAME',
     'ER_CANT_DROP_FIELD_OR_KEY',
     'ER_TABLE_EXISTS_ERROR',
+    'ER_BAD_FIELD_ERROR',
   ]);
-  const ignorableErrnos = new Set([1060, 1061, 1091, 1050]);
+  const ignorableErrnos = new Set([1060, 1061, 1091, 1050, 1054]);
   if (ignorableCodes.has(error?.code) || ignorableErrnos.has(error?.errno)) return true;
   const message = String(error?.message || '').toLowerCase();
   return (

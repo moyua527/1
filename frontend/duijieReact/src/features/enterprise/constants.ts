@@ -18,21 +18,38 @@ export const roleConfig: Record<string, { label: string; color: string; bg: stri
   member: { label: '成员', color: '#64748b', bg: '#f1f5f9' },
 }
 
-export const ENTERPRISE_PERMISSIONS = [
-  { key: 'can_manage_members', label: '管理成员', desc: '添加/移除/编辑企业成员' },
-  { key: 'can_approve_join', label: '审批加入申请', desc: '审批/拒绝企业加入申请' },
-  { key: 'can_manage_roles', label: '管理角色', desc: '创建/编辑/删除企业角色' },
-  { key: 'can_manage_department', label: '管理部门', desc: '创建/编辑/删除企业部门' },
-  { key: 'can_edit_enterprise', label: '编辑企业信息', desc: '修改企业名称/描述/行业等基本信息' },
-  { key: 'can_create_project', label: '创建项目', desc: '在企业内新建项目' },
-  { key: 'can_delete_project', label: '删除项目', desc: '删除企业项目' },
-  { key: 'can_view_report', label: '查看报表', desc: '查看企业数据报表' },
-  { key: 'can_manage_app', label: '管理应用', desc: '管理企业关联应用' },
+export const ENT_PERM_GROUPS = [
+  { title: '成员管理', items: [
+    { key: 'can_manage_members', label: '管理成员' },
+    { key: 'can_approve_join', label: '审批加入' },
+  ]},
+  { title: '组织架构', items: [
+    { key: 'can_manage_roles', label: '管理角色' },
+    { key: 'can_manage_department', label: '管理部门' },
+  ]},
+  { title: '企业信息', items: [
+    { key: 'can_edit_enterprise', label: '编辑企业信息' },
+  ]},
+  { title: '项目管理', items: [
+    { key: 'can_create_project', label: '创建项目' },
+    { key: 'can_delete_project', label: '删除项目' },
+  ]},
+  { title: '报表与应用', items: [
+    { key: 'can_view_report', label: '查看报表' },
+    { key: 'can_manage_app', label: '管理应用' },
+  ]},
 ] as const
+
+export const ALL_ENT_PERM_KEYS = ENT_PERM_GROUPS.flatMap(g => g.items.map(i => i.key))
+
+export const ENTERPRISE_PERMISSIONS = ALL_ENT_PERM_KEYS.map(key => {
+  for (const g of ENT_PERM_GROUPS) for (const i of g.items) if (i.key === key) return { key, label: i.label, desc: '' }
+  return { key, label: key, desc: '' }
+})
 
 export const ROLE_COLORS = ['#2563eb', '#9333ea', '#059669', '#d97706', '#dc2626', '#0891b2', '#7c3aed', '#64748b']
 
 export const emptyEntForm = { name: '', company: '', email: '', phone: '', notes: '', industry: '', scale: '', address: '', credit_code: '', legal_person: '', registered_capital: '', established_date: '', business_scope: '', company_type: '', website: '' }
 export const emptyMemberForm = { name: '', position: '', department: '', phone: '', email: '', notes: '', employee_id: '', join_date: '', supervisor: '', department_id: '', enterprise_role_id: '' }
 export const emptyDeptForm = { name: '', parent_id: '' }
-export const emptyRoleForm: Record<string, any> = { name: '', color: '#2563eb', ...Object.fromEntries(ENTERPRISE_PERMISSIONS.map(p => [p.key, false])) }
+export const emptyRoleForm: Record<string, any> = { name: '', color: '#2563eb', ...Object.fromEntries(ALL_ENT_PERM_KEYS.map(k => [k, false])) }
