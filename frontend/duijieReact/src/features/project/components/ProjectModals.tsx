@@ -20,19 +20,36 @@ interface ManageMembersModalProps {
   projectId: string
   members: any[]
   availableUsers: any[]
-  enterpriseRoles?: any[]
   projectRoles?: any[]
   onRefresh: () => void
   onRefreshAvailable: () => void
 }
 
-export function ManageMembersModal({ open, onClose, projectId, members, availableUsers, enterpriseRoles = [], projectRoles = [], onRefresh, onRefreshAvailable }: ManageMembersModalProps) {
+function parseRoleValue(val: string): { role: string; project_role_id?: number } {
+  if (val.startsWith('proj-')) return { role: 'editor', project_role_id: Number(val.slice(5)) }
+  return { role: val || 'editor' }
+}
+
+function getMemberRoleValue(m: any): string {
+  if (m.project_role_id) return `proj-${m.project_role_id}`
+  return m.member_role === 'viewer' ? 'viewer' : 'editor'
+}
+
+export function ManageMembersModal({ open, onClose, projectId, members, availableUsers, projectRoles = [], onRefresh, onRefreshAvailable }: ManageMembersModalProps) {
   const dn = useNicknameStore(s => s.getDisplayName)
   const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set())
-  const [memberRole, setMemberRole] = useState('editor')
-  const [selectedProjRoleId, setSelectedProjRoleId] = useState<string>('')
+  const [selectedRole, setSelectedRole] = useState('editor')
   const [memberSearch, setMemberSearch] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  const roleOptions = (
+    <>
+      <option value="editor">编辑者</option>
+      <option value="viewer">查看者</option>
+      {projectRoles.length > 0 && <option disabled>──────────</option>}
+      {projectRoles.map((r: any) => <option key={r.id} value={`proj-${r.id}`}>{r.name}</option>)}
+    </>
+  )
 
   return (
     <Modal open={open} onClose={onClose} title="管理项目成员">
@@ -46,23 +63,23 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
                   <Avatar name={dn(m.id, m.nickname || m.username || '?')} size={28} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{dn(m.id, m.nickname || m.username)}</div>
-                    <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{m.member_role === 'owner' ? '负责人' : m.member_role === 'editor' ? '编辑者' : '查看者'}</div>
                   </div>
-                  {m.member_role !== 'owner' && projectRoles.length > 0 && (
-                    <select value={m.project_role_id || ''}
-                      onChange={async (e) => {
-                        const rid = e.target.value ? Number(e.target.value) : null
-                        const r = await projectApi.updateMemberRole(projectId, String(m.pm_id), { project_role_id: rid })
-                        if (r.success) { toast('项目角色已更新', 'success'); onRefresh() } else toast(r.message || '更新失败', 'error')
-                      }}
-                      style={{ padding: '3px 8px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 11, background: 'var(--bg-primary)', color: 'var(--text-body)', cursor: 'pointer' }}>
-                      <option value="">无项目角色</option>
-                      {projectRoles.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
-                    </select>
-                  )}
-                  {m.member_role !== 'owner' && (
-                    <button onClick={async () => { const r = await projectApi.removeMember(projectId, String(m.id)); if (r.success) { toast('已移除', 'success'); onRefresh(); onRefreshAvailable() } else toast(r.message || '移除失败', 'error') }}
-                      style={{ padding: '4px 12px', borderRadius: 6, background: '#fef2f2', color: 'var(--color-danger)', border: '1px solid #fecaca', cursor: 'pointer', fontSize: 12, fontWeight: 500 }}>移除</button>
+                  {m.member_role === 'owner' ? (
+                    <span style={{ fontSize: 11, color: 'var(--brand)', fontWeight: 600 }}>负责人</span>
+                  ) : (
+                    <>
+                      <select value={getMemberRoleValue(m)}
+                        onChange={async (e) => {
+                          const { role, project_role_id } = parseRoleValue(e.target.value)
+                          const r = await projectApi.updateMemberRole(projectId, String(m.pm_id), { role, project_role_id: project_role_id ?? null })
+                          if (r.success) { toast('角色已更新', 'success'); onRefresh() } else toast(r.message || '更新失败', 'error')
+                        }}
+                        style={{ padding: '3px 8px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 12, background: 'var(--bg-primary)', color: 'var(--text-body)', cursor: 'pointer' }}>
+                        {roleOptions}
+                      </select>
+                      <button onClick={async () => { const r = await projectApi.removeMember(projectId, String(m.id)); if (r.success) { toast('已移除', 'success'); onRefresh(); onRefreshAvailable() } else toast(r.message || '移除失败', 'error') }}
+                        style={{ padding: '4px 12px', borderRadius: 6, background: '#fef2f2', color: 'var(--color-danger)', border: '1px solid #fecaca', cursor: 'pointer', fontSize: 12, fontWeight: 500 }}>移除</button>
+                    </>
                   )}
                 </div>
               ))}
@@ -96,25 +113,18 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
             )}
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center' }}>
-            <select value={memberRole} onChange={e => setMemberRole(e.target.value)}
+            <select value={selectedRole} onChange={e => setSelectedRole(e.target.value)}
               style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
-              <option value="editor">编辑者</option>
-              <option value="viewer">查看者</option>
+              {roleOptions}
             </select>
-            {projectRoles.length > 0 && (
-              <select value={selectedProjRoleId} onChange={e => setSelectedProjRoleId(e.target.value)}
-                style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
-                <option value="">无项目角色</option>
-                {projectRoles.map((r: any) => <option key={r.id} value={r.id}>{r.name}</option>)}
-              </select>
-            )}
             {selectedUserIds.size > 0 && <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>已选 {selectedUserIds.size} 人</span>}
             <Button disabled={selectedUserIds.size === 0 || submitting} onClick={async () => {
               setSubmitting(true)
+              const { role, project_role_id } = parseRoleValue(selectedRole)
               let ok = 0
               let lastErr = ''
               for (const uid of selectedUserIds) {
-                const r = await projectApi.addMember(projectId, { user_id: uid, role: memberRole, project_role_id: selectedProjRoleId ? Number(selectedProjRoleId) : undefined })
+                const r = await projectApi.addMember(projectId, { user_id: uid, role, project_role_id })
                 if (r.success) ok++
                 else lastErr = r.message || '添加失败'
               }
@@ -259,18 +269,17 @@ export function MemberInfoModal({ member, onClose }: MemberInfoModalProps) {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <Shield size={16} color="var(--text-secondary)" />
-              <span style={{ fontSize: 13, color: 'var(--text-secondary)', minWidth: 70 }}>项目角色</span>
-              <Badge color={member.member_role === 'owner' ? 'blue' : member.member_role === 'editor' ? 'green' : 'gray'}>
-                {member.member_role === 'owner' ? '负责人' : member.member_role === 'editor' ? '编辑者' : '查看者'}
-              </Badge>
+              <span style={{ fontSize: 13, color: 'var(--text-secondary)', minWidth: 70 }}>角色</span>
+              {member.member_role === 'owner' ? (
+                <Badge color="blue">负责人</Badge>
+              ) : member.project_role_name ? (
+                <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 4, background: member.project_role_color || 'var(--brand)', color: 'var(--bg-primary)', fontWeight: 500 }}>{member.project_role_name}</span>
+              ) : (
+                <Badge color={member.member_role === 'editor' ? 'green' : 'gray'}>
+                  {member.member_role === 'editor' ? '编辑者' : '查看者'}
+                </Badge>
+              )}
             </div>
-            {member.enterprise_role_name && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Building2 size={16} color="var(--text-secondary)" />
-                <span style={{ fontSize: 13, color: 'var(--text-secondary)', minWidth: 70 }}>企业角色</span>
-                <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 4, background: member.enterprise_role_color || 'var(--text-secondary)', color: 'var(--bg-primary)', fontWeight: 500 }}>{member.enterprise_role_name}</span>
-              </div>
-            )}
             {member.nickname && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Mail size={16} color="var(--text-secondary)" />

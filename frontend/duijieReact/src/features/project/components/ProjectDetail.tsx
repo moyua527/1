@@ -79,7 +79,6 @@ export default function ProjectDetail() {
   const [appForm, setAppForm] = useState({ app_name: '', app_url: '' })
   const [clientModal, setClientModal] = useState(false)
   const [clientData, setClientData] = useState<any>(null)
-  const [enterpriseRoles, setEnterpriseRoles] = useState<any[]>([])
   const [projectRoles, setProjectRoles] = useState<any[]>([])
   const activeEnterpriseId = useEnterpriseStore(s => s.activeEnterpriseId)
   const [showSetClient, setShowSetClient] = useState(false)
@@ -191,10 +190,6 @@ export default function ProjectDetail() {
   const refreshAvailableUsers = () => { projectApi.availableUsers(id!).then(r => { if (r.success) setAvailableUsers(r.data || []) }) }
   const refreshClientAvailableUsers = () => { projectApi.clientAvailableUsers(id!).then(r => { if (r.success) setClientAvailableUsers(r.data || []) }) }
 
-  const loadEnterpriseRoles = () => {
-    fetchApi('/api/my-enterprise/roles').then(r => { if (r.success) setEnterpriseRoles(r.data || []) }).catch(() => {})
-  }
-
   const loadProjectRoles = () => {
     projectApi.listRoles(id!).then(r => { if (r.success) setProjectRoles(r.data || []) }).catch(() => {})
   }
@@ -202,7 +197,6 @@ export default function ProjectDetail() {
   const openManageMembers = () => {
     setShowAddMember(true)
     refreshAvailableUsers()
-    loadEnterpriseRoles()
     loadProjectRoles()
   }
 
@@ -374,7 +368,6 @@ export default function ProjectDetail() {
           projectId={id!}
           members={internalMembers}
           availableUsers={availableUsers}
-          enterpriseRoles={enterpriseRoles}
           projectRoles={projectRoles}
           onRefresh={loadProject}
           onRefreshAvailable={refreshAvailableUsers}
