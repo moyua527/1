@@ -94,6 +94,7 @@ async function getProjectPerms(userId, projectId) {
   }
 
   // 遗留角色回退
+  const isOwner = member.role === 'owner';
   const isEditor = member.role === 'editor';
   const ownerPerms = allPerms(false);
   PROJECT_ROLE_FIELDS.forEach(f => { ownerPerms[f] = isOwner; });

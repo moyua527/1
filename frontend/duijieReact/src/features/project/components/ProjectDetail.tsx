@@ -366,7 +366,7 @@ export default function ProjectDetail() {
           myMembers={myMembers}
           otherMembers={otherMembers}
           showOtherTeam={false}
-          canEditMyTeam={canAddMember}
+          canEditMyTeam={canAddMember || isOwner}
           onManageMyMembers={openManageMembers}
           onSelectMember={setSelectedMember}
         />
