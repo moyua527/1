@@ -48,6 +48,7 @@ function getSocket(): Socket {
 
   socket.on('new_dm', (payload: any) => { playNotificationSound(); emit('new_dm', payload) })
   socket.on('new_notification', (payload: any) => { playNotificationSound(); emit('new_notification', payload) })
+  socket.on('task_created', (payload: any) => { playNotificationSound(); emit('task_created', payload); emit('data_changed', { entity: 'task', action: 'created', ...payload }) })
   socket.on('data_changed', (payload: any) => emit('data_changed', payload))
 
   socket.on('disconnect', () => {

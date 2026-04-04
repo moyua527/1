@@ -1,22 +1,20 @@
-let audioElement: HTMLAudioElement | null = null
 let lastPlayTime = 0
 const MIN_INTERVAL = 1500
+let cachedWavUrl: string | null = null
+let audioPool: HTMLAudioElement[] = []
 
-function writeStr(view: DataView, offset: number, str: string) {
-  for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i))
+function writeStr(v: DataView, o: number, s: string) {
+  for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i))
 }
 
-function buildWav(): string {
-  const rate = 44100
-  const dur = 0.35
-  const n = Math.floor(rate * dur)
-  const headerSize = 44
-  const dataSize = n * 2
-  const buf = new ArrayBuffer(headerSize + dataSize)
+function getWavUrl(): string {
+  if (cachedWavUrl) return cachedWavUrl
+  const rate = 22050, dur = 0.4, n = Math.floor(rate * dur)
+  const buf = new ArrayBuffer(44 + n * 2)
   const v = new DataView(buf)
 
   writeStr(v, 0, 'RIFF')
-  v.setUint32(4, headerSize + dataSize - 8, true)
+  v.setUint32(4, 36 + n * 2, true)
   writeStr(v, 8, 'WAVE')
   writeStr(v, 12, 'fmt ')
   v.setUint32(16, 16, true)
@@ -27,42 +25,86 @@ function buildWav(): string {
   v.setUint16(32, 2, true)
   v.setUint16(34, 16, true)
   writeStr(v, 36, 'data')
-  v.setUint32(40, dataSize, true)
+  v.setUint32(40, n * 2, true)
 
   for (let i = 0; i < n; i++) {
     const t = i / rate
-    const env = Math.exp(-t * 12) * (1 - Math.exp(-t * 500))
+    const attack = Math.min(1, t * 200)
+    const decay = Math.exp(-t * 8)
+    const env = attack * decay
     const sig =
-      Math.sin(2 * Math.PI * 880 * t) * 0.45 +
-      Math.sin(2 * Math.PI * 1318.5 * t) * 0.30 +
-      Math.sin(2 * Math.PI * 1760 * t) * 0.15 +
-      Math.sin(2 * Math.PI * 2640 * t) * 0.10
-    v.setInt16(headerSize + i * 2, Math.max(-32768, Math.min(32767, sig * env * 32767 | 0)), true)
+      Math.sin(2 * Math.PI * 830 * t) * 0.5 +
+      Math.sin(2 * Math.PI * 1245 * t) * 0.3 +
+      Math.sin(2 * Math.PI * 1660 * t) * 0.2
+    const val = Math.max(-32768, Math.min(32767, (sig * env * 32000) | 0))
+    v.setInt16(44 + i * 2, val, true)
   }
 
-  const bytes = new Uint8Array(buf)
-  let bin = ''
-  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i])
-  return 'data:audio/wav;base64,' + btoa(bin)
+  const blob = new Blob([buf], { type: 'audio/wav' })
+  cachedWavUrl = URL.createObjectURL(blob)
+  return cachedWavUrl
 }
 
-function ensureAudio() {
-  if (audioElement) return
-  audioElement = new Audio(buildWav())
-  audioElement.volume = 0.8
-  audioElement.load()
+function getAudio(): HTMLAudioElement {
+  const free = audioPool.find(a => a.paused || a.ended)
+  if (free) return free
+  const a = new Audio()
+  a.src = getWavUrl()
+  a.volume = 1.0
+  audioPool.push(a)
+  return a
 }
 
-function warmUp() {
-  ensureAudio()
-  if (!audioElement) return
-  const p = audioElement.play()
-  if (p) p.then(() => { audioElement!.pause(); audioElement!.currentTime = 0 }).catch(() => {})
+function playViaAudioElement(): boolean {
+  try {
+    const a = getAudio()
+    a.currentTime = 0
+    const p = a.play()
+    if (p) {
+      p.catch(() => {
+        console.warn('[notif] Audio play blocked')
+        playViaAudioContext()
+      })
+    }
+    return true
+  } catch {
+    return false
+  }
 }
 
-if (typeof document !== 'undefined') {
-  const opts = { capture: true } as const
-  ;['click', 'touchstart', 'keydown'].forEach(e => document.addEventListener(e, warmUp, opts))
+function playViaAudioContext() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+    if (ctx.state === 'suspended') ctx.resume()
+    const rate = ctx.sampleRate
+    const dur = 0.4
+    const len = Math.floor(rate * dur)
+    const buffer = ctx.createBuffer(1, len, rate)
+    const ch = buffer.getChannelData(0)
+
+    for (let i = 0; i < len; i++) {
+      const t = i / rate
+      const attack = Math.min(1, t * 200)
+      const decay = Math.exp(-t * 8)
+      const env = attack * decay
+      ch[i] = (
+        Math.sin(2 * Math.PI * 830 * t) * 0.5 +
+        Math.sin(2 * Math.PI * 1245 * t) * 0.3 +
+        Math.sin(2 * Math.PI * 1660 * t) * 0.2
+      ) * env * 0.9
+    }
+
+    const src = ctx.createBufferSource()
+    src.buffer = buffer
+    const gain = ctx.createGain()
+    gain.gain.value = 1.0
+    src.connect(gain)
+    gain.connect(ctx.destination)
+    src.start()
+    src.onended = () => ctx.close()
+  } catch (e) {
+    console.warn('[notif] AudioContext fallback failed', e)
+  }
 }
 
 export function playNotificationSound() {
@@ -70,10 +112,8 @@ export function playNotificationSound() {
   if (now - lastPlayTime < MIN_INTERVAL) return
   lastPlayTime = now
 
-  ensureAudio()
-  if (!audioElement) return
-
-  audioElement.currentTime = 0
-  const p = audioElement.play()
-  if (p) p.catch(() => {})
+  console.log('[notif] playing notification sound')
+  if (!playViaAudioElement()) {
+    playViaAudioContext()
+  }
 }

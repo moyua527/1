@@ -1,6 +1,7 @@
-﻿const createTask = require('../../services/task/createTask');
+const createTask = require('../../services/task/createTask');
 const db = require('../../../config/db');
 const { broadcast } = require('../../utils/broadcast');
+const { notify } = require('../../utils/notify');
 
 module.exports = async (req, res) => {
   try {
@@ -13,6 +14,11 @@ module.exports = async (req, res) => {
         );
       }
     }
+
+    if (req.body.assignee_id && req.body.assignee_id !== req.userId) {
+      await notify(req.body.assignee_id, 'task_assigned', '新任务指派', `你被指派了任务「${req.body.title}」`, `/tasks`);
+    }
+
     broadcast('task', 'created', { id, project_id: req.body.project_id, userId: req.userId });
     res.json({ success: true, data: { id } });
   } catch (e) {
