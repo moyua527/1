@@ -188,22 +188,37 @@ export default function ProjectRoleList({ canEdit, projectId }: Props) {
               const permCount = ALL_PERM_KEYS.filter(k => !!r[k]).length
               const isSelected = expandedId === r.id
               return (
-                <div key={r.id} onClick={() => setExpandedId(isSelected ? null : r.id)}
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 16px', borderRadius: 10,
-                    border: isSelected ? `2px solid ${r.color || '#64748b'}` : '2px solid var(--border-primary)',
-                    background: isSelected ? `${r.color || '#64748b'}08` : 'var(--bg-primary)',
-                    cursor: 'pointer', transition: 'all 0.15s', minWidth: 90 }}>
-                  {/* 色块圆圈 */}
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: r.color || '#64748b',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 14, fontWeight: 700 }}>
-                    {r.name.charAt(0)}
+                <div key={r.id} style={{ position: 'relative' }}>
+                  <div onClick={() => setExpandedId(isSelected ? null : r.id)}
+                    style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 16px', borderRadius: 10,
+                      border: isSelected ? `2px solid ${r.color || '#64748b'}` : '2px solid var(--border-primary)',
+                      background: isSelected ? `${r.color || '#64748b'}08` : 'var(--bg-primary)',
+                      cursor: 'pointer', transition: 'all 0.15s', minWidth: 90 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: r.color || '#64748b',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 14, fontWeight: 700 }}>
+                      {r.name.charAt(0)}
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-heading)', textAlign: 'center', lineHeight: 1.2 }}>{r.name}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-tertiary)' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}><Users size={10} />{r.member_count || 0}</span>
+                      <span>{permCount}/{ALL_PERM_KEYS.length}</span>
+                    </div>
+                    {r.is_default ? <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 3, background: 'var(--bg-tertiary)', color: 'var(--text-tertiary)' }}>默认</span> : null}
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-heading)', textAlign: 'center', lineHeight: 1.2 }}>{r.name}</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-tertiary)' }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}><Users size={10} />{r.member_count || 0}</span>
-                    <span>{permCount}/{ALL_PERM_KEYS.length}</span>
-                  </div>
-                  {r.is_default ? <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 3, background: 'var(--bg-tertiary)', color: 'var(--text-tertiary)' }}>默认</span> : null}
+                  {canEdit && (
+                    <div style={{ position: 'absolute', top: 4, right: 4, display: 'flex', gap: 2 }}>
+                      <button onClick={(e) => { e.stopPropagation(); openEdit(r) }}
+                        style={{ width: 22, height: 22, borderRadius: 4, background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', padding: 0 }}>
+                        <Edit3 size={11} />
+                      </button>
+                      {!r.is_default && (
+                        <button onClick={(e) => { e.stopPropagation(); handleDelete(r.id) }}
+                          style={{ width: 22, height: 22, borderRadius: 4, background: '#fef2f2', border: '1px solid #fecaca', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-danger)', padding: 0 }}>
+                          <Trash2 size={11} />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )
             })}

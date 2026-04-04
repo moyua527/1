@@ -1,6 +1,6 @@
 {
-  "version": "1.1.73.2",
+  "version": "1.1.73.3",
   "versionCode": 73,
   "minVersion": "1.0.0",
-  "changelog": "移除编辑者/查看者角色选项，角色下拉框只保留自定义项目角色"
+  "changelog": "角色卡片直接显示编辑和删除按钮"
 }
