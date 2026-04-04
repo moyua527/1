@@ -1,6 +1,6 @@
 {
-  "version": "1.1.73.9",
+  "version": "1.1.74",
   "versionCode": 73,
   "minVersion": "1.0.0",
-  "changelog": "项目角色列表只显示项目级角色，不再混入企业级共享角色"
+  "changelog": "新成员加入项目时自动分配默认基础角色（编辑者）"
 }

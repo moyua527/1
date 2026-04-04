@@ -182,19 +182,11 @@ async function findEnterpriseProjectRole(enterpriseId, roleId, conn = db) {
   return rows[0] || null;
 }
 
-async function resolveProjectRoleId(projectId, legacyRole = 'viewer', requestedRoleId = null, conn = db) {
+async function resolveProjectRoleId(projectId, legacyRole = 'editor', requestedRoleId = null, conn = db) {
   if (requestedRoleId) {
     const [rows] = await conn.query('SELECT * FROM project_roles WHERE id = ? AND is_deleted = 0 LIMIT 1', [requestedRoleId]);
     return rows[0] ? rows[0].id : null;
   }
-  // 先尝试企业级角色
-  const [proj] = await conn.query('SELECT internal_client_id FROM duijie_projects WHERE id = ? LIMIT 1', [projectId]);
-  if (proj[0]?.internal_client_id) {
-    const entRoles = await ensureDefaultEnterpriseProjectRoles(proj[0].internal_client_id, null, conn);
-    const match = entRoles.find(r => r.role_key === legacyRole);
-    if (match) return match.id;
-  }
-  // 回退到项目级角色
   const roles = await ensureDefaultProjectRoles(projectId, null, conn);
   return roles.find(role => role.role_key === legacyRole)?.id || null;
 }

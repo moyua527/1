@@ -1,7 +1,7 @@
 const db = require('../../../config/db');
 const { broadcast } = require('../../utils/broadcast');
+const { resolveProjectRoleId } = require('../../utils/projectRoles');
 
-// 审批项目加入申请 (approve / reject)
 module.exports = async (req, res) => {
   try {
     const { requestId } = req.params;
@@ -15,7 +15,6 @@ module.exports = async (req, res) => {
 
     const request = rows[0];
 
-    // 删除该用户在此项目的旧已处理记录（避免唯一键冲突）
     await db.query(
       "DELETE FROM duijie_project_join_requests WHERE project_id = ? AND user_id = ? AND status = ? AND id != ?",
       [request.project_id, request.user_id, action, requestId]
@@ -27,10 +26,10 @@ module.exports = async (req, res) => {
     );
 
     if (action === 'approved') {
-      // 添加为项目成员(editor, internal)
+      const defaultRoleId = await resolveProjectRoleId(request.project_id, 'editor');
       await db.query(
-        "INSERT IGNORE INTO duijie_project_members (project_id, user_id, role, source) VALUES (?, ?, 'editor', 'internal')",
-        [request.project_id, request.user_id]
+        "INSERT IGNORE INTO duijie_project_members (project_id, user_id, role, source, project_role_id) VALUES (?, ?, 'editor', 'internal', ?)",
+        [request.project_id, request.user_id, defaultRoleId]
       );
     }
 

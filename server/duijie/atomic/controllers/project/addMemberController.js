@@ -1,6 +1,7 @@
 const db = require('../../../config/db');
 const { notify } = require('../../utils/notify');
 const { broadcast } = require('../../utils/broadcast');
+const { resolveProjectRoleId } = require('../../utils/projectRoles');
 
 module.exports = async (req, res) => {
   try {
@@ -10,13 +11,11 @@ module.exports = async (req, res) => {
     const validRoles = ['owner', 'editor', 'viewer'];
     const memberRole = validRoles.includes(role) ? role : 'editor';
 
-    // 获取项目的我方企业ID
     const [[project]] = await db.query(
       'SELECT internal_client_id, name FROM duijie_projects WHERE id = ? AND is_deleted = 0', [id]
     );
     if (!project) return res.status(404).json({ success: false, message: '项目不存在' });
 
-    // 如果项目关联了我方企业，验证被添加用户必须是该企业成员
     if (project.internal_client_id) {
       const [[isMember]] = await db.query(
         'SELECT 1 FROM duijie_client_members WHERE client_id = ? AND user_id = ? AND is_deleted = 0',
@@ -30,9 +29,11 @@ module.exports = async (req, res) => {
     );
     if (existing) return res.status(400).json({ success: false, message: '该用户已是项目成员' });
 
+    const finalRoleId = project_role_id || await resolveProjectRoleId(id, memberRole);
+
     await db.query(
       "INSERT INTO duijie_project_members (project_id, user_id, role, source, enterprise_role_id, project_role_id) VALUES (?, ?, ?, 'internal', ?, ?)",
-      [id, user_id, memberRole, enterprise_role_id || null, project_role_id || null]
+      [id, user_id, memberRole, enterprise_role_id || null, finalRoleId]
     );
     if (user_id !== req.userId) {
       await notify(user_id, 'project_member', '项目邀请', `你被添加为项目「${project.name}」的成员`, `/projects/${id}`);
