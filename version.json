@@ -1,6 +1,6 @@
 {
-  "version": "1.1.80.1",
-  "versionCode": 87,
+  "version": "1.1.81",
+  "versionCode": 88,
   "minVersion": "1.0.0",
-  "changelog": "账号与安全标签重构为纯密码/安全设置，个人信息移至个人资料弹窗"
+  "changelog": "项目概览左右两栏布局，项目成员只显示头像，点击头像查看信息"
 }

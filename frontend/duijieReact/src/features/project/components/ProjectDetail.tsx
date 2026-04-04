@@ -174,10 +174,6 @@ export default function ProjectDetail() {
   const st = statusMap[project.status] || statusMap.planning
   const isOwner = (project.members || []).some((m: any) => m.user_id === user?.id && m.role === 'owner')
   const allMembers = project.members || []
-  const myMembers = allMembers
-  const otherMembers: any[] = []
-  const myTeamTitle = '项目成员'
-  const otherTeamTitle = ''
 
   const handleDelete = async () => {
     if (!(await confirm({ message: '确定将此项目移到回收站？可在项目列表的回收站中恢复。', danger: true }))) return
@@ -260,85 +256,102 @@ export default function ProjectDetail() {
 
       <div style={{ flex: 1, minHeight: 0, paddingTop: 16, ...(tab === 'tasks' ? { display: 'flex', flexDirection: 'column' as const, overflow: 'hidden' } : { overflowY: 'auto' as const }) }}>
       {tab === 'overview' && (<>
-        <div style={section}>
-          {project.description && <div style={{ marginBottom: 16 }}><div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>描述</div><div style={{ fontSize: 14, color: 'var(--text-body)', lineHeight: 1.6 }}>{project.description}</div></div>}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
-            <div>
-              <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>开始日期</div>
-              {canEdit ? (
-                <input type="date" value={project.start_date ? project.start_date.slice(0, 10) : ''} onChange={async e => {
-                  const r = await projectApi.update(id!, { start_date: e.target.value || null })
-                  if (r.success) { toast('已更新', 'success'); loadProject() } else toast(r.message || '更新失败', 'error')
-                }} style={{ fontSize: 14, fontWeight: 500, marginTop: 2, border: '1px solid var(--border-primary)', borderRadius: 6, padding: '4px 8px', background: 'var(--bg-primary)', color: 'var(--text-heading)', cursor: 'pointer', width: '100%' }} />
+        <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+          {/* 左栏：项目详情 + 关联应用 */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={section}>
+              {project.description && <div style={{ marginBottom: 16 }}><div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>描述</div><div style={{ fontSize: 14, color: 'var(--text-body)', lineHeight: 1.6 }}>{project.description}</div></div>}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+                <div>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>开始日期</div>
+                  {canEdit ? (
+                    <input type="date" value={project.start_date ? project.start_date.slice(0, 10) : ''} onChange={async e => {
+                      const r = await projectApi.update(id!, { start_date: e.target.value || null })
+                      if (r.success) { toast('已更新', 'success'); loadProject() } else toast(r.message || '更新失败', 'error')
+                    }} style={{ fontSize: 14, fontWeight: 500, marginTop: 2, border: '1px solid var(--border-primary)', borderRadius: 6, padding: '4px 8px', background: 'var(--bg-primary)', color: 'var(--text-heading)', cursor: 'pointer', width: '100%' }} />
+                  ) : (
+                    <div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.start_date ? project.start_date.slice(0, 10) : '未设置'}</div>
+                  )}
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>结束日期</div>
+                  {canEdit ? (
+                    <input type="date" value={project.end_date ? project.end_date.slice(0, 10) : ''} onChange={async e => {
+                      const r = await projectApi.update(id!, { end_date: e.target.value || null })
+                      if (r.success) { toast('已更新', 'success'); loadProject() } else toast(r.message || '更新失败', 'error')
+                    }} style={{ fontSize: 14, fontWeight: 500, marginTop: 2, border: '1px solid var(--border-primary)', borderRadius: 6, padding: '4px 8px', background: 'var(--bg-primary)', color: 'var(--text-heading)', cursor: 'pointer', width: '100%' }} />
+                  ) : (
+                    <div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.end_date ? project.end_date.slice(0, 10) : '未设置'}</div>
+                  )}
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>预算</div>
+                  {canEdit ? (
+                    <input type="number" placeholder="输入预算金额" defaultValue={project.budget > 0 ? project.budget : ''} onBlur={async e => {
+                      const val = e.target.value ? Number(e.target.value) : 0
+                      if (val === (project.budget || 0)) return
+                      const r = await projectApi.update(id!, { budget: val })
+                      if (r.success) { toast('已更新', 'success'); loadProject() } else toast(r.message || '更新失败', 'error')
+                    }} onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
+                    style={{ fontSize: 14, fontWeight: 500, marginTop: 2, border: '1px solid var(--border-primary)', borderRadius: 6, padding: '4px 8px', background: 'var(--bg-primary)', color: 'var(--text-heading)', width: '100%' }} />
+                  ) : (
+                    <div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.budget > 0 ? `¥${Number(project.budget).toLocaleString()}` : '未设置'}</div>
+                  )}
+                </div>
+                <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>创建时间</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{formatDateTime(project.created_at)}</div></div>
+                <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>任务数</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{tasks.length}</div></div>
+              </div>
+            </div>
+
+            <div style={section}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <AppWindow size={16} color="var(--brand)" />
+                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>关联应用</h3>
+                </div>
+                {canEdit && <button onClick={() => { setAppForm({ app_name: project.app_name || '', app_url: project.app_url || '' }); setShowAppEdit(true) }}
+                  style={{ fontSize: 12, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>{project.app_url ? '编辑' : '添加'}</button>}
+              </div>
+              {project.app_url && /^https?:\/\/.+/.test(project.app_url) ? (
+                <a href={project.app_url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', background: 'linear-gradient(135deg, #eff6ff, #f0f4ff)', borderRadius: 12, border: '1px solid #dbeafe', textDecoration: 'none', cursor: 'pointer', transition: 'all 0.2s' }}
+                  onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(37,99,235,0.15)'; e.currentTarget.style.borderColor = '#93c5fd' }}
+                  onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--brand-light-2)' }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(37,99,235,0.3)' }}>
+                    <AppWindow size={22} color="#fff" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{project.app_name || '应用'}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>点击打开应用</div>
+                  </div>
+                  <ExternalLink size={18} color="var(--brand)" />
+                </a>
+              ) : project.app_url ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <AppWindow size={22} color="#ef4444" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: '#dc2626' }}>{project.app_name || '应用'}</div>
+                    <div style={{ fontSize: 12, color: '#ef4444' }}>应用链接无效，请编辑修正（需以 http:// 或 https:// 开头）</div>
+                  </div>
+                </div>
               ) : (
-                <div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.start_date ? project.start_date.slice(0, 10) : '未设置'}</div>
+                <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 13 }}>暂无关联应用{canEdit ? '，点击"添加"按钮关联' : ''}</div>
               )}
             </div>
-            <div>
-              <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>结束日期</div>
-              {canEdit ? (
-                <input type="date" value={project.end_date ? project.end_date.slice(0, 10) : ''} onChange={async e => {
-                  const r = await projectApi.update(id!, { end_date: e.target.value || null })
-                  if (r.success) { toast('已更新', 'success'); loadProject() } else toast(r.message || '更新失败', 'error')
-                }} style={{ fontSize: 14, fontWeight: 500, marginTop: 2, border: '1px solid var(--border-primary)', borderRadius: 6, padding: '4px 8px', background: 'var(--bg-primary)', color: 'var(--text-heading)', cursor: 'pointer', width: '100%' }} />
-              ) : (
-                <div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.end_date ? project.end_date.slice(0, 10) : '未设置'}</div>
-              )}
-            </div>
-            <div>
-              <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>预算</div>
-              {canEdit ? (
-                <input type="number" placeholder="输入预算金额" defaultValue={project.budget > 0 ? project.budget : ''} onBlur={async e => {
-                  const val = e.target.value ? Number(e.target.value) : 0
-                  if (val === (project.budget || 0)) return
-                  const r = await projectApi.update(id!, { budget: val })
-                  if (r.success) { toast('已更新', 'success'); loadProject() } else toast(r.message || '更新失败', 'error')
-                }} onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
-                style={{ fontSize: 14, fontWeight: 500, marginTop: 2, border: '1px solid var(--border-primary)', borderRadius: 6, padding: '4px 8px', background: 'var(--bg-primary)', color: 'var(--text-heading)', width: '100%' }} />
-              ) : (
-                <div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.budget > 0 ? `¥${Number(project.budget).toLocaleString()}` : '未设置'}</div>
-              )}
-            </div>
-            <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>创建时间</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{formatDateTime(project.created_at)}</div></div>
-            <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>任务数</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{tasks.length}</div></div>
+          </div>
+
+          {/* 右栏：项目成员 */}
+          <div style={{ ...section, width: 220, flexShrink: 0, marginBottom: 0, position: 'sticky', top: 0 }}>
+            <MembersSection
+              myMembers={allMembers}
+              canEditMyTeam={canAddMember || isOwner}
+              onManageMyMembers={openManageMembers}
+              onSelectMember={setSelectedMember}
+            />
           </div>
         </div>
-        <div style={section}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <AppWindow size={16} color="var(--brand)" />
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>关联应用</h3>
-            </div>
-            {canEdit && <button onClick={() => { setAppForm({ app_name: project.app_name || '', app_url: project.app_url || '' }); setShowAppEdit(true) }}
-              style={{ fontSize: 12, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>{project.app_url ? '编辑' : '添加'}</button>}
-          </div>
-          {project.app_url && /^https?:\/\/.+/.test(project.app_url) ? (
-            <a href={project.app_url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', background: 'linear-gradient(135deg, #eff6ff, #f0f4ff)', borderRadius: 12, border: '1px solid #dbeafe', textDecoration: 'none', cursor: 'pointer', transition: 'all 0.2s' }}
-              onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(37,99,235,0.15)'; e.currentTarget.style.borderColor = '#93c5fd' }}
-              onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--brand-light-2)' }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(37,99,235,0.3)' }}>
-                <AppWindow size={22} color="#fff" />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{project.app_name || '应用'}</div>
-                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>点击打开应用</div>
-              </div>
-              <ExternalLink size={18} color="var(--brand)" />
-            </a>
-          ) : project.app_url ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <AppWindow size={22} color="#ef4444" />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 600, color: '#dc2626' }}>{project.app_name || '应用'}</div>
-                <div style={{ fontSize: 12, color: '#ef4444' }}>应用链接无效，请编辑修正（需以 http:// 或 https:// 开头）</div>
-              </div>
-            </div>
-          ) : (
-            <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 13 }}>暂无关联应用{canEdit ? '，点击"添加"按钮关联' : ''}</div>
-          )}
-        </div>
+
         <Modal open={showAppEdit} onClose={() => setShowAppEdit(false)} title={project.app_url ? '编辑关联应用' : '添加关联应用'}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <Input label="应用名称" placeholder="如：客户门户、货联系统" value={appForm.app_name} onChange={e => setAppForm({ ...appForm, app_name: e.target.value })} />
@@ -359,17 +372,6 @@ export default function ProjectDetail() {
             </div>
           </div>
         </Modal>
-
-        <MembersSection
-          myTeamTitle={myTeamTitle}
-          otherTeamTitle={otherTeamTitle}
-          myMembers={myMembers}
-          otherMembers={otherMembers}
-          showOtherTeam={false}
-          canEditMyTeam={canAddMember || isOwner}
-          onManageMyMembers={openManageMembers}
-          onSelectMember={setSelectedMember}
-        />
 
         <ManageMembersModal
           open={showAddMember}
