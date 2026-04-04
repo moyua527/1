@@ -348,6 +348,8 @@ export function useEnterprise() {
   const isOwner = myRole === 'creator'
   const canAdmin = isOwner || !!enterprisePerms.can_manage_members
   const canManageRoles = isOwner || !!enterprisePerms.can_manage_roles
+  const canManageDept = isOwner || !!enterprisePerms.can_manage_department
+  const canEditEnterprise = isOwner || !!enterprisePerms.can_edit_enterprise
   const getDeptName = (id: number | null) => departments.find((d: any) => d.id === id)?.name || ''
   const getRoleName = (roleId: number | null) => roles.find((r: any) => r.id === roleId)?.name || ''
   const getRoleColor = (roleId: number | null) => roles.find((r: any) => r.id === roleId)?.color || '#64748b'
@@ -357,7 +359,7 @@ export function useEnterprise() {
   return {
     // 状态
     data, loading, tab, setTab, isSysAdmin, enterprises, activeId, switchEnterprise,
-    ent, members, departments, roles, enterprisePerms, myRole, isOwner, canAdmin, canManageRoles, getDeptName, getRoleName, getRoleColor,
+    ent, members, departments, roles, enterprisePerms, myRole, isOwner, canAdmin, canManageRoles, canManageDept, canEditEnterprise, getDeptName, getRoleName, getRoleColor,
     // 企业
     editEntOpen, setEditEntOpen, entForm, setEntForm, entSaving, entMenuOpen, setEntMenuOpen,
     openEditEnt, handleSaveEnt, handleDeleteEnterprise, handleRegenerateJoinCode, joinCodeRefreshing,

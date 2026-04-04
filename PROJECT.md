@@ -24,6 +24,7 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | 图标 | Lucide React |
 | 图表 | Recharts |
 | 样式 | 纯内联样式（无 CSS 文件、无 Tailwind） |
+| 邮件服务 | Nodemailer + SMTP（163 邮箱） |
 | 进程管理 | PM2（生产环境） |
 | Web 服务器 | Nginx（反向代理） |
 | 容器化 | Docker + docker-compose |
@@ -58,21 +59,32 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 
 ### 项目角色系统
 
-每个项目拥有独立的角色体系（`project_roles` 表），支持自定义角色名称、颜色和 7 项权限开关：
+每个项目拥有独立的角色体系（`project_roles` 表），支持自定义角色名称、颜色和 **60 项细粒度权限开关**，按 17 个分组管理：
 
-| 权限字段 | 说明 |
-|----------|------|
-| can_manage_members | 添加、编辑、移除项目成员 |
-| can_manage_roles | 创建、编辑、删除项目角色并分配 |
-| can_edit_project | 修改项目信息 |
-| can_delete_project | 删除项目 |
-| can_manage_client | 管理项目关联客户 |
-| can_view_report | 查看项目数据报表 |
-| can_manage_task | 创建和管理任务 |
+| 分组 | 权限数 | 包含字段 |
+|------|--------|----------|
+| 项目信息管理 | 4 | can_edit_project_name / desc / status, can_delete_project |
+| 关联客户企业 | 3 | can_send_client_request, can_cancel_client_link, can_change_client_link |
+| 我方成员管理 | 5 | can_add_member, can_assign_member_legacy/ent/proj_role, can_remove_member |
+| 修改成员角色 | 3 | can_update_member_legacy/ent/proj_role |
+| 客户方成员 | 3 | can_view_client_users, can_add/remove_client_member |
+| 加入审批 | 3 | can_view_join_requests, can_approve_join, can_reject_join |
+| 角色管理 | 5 | can_create_role, can_edit_role_name/color/perms, can_delete_role |
+| 任务创建 | 2 | can_create_task, can_create_task_with_attachment |
+| 任务删除与恢复 | 3 | can_delete_task, can_view_task_trash, can_restore_task |
+| 任务状态流转 | 7 | can_move_task_accept/dispute/supplement/submit_review/reject/approve/resubmit |
+| 任务编辑 | 5 | can_edit_task_title/desc/priority/deadline, can_assign_task |
+| 任务附件 | 2 | can_upload/delete_task_attachment |
+| 审核要点 | 3 | can_add/respond/confirm_review_point |
+| 任务预设标题 | 4 | can_view_title_options, can_record/delete_title_history, can_edit_title_presets |
+| 里程碑 | 4 | can_create/edit/delete/toggle_milestone |
+| 报表 | 2 | can_view_report, can_export_data |
+| 应用/集成 | 2 | can_manage_app_config, can_manage_app_integration |
 
-- 新项目自动创建 3 个默认角色：**项目管理员**（全部权限）、**开发者**（仅管理任务）、**观察者**（仅查看报表）
-- 项目详情页"设置"Tab 提供角色 CRUD 管理界面
-- 成员管理弹窗支持为成员分配项目角色
+- 新项目自动创建 3 个默认角色：**负责人**（全部 60 项权限）、**编辑者**（任务相关 27 项）、**查看者**（无权限）
+- 企业角色（enterprise_roles）仍保留 16 个旧字段，在代码层自动映射展开为 60 个字段
+- 权限判定优先级：项目角色 > 企业角色（映射展开） > 企业管理人员 > 遗留角色回退
+- 项目详情页"设置"Tab 提供角色 CRUD 管理界面，60 项权限按分组显示、支持全选/全不选
 - API：`GET/POST /api/projects/:id/roles`、`PUT/DELETE /api/projects/:id/roles/:roleId`
 
 ### 默认账户（full-init.sql 种子数据）
@@ -106,14 +118,13 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 ### 3.1 用户认证与注册
 
 - **登录/注册 Tab 切换**：统一页面，顶部 Tab 切换
-- **注册方式 Tab**：手机号注册 / 邮箱注册，二选一
-- **注册表单**：手机号或邮箱（必填）+ 昵称（必填）+ 性别 + 类型（个人/企业）+ 所在地（省份+城市）+ 密码（≥6位）+ 确认密码 + 邀请码
-- **企业用户扩展字段**：选择"企业"类型时显示职位输入框（必填）
-- **自动生成用户名**：手机号注册以手机号为用户名，邮箱注册自动生成
-- **密码强度指示器**：三级评分（弱/中/强），基于长度+大写+数字+特殊字符
+- **登录方式 Tab**：「账号密码」和「邮箱登录」两种方式切换；账号密码模式输入用户名+密码；邮箱登录模式输入邮箱+验证码（SMTP 实时发送）
+- **注册表单**：用户名（必填）+ 邮箱（选填，需验证码验证后绑定，验证后可用邮箱登录）+ 密码 + 确认密码
+- **邮箱验证流程**：注册时输入邮箱后自动显示验证码输入区，点击「发送」获取验证码 → 输入后点击「验证」→ 验证成功显示绿色已验证标识，支持更换邮箱
 - **邀请码机制**：管理员可在用户管理页开启/关闭/修改邀请码
 - **用户协议**：登录/注册前需勾选同意《用户服务协议》和《隐私保护政策》，点击可查看全文弹窗，未勾选时显示红色提示
 - **找回密码**：登录页"忘记密码？"入口 → 两步流程：第1步选择手机号/邮箱验证身份（发送验证码），第2步输入新密码+确认密码（含密码强度指示器）→ 重置成功自动跳转登录
+- **SMTP 邮件验证码**：邮箱类型验证码（登录/注册/找回密码）通过 SMTP 实际发送邮件（163 邮箱），包含品牌化 HTML 邮件模板；SMTP 未配置时自动降级为日志记录，不影响业务流程
 - **个人资料**：侧边栏点击头像 → 查看个人信息（昵称/邮箱/手机/性别/角色/注册时间/邀请码），点击「编辑资料」按钮进入编辑模式修改昵称/邮箱/手机号/密码
 - **侧边栏悬浮反馈**：桌面端左侧导航项、个人资料入口与登出按钮支持鼠标悬浮高亮，当前激活项保持选中态不被 hover 覆盖
 

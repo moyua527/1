@@ -45,10 +45,10 @@ const PERM_TO_ENTERPRISE: Record<string, string> = {
   'project:create': 'can_create_project',
   'project:edit': 'can_edit_project',
   'project:delete': 'can_delete_project',
-  'client:create': 'can_manage_client',
-  'client:manage': 'can_manage_client',
+  'client:create': 'can_manage_client_member',
+  'client:manage': 'can_manage_client_member',
   'report:view': 'can_view_report',
-  'task:create': 'can_manage_task',
+  'task:create': 'can_create_task',
 }
 
 export function can(role: string, permission: string): boolean {

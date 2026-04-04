@@ -62,28 +62,32 @@ async function getEnterpriseManagerUserIds(clientId, excludeUserId = null) {
 
 function isCreator(ent) { return ent && ent.member_role === 'creator'; }
 
+const ENTERPRISE_PERM_KEYS = ['can_manage_members', 'can_approve_join', 'can_manage_roles', 'can_create_project', 'can_delete_project', 'can_view_report', 'can_manage_app', 'can_manage_department', 'can_edit_enterprise'];
+
+function allEnterprisePerms(val) {
+  const obj = { is_creator: false };
+  ENTERPRISE_PERM_KEYS.forEach(k => { obj[k] = val; });
+  return obj;
+}
+
 async function getEnterprisePerms(userId) {
   const ent = await findActiveEnterprise(userId);
   if (!ent) return null;
   if (isCreator(ent)) {
-    return { is_creator: true, can_manage_members: true, can_manage_roles: true, can_create_project: true, can_edit_project: true, can_delete_project: true, can_manage_client: true, can_view_report: true, can_manage_task: true };
+    return { ...allEnterprisePerms(true), is_creator: true };
   }
   if (ent.member_role === 'admin') {
-    return { is_creator: false, can_manage_members: true, can_manage_roles: true, can_create_project: true, can_edit_project: true, can_delete_project: true, can_manage_client: true, can_view_report: true, can_manage_task: true };
+    return allEnterprisePerms(true);
   }
   if (!ent.enterprise_role_id) {
-    return { is_creator: false, can_manage_members: false, can_manage_roles: false, can_create_project: false, can_edit_project: false, can_delete_project: false, can_manage_client: false, can_view_report: false, can_manage_task: false };
+    return allEnterprisePerms(false);
   }
   const [rows] = await db.query('SELECT * FROM enterprise_roles WHERE id = ? AND is_deleted = 0', [ent.enterprise_role_id]);
-  if (!rows[0]) return { is_creator: false, can_manage_members: false, can_manage_roles: false, can_create_project: false, can_edit_project: false, can_delete_project: false, can_manage_client: false, can_view_report: false, can_manage_task: false };
+  if (!rows[0]) return allEnterprisePerms(false);
   const r = rows[0];
-  return {
-    is_creator: false,
-    can_manage_members: !!r.can_manage_members, can_manage_roles: !!r.can_manage_roles,
-    can_create_project: !!r.can_create_project, can_edit_project: !!r.can_edit_project,
-    can_delete_project: !!r.can_delete_project, can_manage_client: !!r.can_manage_client,
-    can_view_report: !!r.can_view_report, can_manage_task: !!r.can_manage_task,
-  };
+  const obj = { is_creator: false };
+  ENTERPRISE_PERM_KEYS.forEach(k => { obj[k] = !!r[k]; });
+  return obj;
 }
 
 module.exports = { findMyEnterprises, findActiveEnterprise, canManage, isCreator, getEnterprisePerms, generateJoinCode, getEnterpriseManagerUserIds };

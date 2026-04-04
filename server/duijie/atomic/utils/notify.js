@@ -9,6 +9,7 @@ const TYPE_TO_CATEGORY = {
   join_request: 'approval', join_approved: 'approval', join_rejected: 'approval', join_via_code: 'approval',
   client_request: 'approval', client_request_approved: 'approval', client_request_rejected: 'approval',
   ticket_reply: 'system', follow_reminder: 'system',
+  security: 'security',
 };
 
 /**

@@ -19,14 +19,15 @@ export const roleConfig: Record<string, { label: string; color: string; bg: stri
 }
 
 export const ENTERPRISE_PERMISSIONS = [
-  { key: 'can_manage_members', label: '管理成员', desc: '添加、编辑、删除企业成员' },
-  { key: 'can_manage_roles', label: '管理角色', desc: '创建、编辑、删除角色和分配角色' },
-  { key: 'can_create_project', label: '创建项目', desc: '新建项目' },
-  { key: 'can_edit_project', label: '编辑项目', desc: '修改项目信息' },
-  { key: 'can_delete_project', label: '删除项目', desc: '删除项目' },
-  { key: 'can_manage_client', label: '管理客户', desc: '创建和管理客户信息' },
-  { key: 'can_view_report', label: '查看报表', desc: '查看数据报表' },
-  { key: 'can_manage_task', label: '管理任务', desc: '创建和管理任务' },
+  { key: 'can_manage_members', label: '管理成员', desc: '添加/移除/编辑企业成员' },
+  { key: 'can_approve_join', label: '审批加入申请', desc: '审批/拒绝企业加入申请' },
+  { key: 'can_manage_roles', label: '管理角色', desc: '创建/编辑/删除企业角色' },
+  { key: 'can_manage_department', label: '管理部门', desc: '创建/编辑/删除企业部门' },
+  { key: 'can_edit_enterprise', label: '编辑企业信息', desc: '修改企业名称/描述/行业等基本信息' },
+  { key: 'can_create_project', label: '创建项目', desc: '在企业内新建项目' },
+  { key: 'can_delete_project', label: '删除项目', desc: '删除企业项目' },
+  { key: 'can_view_report', label: '查看报表', desc: '查看企业数据报表' },
+  { key: 'can_manage_app', label: '管理应用', desc: '管理企业关联应用' },
 ] as const
 
 export const ROLE_COLORS = ['#2563eb', '#9333ea', '#059669', '#d97706', '#dc2626', '#0891b2', '#7c3aed', '#64748b']
@@ -34,4 +35,4 @@ export const ROLE_COLORS = ['#2563eb', '#9333ea', '#059669', '#d97706', '#dc2626
 export const emptyEntForm = { name: '', company: '', email: '', phone: '', notes: '', industry: '', scale: '', address: '', credit_code: '', legal_person: '', registered_capital: '', established_date: '', business_scope: '', company_type: '', website: '' }
 export const emptyMemberForm = { name: '', position: '', department: '', phone: '', email: '', notes: '', employee_id: '', join_date: '', supervisor: '', department_id: '', enterprise_role_id: '' }
 export const emptyDeptForm = { name: '', parent_id: '' }
-export const emptyRoleForm = { name: '', color: '#2563eb', can_manage_members: false, can_manage_roles: false, can_create_project: false, can_edit_project: false, can_delete_project: false, can_manage_client: false, can_view_report: false, can_manage_task: false }
+export const emptyRoleForm: Record<string, any> = { name: '', color: '#2563eb', ...Object.fromEntries(ENTERPRISE_PERMISSIONS.map(p => [p.key, false])) }

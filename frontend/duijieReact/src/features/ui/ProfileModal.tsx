@@ -53,7 +53,8 @@ export default function ProfileModal({ open, onClose, user, onProfileUpdated }: 
     if (form.email.trim() !== (user?.email || '')) body.email = form.email.trim()
     if (form.phone.trim() !== (user?.phone || '')) body.phone = form.phone.trim()
     if (form.password) {
-      if (form.password.length < 6) { toast('密码至少6位', 'error'); return }
+      if (form.password.length < 8) { toast('密码至少8位，需含字母和数字', 'error'); return }
+      if (!/[a-zA-Z]/.test(form.password) || !/[0-9]/.test(form.password)) { toast('密码必须包含字母和数字', 'error'); return }
       if (form.password !== form.confirmPassword) { toast('两次密码不一致', 'error'); return }
       body.password = form.password
     }
@@ -146,7 +147,7 @@ export default function ProfileModal({ open, onClose, user, onProfileUpdated }: 
           <div>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-body)', marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid var(--border-primary)' }}>安全设置</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <Input label="新密码（不修改请留空）" placeholder="至少6位" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
+              <Input label="新密码（不修改请留空）" placeholder="至少8位，含字母和数字" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
               {form.password && (
                 <Input label="确认密码" placeholder="再次输入新密码" type="password" value={form.confirmPassword} onChange={e => setForm({ ...form, confirmPassword: e.target.value })} />
               )}

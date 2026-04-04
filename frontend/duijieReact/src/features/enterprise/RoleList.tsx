@@ -31,10 +31,7 @@ export default function RoleList({ roles, isOwner, canManageRoles, onCreateRole,
     setEditing(r)
     setForm({
       name: r.name || '', color: r.color || 'var(--text-secondary)',
-      can_manage_members: !!r.can_manage_members, can_manage_roles: !!r.can_manage_roles,
-      can_create_project: !!r.can_create_project, can_edit_project: !!r.can_edit_project,
-      can_delete_project: !!r.can_delete_project, can_manage_client: !!r.can_manage_client,
-      can_view_report: !!r.can_view_report, can_manage_task: !!r.can_manage_task,
+      ...Object.fromEntries(ENTERPRISE_PERMISSIONS.map(p => [p.key, !!r[p.key]])),
     })
     setModalOpen(true)
   }

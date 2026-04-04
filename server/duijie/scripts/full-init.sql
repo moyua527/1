@@ -301,6 +301,100 @@ CREATE TABLE IF NOT EXISTS duijie_client_requests (
   KEY idx_project (project_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 项目角色表
+CREATE TABLE IF NOT EXISTS project_roles (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  project_id INT NOT NULL,
+  role_key VARCHAR(20) DEFAULT NULL,
+  name VARCHAR(50) NOT NULL,
+  -- 项目信息管理
+  can_edit_project_name TINYINT(1) DEFAULT 0 COMMENT '修改项目名称',
+  can_edit_project_desc TINYINT(1) DEFAULT 0 COMMENT '修改项目描述',
+  can_edit_project_status TINYINT(1) DEFAULT 0 COMMENT '修改项目状态',
+  can_delete_project TINYINT(1) DEFAULT 0 COMMENT '删除项目',
+  -- 关联客户企业
+  can_send_client_request TINYINT(1) DEFAULT 0 COMMENT '发起关联客户企业请求',
+  can_cancel_client_link TINYINT(1) DEFAULT 0 COMMENT '取消客户企业关联',
+  can_change_client_link TINYINT(1) DEFAULT 0 COMMENT '变更客户企业',
+  -- 我方成员管理
+  can_add_member TINYINT(1) DEFAULT 0 COMMENT '添加内部成员',
+  can_assign_member_legacy_role TINYINT(1) DEFAULT 0 COMMENT '添加时指定遗留角色',
+  can_assign_member_ent_role TINYINT(1) DEFAULT 0 COMMENT '添加时分配企业角色',
+  can_assign_member_proj_role TINYINT(1) DEFAULT 0 COMMENT '添加时分配项目角色',
+  can_remove_member TINYINT(1) DEFAULT 0 COMMENT '移除内部成员',
+  -- 修改成员角色
+  can_update_member_legacy_role TINYINT(1) DEFAULT 0 COMMENT '修改成员遗留角色',
+  can_update_member_ent_role TINYINT(1) DEFAULT 0 COMMENT '修改成员企业角色',
+  can_update_member_proj_role TINYINT(1) DEFAULT 0 COMMENT '修改成员项目角色',
+  -- 客户方成员
+  can_view_client_users TINYINT(1) DEFAULT 0 COMMENT '查看客户企业可用用户',
+  can_add_client_member TINYINT(1) DEFAULT 0 COMMENT '添加客户方成员',
+  can_remove_client_member TINYINT(1) DEFAULT 0 COMMENT '移除客户方成员',
+  -- 加入审批
+  can_view_join_requests TINYINT(1) DEFAULT 0 COMMENT '查看待审批列表',
+  can_approve_join TINYINT(1) DEFAULT 0 COMMENT '批准加入申请',
+  can_reject_join TINYINT(1) DEFAULT 0 COMMENT '拒绝加入申请',
+  -- 角色管理
+  can_create_role TINYINT(1) DEFAULT 0 COMMENT '创建项目角色',
+  can_edit_role_name TINYINT(1) DEFAULT 0 COMMENT '编辑角色名称',
+  can_edit_role_color TINYINT(1) DEFAULT 0 COMMENT '编辑角色颜色',
+  can_edit_role_perms TINYINT(1) DEFAULT 0 COMMENT '编辑角色权限',
+  can_delete_role TINYINT(1) DEFAULT 0 COMMENT '删除角色',
+  -- 任务创建
+  can_create_task TINYINT(1) DEFAULT 0 COMMENT '创建任务',
+  can_create_task_with_attachment TINYINT(1) DEFAULT 0 COMMENT '创建任务时上传附件',
+  -- 任务删除与恢复
+  can_delete_task TINYINT(1) DEFAULT 0 COMMENT '删除任务',
+  can_view_task_trash TINYINT(1) DEFAULT 0 COMMENT '查看任务回收站',
+  can_restore_task TINYINT(1) DEFAULT 0 COMMENT '恢复已删除任务',
+  -- 任务状态流转
+  can_move_task_accept TINYINT(1) DEFAULT 0 COMMENT '接受任务',
+  can_move_task_dispute TINYINT(1) DEFAULT 0 COMMENT '提疑问',
+  can_move_task_supplement TINYINT(1) DEFAULT 0 COMMENT '补充回复',
+  can_move_task_submit_review TINYINT(1) DEFAULT 0 COMMENT '提交验收',
+  can_move_task_reject TINYINT(1) DEFAULT 0 COMMENT '驳回验收',
+  can_move_task_approve TINYINT(1) DEFAULT 0 COMMENT '验收通过',
+  can_move_task_resubmit TINYINT(1) DEFAULT 0 COMMENT '重新验收',
+  -- 任务编辑
+  can_edit_task_title TINYINT(1) DEFAULT 0 COMMENT '编辑任务标题',
+  can_edit_task_desc TINYINT(1) DEFAULT 0 COMMENT '编辑任务描述',
+  can_edit_task_priority TINYINT(1) DEFAULT 0 COMMENT '编辑任务优先级',
+  can_edit_task_deadline TINYINT(1) DEFAULT 0 COMMENT '编辑任务截止日期',
+  can_assign_task TINYINT(1) DEFAULT 0 COMMENT '指派/变更负责人',
+  -- 任务附件
+  can_upload_task_attachment TINYINT(1) DEFAULT 0 COMMENT '上传任务附件',
+  can_delete_task_attachment TINYINT(1) DEFAULT 0 COMMENT '删除任务附件',
+  -- 审核要点
+  can_add_review_point TINYINT(1) DEFAULT 0 COMMENT '添加审核要点',
+  can_respond_review_point TINYINT(1) DEFAULT 0 COMMENT '回复审核要点',
+  can_confirm_review_point TINYINT(1) DEFAULT 0 COMMENT '确认审核要点',
+  -- 任务预设标题
+  can_view_title_options TINYINT(1) DEFAULT 0 COMMENT '查看标题选项',
+  can_record_title_history TINYINT(1) DEFAULT 0 COMMENT '记录历史标题',
+  can_delete_title_history TINYINT(1) DEFAULT 0 COMMENT '删除历史标题',
+  can_edit_title_presets TINYINT(1) DEFAULT 0 COMMENT '编辑预设模板',
+  -- 里程碑
+  can_create_milestone TINYINT(1) DEFAULT 0 COMMENT '创建里程碑',
+  can_edit_milestone TINYINT(1) DEFAULT 0 COMMENT '编辑里程碑',
+  can_delete_milestone TINYINT(1) DEFAULT 0 COMMENT '删除里程碑',
+  can_toggle_milestone TINYINT(1) DEFAULT 0 COMMENT '切换里程碑完成状态',
+  -- 报表
+  can_view_report TINYINT(1) DEFAULT 0 COMMENT '查看报表',
+  can_export_data TINYINT(1) DEFAULT 0 COMMENT '导出项目数据',
+  -- 应用/集成
+  can_manage_app_config TINYINT(1) DEFAULT 0 COMMENT '管理应用配置',
+  can_manage_app_integration TINYINT(1) DEFAULT 0 COMMENT '管理集成设置',
+  -- 元数据
+  color VARCHAR(20) DEFAULT '#64748b',
+  sort_order INT DEFAULT 0,
+  is_default TINYINT(1) DEFAULT 0,
+  created_by INT DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  is_deleted TINYINT(1) DEFAULT 0,
+  INDEX idx_project (project_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- ========== 种子数据 ==========
 
 -- JWT密钥

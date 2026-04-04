@@ -17,5 +17,8 @@ router.post('/auth/refresh', require('../controllers/auth/refreshController'));
 router.get('/auth/me', auth, require('../controllers/auth/meController'));
 router.put('/auth/profile', auth, V.profile, validate, require('../controllers/auth/profileController'));
 router.put('/auth/change-password', auth, require('../controllers/auth/changePasswordController'));
+router.get('/auth/sessions', auth, require('../controllers/auth/sessionsListController'));
+router.delete('/auth/sessions/all', auth, require('../controllers/auth/sessionRevokeAllController'));
+router.delete('/auth/sessions/:id', auth, require('../controllers/auth/sessionRevokeController'));
 
 module.exports = router;

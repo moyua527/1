@@ -1,6 +1,7 @@
 ﻿const db = require('../../../config/db');
 const logger = require('../../../config/logger');
-const { buildUserPayload, signAccessToken } = require('../../utils/authToken');
+const { buildUserPayload, signAccessToken, createRefreshToken, parseDeviceName } = require('../../utils/authToken');
+const { notify } = require('../../utils/notify');
 
 module.exports = async (req, res) => {
   try {
@@ -33,11 +34,17 @@ module.exports = async (req, res) => {
       return res.json({ success: false, message: '账号已被禁用' });
     }
 
+    const deviceInfo = { userAgent: req.headers['user-agent'], ip: req.ip };
     const token = await signAccessToken(user);
+    const refreshToken = await createRefreshToken(user.id, deviceInfo);
     db.query('UPDATE voice_users SET last_login_at = NOW() WHERE id = ?', [user.id]).catch((err) => {
       logger.error(`loginByCode.lastLogin: ${err.message}`);
     });
-    res.cookie('token', token, { httpOnly: true, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000 });
+    // 安全事件通知
+    const devName = parseDeviceName(req.headers['user-agent']);
+    notify(user.id, 'security', '新设备登录提醒', `你的账号刚刚在 ${devName} 上通过验证码登录（IP: ${req.ip}）。如非本人操作，请立即修改密码。`).catch(() => {});
+    res.cookie('token', token, { httpOnly: true, sameSite: 'lax', maxAge: 2 * 60 * 60 * 1000 });
+    res.cookie('refresh_token', refreshToken, { httpOnly: true, sameSite: 'lax', maxAge: 30 * 24 * 60 * 60 * 1000, path: '/api/auth/refresh' });
 
     res.json({
       success: true,

@@ -7,6 +7,7 @@ interface Props {
   myRole: string
   isOwner: boolean
   canAdmin: boolean
+  canEditEnterprise: boolean
   entMenuOpen: boolean
   setEntMenuOpen: (v: boolean) => void
   openEditEnt: () => void
@@ -16,7 +17,7 @@ interface Props {
   handleRegenerateJoinCode: () => void
 }
 
-export default function EnterpriseCard({ ent, myRole, isOwner, canAdmin, entMenuOpen, setEntMenuOpen, openEditEnt, handleDeleteEnterprise, handleLeaveEnterprise, joinCodeRefreshing, handleRegenerateJoinCode }: Props) {
+export default function EnterpriseCard({ ent, myRole, isOwner, canAdmin, canEditEnterprise, entMenuOpen, setEntMenuOpen, openEditEnt, handleDeleteEnterprise, handleLeaveEnterprise, joinCodeRefreshing, handleRegenerateJoinCode }: Props) {
   const fallbackCopyText = (value: string) => {
     const textarea = document.createElement('textarea')
     textarea.value = value
@@ -69,7 +70,7 @@ export default function EnterpriseCard({ ent, myRole, isOwner, canAdmin, entMenu
           </div>
           {ent.company && <div style={{ fontSize: 14, color: 'var(--text-secondary)' }}>{ent.company}</div>}
         </div>
-        {isOwner && (
+        {(isOwner || canEditEnterprise) && (
           <div style={{ position: 'relative' }}>
             <button onClick={() => setEntMenuOpen(!entMenuOpen)} style={{ background: 'none', border: '1px solid var(--border-primary)', borderRadius: 8, padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: 'var(--text-secondary)' }}>
               <MoreHorizontal size={18} />
@@ -82,11 +83,13 @@ export default function EnterpriseCard({ ent, myRole, isOwner, canAdmin, entMenu
                     onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-secondary)')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
                     <Edit3 size={14} color="var(--brand)" /> 编辑企业
                   </button>
-                  <div style={{ height: 1, background: 'var(--bg-tertiary)' }} />
-                  <button onClick={() => { setEntMenuOpen(false); handleDeleteEnterprise() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--color-danger)' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-                    <Trash2 size={14} /> 删除企业
-                  </button>
+                  {isOwner && <>
+                    <div style={{ height: 1, background: 'var(--bg-tertiary)' }} />
+                    <button onClick={() => { setEntMenuOpen(false); handleDeleteEnterprise() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--color-danger)' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                      <Trash2 size={14} /> 删除企业
+                    </button>
+                  </>}
                 </div>
               </>
             )}

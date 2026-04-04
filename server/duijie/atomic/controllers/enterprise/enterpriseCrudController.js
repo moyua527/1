@@ -61,7 +61,14 @@ exports.get = async (req, res) => {
     if (enterprises.length === 0) return res.json({ success: true, data: null });
     const active = await findActiveEnterprise(req.userId);
     const [[members], [departments], [roles]] = await Promise.all([
-      db.query('SELECT * FROM duijie_client_members WHERE client_id = ? AND is_deleted = 0 ORDER BY created_at ASC', [active.id]),
+      db.query(`SELECT cm.*,
+        COALESCE(NULLIF(u.nickname, ''), cm.name) AS name,
+        COALESCE(NULLIF(u.phone, ''), cm.phone) AS phone,
+        COALESCE(NULLIF(u.email, ''), cm.email) AS email
+       FROM duijie_client_members cm
+       LEFT JOIN voice_users u ON u.id = cm.user_id AND u.is_deleted = 0
+       WHERE cm.client_id = ? AND cm.is_deleted = 0
+       ORDER BY cm.created_at ASC`, [active.id]),
       db.query('SELECT * FROM duijie_departments WHERE client_id = ? AND is_deleted = 0 ORDER BY sort_order ASC, id ASC', [active.id]),
       db.query('SELECT * FROM enterprise_roles WHERE enterprise_id = ? AND is_deleted = 0 ORDER BY sort_order ASC, id ASC', [active.id]),
     ]);
@@ -82,7 +89,8 @@ exports.update = async (req, res) => {
   try {
     const ent = await findActiveEnterprise(req.userId);
     if (!ent) return res.status(404).json({ success: false, message: '未找到关联企业' });
-    if (!isCreator(ent)) return res.status(403).json({ success: false, message: '仅企业创建者可编辑企业信息' });
+    const perms = await getEnterprisePerms(req.userId);
+    if (!isCreator(ent) && ent.member_role !== 'admin' && !perms?.can_edit_enterprise) return res.status(403).json({ success: false, message: '无权限编辑企业信息' });
     const { name, company, email, phone, notes, industry, scale, address, credit_code, legal_person, registered_capital, established_date, business_scope, company_type, website } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ success: false, message: '请输入企业名称' });
     await db.query(

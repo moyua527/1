@@ -8,10 +8,10 @@ const { getProjectPerms } = require('../utils/projectPerms');
  *   如 'can_manage_members', 'can_edit_project', 'can_delete_project', 'can_manage_tasks' 等
  * @param {{ projectIdParam?: string }} opts - 可选参数，指定路由中项目ID的参数名
  */
-module.exports = (permField, { projectIdParam = 'id' } = {}) => {
+module.exports = (permFieldOrFields, { projectIdParam = 'id' } = {}) => {
+  const fields = Array.isArray(permFieldOrFields) ? permFieldOrFields : [permFieldOrFields];
   return async (req, res, next) => {
     try {
-      // admin 跳过项目级权限检查
       if (req.userRole === 'admin') return next();
 
       const projectId = req.params?.[projectIdParam];
@@ -23,11 +23,11 @@ module.exports = (permField, { projectIdParam = 'id' } = {}) => {
       if (!perms) {
         return res.status(403).json({ success: false, message: '无权访问此项目' });
       }
-      if (!perms[permField]) {
+      const hasAny = fields.some(f => !!perms[f]);
+      if (!hasAny) {
         return res.status(403).json({ success: false, message: '权限不足' });
       }
 
-      // 将权限信息挂载到 req 上，供 controller 使用
       req.projectPerms = perms;
       return next();
     } catch (e) {

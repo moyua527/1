@@ -4,9 +4,10 @@ const { notify } = require('../../utils/notify');
 const { broadcast } = require('../../utils/broadcast');
 
 const PERM_FIELDS = [
-  'can_manage_members', 'can_manage_roles',
-  'can_create_project', 'can_edit_project', 'can_delete_project',
-  'can_manage_client', 'can_view_report', 'can_manage_task'
+  'can_manage_members', 'can_approve_join', 'can_manage_roles',
+  'can_create_project', 'can_delete_project',
+  'can_view_report', 'can_manage_app',
+  'can_manage_department', 'can_edit_enterprise'
 ];
 
 async function canManageRoles(ent, userId) {
@@ -131,9 +132,9 @@ exports.assignRole = async (req, res) => {
 
 exports.createDefaultRoles = async (enterpriseId, createdBy) => {
   await db.query(
-    `INSERT INTO enterprise_roles (enterprise_id, name, color, can_manage_members, can_manage_roles, can_create_project, can_edit_project, can_delete_project, can_manage_client, can_view_report, can_manage_task, is_default, sort_order, created_by)
-     VALUES (?, '管理员', '#2563eb', 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, ?),
-            (?, '普通成员', '#64748b', 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, ?)`,
+    `INSERT INTO enterprise_roles (enterprise_id, name, color, can_manage_members, can_approve_join, can_manage_roles, can_create_project, can_delete_project, can_view_report, can_manage_app, can_manage_department, can_edit_enterprise, is_default, sort_order, created_by)
+     VALUES (?, '管理员', '#2563eb', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, ?),
+            (?, '普通成员', '#64748b', 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, ?)`,
     [enterpriseId, createdBy, enterpriseId, createdBy]
   );
 };

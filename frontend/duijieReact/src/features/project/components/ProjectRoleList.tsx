@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, Edit3, Trash2, Users, Check, X as XIcon } from 'lucide-react'
+import { Plus, Edit3, Trash2, Users, Check } from 'lucide-react'
 import Button from '../../ui/Button'
 import Modal from '../../ui/Modal'
 import Input from '../../ui/Input'
@@ -7,28 +7,108 @@ import { projectApi } from '../services/api'
 import { toast } from '../../ui/Toast'
 import { confirm } from '../../ui/ConfirmDialog'
 
-const PROJECT_PERMISSIONS = [
-  { key: 'can_edit_project', label: '编辑项目', desc: '修改项目名称/描述/状态' },
-  { key: 'can_delete_project', label: '删除项目', desc: '删除项目' },
-  { key: 'can_set_client', label: '设置客户企业', desc: '设置/更换客户企业' },
-  { key: 'can_add_member', label: '添加成员', desc: '添加内部成员' },
-  { key: 'can_remove_member', label: '移除成员', desc: '移除内部成员' },
-  { key: 'can_update_member_role', label: '更新成员角色', desc: '更改成员角色' },
-  { key: 'can_manage_client_member', label: '管理客户方成员', desc: '添加/移除客户方成员' },
-  { key: 'can_approve_join', label: '审批加入申请', desc: '审批/拒绝加入申请' },
-  { key: 'can_manage_roles', label: '管理角色', desc: '创建/编辑/删除角色' },
-  { key: 'can_create_task', label: '创建任务', desc: '创建新任务' },
-  { key: 'can_delete_task', label: '删除任务', desc: '删除任务' },
-  { key: 'can_manage_task_flow', label: '任务状态流转', desc: '接受/提交/审核等操作' },
-  { key: 'can_manage_task_preset', label: '管理任务预设', desc: '管理任务标题预设' },
-  { key: 'can_manage_milestone', label: '管理里程碑', desc: '创建/编辑/完成/删除里程碑' },
-  { key: 'can_view_report', label: '查看报表', desc: '查看项目数据报表' },
-  { key: 'can_manage_app', label: '管理应用', desc: '添加/编辑/移除关联应用' },
+const PERM_GROUPS = [
+  { title: '项目信息管理', items: [
+    { key: 'can_edit_project_name', label: '修改名称' },
+    { key: 'can_edit_project_desc', label: '修改描述' },
+    { key: 'can_edit_project_status', label: '修改状态' },
+    { key: 'can_delete_project', label: '删除项目' },
+  ]},
+  { title: '关联客户企业', items: [
+    { key: 'can_send_client_request', label: '发起关联请求' },
+    { key: 'can_cancel_client_link', label: '取消关联' },
+    { key: 'can_change_client_link', label: '变更企业' },
+  ]},
+  { title: '我方成员管理', items: [
+    { key: 'can_add_member', label: '添加成员' },
+    { key: 'can_assign_member_legacy_role', label: '指定遗留角色' },
+    { key: 'can_assign_member_ent_role', label: '分配企业角色' },
+    { key: 'can_assign_member_proj_role', label: '分配项目角色' },
+    { key: 'can_remove_member', label: '移除成员' },
+  ]},
+  { title: '修改成员角色', items: [
+    { key: 'can_update_member_legacy_role', label: '改遗留角色' },
+    { key: 'can_update_member_ent_role', label: '改企业角色' },
+    { key: 'can_update_member_proj_role', label: '改项目角色' },
+  ]},
+  { title: '客户方成员', items: [
+    { key: 'can_view_client_users', label: '查看可用用户' },
+    { key: 'can_add_client_member', label: '添加客户方成员' },
+    { key: 'can_remove_client_member', label: '移除客户方成员' },
+  ]},
+  { title: '加入审批', items: [
+    { key: 'can_view_join_requests', label: '查看申请列表' },
+    { key: 'can_approve_join', label: '批准加入' },
+    { key: 'can_reject_join', label: '拒绝加入' },
+  ]},
+  { title: '角色管理', items: [
+    { key: 'can_create_role', label: '创建角色' },
+    { key: 'can_edit_role_name', label: '编辑名称' },
+    { key: 'can_edit_role_color', label: '编辑颜色' },
+    { key: 'can_edit_role_perms', label: '编辑权限' },
+    { key: 'can_delete_role', label: '删除角色' },
+  ]},
+  { title: '任务创建', items: [
+    { key: 'can_create_task', label: '创建任务' },
+    { key: 'can_create_task_with_attachment', label: '创建时上传附件' },
+  ]},
+  { title: '任务删除与恢复', items: [
+    { key: 'can_delete_task', label: '删除任务' },
+    { key: 'can_view_task_trash', label: '查看回收站' },
+    { key: 'can_restore_task', label: '恢复任务' },
+  ]},
+  { title: '任务状态流转', items: [
+    { key: 'can_move_task_accept', label: '接受任务' },
+    { key: 'can_move_task_dispute', label: '提疑问' },
+    { key: 'can_move_task_supplement', label: '补充回复' },
+    { key: 'can_move_task_submit_review', label: '提交验收' },
+    { key: 'can_move_task_reject', label: '驳回验收' },
+    { key: 'can_move_task_approve', label: '验收通过' },
+    { key: 'can_move_task_resubmit', label: '重新验收' },
+  ]},
+  { title: '任务编辑', items: [
+    { key: 'can_edit_task_title', label: '编辑标题' },
+    { key: 'can_edit_task_desc', label: '编辑描述' },
+    { key: 'can_edit_task_priority', label: '编辑优先级' },
+    { key: 'can_edit_task_deadline', label: '编辑截止日期' },
+    { key: 'can_assign_task', label: '指派负责人' },
+  ]},
+  { title: '任务附件', items: [
+    { key: 'can_upload_task_attachment', label: '上传附件' },
+    { key: 'can_delete_task_attachment', label: '删除附件' },
+  ]},
+  { title: '审核要点', items: [
+    { key: 'can_add_review_point', label: '添加要点' },
+    { key: 'can_respond_review_point', label: '回复要点' },
+    { key: 'can_confirm_review_point', label: '确认要点' },
+  ]},
+  { title: '任务预设标题', items: [
+    { key: 'can_view_title_options', label: '查看选项' },
+    { key: 'can_record_title_history', label: '记录历史' },
+    { key: 'can_delete_title_history', label: '删除历史' },
+    { key: 'can_edit_title_presets', label: '编辑模板' },
+  ]},
+  { title: '里程碑', items: [
+    { key: 'can_create_milestone', label: '创建' },
+    { key: 'can_edit_milestone', label: '编辑' },
+    { key: 'can_delete_milestone', label: '删除' },
+    { key: 'can_toggle_milestone', label: '切换完成' },
+  ]},
+  { title: '报表', items: [
+    { key: 'can_view_report', label: '查看报表' },
+    { key: 'can_export_data', label: '导出数据' },
+  ]},
+  { title: '应用/集成', items: [
+    { key: 'can_manage_app_config', label: '应用配置' },
+    { key: 'can_manage_app_integration', label: '集成设置' },
+  ]},
 ] as const
+
+const ALL_PERM_KEYS = PERM_GROUPS.flatMap(g => g.items.map(i => i.key))
 
 const ROLE_COLORS = ['#2563eb', '#9333ea', '#059669', '#d97706', '#dc2626', '#0891b2', '#7c3aed', '#64748b']
 
-const emptyForm: Record<string, any> = { name: '', color: '#2563eb', ...Object.fromEntries(PROJECT_PERMISSIONS.map(p => [p.key, false])) }
+const emptyForm: Record<string, any> = { name: '', color: '#2563eb', ...Object.fromEntries(ALL_PERM_KEYS.map(k => [k, false])) }
 
 interface Props {
   projectId: string
@@ -61,7 +141,7 @@ export default function ProjectRoleList({ projectId, canEdit }: Props) {
     setEditing(r)
     setForm({
       name: r.name || '', color: r.color || '#64748b',
-      ...Object.fromEntries(PROJECT_PERMISSIONS.map(p => [p.key, !!r[p.key]])),
+      ...Object.fromEntries(ALL_PERM_KEYS.map(k => [k, !!r[k]])),
     })
     setModalOpen(true)
   }
@@ -119,15 +199,13 @@ export default function ProjectRoleList({ projectId, canEdit }: Props) {
                 )}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                {PROJECT_PERMISSIONS.map(p => {
-                  const on = !!r[p.key]
-                  return (
-                    <span key={p.key} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 3,
-                      background: on ? '#f0fdf4' : '#fef2f2', color: on ? 'var(--color-success)' : 'var(--color-danger)' }}>
-                      {on ? <Check size={10} /> : <XIcon size={10} />} {p.label}
-                    </span>
-                  )
-                })}
+                {PERM_GROUPS.map(g => g.items.filter(p => !!r[p.key]).map(p => (
+                  <span key={p.key} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 3,
+                    background: '#f0fdf4', color: 'var(--color-success)' }}>
+                    <Check size={10} /> {p.label}
+                  </span>
+                )))}
+                {ALL_PERM_KEYS.every(k => !r[k]) && <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>无权限</span>}
               </div>
             </div>
           ))}
@@ -149,20 +227,36 @@ export default function ProjectRoleList({ projectId, canEdit }: Props) {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--brand)', borderBottom: '1px solid var(--border-primary)', paddingBottom: 6, marginBottom: 10 }}>权限设置</label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {PROJECT_PERMISSIONS.map(p => (
-                <label key={p.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', cursor: 'pointer', transition: 'all 0.15s', background: (form as any)[p.key] ? '#f0fdf4' : 'var(--bg-primary)' }}
-                  onClick={() => setForm({ ...form, [p.key]: !(form as any)[p.key] })}>
-                  <div>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{p.label}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{p.desc}</div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: 'var(--brand)', borderBottom: '1px solid var(--border-primary)', paddingBottom: 6, marginBottom: 10 }}>权限设置（{ALL_PERM_KEYS.filter(k => (form as any)[k]).length}/{ALL_PERM_KEYS.length}）</label>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginBottom: 8 }}>
+              <button onClick={() => setForm({ ...form, ...Object.fromEntries(ALL_PERM_KEYS.map(k => [k, true])) })} style={{ fontSize: 12, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>全选</button>
+              <button onClick={() => setForm({ ...form, ...Object.fromEntries(ALL_PERM_KEYS.map(k => [k, false])) })} style={{ fontSize: 12, color: 'var(--text-tertiary)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>全不选</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 400, overflowY: 'auto', paddingRight: 4 }}>
+              {PERM_GROUPS.map(group => {
+                const allOn = group.items.every(p => (form as any)[p.key])
+                return (
+                  <div key={group.title}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>{group.title}</span>
+                      <button onClick={() => { const val = !allOn; setForm({ ...form, ...Object.fromEntries(group.items.map(p => [p.key, val])) }) }}
+                        style={{ fontSize: 11, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer' }}>{allOn ? '取消全选' : '全选'}</button>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {group.items.map(p => {
+                        const on = !!(form as any)[p.key]
+                        return (
+                          <button key={p.key} onClick={() => setForm({ ...form, [p.key]: !on })}
+                            style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid', cursor: 'pointer', transition: 'all 0.15s',
+                              borderColor: on ? 'var(--brand)' : 'var(--border-primary)', background: on ? '#eff6ff' : 'var(--bg-primary)', color: on ? 'var(--brand)' : 'var(--text-secondary)' }}>
+                            {on ? <Check size={10} style={{ marginRight: 3, verticalAlign: -1 }} /> : null}{p.label}
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
-                  <div style={{ width: 40, height: 22, borderRadius: 11, background: (form as any)[p.key] ? 'var(--brand)' : 'var(--text-disabled)', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
-                    <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'var(--bg-primary)', position: 'absolute', top: 2, left: (form as any)[p.key] ? 20 : 2, transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
-                  </div>
-                </label>
-              ))}
+                )
+              })}
             </div>
           </div>
 

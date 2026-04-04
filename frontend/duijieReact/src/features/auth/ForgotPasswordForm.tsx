@@ -48,7 +48,7 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
     if (forgotMethod === 'phone' && !/^\d{11}$/.test(target)) { setError('请输入正确的11位手机号'); return }
     if (forgotMethod === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)) { setError('请输入正确的邮箱'); return }
     const res = await authApi.forgotPassword(type, target)
-    if (res.success) { setCountdown(60); setSuccess(res._dev_code ? `验证码: ${res._dev_code}（测试模式）` : '验证码已发送'); if (res._dev_code) setVerifyCode(res._dev_code); setTimeout(() => setSuccess(''), 8000) }
+    if (res.success) { setCountdown(60); setSuccess('验证码已发送'); setTimeout(() => setSuccess(''), 8000) }
     else setError(res.message || '发送失败')
   }
 
@@ -70,7 +70,8 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(''); setSuccess('')
-    if (!newPassword || newPassword.length < 6) { setError('密码至少6个字符'); return }
+    if (!newPassword || newPassword.length < 8) { setError('密码至少8个字符'); return }
+    if (!/[a-zA-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) { setError('密码必须包含字母和数字'); return }
     if (newPassword !== confirmNewPwd) { setError('两次密码不一致'); return }
     setLoading(true)
     try {

@@ -4,6 +4,7 @@ import { setToken, fetchApi } from '../../bootstrap'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
 import { confirm } from '../ui/ConfirmDialog'
+import { CheckCircle } from 'lucide-react'
 
 interface RegisterFormProps {
   onRegistered: (user: any) => void
@@ -15,7 +16,12 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPwd, setConfirmPwd] = useState('')
+  const [email, setEmail] = useState('')
+  const [emailCode, setEmailCode] = useState('')
+  const [emailVerified, setEmailVerified] = useState(false)
+  const [countdown, setCountdown] = useState(0)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
   const [agreed, setAgreed] = useState(false)
   const [showTerms, setShowTerms] = useState(false)
@@ -29,6 +35,38 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
     }
   }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (countdown <= 0) return
+    const t = setTimeout(() => setCountdown(c => c - 1), 1000)
+    return () => clearTimeout(t)
+  }, [countdown])
+
+  const handleSendEmailCode = async () => {
+    setError(''); setSuccess('')
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('请输入正确的邮箱地址'); return }
+    try {
+      const res = await authApi.sendCode('email', email)
+      if (res.success) {
+        setCountdown(60)
+        setSuccess('验证码已发送到邮箱')
+        setTimeout(() => setSuccess(''), 5000)
+      } else setError(res.message || '发送失败')
+    } catch { setError('网络错误') }
+  }
+
+  const handleVerifyEmail = async () => {
+    setError(''); setSuccess('')
+    if (!emailCode || emailCode.length < 4) { setError('请输入验证码'); return }
+    try {
+      const res = await authApi.verifyCode('email', email, emailCode)
+      if (res.success) {
+        setEmailVerified(true)
+        setSuccess('邮箱验证成功')
+        setTimeout(() => setSuccess(''), 3000)
+      } else setError(res.message || '验证码无效')
+    } catch { setError('网络错误') }
+  }
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!agreed) {
@@ -36,15 +74,22 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
       if (!ok) return
       setAgreed(true)
     }
-    setError('')
+    setError(''); setSuccess('')
     if (!username.trim()) { setError('请输入用户名'); return }
     if (username.trim().length < 2) { setError('用户名至少2位'); return }
+    if (email && !emailVerified) { setError('请先验证邮箱'); return }
     if (!password) { setError('请输入密码'); return }
-    if (password.length < 6) { setError('密码至少6位'); return }
+    if (password.length < 8) { setError('密码至少8位'); return }
+    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) { setError('密码必须包含字母和数字'); return }
     if (password !== confirmPwd) { setError('两次密码不一致'); return }
     setLoading(true)
     try {
-      const res = await authApi.register({ username: username.trim(), password, invite_token: inviteToken || undefined })
+      const res = await authApi.register({
+        username: username.trim(),
+        password,
+        email: emailVerified ? email : undefined,
+        invite_token: inviteToken || undefined,
+      })
       if (res.success) {
         if (res.token) { setToken(res.token); onRegistered(res.data) }
         else { setTimeout(() => onSwitchToLogin(), 1500) }
@@ -57,11 +102,47 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
     <>
       <form onSubmit={handleRegister}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <Input label="用户名" placeholder="2-30位字符" value={username} onChange={e => setUsername(e.target.value)} maxLength={30} />
-          <Input label="密码" type="password" placeholder="至少6位" value={password} onChange={e => setPassword(e.target.value)} />
-          <Input label="确认密码" type="password" placeholder="再次输入密码" value={confirmPwd} onChange={e => setConfirmPwd(e.target.value)} />
+          <Input label="用户名 *" placeholder="2-30位字符" value={username} onChange={e => setUsername(e.target.value)} maxLength={30} />
+
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>
+              邮箱 <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>（选填，验证后可用邮箱登录）</span>
+            </label>
+            {emailVerified ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, background: 'var(--bg-success, #f0fdf4)', border: '1px solid var(--color-success, #22c55e)' }}>
+                <CheckCircle size={16} color="var(--color-success, #22c55e)" />
+                <span style={{ fontSize: 13, color: 'var(--color-success, #22c55e)', fontWeight: 500 }}>{email} 已验证</span>
+                <span onClick={() => { setEmailVerified(false); setEmailCode('') }} style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-tertiary)', cursor: 'pointer' }}>更换</span>
+              </div>
+            ) : (
+              <>
+                <Input placeholder="输入邮箱地址" value={email} onChange={e => { setEmail(e.target.value); setEmailVerified(false) }} />
+                {email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
+                  <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                    <input placeholder="输入6位验证码" value={emailCode} onChange={e => setEmailCode(e.target.value)} maxLength={6}
+                      style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                      onFocus={e => (e.currentTarget.style.borderColor = 'var(--brand)')} onBlur={e => (e.currentTarget.style.borderColor = 'var(--border-primary)')} />
+                    <button type="button" disabled={countdown > 0} onClick={handleSendEmailCode}
+                      style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: countdown > 0 ? 'var(--border-primary)' : 'var(--brand)', color: countdown > 0 ? 'var(--text-tertiary)' : 'var(--bg-primary)', fontSize: 12, fontWeight: 500, cursor: countdown > 0 ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
+                      {countdown > 0 ? `${countdown}s` : '发送'}
+                    </button>
+                    {emailCode.length >= 4 && (
+                      <button type="button" onClick={handleVerifyEmail}
+                        style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--color-success, #22c55e)', color: '#fff', fontSize: 12, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                        验证
+                      </button>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          <Input label="密码 *" type="password" placeholder="至少8位，含字母和数字" value={password} onChange={e => setPassword(e.target.value)} />
+          <Input label="确认密码 *" type="password" placeholder="再次输入密码" value={confirmPwd} onChange={e => setConfirmPwd(e.target.value)} />
 
           {error && <div style={{ color: 'var(--color-danger)', fontSize: 13, textAlign: 'center' }}>{error}</div>}
+          {success && <div style={{ color: 'var(--color-success)', fontSize: 13, textAlign: 'center' }}>{success}</div>}
 
           <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, cursor: 'pointer' }}>
             <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}

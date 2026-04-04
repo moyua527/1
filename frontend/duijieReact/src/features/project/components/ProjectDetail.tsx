@@ -45,11 +45,11 @@ export default function ProjectDetail() {
   const platformCanDelete = can(role, 'project:delete')
   const { perms: projectPerms } = useProjectPerms(id)
   const isAdmin = role === 'admin'
-  const canEdit = isAdmin || platformCanEdit || !!projectPerms?.can_edit_project
+  const canEdit = isAdmin || platformCanEdit || !!projectPerms?.can_edit_project_name || !!projectPerms?.can_edit_project_desc || !!projectPerms?.can_edit_project_status
   const canDelete = isAdmin || platformCanDelete || !!projectPerms?.can_delete_project
   const canAddMember = isAdmin || !!projectPerms?.can_add_member
   const canApproveJoin = isAdmin || !!projectPerms?.can_approve_join
-  const canManageMilestone = isAdmin || !!projectPerms?.can_manage_milestone
+  const canManageMilestone = isAdmin || !!projectPerms?.can_create_milestone || !!projectPerms?.can_edit_milestone || !!projectPerms?.can_delete_milestone || !!projectPerms?.can_toggle_milestone
   const canCreateTask = isAdmin || !!projectPerms?.can_create_task
   const [project, setProject] = useState<any>(null)
   const projectRef = useRef<any>(null)

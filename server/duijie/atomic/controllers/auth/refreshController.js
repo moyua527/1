@@ -6,7 +6,8 @@ module.exports = async (req, res) => {
     const rawToken = req.cookies?.refresh_token || req.body?.refresh_token;
     if (!rawToken) return res.status(401).json({ success: false, message: '无刷新令牌' });
 
-    const result = await rotateRefreshToken(rawToken);
+    const deviceInfo = { userAgent: req.headers['user-agent'], ip: req.ip };
+    const result = await rotateRefreshToken(rawToken, deviceInfo);
     if (!result) return res.status(401).json({ success: false, message: '刷新令牌无效或已过期，请重新登录' });
 
     // 查询用户信息用于签发新 access token

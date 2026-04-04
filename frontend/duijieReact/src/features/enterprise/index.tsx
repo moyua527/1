@@ -81,7 +81,7 @@ export default function Enterprise() {
       </div>
 
       <EnterpriseCard
-        ent={h.ent} myRole={h.myRole} isOwner={h.isOwner} canAdmin={h.canAdmin}
+        ent={h.ent} myRole={h.myRole} isOwner={h.isOwner} canAdmin={h.canAdmin} canEditEnterprise={h.canEditEnterprise}
         entMenuOpen={h.entMenuOpen} setEntMenuOpen={h.setEntMenuOpen}
         openEditEnt={h.openEditEnt} handleDeleteEnterprise={h.handleDeleteEnterprise}
         handleLeaveEnterprise={h.handleLeaveEnterprise}
@@ -109,7 +109,7 @@ export default function Enterprise() {
 
       {h.tab === 'departments' && (
         <DepartmentList
-          departments={h.departments} members={h.members} canAdmin={h.canAdmin}
+          departments={h.departments} members={h.members} canAdmin={h.canManageDept}
           deptMenuId={h.deptMenuId} setDeptMenuId={h.setDeptMenuId}
           openAddDept={h.openAddDept} openEditDept={h.openEditDept} handleDeleteDept={h.handleDeleteDept}
         />

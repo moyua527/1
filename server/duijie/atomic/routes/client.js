@@ -10,7 +10,7 @@ const staff = roleGuard('admin', 'member');
 
 // Clients
 router.get('/clients/available-members', auth, staff, require('../controllers/client/availableMembersController'));
-router.post('/clients', auth, roleGuard('admin', 'member', { soft: true }), enterprisePermGuard('can_manage_client'), V.createClient, validate, require('../controllers/client/createController'));
+router.post('/clients', auth, roleGuard('admin', 'member', { soft: true }), enterprisePermGuard('can_manage_client_member'), V.createClient, validate, require('../controllers/client/createController'));
 router.get('/clients', auth, staff, require('../controllers/client/listController'));
 router.get('/clients/:id', auth, staff, require('../controllers/client/detailController'));
 router.put('/clients/:id', auth, staff, V.updateClient, validate, require('../controllers/client/updateController'));

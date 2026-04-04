@@ -11,7 +11,7 @@ const taskStaff = roleGuard('admin', 'member');
 const reviewPoints = require('../controllers/task/reviewPointsController');
 
 // Tasks
-router.post('/tasks', auth, roleGuard('admin', 'member', { soft: true }), enterprisePermGuard('can_manage_task'), upload.array('files', 10), require('../controllers/task/createController'));
+router.post('/tasks', auth, roleGuard('admin', 'member', { soft: true }), enterprisePermGuard('can_create_task'), upload.array('files', 10), require('../controllers/task/createController'));
 router.get('/tasks/export', auth, require('../controllers/task/exportController'));
 router.get('/tasks/trash', auth, taskStaff, require('../controllers/task/trashController'));
 router.get('/tasks', auth, require('../controllers/task/listController'));

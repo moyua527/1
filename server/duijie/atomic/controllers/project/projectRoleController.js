@@ -1,11 +1,6 @@
 const db = require('../../../config/db');
 const { broadcast } = require('../../utils/broadcast');
-
-const PERM_FIELDS = [
-  'can_manage_members', 'can_manage_roles',
-  'can_edit_project', 'can_delete_project',
-  'can_manage_client', 'can_view_report', 'can_manage_task'
-];
+const { PROJECT_ROLE_FIELDS } = require('../../utils/projectRoles');
 
 exports.list = async (req, res) => {
   try {
@@ -33,11 +28,11 @@ exports.create = async (req, res) => {
     const { name, color } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ success: false, message: '请输入角色名称' });
     const perms = {};
-    PERM_FIELDS.forEach(f => { perms[f] = req.body[f] ? 1 : 0; });
+    PROJECT_ROLE_FIELDS.forEach(f => { perms[f] = req.body[f] ? 1 : 0; });
     const [result] = await db.query(
-      `INSERT INTO project_roles (project_id, name, color, ${PERM_FIELDS.join(', ')}, created_by)
-       VALUES (?, ?, ?, ${PERM_FIELDS.map(() => '?').join(', ')}, ?)`,
-      [id, name.trim(), color || '#64748b', ...PERM_FIELDS.map(f => perms[f]), req.userId]
+      `INSERT INTO project_roles (project_id, name, color, ${PROJECT_ROLE_FIELDS.join(', ')}, created_by)
+       VALUES (?, ?, ?, ${PROJECT_ROLE_FIELDS.map(() => '?').join(', ')}, ?)`,
+      [id, name.trim(), color || '#64748b', ...PROJECT_ROLE_FIELDS.map(f => perms[f]), req.userId]
     );
     broadcast('project', 'role_created', { id, userId: req.userId });
     res.json({ success: true, data: { id: result.insertId } });
@@ -55,7 +50,7 @@ exports.update = async (req, res) => {
     if (!name || !name.trim()) return res.status(400).json({ success: false, message: '请输入角色名称' });
     const sets = ['name = ?', 'color = ?'];
     const vals = [name.trim(), color || '#64748b'];
-    PERM_FIELDS.forEach(f => { sets.push(`${f} = ?`); vals.push(req.body[f] ? 1 : 0); });
+    PROJECT_ROLE_FIELDS.forEach(f => { sets.push(`${f} = ?`); vals.push(req.body[f] ? 1 : 0); });
     vals.push(roleId, id);
     await db.query(`UPDATE project_roles SET ${sets.join(', ')} WHERE id = ? AND project_id = ?`, vals);
     broadcast('project', 'role_updated', { id, userId: req.userId });
@@ -79,14 +74,4 @@ exports.remove = async (req, res) => {
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });
   }
-};
-
-exports.createDefaultRoles = async (projectId, createdBy) => {
-  await db.query(
-    `INSERT INTO project_roles (project_id, name, color, can_manage_members, can_manage_roles, can_edit_project, can_delete_project, can_manage_client, can_view_report, can_manage_task, is_default, sort_order, created_by)
-     VALUES (?, '项目管理员', '#2563eb', 1, 1, 1, 1, 1, 1, 1, 1, 0, ?),
-            (?, '开发者', '#059669', 0, 0, 0, 0, 0, 0, 1, 1, 1, ?),
-            (?, '观察者', '#64748b', 0, 0, 0, 0, 0, 1, 0, 1, 2, ?)`,
-    [projectId, createdBy, projectId, createdBy, projectId, createdBy]
-  );
 };

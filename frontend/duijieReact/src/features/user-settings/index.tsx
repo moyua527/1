@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { User, Bell, Palette, Globe, Save, Copy, ArrowLeft, Check, Loader2, Lock, Smartphone } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { User, Bell, Palette, Globe, Save, Copy, ArrowLeft, Check, Loader2, Lock, Smartphone, Monitor, Trash2, LogOut } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
@@ -65,6 +65,23 @@ export default function UserSettings() {
 
   // Notification prefs
   const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>(getNotifPrefs)
+
+  // Session management
+  const [sessions, setSessions] = useState<any[]>([])
+  const [sessionsLoading, setSessionsLoading] = useState(false)
+  const [revokingId, setRevokingId] = useState<number | null>(null)
+  const [revokingAll, setRevokingAll] = useState(false)
+
+  const loadSessions = async () => {
+    setSessionsLoading(true)
+    const r = await fetchApi('/api/auth/sessions')
+    setSessionsLoading(false)
+    if (r.success) setSessions(r.data || [])
+  }
+
+  useEffect(() => {
+    if (tab === 'account') loadSessions()
+  }, [tab])
 
   const startEditing = () => {
     if (user) setForm({ nickname: user.nickname || '', email: user.email || '', phone: user.phone || '' })
@@ -225,7 +242,8 @@ export default function UserSettings() {
                       }}
                       onSubmit={async () => {
                         if (!pwForm.code) { toast('请输入验证码', 'error'); return }
-                        if (pwForm.newPwd.length < 6) { toast('密码至少6位', 'error'); return }
+                        if (pwForm.newPwd.length < 8) { toast('密码至少8位', 'error'); return }
+                        if (!/[a-zA-Z]/.test(pwForm.newPwd) || !/[0-9]/.test(pwForm.newPwd)) { toast('密码必须包含字母和数字', 'error'); return }
                         if (pwForm.newPwd !== pwForm.confirmPwd) { toast('两次密码不一致', 'error'); return }
                         setPwSaving(true)
                         const r = await fetchApi('/api/auth/change-password', { method: 'PUT', body: JSON.stringify({ code: pwForm.code, new_password: pwForm.newPwd }) })
@@ -257,6 +275,79 @@ export default function UserSettings() {
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: -12 }}>分享此邀请码给新用户，对方注册后将自动成为你的客户</div>
                     </>
+                  )}
+
+                  {/* 登录设备管理 */}
+                  <SectionTitle style={{ marginTop: 8 }}>登录设备管理</SectionTitle>
+                  {sessionsLoading ? (
+                    <div style={{ fontSize: 13, color: 'var(--text-tertiary)', padding: 12, textAlign: 'center' }}>
+                      <Loader2 size={16} style={{ animation: 'spin 1s linear infinite', verticalAlign: -3 }} /> 加载中...
+                    </div>
+                  ) : sessions.length === 0 ? (
+                    <div style={{ fontSize: 13, color: 'var(--text-tertiary)', padding: 12 }}>暂无活跃会话</div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                      {sessions.map((s: any, idx: number) => (
+                        <div key={s.id} style={{
+                          display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0',
+                          borderBottom: idx < sessions.length - 1 ? '1px solid var(--border-secondary)' : 'none',
+                        }}>
+                          <Monitor size={20} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)' }}>
+                              {s.device_name} · {s.browser}
+                            </div>
+                            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
+                              IP: {s.ip_address} · 登录于 {new Date(s.created_at).toLocaleString('zh-CN')}
+                            </div>
+                          </div>
+                          <button
+                            onClick={async () => {
+                              setRevokingId(s.id)
+                              const r = await fetchApi(`/api/auth/sessions/${s.id}`, { method: 'DELETE' })
+                              setRevokingId(null)
+                              if (r.success) {
+                                toast('设备已注销', 'success')
+                                setSessions(prev => prev.filter(x => x.id !== s.id))
+                              } else toast(r.message || '操作失败', 'error')
+                            }}
+                            disabled={revokingId === s.id}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6,
+                              border: '1px solid var(--border-primary)', background: 'transparent',
+                              color: '#ef4444', fontSize: 12, cursor: 'pointer', flexShrink: 0,
+                            }}
+                          >
+                            {revokingId === s.id ? <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <Trash2 size={12} />}
+                            注销
+                          </button>
+                        </div>
+                      ))}
+                      {sessions.length > 1 && (
+                        <div style={{ marginTop: 8 }}>
+                          <button
+                            onClick={async () => {
+                              setRevokingAll(true)
+                              const r = await fetchApi('/api/auth/sessions/all', { method: 'DELETE' })
+                              setRevokingAll(false)
+                              if (r.success) {
+                                toast(r.message || '已注销所有其他设备', 'success')
+                                loadSessions()
+                              } else toast(r.message || '操作失败', 'error')
+                            }}
+                            disabled={revokingAll}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8,
+                              border: '1px solid #ef4444', background: 'transparent',
+                              color: '#ef4444', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                            }}
+                          >
+                            {revokingAll ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <LogOut size={14} />}
+                            注销所有其他设备
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
@@ -427,7 +518,7 @@ function ChangePasswordBlock({ phone, form, setForm, sending, cooldown, saving, 
         </div>
       )}
 
-      <Input label="新密码" type="password" placeholder="至少6位" value={form.newPwd} onChange={e => setForm({ ...form, newPwd: e.target.value })} />
+      <Input label="新密码" type="password" placeholder="至少8位，包含字母和数字" value={form.newPwd} onChange={e => setForm({ ...form, newPwd: e.target.value })} />
       {form.newPwd && (
         <Input label="确认新密码" type="password" placeholder="再次输入新密码" value={form.confirmPwd} onChange={e => setForm({ ...form, confirmPwd: e.target.value })} />
       )}
