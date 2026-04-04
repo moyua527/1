@@ -210,11 +210,11 @@ export default function ProjectDetail() {
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>{project.name}</h1>
-            {project.join_code && <span style={{ fontSize: 12, color: 'var(--text-tertiary)', fontFamily: 'monospace', padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: 4, cursor: 'pointer', userSelect: 'none' }}
+            <span style={{ fontSize: 12, color: 'var(--text-tertiary)', fontFamily: 'monospace', padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: 4, cursor: 'pointer', userSelect: 'none' }}
               title="点击复制项目 ID"
-              onClick={() => { const text = project.join_code; if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text) } else { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta) } toast('项目 ID 已复制', 'success') }}>
-              ID: {project.join_code}
-            </span>}
+              onClick={() => { const text = String(project.id); if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text) } else { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta) } toast('项目 ID 已复制', 'success') }}>
+              ID: {project.id}
+            </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
             <Badge color={st.color}>{st.label}</Badge>
