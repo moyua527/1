@@ -114,8 +114,7 @@ export default function MembersSection({ projectId, myMembers, canEditMyTeam, on
             </div>
           )
         })}
-        {canEditMyTeam && (
-          <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative' }}>
             <div title="邀请成员"
               onClick={openInvite}
               style={{
@@ -188,7 +187,6 @@ export default function MembersSection({ projectId, myMembers, canEditMyTeam, on
               </div>
             )}
           </div>
-        )}
       </div>
       {hiddenCount > 0 && (
         <button onClick={() => setExpanded(v => !v)}
