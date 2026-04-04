@@ -40,7 +40,6 @@ export default function MembersSection({ myTeamTitle, otherTeamTitle, myMembers,
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)' }}>{dn(m.id, m.nickname || m.username)}</span>
                     {m.project_role_name && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: m.project_role_color || 'var(--border-primary)', color: 'var(--bg-primary)', fontWeight: 500, whiteSpace: 'nowrap' }}>{m.project_role_name}</span>}
-                    {!m.project_role_name && m.enterprise_role_name && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: m.enterprise_role_color || 'var(--border-primary)', color: 'var(--bg-primary)', fontWeight: 500, whiteSpace: 'nowrap' }}>{m.enterprise_role_name}</span>}
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{m.member_role === 'owner' ? '负责人' : m.member_role === 'editor' ? '编辑者' : '查看者'}</div>
                 </div>

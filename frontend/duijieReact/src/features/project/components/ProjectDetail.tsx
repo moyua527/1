@@ -27,6 +27,7 @@ import SetClientModal from './SetClientModal'
 import InviteMemberModal from './InviteMemberModal'
 import JoinRequestsTab from './JoinRequestsTab'
 import AppTab from './AppTab'
+import ProjectRoleList from './ProjectRoleList'
 
 const statusMap: Record<string, { label: string; color: string }> = {
   planning: { label: '规划中', color: 'blue' },
@@ -55,6 +56,7 @@ export default function ProjectDetail() {
   const canApproveJoin = isAdmin || !!projectPerms?.can_approve_join
   const canManageMilestone = isAdmin || !!projectPerms?.can_create_milestone || !!projectPerms?.can_edit_milestone || !!projectPerms?.can_delete_milestone || !!projectPerms?.can_toggle_milestone
   const canCreateTask = isAdmin || !!projectPerms?.can_create_task
+  const canManageRole = isAdmin || !!projectPerms?.can_create_role || !!projectPerms?.can_edit_role_name || !!projectPerms?.can_delete_role
   const [project, setProject] = useState<any>(null)
   const projectRef = useRef<any>(null)
   const [projectLoading, setProjectLoading] = useState(true)
@@ -63,7 +65,7 @@ export default function ProjectDetail() {
   const [milestones, setMilestones] = useState<any[]>([])
   const [selectedMember, setSelectedMember] = useState<any>(null)
   const [searchParams, setSearchParams] = useSearchParams()
-  const validTabs = ['overview', 'tasks', 'milestones', 'messages', 'app', 'join_requests'] as const
+  const validTabs = ['overview', 'tasks', 'milestones', 'messages', 'app', 'roles', 'join_requests'] as const
   type Tab = typeof validTabs[number]
   const urlTab = searchParams.get('tab') as Tab
   const tab: Tab = validTabs.includes(urlTab as any) ? urlTab! : 'overview'
@@ -165,6 +167,7 @@ export default function ProjectDetail() {
   if (!project) return <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}>项目不存在</div>
 
   const st = statusMap[project.status] || statusMap.planning
+  const isOwner = (project.members || []).some((m: any) => m.user_id === user?.id && m.role === 'owner')
   const internalMembers = (project.members || []).filter((m: any) => m.source !== 'client')
   const clientMembers = (project.members || []).filter((m: any) => m.source === 'client')
   const hasExternalEnterprise = !!project.has_external_enterprise
@@ -241,7 +244,7 @@ export default function ProjectDetail() {
         }} />
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 0, flexWrap: 'wrap', flexShrink: 0 }}>
-        {([['overview','概览'],['tasks','任务'],['milestones','里程碑'],['messages','消息'], ...(project.app_url ? [['app', project.app_name || '应用']] : []), ...(canApproveJoin ? [['join_requests', '加入申请']] : [])] as [string, string][]).map(([k,v]) => (
+        {([['overview','概览'],['tasks','任务'],['milestones','里程碑'],['messages','消息'], ...(project.app_url ? [['app', project.app_name || '应用']] : []), ...((isOwner || canManageRole) ? [['roles', '角色管理']] : []), ...(canApproveJoin ? [['join_requests', '加入申请']] : [])] as [string, string][]).map(([k,v]) => (
           <button key={k} onClick={() => setTab(k as any)} style={{
             padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500,
             background: tab === k ? 'var(--brand)' : 'var(--bg-tertiary)', color: tab === k ? 'var(--bg-primary)' : 'var(--text-secondary)',
@@ -397,6 +400,8 @@ export default function ProjectDetail() {
       {tab === 'messages' && <div style={section}><MessagePanel projectId={id!} /></div>}
 
       {tab === 'app' && <AppTab project={project} />}
+
+      {tab === 'roles' && <ProjectRoleList canEdit={isOwner || canManageRole} projectId={id!} />}
 
       {tab === 'join_requests' && <JoinRequestsTab projectId={id!} joinCode={project.join_code} onRefresh={loadProject} />}
 

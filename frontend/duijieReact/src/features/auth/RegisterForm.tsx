@@ -117,23 +117,21 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
             ) : (
               <>
                 <Input placeholder="输入邮箱地址" value={email} onChange={e => { setEmail(e.target.value); setEmailVerified(false) }} />
-                {email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
-                  <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                    <input placeholder="输入6位验证码" value={emailCode} onChange={e => setEmailCode(e.target.value)} maxLength={6}
-                      style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
-                      onFocus={e => (e.currentTarget.style.borderColor = 'var(--brand)')} onBlur={e => (e.currentTarget.style.borderColor = 'var(--border-primary)')} />
-                    <button type="button" disabled={countdown > 0} onClick={handleSendEmailCode}
-                      style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: countdown > 0 ? 'var(--border-primary)' : 'var(--brand)', color: countdown > 0 ? 'var(--text-tertiary)' : 'var(--bg-primary)', fontSize: 12, fontWeight: 500, cursor: countdown > 0 ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
-                      {countdown > 0 ? `${countdown}s` : '发送'}
+                <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                  <input placeholder="输入6位验证码" value={emailCode} onChange={e => setEmailCode(e.target.value)} maxLength={6}
+                    style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                    onFocus={e => (e.currentTarget.style.borderColor = 'var(--brand)')} onBlur={e => (e.currentTarget.style.borderColor = 'var(--border-primary)')} />
+                  <button type="button" disabled={countdown > 0 || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)} onClick={handleSendEmailCode}
+                    style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: (countdown > 0 || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ? 'var(--border-primary)' : 'var(--brand)', color: (countdown > 0 || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ? 'var(--text-tertiary)' : 'var(--bg-primary)', fontSize: 12, fontWeight: 500, cursor: (countdown > 0 || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
+                    {countdown > 0 ? `${countdown}s` : '发送'}
+                  </button>
+                  {emailCode.length >= 4 && (
+                    <button type="button" onClick={handleVerifyEmail}
+                      style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--color-success, #22c55e)', color: '#fff', fontSize: 12, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                      验证
                     </button>
-                    {emailCode.length >= 4 && (
-                      <button type="button" onClick={handleVerifyEmail}
-                        style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--color-success, #22c55e)', color: '#fff', fontSize: 12, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                        验证
-                      </button>
-                    )}
-                  </div>
-                )}
+                  )}
+                </div>
               </>
             )}
           </div>

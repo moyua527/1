@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { UserPlus, Check, X, Copy } from 'lucide-react'
+import { UserPlus, Check, X, Copy, Link2 } from 'lucide-react'
 import Badge from '../../ui/Badge'
 import { toast } from '../../ui/Toast'
 import { projectApi } from '../services/api'
@@ -35,16 +35,27 @@ export default function JoinRequestsTab({ projectId, joinCode, onRefresh }: Prop
     else toast(r.message || '操作失败', 'error')
   }
 
+  const inviteLink = joinCode ? `${window.location.origin}/join/${joinCode}` : null
+
   return (
     <div style={section}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
         <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>加入申请</h3>
-        {joinCode && (
-          <span style={{ fontSize: 12, color: 'var(--text-tertiary)', fontFamily: 'monospace', cursor: 'pointer', padding: '4px 10px', background: 'var(--bg-secondary)', borderRadius: 6, border: '1px solid var(--border-primary)' }}
-            title="点击复制项目ID" onClick={() => { navigator.clipboard.writeText(joinCode); toast('已复制项目ID', 'success') }}>
-            项目ID: {joinCode} <Copy size={10} style={{ verticalAlign: 'middle' }} />
-          </span>
-        )}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {joinCode && (
+            <span style={{ fontSize: 12, color: 'var(--text-tertiary)', fontFamily: 'monospace', cursor: 'pointer', padding: '4px 10px', background: 'var(--bg-secondary)', borderRadius: 6, border: '1px solid var(--border-primary)' }}
+              title="点击复制项目邀请码" onClick={() => { navigator.clipboard.writeText(joinCode); toast('已复制邀请码', 'success') }}>
+              邀请码: {joinCode} <Copy size={10} style={{ verticalAlign: 'middle' }} />
+            </span>
+          )}
+          {inviteLink && (
+            <button
+              onClick={() => { navigator.clipboard.writeText(inviteLink); toast('邀请链接已复制', 'success') }}
+              style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, padding: '4px 10px', background: 'var(--brand)', color: '#fff', borderRadius: 6, border: 'none', cursor: 'pointer', fontWeight: 500 }}>
+              <Link2 size={12} /> 复制邀请链接
+            </button>
+          )}
+        </div>
       </div>
       {loading ? (
         <p style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: 24 }}>加载中...</p>

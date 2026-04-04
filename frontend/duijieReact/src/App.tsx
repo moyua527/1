@@ -1,5 +1,5 @@
 import { useEffect, lazy, Suspense, ComponentType } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import LoginPage from './features/auth/index'
 import Layout from './features/ui/Layout'
 import MobilePushBridge from './features/ui/MobilePushBridge'
@@ -9,7 +9,8 @@ import ErrorBoundary from './features/ui/ErrorBoundary'
 import useUserStore from './stores/useUserStore'
 import useEnterpriseStore from './stores/useEnterpriseStore'
 import { can } from './stores/permissions'
-import EnterpriseOnboarding from './features/enterprise/EnterpriseOnboarding'
+import ProjectOnboarding from './features/project/ProjectOnboarding'
+import JoinProjectPage from './features/project/JoinProjectPage'
 import { flatRoutes, prefetchPages } from './data/routeManifest'
 
 function lazyLoad(importFn: () => Promise<{ default: ComponentType<any> }>) {
@@ -32,8 +33,21 @@ function prefetchHighFreq() {
 export default function App() {
   const { user, checking, setUser, init } = useUserStore()
   const hasEnterprise = useEnterpriseStore(s => s.hasEnterprise)
+  const hasProjects = useEnterpriseStore(s => s.hasProjects)
+  const location = useLocation()
+  const navigate = useNavigate()
 
   useEffect(() => { init() }, [init])
+
+  useEffect(() => {
+    if (user) {
+      const redirect = localStorage.getItem('redirect_after_login')
+      if (redirect) {
+        localStorage.removeItem('redirect_after_login')
+        navigate(redirect, { replace: true })
+      }
+    }
+  }, [user, navigate])
 
   useEffect(() => {
     if (user) {
@@ -43,8 +57,16 @@ export default function App() {
   }, [user])
 
   if (checking) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: 0, color: 'var(--text-tertiary)' }}>加载中...</div>
-  if (!user) return <LoginPage onLogin={setUser} />
-  if (!hasEnterprise) return <><ToastContainer /><EnterpriseOnboarding /></>
+  if (!user) {
+    if (location.pathname.startsWith('/join/')) {
+      localStorage.setItem('redirect_after_login', location.pathname)
+    }
+    return <LoginPage onLogin={setUser} />
+  }
+  if (location.pathname.startsWith('/join/')) {
+    return <><ToastContainer /><Routes><Route path="/join/:code" element={<JoinProjectPage />} /></Routes></>
+  }
+  if (!hasEnterprise && !hasProjects) return <><ToastContainer /><ProjectOnboarding /></>
 
   const r = user.role
   const allowed = flatRoutes().filter(rt => !rt.perm || can(r, rt.perm))

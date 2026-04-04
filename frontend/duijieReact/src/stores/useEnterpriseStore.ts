@@ -16,6 +16,8 @@ export interface EnterprisePerms {
 interface EnterpriseState {
   /** User has at least one enterprise */
   hasEnterprise: boolean
+  /** User has at least one project */
+  hasProjects: boolean
   /** Enterprise-level permissions for the active enterprise */
   enterprisePerms: EnterprisePerms
   /** List of enterprises user belongs to */
@@ -24,6 +26,7 @@ interface EnterpriseState {
   activeEnterpriseId: number | null
 
   setHasEnterprise: (v: boolean) => void
+  setHasProjects: (v: boolean) => void
   /** Load enterprise data from /api/my-enterprise. Called once after auth. */
   init: (role: string) => Promise<void>
   /** Switch to a different enterprise */
@@ -36,16 +39,17 @@ interface EnterpriseState {
 
 const useEnterpriseStore = create<EnterpriseState>((set, get) => ({
   hasEnterprise: true,
+  hasProjects: true,
   enterprisePerms: {},
   myEnterprises: [],
   activeEnterpriseId: null,
 
   setHasEnterprise: (v) => set({ hasEnterprise: v }),
+  setHasProjects: (v) => set({ hasProjects: v }),
 
   init: async (role) => {
     if (role === 'admin') {
-      set({ hasEnterprise: true })
-      // Admin still loads perms for enterprise context
+      set({ hasEnterprise: true, hasProjects: true })
       fetchApi('/api/my-enterprise').then(r => {
         if (r.success && r.data) {
           set({
@@ -68,6 +72,13 @@ const useEnterpriseStore = create<EnterpriseState>((set, get) => ({
         })
       } else if (r.success) {
         set({ hasEnterprise: false, enterprisePerms: {}, myEnterprises: [], activeEnterpriseId: null })
+        try {
+          const pr = await fetchApi('/api/projects')
+          const hasPrj = pr.success && Array.isArray(pr.data) && pr.data.length > 0
+          set({ hasProjects: hasPrj })
+        } catch {
+          set({ hasProjects: false })
+        }
       }
     } catch {}
   },
@@ -104,6 +115,7 @@ const useEnterpriseStore = create<EnterpriseState>((set, get) => ({
 
   reset: () => set({
     hasEnterprise: true,
+    hasProjects: true,
     enterprisePerms: {},
     myEnterprises: [],
     activeEnterpriseId: null,

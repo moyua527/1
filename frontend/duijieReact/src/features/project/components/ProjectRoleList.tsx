@@ -112,9 +112,10 @@ const emptyForm: Record<string, any> = { name: '', color: '#2563eb', ...Object.f
 
 interface Props {
   canEdit: boolean
+  projectId?: string
 }
 
-export default function ProjectRoleList({ canEdit }: Props) {
+export default function ProjectRoleList({ canEdit, projectId }: Props) {
   const [roles, setRoles] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
@@ -124,10 +125,10 @@ export default function ProjectRoleList({ canEdit }: Props) {
   const [expandedId, setExpandedId] = useState<number | null>(null)
 
   const loadRoles = useCallback(async () => {
-    const r = await projectApi.listEntRoles()
+    const r = projectId ? await projectApi.listRoles(projectId) : await projectApi.listEntRoles()
     if (r.success) setRoles(r.data || [])
     setLoading(false)
-  }, [])
+  }, [projectId])
 
   useEffect(() => { loadRoles() }, [loadRoles])
 
@@ -151,8 +152,8 @@ export default function ProjectRoleList({ canEdit }: Props) {
     setSaving(true)
     try {
       const r = editing
-        ? await projectApi.updateEntRole(editing.id, form)
-        : await projectApi.createEntRole(form)
+        ? (projectId ? await projectApi.updateRole(projectId, editing.id, form) : await projectApi.updateEntRole(editing.id, form))
+        : (projectId ? await projectApi.createRole(projectId, form) : await projectApi.createEntRole(form))
       if (r.success) {
         toast(editing ? '角色已更新' : '角色已创建', 'success')
         setModalOpen(false)
@@ -163,7 +164,7 @@ export default function ProjectRoleList({ canEdit }: Props) {
 
   const handleDelete = async (roleId: number) => {
     if (!(await confirm({ message: '确定删除该角色？', danger: true }))) return
-    const r = await projectApi.removeEntRole(roleId)
+    const r = projectId ? await projectApi.removeRole(projectId, roleId) : await projectApi.removeEntRole(roleId)
     if (r.success) { toast('角色已删除', 'success'); loadRoles() }
     else toast(r.message || '删除失败', 'error')
   }
