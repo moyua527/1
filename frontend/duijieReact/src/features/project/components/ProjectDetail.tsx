@@ -344,10 +344,12 @@ export default function ProjectDetail() {
           {/* 右栏：项目成员 */}
           <div style={{ ...section, width: 220, flexShrink: 0, marginBottom: 0, position: 'sticky', top: 0 }}>
             <MembersSection
+              projectId={id!}
               myMembers={allMembers}
               canEditMyTeam={canAddMember || isOwner}
               onManageMyMembers={openManageMembers}
               onSelectMember={setSelectedMember}
+              onRefresh={loadProject}
             />
           </div>
         </div>
