@@ -1,6 +1,6 @@
 {
-  "version": "1.1.74.4",
+  "version": "1.1.74.5",
   "versionCode": 73,
   "minVersion": "1.0.0",
-  "changelog": "移除新用户引导页门控，注册登录后直接进入系统"
+  "changelog": "撤回：恢复新用户引导页门控"
 }
