@@ -115,7 +115,7 @@ export default function Layout() {
           {user && (
             <div ref={avatarMenuRef} style={{ position: 'relative' }}>
               <div onClick={() => setAvatarMenuOpen(!avatarMenuOpen)} style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', padding: '4px 6px', borderRadius: 6 }} title="个人菜单">
-                <Avatar name={user.nickname || user.username} size={30} />
+                <Avatar name={user.nickname || user.username} size={30} src={user.avatar || undefined} />
                 {!isMobile && <span style={{ fontSize: 13, color: 'var(--text-secondary)', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.nickname || user.username}</span>}
               </div>
 
@@ -134,15 +134,17 @@ export default function Layout() {
                     borderRadius: settingsTab ? '0 12px 12px 0' : 12,
                     boxShadow: '0 8px 24px rgba(0,0,0,0.12)', overflow: 'hidden',
                   }}>
-                    <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--border-secondary)' }}>
+                    <div style={{ padding: '16px 16px 12px', borderBottom: '1px solid var(--border-secondary)', cursor: 'pointer' }}
+                      onClick={() => { setAvatarMenuOpen(false); setSettingsTab(null); setProfileOpen(true) }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <Avatar name={user.nickname || user.username} size={44} />
+                        <Avatar name={user.nickname || user.username} size={44} src={user.avatar || undefined} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.nickname || user.username}</div>
                           <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{role === 'admin' ? '管理员' : '成员'}</div>
                         </div>
                       </div>
                       {user.email && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>}
+                      <div style={{ fontSize: 11, color: 'var(--brand)', marginTop: 6, fontWeight: 500 }}>查看并编辑个人信息</div>
                     </div>
                     <EnterpriseSwitcher />
                     <div style={{ padding: '6px 0' }}>

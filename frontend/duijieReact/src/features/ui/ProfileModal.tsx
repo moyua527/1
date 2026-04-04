@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Edit2, Copy } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Edit2, Copy, Camera } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import Avatar from './Avatar'
 import Modal from './Modal'
@@ -22,6 +22,8 @@ export default function ProfileModal({ open, onClose, user, onProfileUpdated }: 
   const [editing, setEditing] = useState(false)
   const [form, setForm] = useState({ nickname: '', email: '', phone: '', password: '', confirmPassword: '' })
   const [saving, setSaving] = useState(false)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const copyText = async (value: string, message: string) => {
     try {
@@ -40,6 +42,25 @@ export default function ProfileModal({ open, onClose, user, onProfileUpdated }: 
     } catch {
       toast('复制失败', 'error')
     }
+  }
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) { toast('头像不能超过 2MB', 'error'); return }
+    if (!/^image\/(jpeg|jpg|png|gif|webp)$/.test(file.type)) { toast('只支持 JPG/PNG/GIF/WebP 格式', 'error'); return }
+    setAvatarUploading(true)
+    const fd = new FormData()
+    fd.append('avatar', file)
+    const token = localStorage.getItem('token')
+    try {
+      const res = await fetch('/api/auth/avatar', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd })
+      const r = await res.json()
+      if (r.success) { toast('头像已更新', 'success'); onProfileUpdated(r.data) }
+      else toast(r.message || '上传失败', 'error')
+    } catch { toast('上传失败', 'error') }
+    setAvatarUploading(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   const startEditing = () => {
@@ -73,10 +94,17 @@ export default function ProfileModal({ open, onClose, user, onProfileUpdated }: 
 
   return (
     <Modal open={open} onClose={handleClose} title={editing ? '编辑个人信息' : '个人信息'}>
+      <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" style={{ display: 'none' }} onChange={handleAvatarUpload} />
       {user && !editing && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16, background: 'var(--bg-secondary)', borderRadius: 12 }}>
-            <Avatar name={user.nickname || user.username} size={64} />
+            <div style={{ position: 'relative', cursor: 'pointer', flexShrink: 0 }} onClick={() => fileInputRef.current?.click()}>
+              <Avatar name={user.nickname || user.username} size={64} src={user.avatar || undefined} />
+              <div style={{ position: 'absolute', bottom: -2, right: -2, width: 22, height: 22, borderRadius: '50%', background: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-primary)' }}>
+                <Camera size={11} color="#fff" />
+              </div>
+              {avatarUploading && <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11 }}>...</div>}
+            </div>
             <div>
               <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-heading)' }}>{user.nickname || user.username}</div>
               <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2 }}>@{user.username}</div>
@@ -128,7 +156,13 @@ export default function ProfileModal({ open, onClose, user, onProfileUpdated }: 
       {user && editing && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16, background: 'var(--bg-secondary)', borderRadius: 12 }}>
-            <Avatar name={user.nickname || user.username} size={64} />
+            <div style={{ position: 'relative', cursor: 'pointer', flexShrink: 0 }} onClick={() => fileInputRef.current?.click()}>
+              <Avatar name={user.nickname || user.username} size={64} src={user.avatar || undefined} />
+              <div style={{ position: 'absolute', bottom: -2, right: -2, width: 22, height: 22, borderRadius: '50%', background: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-primary)' }}>
+                <Camera size={11} color="#fff" />
+              </div>
+              {avatarUploading && <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 11 }}>...</div>}
+            </div>
             <div>
               <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-heading)' }}>{user.nickname || user.username}</div>
               <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2 }}>@{user.username}</div>
