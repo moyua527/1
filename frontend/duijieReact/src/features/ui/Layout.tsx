@@ -144,7 +144,6 @@ export default function Layout() {
                         </div>
                       </div>
                       {user.email && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>}
-                      <div style={{ fontSize: 11, color: 'var(--brand)', marginTop: 6, fontWeight: 500 }}>查看并编辑个人信息</div>
                     </div>
                     <EnterpriseSwitcher />
                     <div style={{ padding: '6px 0' }}>
