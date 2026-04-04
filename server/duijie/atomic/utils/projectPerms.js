@@ -1,5 +1,4 @@
 const db = require('../../config/db');
-const { getUserActiveEnterpriseId } = require('../services/accessScope');
 const { PROJECT_ROLE_FIELDS } = require('./projectRoles');
 
 /**
@@ -55,17 +54,6 @@ function buildManagerPerms(isCreator) {
  * 优先级：项目角色 > 企业角色（展开映射） > 企业管理人员 > 遗留角色回退
  */
 async function getProjectPerms(userId, projectId) {
-  const activeEnterpriseId = await getUserActiveEnterpriseId(userId);
-  if (activeEnterpriseId) {
-    const [[project]] = await db.query(
-      'SELECT client_id, internal_client_id FROM duijie_projects WHERE id = ? AND is_deleted = 0 LIMIT 1',
-      [projectId]
-    );
-    if (!project) return null;
-    const clientId = project.client_id ? Number(project.client_id) : null;
-    const internalClientId = project.internal_client_id ? Number(project.internal_client_id) : null;
-    if (clientId !== activeEnterpriseId && internalClientId !== activeEnterpriseId) return null;
-  }
 
   const prSelect = PROJECT_ROLE_FIELDS.map(f => `pr.${f} AS pr_${f}`).join(', ');
   const erSelect = ER_FIELDS.map(f => `er.${f} AS er_${f}`).join(', ');
@@ -82,19 +70,6 @@ async function getProjectPerms(userId, projectId) {
   );
 
   if (!member) {
-    if (activeEnterpriseId) {
-      const [[entMember]] = await db.query(
-        "SELECT role FROM duijie_client_members WHERE client_id = ? AND user_id = ? AND role IN ('creator','admin') AND is_deleted = 0 LIMIT 1",
-        [activeEnterpriseId, userId]
-      );
-      if (entMember) {
-        return {
-          projectRole: null, source: null, enterpriseRoleId: null, enterpriseManager: true,
-          can_create_project: true,
-          ...buildManagerPerms(entMember.role === 'creator'),
-        };
-      }
-    }
     return null;
   }
 
@@ -116,22 +91,6 @@ async function getProjectPerms(userId, projectId) {
       can_create_project: !!member.er_can_create_project,
       ...expandErPerms(erRow),
     };
-  }
-
-  // 优先级3：企业 creator/admin
-  const isOwner = member.role === 'owner';
-  if (!isOwner && activeEnterpriseId) {
-    const [[entMember]] = await db.query(
-      "SELECT role FROM duijie_client_members WHERE client_id = ? AND user_id = ? AND role IN ('creator','admin') AND is_deleted = 0 LIMIT 1",
-      [activeEnterpriseId, userId]
-    );
-    if (entMember) {
-      return {
-        ...base, projectRoleId: null, enterpriseRoleId: null, enterpriseManager: true,
-        can_create_project: true,
-        ...buildManagerPerms(entMember.role === 'creator'),
-      };
-    }
   }
 
   // 遗留角色回退

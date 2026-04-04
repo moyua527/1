@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
 import { ArrowLeft, Trash2, AppWindow, ExternalLink, MoreVertical, Pencil } from 'lucide-react'
 import { can } from '../../../stores/permissions'
-import useEnterpriseStore from '../../../stores/useEnterpriseStore'
 import useProjectPerms from '../../../hooks/useProjectPerms'
 import Modal from '../../ui/Modal'
 import { fetchApi } from '../../../bootstrap'
@@ -79,17 +78,17 @@ export default function ProjectDetail() {
   const [clientModal, setClientModal] = useState(false)
   const [clientData, setClientData] = useState<any>(null)
   const [projectRoles, setProjectRoles] = useState<any[]>([])
-  const activeEnterpriseId = useEnterpriseStore(s => s.activeEnterpriseId)
   const [showSetClient, setShowSetClient] = useState(false)
   const [showActionMenu, setShowActionMenu] = useState(false)
   const [showEditProject, setShowEditProject] = useState(false)
   const [pendingJoinCount, setPendingJoinCount] = useState(0)
 
-  const openClientModal = (clientId: number) => {
+  const _openClientModal = (clientId: number) => {
     setClientModal(true)
     setClientData(null)
     fetchApi(`/api/clients/${clientId}`).then(r => { if (r.success) setClientData(r.data) })
   }
+  void _openClientModal
 
   const loadProject = useCallback(async () => {
     if (!id) return
@@ -174,18 +173,11 @@ export default function ProjectDetail() {
 
   const st = statusMap[project.status] || statusMap.planning
   const isOwner = (project.members || []).some((m: any) => m.user_id === user?.id && m.role === 'owner')
-  const internalMembers = (project.members || []).filter((m: any) => m.source !== 'client')
-  const clientMembers = (project.members || []).filter((m: any) => m.source === 'client')
-  const hasExternalEnterprise = !!project.has_external_enterprise
-  const isClientPerspective = hasExternalEnterprise && !!activeEnterpriseId && !!project.client_id && Number(activeEnterpriseId) === Number(project.client_id)
-  const internalEnterpriseName = project.internal_client_name || '-'
-  const clientEnterpriseName = project.client_name || '无'
-  const myEnterpriseName = isClientPerspective ? clientEnterpriseName : internalEnterpriseName
-  const otherEnterpriseName = hasExternalEnterprise ? (isClientPerspective ? internalEnterpriseName : clientEnterpriseName) : '无'
-  const myMembers = isClientPerspective ? clientMembers : internalMembers
-  const otherMembers = hasExternalEnterprise ? (isClientPerspective ? internalMembers : clientMembers) : []
-  const myTeamTitle = `我方团队（${myEnterpriseName}）`
-  const otherTeamTitle = `对方团队（${otherEnterpriseName}）`
+  const allMembers = project.members || []
+  const myMembers = allMembers
+  const otherMembers: any[] = []
+  const myTeamTitle = '项目成员'
+  const otherTeamTitle = ''
 
   const handleDelete = async () => {
     if (!(await confirm({ message: '确定将此项目移到回收站？可在项目列表的回收站中恢复。', danger: true }))) return
@@ -207,10 +199,11 @@ export default function ProjectDetail() {
     loadProjectRoles()
   }
 
-  const openManageClientMembers = () => {
+  const _openManageClientMembers = () => {
     setShowAddClientMember(true)
     refreshClientAvailableUsers()
   }
+  void _openManageClientMembers
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px - 48px)', overflow: 'hidden' }}>
@@ -227,8 +220,6 @@ export default function ProjectDetail() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
             <Badge color={st.color}>{st.label}</Badge>
-            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>我方企业: <span style={{ color: 'var(--text-heading)' }}>{myEnterpriseName}</span></span>
-            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{isClientPerspective ? '对方企业' : '客户企业'}: {hasExternalEnterprise ? (isClientPerspective ? <span style={{ color: 'var(--text-heading)' }}>{otherEnterpriseName}</span> : <span onClick={() => project.client_id && openClientModal(project.client_id)} style={{ color: 'var(--brand)', cursor: 'pointer' }}>{otherEnterpriseName}</span>) : (<>{canEdit && <button onClick={() => setShowSetClient(true)} style={{ fontSize: 12, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, textDecoration: 'underline' }}>设置</button>}{!canEdit && <span style={{ color: 'var(--text-heading)' }}>无</span>}</>)}</span>
           </div>
         </div>
         {(canEdit || canDelete) && (
@@ -308,8 +299,6 @@ export default function ProjectDetail() {
                 <div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.budget > 0 ? `¥${Number(project.budget).toLocaleString()}` : '未设置'}</div>
               )}
             </div>
-            <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>我方企业</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{myEnterpriseName}</div></div>
-            <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{isClientPerspective ? '对方企业' : '客户企业'}</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{hasExternalEnterprise ? (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>{isClientPerspective ? otherEnterpriseName : (project.client_id ? <span onClick={() => openClientModal(project.client_id)} style={{ color: 'var(--brand)', cursor: 'pointer' }}>{otherEnterpriseName}</span> : otherEnterpriseName)}{canEdit && !isClientPerspective && <button onClick={() => setShowSetClient(true)} style={{ fontSize: 11, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>更换</button>}</span>) : (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>无{canEdit && <button onClick={() => setShowSetClient(true)} style={{ fontSize: 11, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>设置</button>}</span>)}</div></div>
             <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>创建时间</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{formatDateTime(project.created_at)}</div></div>
             <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>任务数</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{tasks.length}</div></div>
           </div>
@@ -376,9 +365,9 @@ export default function ProjectDetail() {
           otherTeamTitle={otherTeamTitle}
           myMembers={myMembers}
           otherMembers={otherMembers}
-          showOtherTeam={hasExternalEnterprise}
+          showOtherTeam={false}
           canEditMyTeam={canAddMember}
-          onManageMyMembers={isClientPerspective ? openManageClientMembers : openManageMembers}
+          onManageMyMembers={openManageMembers}
           onSelectMember={setSelectedMember}
         />
 
@@ -386,7 +375,7 @@ export default function ProjectDetail() {
           open={showAddMember}
           onClose={() => setShowAddMember(false)}
           projectId={id!}
-          members={internalMembers}
+          members={allMembers}
           availableUsers={availableUsers}
           projectRoles={projectRoles}
           onRefresh={loadProject}
@@ -397,7 +386,7 @@ export default function ProjectDetail() {
           open={showAddClientMember}
           onClose={() => setShowAddClientMember(false)}
           projectId={id!}
-          clientMembers={clientMembers}
+          clientMembers={[]}
           clientAvailableUsers={clientAvailableUsers}
           onRefresh={loadProject}
           onRefreshAvailable={refreshClientAvailableUsers}
@@ -418,7 +407,7 @@ export default function ProjectDetail() {
       {tab === 'join_requests' && <JoinRequestsTab projectId={id!} joinCode={project.join_code} onRefresh={() => { loadProject(); loadPendingJoinCount() }} />}
 
 
-      <SetClientModal open={showSetClient} hasExternalEnterprise={hasExternalEnterprise}
+      <SetClientModal open={showSetClient} hasExternalEnterprise={false}
         onClose={() => setShowSetClient(false)}
         onSendRequest={async (clientId) => {
           const r = await projectApi.sendClientRequest(id!, { to_enterprise_id: clientId })

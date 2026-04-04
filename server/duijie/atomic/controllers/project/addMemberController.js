@@ -12,17 +12,9 @@ module.exports = async (req, res) => {
     const memberRole = validRoles.includes(role) ? role : 'editor';
 
     const [[project]] = await db.query(
-      'SELECT internal_client_id, name FROM duijie_projects WHERE id = ? AND is_deleted = 0', [id]
+      'SELECT name FROM duijie_projects WHERE id = ? AND is_deleted = 0', [id]
     );
     if (!project) return res.status(404).json({ success: false, message: '项目不存在' });
-
-    if (project.internal_client_id) {
-      const [[isMember]] = await db.query(
-        'SELECT 1 FROM duijie_client_members WHERE client_id = ? AND user_id = ? AND is_deleted = 0',
-        [project.internal_client_id, user_id]
-      );
-      if (!isMember) return res.status(400).json({ success: false, message: '该用户不属于项目关联的我方企业' });
-    }
 
     const [[existing]] = await db.query(
       'SELECT 1 FROM duijie_project_members WHERE project_id = ? AND user_id = ?', [id, user_id]

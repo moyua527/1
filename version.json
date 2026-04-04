@@ -1,6 +1,6 @@
 {
-  "version": "1.1.77",
-  "versionCode": 79,
+  "version": "1.1.78",
+  "versionCode": 80,
   "minVersion": "1.0.0",
-  "changelog": "修复通知无声音：所有通知走 notify() 统一推送，确保 WebSocket 事件触发前端提示音"
+  "changelog": "项目与企业彻底解耦：项目完全独立，任何人都能被邀请进任何项目，不再受企业隔离限制"
 }

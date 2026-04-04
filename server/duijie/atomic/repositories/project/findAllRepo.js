@@ -28,12 +28,6 @@ module.exports = async ({ status, client_id, page = 1, limit = 20 }, auth = {}) 
   if (status) { sql += ' AND p.status = ?'; countSql += ' AND p.status = ?'; params.push(status); countParams.push(status); }
   if (client_id) { sql += ' AND p.client_id = ?'; countSql += ' AND p.client_id = ?'; params.push(client_id); countParams.push(client_id); }
 
-  if (auth.activeEnterpriseId) {
-    const entFilter = ' AND (p.internal_client_id = ? OR p.client_id = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?))';
-    sql += entFilter; countSql += entFilter;
-    params.push(auth.activeEnterpriseId, auth.activeEnterpriseId, auth.userId);
-    countParams.push(auth.activeEnterpriseId, auth.activeEnterpriseId, auth.userId);
-  }
 
   sql += ' ORDER BY p.created_at DESC LIMIT ? OFFSET ?';
   params.push(Number(limit), (Number(page) - 1) * Number(limit));

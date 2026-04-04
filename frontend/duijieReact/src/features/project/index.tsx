@@ -4,7 +4,6 @@ import { Plus, FolderKanban, Loader2, Download, Search, Copy, Trash2, RotateCcw 
 import { projectApi } from './services/api'
 import { can } from '../../stores/permissions'
 import { useProjects, useInvalidate } from '../../hooks/useApi'
-import useEnterpriseStore from '../../stores/useEnterpriseStore'
 import Button from '../ui/Button'
 import Badge from '../ui/Badge'
 
@@ -40,7 +39,6 @@ const cardStyle: React.CSSProperties = {
 export default function ProjectList() {
   const { data: projects = [], isLoading: loading } = useProjects()
   const invalidate = useInvalidate()
-  const { activeEnterpriseId } = useEnterpriseStore()
   const [showCreate, setShowCreate] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({ name: '', description: '', task_title_presets: [] as string[], newPreset: '' })
@@ -68,8 +66,6 @@ export default function ProjectList() {
     if (search) {
       const s = search.toLowerCase()
       if (!(p.name || '').toLowerCase().includes(s)
-        && !(p.client_name || '').toLowerCase().includes(s)
-        && !(p.internal_client_name || '').toLowerCase().includes(s)
         && !(p.description || '').toLowerCase().includes(s)) return false
     }
     return true
@@ -156,21 +152,6 @@ export default function ProjectList() {
                   </div>
                   <Badge color={st.color}>{st.label}</Badge>
                 </div>
-                {(p.internal_client_name || p.client_name) && (
-                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    {(() => {
-                      // 根据活跃企业视角动态显示我方/客户
-                      const isSameEnterprise = p.internal_client_id && p.client_id && p.internal_client_id === p.client_id
-                      const isClientSide = !isSameEnterprise && activeEnterpriseId && p.client_id === activeEnterpriseId && p.internal_client_id !== activeEnterpriseId
-                      const myName = isClientSide ? (p.client_name || '-') : (p.internal_client_name || '-')
-                      const otherName = isSameEnterprise ? '无' : (isClientSide ? (p.internal_client_name || '无') : (p.client_name || '无'))
-                      return <>
-                        <div>我方企业: {myName}</div>
-                        <div>客户企业: {otherName}</div>
-                      </>
-                    })()}
-                  </div>
-                )}
                 {p.description && <div style={{ fontSize: 13, color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: isMobile ? 'normal' : 'nowrap', wordBreak: 'break-word' }}>{p.description}</div>}
               </div>
             )

@@ -2,21 +2,15 @@ const createProject = require('../../services/project/createProject');
 const db = require('../../../config/db');
 const { broadcast } = require('../../utils/broadcast');
 const { withTransaction } = require('../../utils/transaction');
-const { ensureDefaultProjectRoles, ensureDefaultEnterpriseProjectRoles } = require('../../utils/projectRoles');
+const { ensureDefaultProjectRoles } = require('../../utils/projectRoles');
 
 module.exports = async (req, res) => {
   try {
     if (!req.body.name || !req.body.name.trim()) return res.status(400).json({ success: false, message: '请输入项目名称' });
-    let clientId = req.body.client_id || null;
-    let internalClientId = null;
-    const [userRow] = await db.query('SELECT active_enterprise_id FROM voice_users WHERE id = ?', [req.userId]);
-    internalClientId = userRow[0]?.active_enterprise_id || null;
-    if (!clientId) {
-      clientId = userRow[0]?.active_enterprise_id || null;
-    }
+    const clientId = req.body.client_id || null;
 
     const id = await withTransaction(async (conn) => {
-      const projectId = await createProject({ ...req.body, client_id: clientId, internal_client_id: internalClientId, created_by: req.userId }, conn);
+      const projectId = await createProject({ ...req.body, client_id: clientId, internal_client_id: null, created_by: req.userId }, conn);
       await conn.query(
         "INSERT IGNORE INTO duijie_project_members (project_id, user_id, role, source) VALUES (?, ?, 'owner', 'internal')",
         [projectId, req.userId]
@@ -24,11 +18,7 @@ module.exports = async (req, res) => {
       return projectId;
     });
 
-    if (internalClientId) {
-      ensureDefaultEnterpriseProjectRoles(internalClientId, req.userId).catch(() => {});
-    } else {
-      ensureDefaultProjectRoles(id, req.userId).catch(() => {});
-    }
+    ensureDefaultProjectRoles(id, req.userId).catch(() => {});
 
     broadcast('project', 'created', { id, userId: req.userId });
     res.json({ success: true, data: { id } });

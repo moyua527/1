@@ -102,8 +102,7 @@ async function normalizeProjectClientId(clientId, internalClientId) {
 }
 
 async function getUserScopedProjectRows(userId) {
-  const activeEnterpriseId = await getUserActiveEnterpriseId(userId);
-  let sql = `SELECT DISTINCT p.id, p.client_id, p.internal_client_id,
+  const sql = `SELECT DISTINCT p.id, p.client_id, p.internal_client_id,
                     c.user_id AS client_owner_user_id,
                     ic.user_id AS internal_client_owner_user_id
              FROM duijie_projects p
@@ -111,14 +110,7 @@ async function getUserScopedProjectRows(userId) {
              LEFT JOIN duijie_clients ic ON ic.id = p.internal_client_id
              LEFT JOIN duijie_project_members pm ON pm.project_id = p.id AND pm.user_id = ?
              WHERE p.is_deleted = 0 AND (p.created_by = ? OR pm.user_id IS NOT NULL)`;
-  const params = [userId, userId];
-
-  if (activeEnterpriseId) {
-    sql += ' AND (p.internal_client_id = ? OR p.client_id = ?)';
-    params.push(activeEnterpriseId, activeEnterpriseId);
-  }
-
-  const [rows] = await db.query(sql, params);
+  const [rows] = await db.query(sql, [userId, userId]);
   return rows;
 }
 
@@ -167,16 +159,6 @@ async function getProjectAccessStatus(userId, userRole, projectId) {
   const project = await getProjectScope(projectId);
   if (!project) return 'missing';
   if (userRole === 'admin') return 'allowed';
-
-  // 企业范围隔离：用户只能访问当前活跃企业的项目
-  const activeEnterpriseId = await getUserActiveEnterpriseId(userId);
-  if (activeEnterpriseId) {
-    const clientId = toNullableNumber(project.client_id);
-    const internalClientId = toNullableNumber(project.internal_client_id);
-    if (clientId !== activeEnterpriseId && internalClientId !== activeEnterpriseId) {
-      return 'forbidden';
-    }
-  }
 
   const [[row]] = await db.query(
     `SELECT 1 as allowed
