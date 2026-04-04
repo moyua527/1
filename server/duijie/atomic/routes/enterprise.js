@@ -47,4 +47,11 @@ router.put('/my-enterprise/roles/:id', auth, myEntCtrl.updateRole);
 router.delete('/my-enterprise/roles/:id', auth, myEntCtrl.removeRole);
 router.put('/my-enterprise/members/:id/assign-role', auth, myEntCtrl.assignRole);
 
+// Enterprise-level Project Roles (shared across all projects)
+const projectRoleCtrl = require('../controllers/project/projectRoleController');
+router.get('/my-enterprise/project-roles', auth, projectRoleCtrl.entList);
+router.post('/my-enterprise/project-roles', auth, projectRoleCtrl.entCreate);
+router.put('/my-enterprise/project-roles/:roleId', auth, projectRoleCtrl.entUpdate);
+router.delete('/my-enterprise/project-roles/:roleId', auth, projectRoleCtrl.entRemove);
+
 module.exports = router;

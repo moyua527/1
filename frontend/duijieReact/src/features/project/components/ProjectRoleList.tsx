@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, Edit3, Trash2, Users, Check, ChevronDown, ChevronUp } from 'lucide-react'
+import { Plus, Edit3, Trash2, Users, Check } from 'lucide-react'
 import Button from '../../ui/Button'
 import Modal from '../../ui/Modal'
 import Input from '../../ui/Input'
@@ -111,11 +111,10 @@ const ROLE_COLORS = ['#2563eb', '#9333ea', '#059669', '#d97706', '#dc2626', '#08
 const emptyForm: Record<string, any> = { name: '', color: '#2563eb', ...Object.fromEntries(ALL_PERM_KEYS.map(k => [k, false])) }
 
 interface Props {
-  projectId: string
   canEdit: boolean
 }
 
-export default function ProjectRoleList({ projectId, canEdit }: Props) {
+export default function ProjectRoleList({ canEdit }: Props) {
   const [roles, setRoles] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
@@ -125,10 +124,10 @@ export default function ProjectRoleList({ projectId, canEdit }: Props) {
   const [expandedId, setExpandedId] = useState<number | null>(null)
 
   const loadRoles = useCallback(async () => {
-    const r = await projectApi.listRoles(projectId)
+    const r = await projectApi.listEntRoles()
     if (r.success) setRoles(r.data || [])
     setLoading(false)
-  }, [projectId])
+  }, [])
 
   useEffect(() => { loadRoles() }, [loadRoles])
 
@@ -152,8 +151,8 @@ export default function ProjectRoleList({ projectId, canEdit }: Props) {
     setSaving(true)
     try {
       const r = editing
-        ? await projectApi.updateRole(projectId, editing.id, form)
-        : await projectApi.createRole(projectId, form)
+        ? await projectApi.updateEntRole(editing.id, form)
+        : await projectApi.createEntRole(form)
       if (r.success) {
         toast(editing ? '角色已更新' : '角色已创建', 'success')
         setModalOpen(false)
@@ -164,7 +163,7 @@ export default function ProjectRoleList({ projectId, canEdit }: Props) {
 
   const handleDelete = async (roleId: number) => {
     if (!(await confirm({ message: '确定删除该角色？', danger: true }))) return
-    const r = await projectApi.removeRole(projectId, roleId)
+    const r = await projectApi.removeEntRole(roleId)
     if (r.success) { toast('角色已删除', 'success'); loadRoles() }
     else toast(r.message || '删除失败', 'error')
   }
@@ -181,37 +180,55 @@ export default function ProjectRoleList({ projectId, canEdit }: Props) {
       {roles.length === 0 ? (
         <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-tertiary)', fontSize: 14 }}>暂无自定义角色</div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {roles.map((r: any) => {
-            const permCount = ALL_PERM_KEYS.filter(k => !!r[k]).length
-            const isExpanded = expandedId === r.id
-            return (
-              <div key={r.id} style={{ border: '1px solid var(--border-primary)', borderRadius: 10, borderLeft: `3px solid ${r.color || '#64748b'}`, overflow: 'hidden' }}>
-                <div onClick={() => setExpandedId(isExpanded ? null : r.id)}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', cursor: 'pointer', background: isExpanded ? 'var(--bg-secondary)' : 'transparent', transition: 'background 0.15s' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{r.name}</span>
-                    {r.is_default ? <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: 'var(--bg-tertiary)', color: 'var(--text-tertiary)' }}>默认</span> : null}
-                    <span style={{ fontSize: 11, color: 'var(--text-tertiary)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
-                      <Users size={11} /> {r.member_count || 0}人
-                    </span>
-                    <span style={{ fontSize: 11, color: permCount > 0 ? 'var(--brand)' : 'var(--text-tertiary)' }}>{permCount}/{ALL_PERM_KEYS.length} 权限</span>
+        <>
+          {/* 角色方块网格 */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            {roles.map((r: any) => {
+              const permCount = ALL_PERM_KEYS.filter(k => !!r[k]).length
+              const isSelected = expandedId === r.id
+              return (
+                <div key={r.id} onClick={() => setExpandedId(isSelected ? null : r.id)}
+                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 16px', borderRadius: 10,
+                    border: isSelected ? `2px solid ${r.color || '#64748b'}` : '2px solid var(--border-primary)',
+                    background: isSelected ? `${r.color || '#64748b'}08` : 'var(--bg-primary)',
+                    cursor: 'pointer', transition: 'all 0.15s', minWidth: 90 }}>
+                  {/* 色块圆圈 */}
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: r.color || '#64748b',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 14, fontWeight: 700 }}>
+                    {r.name.charAt(0)}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    {canEdit && (
-                      <>
-                        <button onClick={e => { e.stopPropagation(); openEdit(r) }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 2, display: 'flex' }}><Edit3 size={13} /></button>
-                        {!r.is_default && <button onClick={e => { e.stopPropagation(); handleDelete(r.id) }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', padding: 2, display: 'flex' }}><Trash2 size={13} /></button>}
-                      </>
-                    )}
-                    {isExpanded ? <ChevronUp size={14} color="var(--text-tertiary)" /> : <ChevronDown size={14} color="var(--text-tertiary)" />}
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-heading)', textAlign: 'center', lineHeight: 1.2 }}>{r.name}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-tertiary)' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}><Users size={10} />{r.member_count || 0}</span>
+                    <span>{permCount}/{ALL_PERM_KEYS.length}</span>
                   </div>
+                  {r.is_default ? <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 3, background: 'var(--bg-tertiary)', color: 'var(--text-tertiary)' }}>默认</span> : null}
                 </div>
-                {isExpanded && (
-                  <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border-primary)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {permCount === 0 ? (
-                      <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>该角色暂无任何权限</span>
-                    ) : PERM_GROUPS.filter(g => g.items.some(p => !!r[p.key])).map(g => (
+              )
+            })}
+          </div>
+
+          {/* 选中角色的详情面板 */}
+          {expandedId && (() => {
+            const r = roles.find((x: any) => x.id === expandedId)
+            if (!r) return null
+            const permCount = ALL_PERM_KEYS.filter(k => !!r[k]).length
+            return (
+              <div style={{ marginTop: 12, border: '1px solid var(--border-primary)', borderRadius: 10, padding: 16, borderLeft: `3px solid ${r.color || '#64748b'}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{r.name} — {permCount}/{ALL_PERM_KEYS.length} 权限</span>
+                  {canEdit && (
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={() => openEdit(r)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 2, display: 'flex' }}><Edit3 size={14} /></button>
+                      {!r.is_default && <button onClick={() => handleDelete(r.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', padding: 2, display: 'flex' }}><Trash2 size={14} /></button>}
+                    </div>
+                  )}
+                </div>
+                {permCount === 0 ? (
+                  <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>该角色暂无任何权限</span>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {PERM_GROUPS.filter(g => g.items.some(p => !!r[p.key])).map(g => (
                       <div key={g.title}>
                         <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>{g.title}</div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
@@ -227,8 +244,8 @@ export default function ProjectRoleList({ projectId, canEdit }: Props) {
                 )}
               </div>
             )
-          })}
-        </div>
+          })()}
+        </>
       )}
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? '编辑项目角色' : '新建项目角色'} width={520}>

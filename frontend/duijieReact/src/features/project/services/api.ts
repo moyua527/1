@@ -41,9 +41,14 @@ export const projectApi = {
   // 项目回收站
   trash: () => fetchApi('/api/projects/trash'),
   restore: (id: string) => fetchApi(`/api/projects/${id}/restore`, { method: 'PATCH' }),
-  // 项目角色管理
+  // 项目角色管理（项目级 - 兼容旧路由）
   listRoles: (id: string) => fetchApi(`/api/projects/${id}/roles`),
   createRole: (id: string, form: Record<string, any>) => fetchApi(`/api/projects/${id}/roles`, { method: 'POST', body: JSON.stringify(form) }),
   updateRole: (id: string, roleId: number, form: Record<string, any>) => fetchApi(`/api/projects/${id}/roles/${roleId}`, { method: 'PUT', body: JSON.stringify(form) }),
   removeRole: (id: string, roleId: number) => fetchApi(`/api/projects/${id}/roles/${roleId}`, { method: 'DELETE' }),
+  // 项目角色管理（企业级共享）
+  listEntRoles: () => fetchApi('/api/my-enterprise/project-roles'),
+  createEntRole: (form: Record<string, any>) => fetchApi('/api/my-enterprise/project-roles', { method: 'POST', body: JSON.stringify(form) }),
+  updateEntRole: (roleId: number, form: Record<string, any>) => fetchApi(`/api/my-enterprise/project-roles/${roleId}`, { method: 'PUT', body: JSON.stringify(form) }),
+  removeEntRole: (roleId: number) => fetchApi(`/api/my-enterprise/project-roles/${roleId}`, { method: 'DELETE' }),
 }

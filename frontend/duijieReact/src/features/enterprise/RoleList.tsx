@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Edit3, Trash2, Users, Check } from 'lucide-react'
+import { Plus, Edit3, Trash2, Users, Check, ChevronUp, ChevronDown } from 'lucide-react'
 import Button from '../ui/Button'
 import Modal from '../ui/Modal'
 import Input from '../ui/Input'
@@ -19,6 +19,7 @@ export default function RoleList({ roles, isOwner, canManageRoles, onCreateRole,
   const [editing, setEditing] = useState<any>(null)
   const [form, setForm] = useState({ ...emptyRoleForm })
   const [saving, setSaving] = useState(false)
+  const [expandedId, setExpandedId] = useState<number | null>(null)
   const canEdit = isOwner || canManageRoles
 
   const openCreate = () => {
@@ -47,44 +48,61 @@ export default function RoleList({ roles, isOwner, canManageRoles, onCreateRole,
 
   return (
     <div style={{ ...section, marginTop: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0, borderTop: 'none' }}>
-      {canEdit && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
-          <Button onClick={openCreate}><Plus size={14} /> 新建角色</Button>
-        </div>
-      )}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>企业角色</h3>
+        {canEdit && <Button onClick={openCreate}><Plus size={14} /> 新建角色</Button>}
+      </div>
 
       {roles.length === 0 ? (
         <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-tertiary)', fontSize: 14 }}>暂无角色</div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 12 }}>
-          {roles.map((r: any) => (
-            <div key={r.id} style={{ border: '1px solid var(--border-primary)', borderRadius: 10, padding: 16, borderLeft: `3px solid ${r.color || 'var(--text-secondary)'}` }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{r.name}</span>
-                  {r.is_default ? <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: 'var(--bg-tertiary)', color: 'var(--text-tertiary)' }}>默认</span> : null}
-                  <span style={{ fontSize: 11, color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: 3 }}>
-                    <Users size={11} /> {r.member_count || 0}人
-                  </span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {roles.map((r: any) => {
+            const permCount = ALL_ENT_PERM_KEYS.filter(k => !!r[k]).length
+            const isExpanded = expandedId === r.id
+            return (
+              <div key={r.id} style={{ border: '1px solid var(--border-primary)', borderRadius: 10, borderLeft: `3px solid ${r.color || '#64748b'}`, overflow: 'hidden' }}>
+                <div onClick={() => setExpandedId(isExpanded ? null : r.id)}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', cursor: 'pointer', background: isExpanded ? 'var(--bg-secondary)' : 'transparent', transition: 'background 0.15s' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{r.name}</span>
+                    {r.is_default ? <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: 'var(--bg-tertiary)', color: 'var(--text-tertiary)' }}>默认</span> : null}
+                    <span style={{ fontSize: 11, color: 'var(--text-tertiary)', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                      <Users size={11} /> {r.member_count || 0}人
+                    </span>
+                    <span style={{ fontSize: 11, color: permCount > 0 ? 'var(--brand)' : 'var(--text-tertiary)' }}>{permCount}/{ALL_ENT_PERM_KEYS.length} 权限</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {canEdit && (
+                      <>
+                        <button onClick={e => { e.stopPropagation(); openEdit(r) }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 2, display: 'flex' }}><Edit3 size={13} /></button>
+                        {!r.is_default && <button onClick={e => { e.stopPropagation(); onDeleteRole(r.id) }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', padding: 2, display: 'flex' }}><Trash2 size={13} /></button>}
+                      </>
+                    )}
+                    {isExpanded ? <ChevronUp size={14} color="var(--text-tertiary)" /> : <ChevronDown size={14} color="var(--text-tertiary)" />}
+                  </div>
                 </div>
-                {canEdit && (
-                  <div style={{ display: 'flex', gap: 4 }}>
-                    <button onClick={() => openEdit(r)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: 2, display: 'flex' }}><Edit3 size={13} /></button>
-                    {!r.is_default && <button onClick={() => onDeleteRole(r.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', padding: 2, display: 'flex' }}><Trash2 size={13} /></button>}
+                {isExpanded && (
+                  <div style={{ padding: '12px 16px', borderTop: '1px solid var(--border-primary)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {permCount === 0 ? (
+                      <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>该角色暂无任何权限</span>
+                    ) : ENT_PERM_GROUPS.filter(g => g.items.some(p => !!r[p.key])).map(g => (
+                      <div key={g.title}>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4 }}>{g.title}</div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                          {g.items.filter(p => !!r[p.key]).map(p => (
+                            <span key={p.key} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 3, background: '#f0fdf4', color: 'var(--color-success)' }}>
+                              <Check size={10} /> {p.label}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                {ENT_PERM_GROUPS.flatMap(g => g.items.filter(p => !!r[p.key]).map(p => (
-                  <span key={p.key} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 3,
-                    background: '#f0fdf4', color: 'var(--color-success)' }}>
-                    <Check size={10} /> {p.label}
-                  </span>
-                )))}
-                {ALL_ENT_PERM_KEYS.every(k => !r[k]) && <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>无权限</span>}
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 

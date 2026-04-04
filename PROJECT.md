@@ -1,6 +1,6 @@
 # DuiJie（对接）— 客户项目对接平台
 
-> 版本：v1.1.70 | 最后更新：2026-04-03
+> 版本：v1.1.71 | 最后更新：2026-04-04
 >
 > 线上地址：http://160.202.253.143:8080
 
@@ -59,7 +59,7 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 
 ### 项目角色系统
 
-每个项目拥有独立的角色体系（`project_roles` 表），支持自定义角色名称、颜色和 **60 项细粒度权限开关**，按 17 个分组管理：
+企业内所有项目共享一套项目角色（`project_roles` 表，通过 `enterprise_id` 关联），支持自定义角色名称、颜色和 **60 项细粒度权限开关**，按 17 个分组管理：
 
 | 分组 | 权限数 | 包含字段 |
 |------|--------|----------|
@@ -81,11 +81,12 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | 报表 | 2 | can_view_report, can_export_data |
 | 应用/集成 | 2 | can_manage_app_config, can_manage_app_integration |
 
-- 新项目自动创建 3 个默认角色：**负责人**（全部 60 项权限）、**编辑者**（任务相关 27 项）、**查看者**（无权限）
+- 企业首次使用时自动创建 3 个默认角色：**负责人**（全部 60 项权限）、**编辑者**（任务相关 27 项）、**查看者**（无权限）
 - 企业角色（enterprise_roles）仍保留 16 个旧字段，在代码层自动映射展开为 60 个字段
 - 权限判定优先级：项目角色 > 企业角色（映射展开） > 企业管理人员 > 遗留角色回退
-- 项目详情页"设置"Tab 提供角色 CRUD 管理界面，60 项权限按分组显示、支持全选/全不选
-- API：`GET/POST /api/projects/:id/roles`、`PUT/DELETE /api/projects/:id/roles/:roleId`
+- 企业设置页"项目角色"Tab 提供角色 CRUD 管理界面，以色块圆圈网格展示，点击查看权限详情
+- 企业级 API：`GET/POST /api/my-enterprise/project-roles`、`PUT/DELETE /api/my-enterprise/project-roles/:roleId`
+- 项目级兼容 API：`GET /api/projects/:id/roles`（自动合并企业级角色）
 
 ### 默认账户（full-init.sql 种子数据）
 

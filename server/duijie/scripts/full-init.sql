@@ -304,7 +304,8 @@ CREATE TABLE IF NOT EXISTS duijie_client_requests (
 -- 项目角色表
 CREATE TABLE IF NOT EXISTS project_roles (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  project_id INT NOT NULL,
+  project_id INT DEFAULT NULL,
+  enterprise_id INT DEFAULT NULL,
   role_key VARCHAR(20) DEFAULT NULL,
   name VARCHAR(50) NOT NULL,
   -- 项目信息管理
@@ -392,7 +393,8 @@ CREATE TABLE IF NOT EXISTS project_roles (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   is_deleted TINYINT(1) DEFAULT 0,
-  INDEX idx_project (project_id)
+  INDEX idx_project (project_id),
+  INDEX idx_enterprise (enterprise_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ========== 种子数据 ==========
