@@ -1,6 +1,6 @@
 {
-  "version": "1.1.74.3",
+  "version": "1.1.74.4",
   "versionCode": 73,
   "minVersion": "1.0.0",
-  "changelog": "通过项目ID加入支持数据库ID和邀请码双重搜索"
+  "changelog": "移除新用户引导页门控，注册登录后直接进入系统"
 }

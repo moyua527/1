@@ -7,9 +7,8 @@ import ToastContainer from './features/ui/Toast'
 import AppUpdateChecker from './features/ui/AppUpdateChecker'
 import ErrorBoundary from './features/ui/ErrorBoundary'
 import useUserStore from './stores/useUserStore'
-import useEnterpriseStore from './stores/useEnterpriseStore'
+
 import { can } from './stores/permissions'
-import ProjectOnboarding from './features/project/ProjectOnboarding'
 import JoinProjectPage from './features/project/JoinProjectPage'
 import { flatRoutes, prefetchPages } from './data/routeManifest'
 
@@ -32,8 +31,6 @@ function prefetchHighFreq() {
 
 export default function App() {
   const { user, checking, setUser, init } = useUserStore()
-  const hasEnterprise = useEnterpriseStore(s => s.hasEnterprise)
-  const hasProjects = useEnterpriseStore(s => s.hasProjects)
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -66,7 +63,7 @@ export default function App() {
   if (location.pathname.startsWith('/join/')) {
     return <><ToastContainer /><Routes><Route path="/join/:code" element={<JoinProjectPage />} /></Routes></>
   }
-  if (!hasEnterprise && !hasProjects) return <><ToastContainer /><ProjectOnboarding /></>
+  // 不再门控，新用户直接进系统
 
   const r = user.role
   const allowed = flatRoutes().filter(rt => !rt.perm || can(r, rt.perm))
