@@ -14,6 +14,7 @@ import ThemeToggle from './ThemeToggle'
 import SettingsPanel from './SettingsPanel'
 import EnterpriseSwitcher from './EnterpriseSwitcher'
 import UserGuide from './UserGuide'
+import OnboardingChecklist from './OnboardingChecklist'
 import { navItems, navItemsByGroup } from '../../data/routeManifest'
 
 const SIDEBAR_W = 228
@@ -92,7 +93,7 @@ export default function Layout() {
         display: 'flex', alignItems: 'center', padding: '0 16px', gap: 12, flexShrink: 0, zIndex: 100,
       }}>
         {/* Logo */}
-        <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--brand)', letterSpacing: -0.5, cursor: 'pointer', flexShrink: 0, minWidth: isMobile ? 'auto' : sidebarW - 32 }}
+        <div data-tour="logo" style={{ fontSize: 20, fontWeight: 800, color: 'var(--brand)', letterSpacing: -0.5, cursor: 'pointer', flexShrink: 0, minWidth: isMobile ? 'auto' : sidebarW - 32 }}
           onClick={() => navigate('/')}>DuiJie</div>
 
         {/* Mobile hamburger */}
@@ -107,7 +108,7 @@ export default function Layout() {
 
         {/* Desktop: 全局搜索 */}
         {!isMobile && (
-          <div onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
+          <div data-tour="search" onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
             style={{
               display: 'flex', alignItems: 'center', gap: 8, padding: '7px 14px', borderRadius: 8,
               background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)',
@@ -120,7 +121,7 @@ export default function Layout() {
         )}
 
         {/* 右侧工具区 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto', flexShrink: 0 }}>
+        <div data-tour="toolbar" style={{ display: 'flex', alignItems: 'center', gap: 8, marginLeft: 'auto', flexShrink: 0 }}>
           {user && <NotificationBell />}
           <ThemeToggle />
           {user && (
@@ -207,7 +208,7 @@ export default function Layout() {
 
         {/* ===== Desktop 侧边导航 ===== */}
         {!isMobile && (
-          <aside style={{
+          <aside data-tour="sidebar" style={{
             width: sidebarW, flexShrink: 0, background: 'var(--bg-primary)',
             borderRight: '1px solid var(--border-primary)', display: 'flex', flexDirection: 'column',
             transition: 'width 0.2s ease', overflow: 'hidden',
@@ -263,7 +264,7 @@ export default function Layout() {
             </nav>
 
             <div style={{ padding: '4px 8px 0', flexShrink: 0 }}>
-              <button onClick={() => setGuideOpen(true)}
+              <button data-tour="guide-btn" onClick={() => setGuideOpen(true)}
                 title="新手引导"
                 style={{
                   width: '100%', display: 'flex', alignItems: 'center', justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
@@ -325,7 +326,7 @@ export default function Layout() {
         )}
 
         {/* ===== 主内容区 ===== */}
-        <main style={{ flex: 1, overflow: 'auto', minHeight: 0, padding: isMobile ? 12 : 24, WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain' }}>
+        <main data-tour="main-content" style={{ flex: 1, overflow: 'auto', minHeight: 0, padding: isMobile ? 12 : 24, WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain' }}>
           <Outlet context={{ user, isMobile }} />
         </main>
       </div>
@@ -334,6 +335,7 @@ export default function Layout() {
         setGuideOpen(false)
         if (user) localStorage.setItem(`guide_done_${user.id}`, '1')
       }} />
+      <OnboardingChecklist />
       <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} user={user} onProfileUpdated={updateProfile} />
     </div>
   )

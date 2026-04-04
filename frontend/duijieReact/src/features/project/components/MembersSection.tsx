@@ -55,6 +55,7 @@ export default function MembersSection({ projectId, myMembers, canEditMyTeam, on
     setInviting(null)
     if (r.success) {
       toast('已邀请成员加入项目', 'success')
+      window.dispatchEvent(new CustomEvent('onboarding-done', { detail: { type: 'invite_member' } }))
       setAvailableUsers(prev => prev.filter(u => u.id !== userId))
       onRefresh()
     } else {

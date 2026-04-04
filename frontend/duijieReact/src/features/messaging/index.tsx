@@ -153,6 +153,7 @@ export default function Messaging() {
       setSending(false)
       if (r.success) {
         setInput('')
+        window.dispatchEvent(new CustomEvent('onboarding-done', { detail: { type: 'send_message' } }))
         groupApi.history(selectedGroup.id).then(r => {
           if (r.success) setGroupMessages(r.data || [])
           setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
@@ -164,6 +165,7 @@ export default function Messaging() {
       setSending(false)
       if (r.success) {
         setInput('')
+        window.dispatchEvent(new CustomEvent('onboarding-done', { detail: { type: 'send_message' } }))
         dmApi.history(selectedUser.id).then(r => {
           if (r.success) setMessages(r.data || [])
           setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)

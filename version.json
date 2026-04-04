@@ -1,6 +1,6 @@
 {
-  "version": "1.1.83.2",
-  "versionCode": 93,
+  "version": "1.1.84",
+  "versionCode": 94,
   "minVersion": "1.0.0",
-  "changelog": "邀请按钮对所有项目成员可见可用"
+  "changelog": "新手引导升级: driver.js元素高亮引导 + 任务清单追踪"
 }

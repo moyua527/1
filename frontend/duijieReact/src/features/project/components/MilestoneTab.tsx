@@ -48,7 +48,7 @@ export default function MilestoneTab({ milestones, projectId, canEdit, onRefresh
               const r = editingMs
                 ? await milestoneApi.update(String(editingMs.id), msForm)
                 : await milestoneApi.create({ project_id: Number(projectId), ...msForm })
-              if (r.success) { toast(editingMs ? '里程碑已更新' : '里程碑已创建', 'success'); setShowMsForm(false); setEditingMs(null); setMsForm({ title: '', description: '', due_date: '' }); onRefresh() }
+              if (r.success) { toast(editingMs ? '里程碑已更新' : '里程碑已创建', 'success'); if (!editingMs) window.dispatchEvent(new CustomEvent('onboarding-done', { detail: { type: 'set_milestone' } })); setShowMsForm(false); setEditingMs(null); setMsForm({ title: '', description: '', due_date: '' }); onRefresh() }
               else toast(r.message || '操作失败', 'error')
             }}>{editingMs ? '保存修改' : '创建'}</Button>
           </div>

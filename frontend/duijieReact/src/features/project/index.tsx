@@ -86,7 +86,7 @@ export default function ProjectList() {
     setSubmitting(true)
     const r = await projectApi.create({ name: form.name.trim(), description: form.description.trim(), task_title_presets: form.task_title_presets })
     setSubmitting(false)
-    if (r.success) { toast('项目创建成功', 'success'); setShowCreate(false); setForm({ name: '', description: '', task_title_presets: [], newPreset: '' }); load() }
+    if (r.success) { toast('项目创建成功', 'success'); window.dispatchEvent(new CustomEvent('onboarding-done', { detail: { type: 'create_project' } })); setShowCreate(false); setForm({ name: '', description: '', task_title_presets: [], newPreset: '' }); load() }
     else toast(r.message || '创建失败', 'error')
   }
 

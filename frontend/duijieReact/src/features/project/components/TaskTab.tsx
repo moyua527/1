@@ -545,6 +545,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                 const rememberResult = await projectApi.rememberTaskTitle(projectId, title)
                 if (!rememberResult.success) toast(rememberResult.message || '任务标题历史保存失败', 'error')
                 toast('任务创建成功', 'success')
+                window.dispatchEvent(new CustomEvent('onboarding-done', { detail: { type: 'create_task' } }))
                 setShowCreateTask(false)
                 resetCreateForm()
                 loadTasks()
