@@ -86,9 +86,6 @@ export default function ProjectOnboarding() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 50%, #f5f3ff 100%)', padding: 20 }}>
       <div style={{ position: 'absolute', top: 20, right: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
         <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{user?.nickname || user?.username}</span>
-        <button onClick={() => { useEnterpriseStore.getState().setHasProjects(true) }} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 13 }}>
-          跳过 <ArrowRight size={14} />
-        </button>
         <button onClick={() => logout()} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: 13 }}>
           <LogOut size={14} /> 退出
         </button>
@@ -162,6 +159,12 @@ export default function ProjectOnboarding() {
               )}
             </div>
           )}
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: 16 }}>
+          <button onClick={() => { useEnterpriseStore.getState().setHasProjects(true) }} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '8px 20px', borderRadius: 8, border: 'none', background: 'transparent', color: 'var(--text-tertiary)', cursor: 'pointer', fontSize: 14 }}>
+            跳过，直接进入 <ArrowRight size={14} />
+          </button>
         </div>
 
         {pendingRequests.length > 0 && (

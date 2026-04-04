@@ -1,7 +1,7 @@
 import { type ComponentType } from 'react'
 import {
-  LayoutDashboard, FolderKanban, Users, ListTodo, TrendingUp, Building2,
-  MessageSquare, Ticket, CalendarDays, BarChart3, FileText, BellRing,
+  LayoutDashboard, FolderKanban, Users, ListTodo, Building2,
+  MessageSquare, CalendarDays, FileText, BellRing,
   Shield, ScrollText, Plug2, Settings,
 } from 'lucide-react'
 
@@ -41,11 +41,6 @@ const ROUTES: RouteEntry[] = [
     ],
   },
   {
-    path: '/opportunities', label: '商机管理', icon: TrendingUp, perm: 'opportunity:view',
-    importFn: () => import('../features/opportunity/index'),
-    showInNav: true, group: 'business',
-  },
-  {
     path: '/tasks', label: '任务看板', icon: ListTodo, perm: 'task:view',
     importFn: () => import('../features/task/index'),
     showInNav: true, prefetch: true, group: 'business',
@@ -61,19 +56,9 @@ const ROUTES: RouteEntry[] = [
     showInNav: true, prefetch: true, group: 'workspace',
   },
   {
-    path: '/tickets', label: '工单系统', icon: Ticket, perm: 'ticket:view',
-    importFn: () => import('../features/ticket/index'),
-    showInNav: true, group: 'business',
-  },
-  {
     path: '/calendar', label: '日历日程', icon: CalendarDays, perm: 'dashboard:view',
     importFn: () => import('../features/calendar/index'),
     showInNav: true, group: 'workspace',
-  },
-  {
-    path: '/report', label: '数据报表', icon: BarChart3, perm: 'report:view',
-    importFn: () => import('../features/dashboard/Report'),
-    showInNav: true, group: 'business',
   },
   {
     path: '/files', label: '文件管理', icon: FileText, perm: 'file:view',

@@ -1,6 +1,6 @@
 {
-  "version": "1.1.74.6",
+  "version": "1.1.74.7",
   "versionCode": 73,
   "minVersion": "1.0.0",
-  "changelog": "引导页增加跳过按钮，允许新用户直接进入系统"
+  "changelog": "移除工单系统、商机管理、数据报表三个模块"
 }
