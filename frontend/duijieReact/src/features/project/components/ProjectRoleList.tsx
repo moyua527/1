@@ -8,54 +8,35 @@ import { toast } from '../../ui/Toast'
 import { confirm } from '../../ui/ConfirmDialog'
 
 const PERM_GROUPS = [
-  { title: '项目信息管理', items: [
+  { title: '项目管理', items: [
     { key: 'can_edit_project_name', label: '修改名称' },
     { key: 'can_edit_project_desc', label: '修改描述' },
     { key: 'can_edit_project_status', label: '修改状态' },
     { key: 'can_delete_project', label: '删除项目' },
   ]},
-  { title: '关联客户企业', items: [
-    { key: 'can_send_client_request', label: '发起关联请求' },
-    { key: 'can_cancel_client_link', label: '取消关联' },
-    { key: 'can_change_client_link', label: '变更企业' },
-  ]},
-  { title: '我方成员管理', items: [
+  { title: '成员管理', items: [
     { key: 'can_add_member', label: '添加成员' },
-    { key: 'can_assign_member_legacy_role', label: '指定遗留角色' },
-    { key: 'can_assign_member_ent_role', label: '分配企业角色' },
-    { key: 'can_assign_member_proj_role', label: '分配项目角色' },
     { key: 'can_remove_member', label: '移除成员' },
-  ]},
-  { title: '修改成员角色', items: [
-    { key: 'can_update_member_legacy_role', label: '改遗留角色' },
-    { key: 'can_update_member_ent_role', label: '改企业角色' },
-    { key: 'can_update_member_proj_role', label: '改项目角色' },
-  ]},
-  { title: '客户方成员', items: [
-    { key: 'can_view_client_users', label: '查看可用用户' },
-    { key: 'can_add_client_member', label: '添加客户方成员' },
-    { key: 'can_remove_client_member', label: '移除客户方成员' },
+    { key: 'can_assign_member_proj_role', label: '修改成员角色' },
   ]},
   { title: '加入审批', items: [
-    { key: 'can_view_join_requests', label: '查看申请列表' },
     { key: 'can_approve_join', label: '批准加入' },
     { key: 'can_reject_join', label: '拒绝加入' },
   ]},
   { title: '角色管理', items: [
     { key: 'can_create_role', label: '创建角色' },
-    { key: 'can_edit_role_name', label: '编辑名称' },
-    { key: 'can_edit_role_color', label: '编辑颜色' },
+    { key: 'can_edit_role_name', label: '编辑角色' },
     { key: 'can_edit_role_perms', label: '编辑权限' },
     { key: 'can_delete_role', label: '删除角色' },
   ]},
-  { title: '任务创建', items: [
+  { title: '任务管理', items: [
     { key: 'can_create_task', label: '创建任务' },
-    { key: 'can_create_task_with_attachment', label: '创建时上传附件' },
-  ]},
-  { title: '任务删除与恢复', items: [
+    { key: 'can_edit_task_title', label: '编辑标题' },
+    { key: 'can_edit_task_desc', label: '编辑描述' },
+    { key: 'can_edit_task_priority', label: '编辑优先级' },
+    { key: 'can_edit_task_deadline', label: '编辑截止日期' },
+    { key: 'can_assign_task', label: '指派负责人' },
     { key: 'can_delete_task', label: '删除任务' },
-    { key: 'can_view_task_trash', label: '查看回收站' },
-    { key: 'can_restore_task', label: '恢复任务' },
   ]},
   { title: '任务状态流转', items: [
     { key: 'can_move_task_accept', label: '接受任务' },
@@ -66,41 +47,22 @@ const PERM_GROUPS = [
     { key: 'can_move_task_approve', label: '验收通过' },
     { key: 'can_move_task_resubmit', label: '重新验收' },
   ]},
-  { title: '任务编辑', items: [
-    { key: 'can_edit_task_title', label: '编辑标题' },
-    { key: 'can_edit_task_desc', label: '编辑描述' },
-    { key: 'can_edit_task_priority', label: '编辑优先级' },
-    { key: 'can_edit_task_deadline', label: '编辑截止日期' },
-    { key: 'can_assign_task', label: '指派负责人' },
-  ]},
-  { title: '任务附件', items: [
+  { title: '附件与审核', items: [
     { key: 'can_upload_task_attachment', label: '上传附件' },
     { key: 'can_delete_task_attachment', label: '删除附件' },
-  ]},
-  { title: '审核要点', items: [
-    { key: 'can_add_review_point', label: '添加要点' },
-    { key: 'can_respond_review_point', label: '回复要点' },
-    { key: 'can_confirm_review_point', label: '确认要点' },
-  ]},
-  { title: '任务预设标题', items: [
-    { key: 'can_view_title_options', label: '查看选项' },
-    { key: 'can_record_title_history', label: '记录历史' },
-    { key: 'can_delete_title_history', label: '删除历史' },
-    { key: 'can_edit_title_presets', label: '编辑模板' },
+    { key: 'can_add_review_point', label: '添加审核要点' },
+    { key: 'can_respond_review_point', label: '回复审核要点' },
+    { key: 'can_confirm_review_point', label: '确认审核要点' },
   ]},
   { title: '里程碑', items: [
     { key: 'can_create_milestone', label: '创建' },
     { key: 'can_edit_milestone', label: '编辑' },
     { key: 'can_delete_milestone', label: '删除' },
-    { key: 'can_toggle_milestone', label: '切换完成' },
+    { key: 'can_toggle_milestone', label: '完成/取消' },
   ]},
-  { title: '报表', items: [
-    { key: 'can_view_report', label: '查看报表' },
+  { title: '数据与应用', items: [
     { key: 'can_export_data', label: '导出数据' },
-  ]},
-  { title: '应用/集成', items: [
-    { key: 'can_manage_app_config', label: '应用配置' },
-    { key: 'can_manage_app_integration', label: '集成设置' },
+    { key: 'can_manage_app_config', label: '管理关联应用' },
   ]},
 ] as const
 

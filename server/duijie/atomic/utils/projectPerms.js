@@ -1,30 +1,23 @@
 const db = require('../../config/db');
 const { PROJECT_ROLE_FIELDS } = require('./projectRoles');
 
-/**
- * enterprise_roles 仍为 16 个旧字段，需映射为 60 个新字段
- */
 const ER_TO_PR_MAP = {
   can_edit_project:        ['can_edit_project_name', 'can_edit_project_desc', 'can_edit_project_status'],
   can_delete_project:      ['can_delete_project'],
-  can_set_client:          ['can_send_client_request', 'can_cancel_client_link', 'can_change_client_link'],
-  can_add_member:          ['can_add_member', 'can_assign_member_legacy_role', 'can_assign_member_ent_role', 'can_assign_member_proj_role'],
+  can_add_member:          ['can_add_member', 'can_assign_member_proj_role'],
   can_remove_member:       ['can_remove_member'],
-  can_update_member_role:  ['can_update_member_legacy_role', 'can_update_member_ent_role', 'can_update_member_proj_role'],
-  can_manage_client_member:['can_view_client_users', 'can_add_client_member', 'can_remove_client_member'],
-  can_approve_join:        ['can_view_join_requests', 'can_approve_join', 'can_reject_join'],
-  can_manage_roles:        ['can_create_role', 'can_edit_role_name', 'can_edit_role_color', 'can_edit_role_perms', 'can_delete_role'],
-  can_create_task:         ['can_create_task', 'can_create_task_with_attachment'],
-  can_delete_task:         ['can_delete_task', 'can_view_task_trash', 'can_restore_task'],
+  can_approve_join:        ['can_approve_join', 'can_reject_join'],
+  can_manage_roles:        ['can_create_role', 'can_edit_role_name', 'can_edit_role_perms', 'can_delete_role'],
+  can_create_task:         ['can_create_task'],
+  can_delete_task:         ['can_delete_task'],
   can_manage_task_flow:    ['can_move_task_accept', 'can_move_task_dispute', 'can_move_task_supplement',
                             'can_move_task_submit_review', 'can_move_task_reject', 'can_move_task_approve', 'can_move_task_resubmit',
                             'can_edit_task_title', 'can_edit_task_desc', 'can_edit_task_priority', 'can_edit_task_deadline',
                             'can_assign_task', 'can_upload_task_attachment', 'can_delete_task_attachment',
                             'can_add_review_point', 'can_respond_review_point', 'can_confirm_review_point'],
-  can_manage_task_preset:  ['can_view_title_options', 'can_record_title_history', 'can_delete_title_history', 'can_edit_title_presets'],
   can_manage_milestone:    ['can_create_milestone', 'can_edit_milestone', 'can_delete_milestone', 'can_toggle_milestone'],
-  can_view_report:         ['can_view_report', 'can_export_data'],
-  can_manage_app:          ['can_manage_app_config', 'can_manage_app_integration'],
+  can_view_report:         ['can_export_data'],
+  can_manage_app:          ['can_manage_app_config'],
 };
 const ER_FIELDS = Object.keys(ER_TO_PR_MAP);
 
@@ -99,16 +92,15 @@ async function getProjectPerms(userId, projectId) {
   const ownerPerms = allPerms(false);
   PROJECT_ROLE_FIELDS.forEach(f => { ownerPerms[f] = isOwner; });
   if (isEditor) {
-    // 编辑者默认开放任务相关权限
     const editorOn = [
-      'can_create_task', 'can_create_task_with_attachment',
-      'can_delete_task', 'can_view_task_trash', 'can_restore_task',
+      'can_create_task', 'can_delete_task',
+      'can_edit_task_title', 'can_edit_task_desc', 'can_edit_task_priority', 'can_edit_task_deadline',
+      'can_assign_task',
       'can_move_task_accept', 'can_move_task_dispute', 'can_move_task_supplement',
       'can_move_task_submit_review', 'can_move_task_reject', 'can_move_task_approve', 'can_move_task_resubmit',
-      'can_edit_task_title', 'can_edit_task_desc', 'can_edit_task_priority', 'can_edit_task_deadline',
-      'can_assign_task', 'can_upload_task_attachment', 'can_delete_task_attachment',
+      'can_upload_task_attachment', 'can_delete_task_attachment',
       'can_add_review_point', 'can_respond_review_point', 'can_confirm_review_point',
-      'can_view_title_options', 'can_record_title_history', 'can_delete_title_history', 'can_edit_title_presets',
+      'can_create_milestone', 'can_edit_milestone', 'can_toggle_milestone',
     ];
     editorOn.forEach(f => { ownerPerms[f] = true; });
   }

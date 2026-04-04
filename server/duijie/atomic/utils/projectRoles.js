@@ -1,44 +1,29 @@
 const db = require('../../config/db');
 
 const PROJECT_ROLE_FIELDS = [
-  // 项目信息管理
+  // 项目管理
   'can_edit_project_name', 'can_edit_project_desc', 'can_edit_project_status',
   'can_delete_project',
-  // 关联客户企业
-  'can_send_client_request', 'can_cancel_client_link', 'can_change_client_link',
-  // 我方成员管理
-  'can_add_member', 'can_assign_member_legacy_role', 'can_assign_member_ent_role', 'can_assign_member_proj_role',
-  'can_remove_member',
-  // 修改成员角色
-  'can_update_member_legacy_role', 'can_update_member_ent_role', 'can_update_member_proj_role',
-  // 客户方成员
-  'can_view_client_users', 'can_add_client_member', 'can_remove_client_member',
+  // 成员管理
+  'can_add_member', 'can_remove_member', 'can_assign_member_proj_role',
   // 加入审批
-  'can_view_join_requests', 'can_approve_join', 'can_reject_join',
+  'can_approve_join', 'can_reject_join',
   // 角色管理
-  'can_create_role', 'can_edit_role_name', 'can_edit_role_color', 'can_edit_role_perms', 'can_delete_role',
-  // 任务创建
-  'can_create_task', 'can_create_task_with_attachment',
-  // 任务删除与恢复
-  'can_delete_task', 'can_view_task_trash', 'can_restore_task',
+  'can_create_role', 'can_edit_role_name', 'can_edit_role_perms', 'can_delete_role',
+  // 任务管理
+  'can_create_task',
+  'can_edit_task_title', 'can_edit_task_desc', 'can_edit_task_priority', 'can_edit_task_deadline',
+  'can_assign_task', 'can_delete_task',
   // 任务状态流转
   'can_move_task_accept', 'can_move_task_dispute', 'can_move_task_supplement',
   'can_move_task_submit_review', 'can_move_task_reject', 'can_move_task_approve', 'can_move_task_resubmit',
-  // 任务编辑
-  'can_edit_task_title', 'can_edit_task_desc', 'can_edit_task_priority', 'can_edit_task_deadline',
-  'can_assign_task',
-  // 任务附件
+  // 附件与审核
   'can_upload_task_attachment', 'can_delete_task_attachment',
-  // 审核要点
   'can_add_review_point', 'can_respond_review_point', 'can_confirm_review_point',
-  // 任务预设标题
-  'can_view_title_options', 'can_record_title_history', 'can_delete_title_history', 'can_edit_title_presets',
   // 里程碑
   'can_create_milestone', 'can_edit_milestone', 'can_delete_milestone', 'can_toggle_milestone',
-  // 报表
-  'can_view_report', 'can_export_data',
-  // 应用/集成
-  'can_manage_app_config', 'can_manage_app_integration',
+  // 数据与应用
+  'can_export_data', 'can_manage_app_config',
 ];
 
 const LEGACY_ROLE_LABELS = {
@@ -55,22 +40,14 @@ const DEFAULT_PROJECT_ROLE_PRESETS = [
   {
     role_key: 'editor', name: '项目编辑', color: '#059669', sort_order: 1, is_default: 1,
     ...Object.fromEntries(PROJECT_ROLE_FIELDS.map(f => [f, 0])),
-    // 任务创建
-    can_create_task: 1, can_create_task_with_attachment: 1,
-    // 任务删除与恢复
-    can_delete_task: 1, can_view_task_trash: 1, can_restore_task: 1,
-    // 任务状态流转
+    can_create_task: 1,
+    can_edit_task_title: 1, can_edit_task_desc: 1, can_edit_task_priority: 1, can_edit_task_deadline: 1,
+    can_assign_task: 1, can_delete_task: 1,
     can_move_task_accept: 1, can_move_task_dispute: 1, can_move_task_supplement: 1,
     can_move_task_submit_review: 1, can_move_task_reject: 1, can_move_task_approve: 1, can_move_task_resubmit: 1,
-    // 任务编辑
-    can_edit_task_title: 1, can_edit_task_desc: 1, can_edit_task_priority: 1, can_edit_task_deadline: 1,
-    can_assign_task: 1,
-    // 任务附件
     can_upload_task_attachment: 1, can_delete_task_attachment: 1,
-    // 审核要点
     can_add_review_point: 1, can_respond_review_point: 1, can_confirm_review_point: 1,
-    // 任务预设标题
-    can_view_title_options: 1, can_record_title_history: 1, can_delete_title_history: 1, can_edit_title_presets: 1,
+    can_create_milestone: 1, can_edit_milestone: 1, can_toggle_milestone: 1,
   },
   {
     role_key: 'viewer', name: '项目查看', color: '#64748b', sort_order: 2, is_default: 1,
