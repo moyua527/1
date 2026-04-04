@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { FolderKanban, Users, ListTodo, CheckCircle, TrendingUp, Clock, Loader2, DollarSign, FileSignature, AlertTriangle, Bell, MessageSquare } from 'lucide-react'
+import { FolderKanban, Users, ListTodo, CheckCircle, TrendingUp, Clock, Loader2, FileSignature, AlertTriangle, Bell, MessageSquare } from 'lucide-react'
 import { can } from '../../stores/permissions'
 import { useDashboardStats, useDashboardChart } from '../../hooks/useApi'
 import DashboardCharts from './DashboardCharts'
@@ -43,7 +43,7 @@ export default function Dashboard() {
   const r = user?.role || ''
   const canClients = can(r, 'dashboard:clients')
   const canTasks = can(r, 'dashboard:tasks')
-  const canAmount = can(r, 'dashboard:amount')
+
 
   const isClient = r === 'client'
 
@@ -59,10 +59,6 @@ export default function Dashboard() {
     { label: '已完成', value: stats.completedProjects, icon: CheckCircle, bg: '#dcfce7', color: 'var(--color-success)', path: '/projects' },
     ...(canClients ? [
       { label: '客户总数', value: stats.totalClients, icon: Users, bg: '#f3e8ff', color: 'var(--color-purple)', path: '/clients' },
-      ...(canAmount ? [
-        { label: '合同总数', value: stats.contracts?.total || 0, icon: FileSignature, bg: '#dcfce7', color: 'var(--color-success)', path: '/report' },
-        { label: '生效合同额', value: '¥' + ((stats.contracts?.activeAmount || 0) / 10000).toFixed(1) + '万', icon: DollarSign, bg: '#fef3c7', color: 'var(--color-warning)', path: '/report', isText: true },
-      ] : []),
     ] : []),
     ...(canTasks ? [
       { label: '总任务', value: stats.totalTasks, icon: ListTodo, bg: '#e0f2fe', color: '#0284c7', path: '/tasks' },

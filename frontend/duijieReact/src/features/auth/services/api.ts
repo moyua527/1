@@ -9,7 +9,7 @@ export const authApi = {
     fetchApi('/api/auth/login-by-code', { method: 'POST', body: JSON.stringify({ type, target, code }) }),
   verifyCode: (type: 'phone' | 'email', target: string, code: string) =>
     fetchApi('/api/auth/verify-code', { method: 'POST', body: JSON.stringify({ type, target, code }) }),
-  register: (data: { username: string; password: string; email?: string; invite_token?: string }) =>
+  register: (data: { email: string; invite_token?: string }) =>
     fetchApi('/api/auth/register', { method: 'POST', body: JSON.stringify(data) }),
   forgotPassword: (type: 'phone' | 'email', target: string) =>
     fetchApi('/api/auth/forgot-password', { method: 'POST', body: JSON.stringify({ type, target }) }),

@@ -16,8 +16,7 @@ exports.twoFactorCode = [
 ];
 
 exports.register = [
-  body('username').trim().isLength({ min: 2, max: 30 }).withMessage('用户名长度 2-30 位'),
-  body('password').isLength({ min: 6 }).withMessage('密码至少6位'),
+  body('email').trim().isEmail().withMessage('请输入有效的邮箱地址'),
 ];
 
 exports.profile = [

@@ -13,9 +13,6 @@ interface RegisterFormProps {
 }
 
 export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToken: inviteTokenProp }: RegisterFormProps) {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPwd, setConfirmPwd] = useState('')
   const [email, setEmail] = useState('')
   const [emailCode, setEmailCode] = useState('')
   const [emailVerified, setEmailVerified] = useState(false)
@@ -75,19 +72,13 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
       setAgreed(true)
     }
     setError(''); setSuccess('')
-    if (!username.trim()) { setError('请输入用户名'); return }
-    if (username.trim().length < 2) { setError('用户名至少2位'); return }
-    if (email && !emailVerified) { setError('请先验证邮箱'); return }
-    if (!password) { setError('请输入密码'); return }
-    if (password.length < 8) { setError('密码至少8位'); return }
-    if (!/[a-zA-Z]/.test(password) || !/[0-9]/.test(password)) { setError('密码必须包含字母和数字'); return }
-    if (password !== confirmPwd) { setError('两次密码不一致'); return }
+    if (!email.trim()) { setError('请输入邮箱地址'); return }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('请输入正确的邮箱地址'); return }
+    if (!emailVerified) { setError('请先验证邮箱'); return }
     setLoading(true)
     try {
       const res = await authApi.register({
-        username: username.trim(),
-        password,
-        email: emailVerified ? email : undefined,
+        email: email.trim(),
         invite_token: inviteToken || undefined,
       })
       if (res.success) {
@@ -102,11 +93,9 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
     <>
       <form onSubmit={handleRegister}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <Input label="用户名 *" placeholder="2-30位字符" value={username} onChange={e => setUsername(e.target.value)} maxLength={30} />
-
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>
-              邮箱 <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>（选填，验证后可用邮箱登录）</span>
+              邮箱 *
             </label>
             {emailVerified ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, background: 'var(--bg-success, #f0fdf4)', border: '1px solid var(--color-success, #22c55e)' }}>
@@ -135,9 +124,6 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
               </>
             )}
           </div>
-
-          <Input label="密码 *" type="password" placeholder="至少8位，含字母和数字" value={password} onChange={e => setPassword(e.target.value)} />
-          <Input label="确认密码 *" type="password" placeholder="再次输入密码" value={confirmPwd} onChange={e => setConfirmPwd(e.target.value)} />
 
           {error && <div style={{ color: 'var(--color-danger)', fontSize: 13, textAlign: 'center' }}>{error}</div>}
           {success && <div style={{ color: 'var(--color-success)', fontSize: 13, textAlign: 'center' }}>{success}</div>}
