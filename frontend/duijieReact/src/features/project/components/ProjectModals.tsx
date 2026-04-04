@@ -41,6 +41,8 @@ function getMemberRoleValue(m: any): string {
   return ''
 }
 
+const MEMBER_VISIBLE = 3
+
 export function ManageMembersModal({ open, onClose, projectId, members, availableUsers, projectRoles = [], onRefresh, onRefreshAvailable, onGoToRoles }: ManageMembersModalProps) {
   const dn = useNicknameStore(s => s.getDisplayName)
   const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set())
@@ -52,6 +54,7 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
   const [inviteSearching, setInviteSearching] = useState(false)
   const [invitingId, setInvitingId] = useState<number | null>(null)
   const inviteTimerRef = useRef<any>(null)
+  const [membersExpanded, setMembersExpanded] = useState(false)
 
   const handleInviteSearch = (q: string) => {
     setInviteSearch(q)
@@ -107,11 +110,19 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
   return (
     <Modal open={open} onClose={onClose} title="管理项目成员">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {members && members.length > 0 && (
+        {members && members.length > 0 && (() => {
+          const sorted = [...members].sort((a, b) => {
+            if (a.member_role === 'owner') return -1
+            if (b.member_role === 'owner') return 1
+            return new Date(a.joined_at || a.created_at || 0).getTime() - new Date(b.joined_at || b.created_at || 0).getTime()
+          })
+          const visible = membersExpanded ? sorted : sorted.slice(0, MEMBER_VISIBLE)
+          const hiddenCount = sorted.length - MEMBER_VISIBLE
+          return (
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 8 }}>当前成员</label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 8 }}>当前成员 ({members.length})</label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {members.map((m: any) => (
+              {visible.map((m: any) => (
                 <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--bg-secondary)', borderRadius: 8, border: '1px solid var(--border-primary)' }}>
                   <Avatar name={dn(m.id, m.nickname || m.username || '?')} size={28} />
                   <div style={{ flex: 1 }}>
@@ -136,9 +147,16 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
                   )}
                 </div>
               ))}
+              {hiddenCount > 0 && (
+                <button onClick={() => setMembersExpanded(v => !v)}
+                  style={{ padding: '6px 12px', background: 'var(--bg-tertiary)', borderRadius: 8, border: '1px dashed var(--border-primary)', cursor: 'pointer', fontSize: 13, color: 'var(--brand)', fontWeight: 500, textAlign: 'center' }}>
+                  {membersExpanded ? '收起' : `查看更多 (${hiddenCount})`}
+                </button>
+              )}
             </div>
           </div>
-        )}
+          )
+        })()}
         <div style={{ borderTop: '1px solid var(--border-primary)', paddingTop: 16 }}>
           <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 8 }}>添加新成员</label>
           <Input placeholder="输入用户名或昵称筛选" value={memberSearch} onChange={e => setMemberSearch(e.target.value)} />
