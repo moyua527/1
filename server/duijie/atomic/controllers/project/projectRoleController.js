@@ -7,13 +7,11 @@ const { PROJECT_ROLE_FIELDS, ensureDefaultEnterpriseProjectRoles } = require('..
 exports.list = async (req, res) => {
   try {
     const { id } = req.params;
-    const [proj] = await db.query('SELECT internal_client_id FROM duijie_projects WHERE id = ? LIMIT 1', [id]);
-    const entId = proj[0]?.internal_client_id || null;
     const [roles] = await db.query(
       `SELECT * FROM project_roles
-       WHERE is_deleted = 0 AND (project_id = ? ${entId ? 'OR enterprise_id = ?' : ''})
+       WHERE is_deleted = 0 AND project_id = ?
        ORDER BY sort_order ASC, id ASC`,
-      entId ? [id, entId] : [id]
+      [id]
     );
     const [counts] = await db.query(
       'SELECT project_role_id, COUNT(*) as cnt FROM duijie_project_members WHERE project_id = ? AND project_role_id IS NOT NULL GROUP BY project_role_id',

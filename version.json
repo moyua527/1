@@ -1,6 +1,6 @@
 {
-  "version": "1.1.73.8",
+  "version": "1.1.73.9",
   "versionCode": 73,
   "minVersion": "1.0.0",
-  "changelog": "修复编辑/删除企业级共享角色时报「角色不存在」的bug"
+  "changelog": "项目角色列表只显示项目级角色，不再混入企业级共享角色"
 }
