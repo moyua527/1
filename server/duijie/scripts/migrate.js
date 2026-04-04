@@ -59,6 +59,7 @@ function isIgnorableMigrationError(error) {
     || message.includes("can't drop")
     || message.includes('check that column/key exists')
     || message.includes('table already exists')
+    || message.includes('unknown column')
   );
 }
 
