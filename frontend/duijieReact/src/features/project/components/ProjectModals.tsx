@@ -11,6 +11,11 @@ import { projectApi } from '../services/api'
 import { toast } from '../../ui/Toast'
 
 const sysRoleLabel: Record<string, string> = { admin: '管理员', member: '成员' }
+const relationLabel: Record<string, { text: string; color: string }> = {
+  colleague: { text: '企业同事', color: '#3b82f6' },
+  friend: { text: '好友', color: '#22c55e' },
+  collaborator: { text: '协作者', color: '#f59e0b' },
+}
 
 /* ── Manage project members modal ── */
 
@@ -23,6 +28,7 @@ interface ManageMembersModalProps {
   projectRoles?: any[]
   onRefresh: () => void
   onRefreshAvailable: () => void
+  onGoToRoles?: () => void
 }
 
 function parseRoleValue(val: string): { role: string; project_role_id?: number } {
@@ -35,7 +41,7 @@ function getMemberRoleValue(m: any): string {
   return ''
 }
 
-export function ManageMembersModal({ open, onClose, projectId, members, availableUsers, projectRoles = [], onRefresh, onRefreshAvailable }: ManageMembersModalProps) {
+export function ManageMembersModal({ open, onClose, projectId, members, availableUsers, projectRoles = [], onRefresh, onRefreshAvailable, onGoToRoles }: ManageMembersModalProps) {
   const dn = useNicknameStore(s => s.getDisplayName)
   const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(new Set())
   const [selectedRole, setSelectedRole] = useState('')
@@ -150,7 +156,12 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
                 <Avatar name={dn(u.id, u.nickname || u.username || '?')} size={28} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{dn(u.id, u.nickname || u.username)}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>@{u.username} · {sysRoleLabel[u.role] || u.role}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    @{u.username}
+                    {u.relation && relationLabel[u.relation] && (
+                      <span style={{ fontSize: 10, padding: '0 5px', borderRadius: 3, background: relationLabel[u.relation].color + '18', color: relationLabel[u.relation].color, fontWeight: 500 }}>{relationLabel[u.relation].text}</span>
+                    )}
+                  </div>
                 </div>
               </div>
               )
@@ -159,11 +170,13 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
               <div style={{ padding: 16, textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 14 }}>无可添加的用户</div>
             )}
           </div>
-          <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <select value={selectedRole} onChange={e => setSelectedRole(e.target.value)}
               style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
               {roleOptions}
             </select>
+            {onGoToRoles && <button onClick={() => { onClose(); onGoToRoles() }}
+              style={{ fontSize: 12, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500, textDecoration: 'underline' }}>编辑角色权限</button>}
             {selectedUserIds.size > 0 && <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>已选 {selectedUserIds.size} 人</span>}
             <Button disabled={selectedUserIds.size === 0 || submitting} onClick={async () => {
               setSubmitting(true)

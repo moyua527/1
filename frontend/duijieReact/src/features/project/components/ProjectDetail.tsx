@@ -380,6 +380,7 @@ export default function ProjectDetail() {
           projectRoles={projectRoles}
           onRefresh={loadProject}
           onRefreshAvailable={refreshAvailableUsers}
+          onGoToRoles={(isOwner || canManageRole) ? () => setTab('roles') : undefined}
         />
 
         <ManageClientMembersModal

@@ -1,6 +1,6 @@
 {
-  "version": "1.1.78.4",
-  "versionCode": 84,
+  "version": "1.1.79",
+  "versionCode": 85,
   "minVersion": "1.0.0",
-  "changelog": "修复项目owner权限丢失bug，项目创建者恢复完整管理权限"
+  "changelog": "成员列表默认显示3人可展开，添加成员只显示关联用户(同事/好友/协作者)，角色选择增加编辑权限快捷入口"
 }
