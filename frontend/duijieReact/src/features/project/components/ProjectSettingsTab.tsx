@@ -169,14 +169,14 @@ export default function ProjectSettingsTab({ project, projectId, isOwner, canMan
             {item.key === 'nickname' && currentNickname ? (
               <span style={{ fontSize: 12, color: 'var(--text-secondary)', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 0 }}>{currentNickname}</span>
             ) : item.key === 'members' && members.length > 0 ? (
-              <div style={{ display: 'flex', marginRight: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'center', marginRight: 4 }}>
                 {members.slice(0, 4).map((m: any, i: number) => (
-                  <div key={m.user_id || m.id} style={{ marginLeft: i > 0 ? -8 : 0, zIndex: 4 - i }}>
+                  <div key={m.user_id || m.id} style={{ marginLeft: i > 0 ? -8 : 0, zIndex: 4 - i, position: 'relative', borderRadius: '50%', border: '2px solid var(--bg-primary)', overflow: 'hidden', flexShrink: 0 }}>
                     <Avatar name={m.nickname || m.username || '?'} src={m.avatar} size={24} />
                   </div>
                 ))}
                 {members.length > 4 && (
-                  <div style={{ marginLeft: -8, width: 24, height: 24, borderRadius: '50%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: 'var(--text-tertiary)', fontWeight: 600, border: '2px solid var(--bg-primary)' }}>
+                  <div style={{ marginLeft: -8, width: 24, height: 24, borderRadius: '50%', background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: 'var(--text-tertiary)', fontWeight: 600, border: '2px solid var(--bg-primary)', position: 'relative', zIndex: 0, flexShrink: 0 }}>
                     +{members.length - 4}
                   </div>
                 )}
