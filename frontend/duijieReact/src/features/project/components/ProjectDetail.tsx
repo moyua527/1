@@ -359,6 +359,9 @@ export default function ProjectDetail() {
             background: tab === k ? 'var(--brand)' : 'var(--bg-tertiary)', color: tab === k ? 'var(--bg-primary)' : 'var(--text-secondary)',
           }}>
             {v}
+            {k === 'tasks' && tasks.filter(t => t.status === 'submitted').length > 0 && tab !== 'tasks' && (
+              <span style={{ position: 'absolute', top: -2, right: -2, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
+            )}
             {k === 'join_requests' && pendingJoinCount > 0 && (
               <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 18, height: 18, borderRadius: 9, background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px', lineHeight: 1 }}>
                 {pendingJoinCount}
