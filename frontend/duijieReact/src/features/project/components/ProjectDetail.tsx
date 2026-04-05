@@ -375,7 +375,7 @@ export default function ProjectDetail() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={section}>
               {project.description && <div style={{ marginBottom: 16 }}><div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>描述</div><div style={{ fontSize: 14, color: 'var(--text-body)', lineHeight: 1.6 }}>{project.description}</div></div>}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 16 }}>
                 <div>
                   <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>开始日期</div>
                   {canEdit ? (
@@ -412,7 +412,9 @@ export default function ProjectDetail() {
                     <div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.budget > 0 ? `¥${Number(project.budget).toLocaleString()}` : '未设置'}</div>
                   )}
                 </div>
+                <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>创建者</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.creator_name || project.creator_username || '—'}</div></div>
                 <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>创建时间</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{formatDateTime(project.created_at)}</div></div>
+                <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>最后更新</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{formatDateTime(project.updated_at)}</div></div>
                 <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>任务数</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{tasks.length}</div></div>
               </div>
             </div>

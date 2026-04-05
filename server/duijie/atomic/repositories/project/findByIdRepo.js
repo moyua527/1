@@ -5,10 +5,12 @@ module.exports = async (id) => {
   const [rows] = await db.query(
     `SELECT p.*, 
             c.name as client_name, c.company as client_company, c.user_id as client_owner_user_id,
-            ic.name as internal_client_name, ic.company as internal_client_company, ic.user_id as internal_client_owner_user_id
+            ic.name as internal_client_name, ic.company as internal_client_company, ic.user_id as internal_client_owner_user_id,
+            cu.nickname as creator_name, cu.username as creator_username, cu.avatar as creator_avatar
      FROM duijie_projects p
      LEFT JOIN duijie_clients c ON p.client_id = c.id
      LEFT JOIN duijie_clients ic ON p.internal_client_id = ic.id
+     LEFT JOIN voice_users cu ON p.created_by = cu.id
      WHERE p.id = ? AND p.is_deleted = 0`,
     [id]
   );

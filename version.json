@@ -1,6 +1,6 @@
 {
-  "version": "1.1.85",
-  "versionCode": 97,
+  "version": "1.1.85.1",
+  "versionCode": 98,
   "minVersion": "1.0.0",
-  "changelog": "项目概览新增任务状态分布图与最近动态"
+  "changelog": "补全项目概览信息：创建者、最后更新时间"
 }
