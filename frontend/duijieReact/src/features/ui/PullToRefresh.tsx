@@ -6,36 +6,60 @@ interface Props {
   disabled?: boolean
 }
 
-const THRESHOLD = 60
-const MAX_PULL = 100
+const THRESHOLD = 70
+const MAX_PULL = 110
+const ACTIVATE_DISTANCE = 15
 
 export default function PullToRefresh({ children, onRefresh, disabled }: Props) {
   const [pullY, setPullY] = useState(0)
   const [refreshing, setRefreshing] = useState(false)
-  const touchStart = useRef<{ y: number; scrollTop: number } | null>(null)
+  const startY = useRef(0)
+  const pulling = useRef(false)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  const isAtTop = () => {
+    const el = containerRef.current
+    if (!el) return false
+    if (el.scrollTop > 0) return false
+    let node = el.firstElementChild as HTMLElement | null
+    while (node) {
+      if (node.scrollTop > 0 && node.scrollHeight > node.clientHeight) return false
+      node = node.firstElementChild as HTMLElement | null
+    }
+    return true
+  }
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (disabled || refreshing) return
-    const el = containerRef.current
-    if (!el || el.scrollTop > 0) return
-    touchStart.current = { y: e.touches[0].clientY, scrollTop: el.scrollTop }
+    if (!isAtTop()) return
+    startY.current = e.touches[0].clientY
+    pulling.current = false
   }, [disabled, refreshing])
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!touchStart.current || refreshing) return
-    const el = containerRef.current
-    if (!el || el.scrollTop > 0) { touchStart.current = null; setPullY(0); return }
-    const diff = e.touches[0].clientY - touchStart.current.y
-    if (diff <= 0) { setPullY(0); return }
-    const pull = Math.min(diff * 0.5, MAX_PULL)
-    setPullY(pull)
-    if (pull > 10) e.preventDefault()
+    if (refreshing || !startY.current) return
+
+    const diff = e.touches[0].clientY - startY.current
+    if (diff < 0) {
+      if (pulling.current) { pulling.current = false; setPullY(0) }
+      return
+    }
+
+    if (!pulling.current) {
+      if (diff < ACTIVATE_DISTANCE) return
+      if (!isAtTop()) { startY.current = 0; return }
+      pulling.current = true
+    }
+
+    e.preventDefault()
+    const pull = Math.min((diff - ACTIVATE_DISTANCE) * 0.4, MAX_PULL)
+    setPullY(Math.max(0, pull))
   }, [refreshing])
 
   const handleTouchEnd = useCallback(async () => {
-    if (!touchStart.current) return
-    touchStart.current = null
+    if (!pulling.current) { startY.current = 0; return }
+    pulling.current = false
+    startY.current = 0
     if (pullY >= THRESHOLD && !refreshing) {
       setRefreshing(true)
       setPullY(THRESHOLD)
