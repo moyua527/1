@@ -232,16 +232,17 @@ export default function MilestoneDetailModal({ milestoneId, currentUserId, membe
                     <div style={{ marginTop: 8, background: 'var(--bg-secondary)', borderRadius: 10, border: '1px solid var(--border-primary)', maxHeight: 240, overflow: 'auto' }}>
                       {members.filter(m => m.user_id !== currentUserId).map((m: any) => {
                         const isIn = participants.some((p: any) => p.user_id === m.user_id)
+                        const name = m.project_nickname || m.nickname || m.username || '?'
                         return (
                           <div key={m.user_id} onClick={() => handleToggleParticipant(m.user_id)}
                             style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer', transition: 'background 0.1s' }}
                             onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
                             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                             <div style={{ width: 28, height: 28, borderRadius: '50%', background: isIn ? 'var(--brand)' : 'var(--bg-tertiary)', color: isIn ? '#fff' : 'var(--text-tertiary)', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, transition: 'all 0.15s' }}>
-                              {isIn ? <CheckCircle2 size={16} /> : (m.display_name || '?')[0]}
+                              {isIn ? <CheckCircle2 size={16} /> : name[0]}
                             </div>
                             <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)' }}>{m.display_name}</div>
+                              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)' }}>{name}</div>
                             </div>
                             {isIn && <span style={{ fontSize: 11, color: 'var(--brand)', fontWeight: 500 }}>已添加</span>}
                           </div>
