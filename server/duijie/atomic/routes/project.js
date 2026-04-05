@@ -64,6 +64,8 @@ router.post('/projects/:id/invite', auth, pag, require('../controllers/project/i
 router.post('/projects/:id/invite-token', auth, pag, require('../controllers/project/generateInviteTokenController'));
 // 搜索可邀请用户（全局搜索，通过ID/昵称/手机号）
 router.get('/projects/:id/search-users', auth, pag, require('../controllers/project/searchUsersForInviteController'));
+// 项目备注名
+router.patch('/projects/:id/nickname', auth, pag, require('../controllers/project/setNicknameController'));
 // 项目活动动态
 router.get('/projects/:id/activity', auth, pag, require('../controllers/project/activityController'));
 

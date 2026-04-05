@@ -1,45 +1,20 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { Plus, FolderKanban, Loader2, Download, Search, Copy, Trash2, RotateCcw, Upload, Link, MoreVertical } from 'lucide-react'
+import { Plus, FolderKanban, Loader2, Download, Search, Trash2, RotateCcw, Upload, Link, MoreVertical, Pencil } from 'lucide-react'
 import { projectApi } from './services/api'
 import { can } from '../../stores/permissions'
 import { useProjects, useInvalidate } from '../../hooks/useApi'
 import Button from '../ui/Button'
-import Badge from '../ui/Badge'
 
 import Modal from '../ui/Modal'
 import Input from '../ui/Input'
 import { toast } from '../ui/Toast'
 import PageHeader from '../ui/PageHeader'
-import FilterBar from '../ui/FilterBar'
 import EmptyState from '../ui/EmptyState'
 import useLiveData from '../../hooks/useLiveData'
 
-const statusMap: Record<string, { label: string; color: string }> = {
-  planning: { label: '规划中', color: 'blue' },
-  in_progress: { label: '进行中', color: 'yellow' },
-  review: { label: '审核中', color: 'blue' },
-  completed: { label: '已完成', color: 'green' },
-  on_hold: { label: '已暂停', color: 'gray' },
-}
-const statusTabs = [
-  { key: '', label: '全部' },
-  { key: 'planning', label: '规划中' },
-  { key: 'in_progress', label: '进行中' },
-  { key: 'review', label: '审核中' },
-  { key: 'completed', label: '已完成' },
-  { key: 'on_hold', label: '已暂停' },
-]
-
-const cardStyle: React.CSSProperties = {
-  background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-  cursor: 'pointer', transition: 'box-shadow 0.15s',
-}
-
-function fmtDate(d: string | null | undefined) {
-  if (!d) return '-'
-  const dt = new Date(d)
-  return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`
+const statusMap: Record<string, string> = {
+  planning: '规划中', in_progress: '进行中', review: '审核中', completed: '已完成', on_hold: '已暂停',
 }
 
 export default function ProjectList() {
@@ -49,7 +24,6 @@ export default function ProjectList() {
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({ name: '', description: '', task_title_presets: [] as string[], newPreset: '' })
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
   const [showJoin, setShowJoin] = useState(false)
   const [joinCode, setJoinCode] = useState('')
   const [joinResult, setJoinResult] = useState<any>(null)
@@ -64,6 +38,10 @@ export default function ProjectList() {
   const [showJoinLink, setShowJoinLink] = useState(false)
   const [inviteLink, setInviteLink] = useState('')
   const [joinLinkSubmitting, setJoinLinkSubmitting] = useState(false)
+  const [editingNickname, setEditingNickname] = useState<{ id: number; name: string; nickname: string } | null>(null)
+  const [nicknameInput, setNicknameInput] = useState('')
+  const [nicknameSaving, setNicknameSaving] = useState(false)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const nav = useNavigate()
   const { user, isMobile } = useOutletContext<{ user: any; isMobile?: boolean }>()
   const canCreate = can(user?.role || '', 'project:create')
@@ -71,15 +49,33 @@ export default function ProjectList() {
   const load = useCallback(() => invalidate('projects'), [invalidate])
   useLiveData(['project'], load)
 
-  const filtered = projects.filter(p => {
-    if (statusFilter && p.status !== statusFilter) return false
+  const filtered = projects.filter((p: any) => {
     if (search) {
       const s = search.toLowerCase()
-      if (!(p.name || '').toLowerCase().includes(s)
-        && !(p.description || '').toLowerCase().includes(s)) return false
+      const displayName = (p.my_nickname || p.name || '').toLowerCase()
+      if (!displayName.includes(s)) return false
     }
     return true
   })
+
+  const openNicknameEdit = (p: any) => {
+    setEditingNickname({ id: p.id, name: p.name, nickname: p.my_nickname || '' })
+    setNicknameInput(p.my_nickname || '')
+  }
+
+  const saveNickname = async () => {
+    if (!editingNickname) return
+    setNicknameSaving(true)
+    const r = await projectApi.setNickname(String(editingNickname.id), nicknameInput.trim())
+    setNicknameSaving(false)
+    if (r.success) {
+      toast('备注已保存', 'success')
+      setEditingNickname(null)
+      load()
+    } else {
+      toast(r.message || '保存失败', 'error')
+    }
+  }
 
   const handleCreate = async () => {
     if (!form.name.trim()) { toast('请输入项目名称', 'error'); return }
@@ -152,15 +148,13 @@ export default function ProjectList() {
         </div>
       } />
 
-      <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="搜索项目..."
-        filters={[{
-          value: statusFilter, onChange: setStatusFilter, placeholder: '全部状态',
-          options: statusTabs.filter(t => t.key).map(t => ({ value: t.key, label: t.label })),
-        }]}
-        resultCount={filtered.length} hasFilters={!!statusFilter || !!search.trim()}
-        activeFilterCount={(statusFilter ? 1 : 0) + (search.trim() ? 1 : 0)}
-        onClearFilters={() => { setStatusFilter(''); setSearch('') }}
-      />
+      {projects.length > 3 && <div style={{ marginBottom: 16 }}>
+        <div style={{ position: 'relative', maxWidth: 320 }}>
+          <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索项目..."
+            style={{ width: '100%', padding: '8px 12px 8px 34px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', fontSize: 14, outline: 'none' }} />
+        </div>
+      </div>}
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
@@ -169,34 +163,47 @@ export default function ProjectList() {
           subtitle={projects.length === 0 ? '点击右上角新建项目' : '调整筛选条件试试'}
           action={projects.length === 0 && canCreate ? { label: '新建项目', onClick: () => setShowCreate(true) } : undefined} />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(min(320px, 100%), 1fr))', gap: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 1 : 8 }}>
           {filtered.map((p: any) => {
-            const st = statusMap[p.status] || statusMap.planning
+            const displayName = p.my_nickname || p.name
             return (
-              <div key={p.id} style={cardStyle} onClick={() => nav(`/projects/${p.id}`)}
-                onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)')}
-                onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)')}>
-                <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: isMobile ? 8 : 12, marginBottom: 12 }}>
-                  <div>
-                    <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: 'var(--text-heading)', wordBreak: 'break-word' }}>{p.name}</h3>
-                    {p.join_code && <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'monospace', cursor: 'pointer' }}
-                      title="点击复制项目ID" onClick={e => { e.stopPropagation(); const text = p.join_code; if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text) } else { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta) } toast('已复制项目ID', 'success') }}>
-                      ID: {p.join_code} <Copy size={10} style={{ verticalAlign: 'middle' }} />
-                    </span>}
-                  </div>
-                  <Badge color={st.color}>{st.label}</Badge>
-                </div>
-                {p.description && <div style={{ fontSize: 13, color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: isMobile ? 'normal' : 'nowrap', wordBreak: 'break-word', marginBottom: 8 }}>{p.description}</div>}
-                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', fontSize: 12, color: 'var(--text-tertiary)' }}>
-                  {p.created_by_name && <span>创建者: {p.created_by_name}</span>}
-                  <span>创建: {fmtDate(p.created_at)}</span>
-                  <span>更新: {fmtDate(p.updated_at)}</span>
-                </div>
+              <div key={p.id}
+                onClick={() => nav(`/projects/${p.id}`)}
+                onContextMenu={e => { e.preventDefault(); openNicknameEdit(p) }}
+                onTouchStart={() => { longPressTimer.current = setTimeout(() => openNicknameEdit(p), 600) }}
+                onTouchEnd={() => { if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null } }}
+                onTouchMove={() => { if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null } }}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '14px 16px' : '12px 16px', background: 'var(--bg-primary)', borderRadius: isMobile ? 0 : 10, cursor: 'pointer', borderBottom: isMobile ? '1px solid var(--border-primary)' : 'none', transition: 'background 0.12s' }}
+                onMouseEnter={e => { if (!isMobile) e.currentTarget.style.background = 'var(--bg-secondary)' }}
+                onMouseLeave={e => { if (!isMobile) e.currentTarget.style.background = 'var(--bg-primary)' }}>
+                <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+                  {displayName}
+                </span>
+                {p.my_nickname && <span style={{ fontSize: 11, color: 'var(--text-tertiary)', marginLeft: 8, flexShrink: 0 }}>({p.name})</span>}
+                <button onClick={e => { e.stopPropagation(); openNicknameEdit(p) }}
+                  style={{ marginLeft: 8, padding: 4, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', flexShrink: 0, opacity: 0.5 }}
+                  title="修改备注名">
+                  <Pencil size={14} />
+                </button>
               </div>
             )
           })}
         </div>
       )}
+
+      {/* 修改备注名弹窗 */}
+      <Modal open={!!editingNickname} onClose={() => setEditingNickname(null)} title="项目备注名">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>原名称：<b>{editingNickname?.name}</b></div>
+          <Input label="备注名称" placeholder="输入你的备注名（留空则显示原名）" value={nicknameInput} onChange={e => setNicknameInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && saveNickname()} />
+          <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>备注仅自己可见，不影响其他成员</div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <Button variant="secondary" onClick={() => setEditingNickname(null)}>取消</Button>
+            <Button onClick={saveNickname} disabled={nicknameSaving}>{nicknameSaving ? '保存中...' : '保存'}</Button>
+          </div>
+        </div>
+      </Modal>
 
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title="新建项目">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -240,7 +247,7 @@ export default function ProjectList() {
               <h4 style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{joinResult.name}</h4>
               {joinResult.description && <p style={{ margin: '0 0 8px', fontSize: 13, color: 'var(--text-secondary)' }}>{joinResult.description}</p>}
               <div style={{ display: 'flex', gap: 12, fontSize: 12, color: 'var(--text-tertiary)', flexWrap: 'wrap' }}>
-                <span>状态: {statusMap[joinResult.status]?.label || joinResult.status}</span>
+                <span>状态: {statusMap[joinResult.status] || joinResult.status}</span>
                 <span>成员: {joinResult.member_count}人</span>
                 <span>创建者: {joinResult.creator_name}</span>
               </div>
