@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
     if (action === 'approved') {
       const defaultRoleId = await resolveProjectRoleId(request.project_id, 'viewer');
       await db.query(
-        "INSERT IGNORE INTO duijie_project_members (project_id, user_id, role, source, project_role_id) VALUES (?, ?, 'editor', 'internal', ?)",
+        "INSERT IGNORE INTO duijie_project_members (project_id, user_id, role, source, project_role_id) VALUES (?, ?, 'viewer', 'join_request', ?)",
         [request.project_id, request.user_id, defaultRoleId]
       );
     }

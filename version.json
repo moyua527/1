@@ -1,6 +1,6 @@
 {
-  "version": "1.1.84.1",
-  "versionCode": 95,
+  "version": "1.1.84.2",
+  "versionCode": 96,
   "minVersion": "1.0.0",
-  "changelog": "修复项目角色列表不显示默认角色的问题"
+  "changelog": "不同加入方式赋予不同默认角色"
 }

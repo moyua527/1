@@ -51,7 +51,7 @@ export default function MembersSection({ projectId, myMembers, canEditMyTeam, on
 
   const handleInvite = async (userId: number) => {
     setInviting(userId)
-    const r = await projectApi.addMember(projectId, { user_id: userId, role: 'editor' })
+    const r = await projectApi.addMember(projectId, { user_id: userId, role: 'viewer' })
     setInviting(null)
     if (r.success) {
       toast('已邀请成员加入项目', 'success')
