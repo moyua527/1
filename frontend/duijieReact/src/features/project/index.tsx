@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { Plus, FolderKanban, Loader2, Download, Search, Trash2, RotateCcw, Upload, Link, MoreVertical, Pencil } from 'lucide-react'
+import { Plus, FolderKanban, Loader2, Download, Search, Trash2, RotateCcw, Upload, Link, MoreVertical, Pencil, Users, ListTodo } from 'lucide-react'
 import { projectApi } from './services/api'
 import { can } from '../../stores/permissions'
 import { useProjects, useInvalidate } from '../../hooks/useApi'
@@ -229,7 +229,12 @@ export default function ProjectList() {
                     {displayName}
                   </span>
                 </div>
-                {p.my_nickname && <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>原名: {p.name}</div>}
+                {p.my_nickname && <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>原名: {p.name}</div>}
+                {p.description && <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4, marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' } as any}>{p.description}</div>}
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 8 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Users size={12} /> {p.member_count ?? 0}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><ListTodo size={12} /> {p.task_count ?? 0}</span>
+                </div>
                 <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   {statusLabel && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 999, background: statusColor + '18', color: statusColor, fontWeight: 500 }}>{statusLabel}</span>}
                   <button onClick={e => { e.stopPropagation(); openNicknameEdit(p) }}

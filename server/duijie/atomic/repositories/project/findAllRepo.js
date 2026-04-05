@@ -2,7 +2,7 @@ const db = require('../../../config/db');
 const logger = require('../../../config/logger');
 
 module.exports = async ({ status, client_id, page = 1, limit = 20 }, auth = {}) => {
-  let sql = 'SELECT p.*, COALESCE(u.nickname, u.username) as created_by_name, c.name as client_name, c.company as client_company, ic.name as internal_client_name, ic.company as internal_client_company, pm_self.nickname as my_nickname FROM duijie_projects p LEFT JOIN voice_users u ON p.created_by = u.id LEFT JOIN duijie_clients c ON p.client_id = c.id LEFT JOIN duijie_clients ic ON p.internal_client_id = ic.id LEFT JOIN duijie_project_members pm_self ON pm_self.project_id = p.id AND pm_self.user_id = ? WHERE p.is_deleted = 0';
+  let sql = 'SELECT p.*, COALESCE(u.nickname, u.username) as created_by_name, c.name as client_name, c.company as client_company, ic.name as internal_client_name, ic.company as internal_client_company, pm_self.nickname as my_nickname, (SELECT COUNT(*) FROM duijie_project_members pm2 WHERE pm2.project_id = p.id) as member_count, (SELECT COUNT(*) FROM duijie_tasks t WHERE t.project_id = p.id) as task_count FROM duijie_projects p LEFT JOIN voice_users u ON p.created_by = u.id LEFT JOIN duijie_clients c ON p.client_id = c.id LEFT JOIN duijie_clients ic ON p.internal_client_id = ic.id LEFT JOIN duijie_project_members pm_self ON pm_self.project_id = p.id AND pm_self.user_id = ? WHERE p.is_deleted = 0';
   let countSql = 'SELECT COUNT(*) as total FROM duijie_projects p LEFT JOIN voice_users u ON p.created_by = u.id LEFT JOIN duijie_clients c ON p.client_id = c.id LEFT JOIN duijie_clients ic ON p.internal_client_id = ic.id WHERE p.is_deleted = 0';
   const params = [auth.userId || 0];
   const countParams = [];
