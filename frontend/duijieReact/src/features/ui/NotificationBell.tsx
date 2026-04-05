@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, CheckCheck, ExternalLink } from 'lucide-react'
+import { Bell, CheckCheck, ExternalLink, Trash2, X } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { onSocket } from './smartSocket'
 
@@ -66,6 +66,14 @@ export default function NotificationBell() {
     load()
   }
 
+  const deleteNotif = async (id: number | 'all', e?: React.MouseEvent) => {
+    if (e) e.stopPropagation()
+    if (id === 'all' && !confirm('确定清空所有通知？')) return
+    await fetchApi(`/api/notifications/${id}`, { method: 'DELETE' })
+    if (selected && (id === 'all' || selected.id === id)) setSelected(null)
+    load()
+  }
+
   const handleClick = (n: any) => {
     if (!n.is_read) markRead(n.id)
     setSelected(n)
@@ -94,12 +102,20 @@ export default function NotificationBell() {
             ) : (
               <>
                 <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)' }}>通知 {unread > 0 && <span style={{ fontSize: 12, color: 'var(--color-danger)' }}>({unread})</span>}</span>
-                {unread > 0 && (
-                  <button onClick={() => markRead('all')}
-                    style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>
-                    <CheckCheck size={14} /> 全部已读
-                  </button>
-                )}
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  {unread > 0 && (
+                    <button onClick={() => markRead('all')}
+                      style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>
+                      <CheckCheck size={14} /> 全部已读
+                    </button>
+                  )}
+                  {notifications.length > 0 && (
+                    <button onClick={(e) => deleteNotif('all', e)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 12, color: 'var(--color-danger)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>
+                      <Trash2 size={13} /> 清空
+                    </button>
+                  )}
+                </div>
               </>
             )}
           </div>
@@ -127,12 +143,18 @@ export default function NotificationBell() {
                 </div>
                 <div style={{ fontSize: 14, color: 'var(--text-body)', lineHeight: 1.8, marginBottom: 16, whiteSpace: 'pre-wrap' }}>{selected.content}</div>
                 <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 16 }}>{new Date(selected.created_at).toLocaleString('zh-CN')}</div>
-                {selected.link && (
-                  <button onClick={() => { nav(selected.link); setOpen(false); setSelected(null) }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, background: 'var(--brand)', color: 'var(--bg-primary)', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>
-                    <ExternalLink size={14} /> 查看详情
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {selected.link && (
+                    <button onClick={() => { nav(selected.link); setOpen(false); setSelected(null) }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, background: 'var(--brand)', color: 'var(--bg-primary)', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>
+                      <ExternalLink size={14} /> 查看详情
+                    </button>
+                  )}
+                  <button onClick={() => deleteNotif(selected.id)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, background: 'var(--bg-secondary)', color: 'var(--color-danger)', border: '1px solid var(--border-primary)', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>
+                    <Trash2 size={14} /> 删除
                   </button>
-                )}
+                </div>
               </div>
             ) : notifications.length === 0 ? (
               <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 13 }}>暂无通知</div>
@@ -147,7 +169,16 @@ export default function NotificationBell() {
                   <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.content}</div>
                   <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 3 }}>{new Date(n.created_at).toLocaleString('zh-CN')}</div>
                 </div>
-                {!n.is_read && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--brand)', flexShrink: 0, marginTop: 6 }} />}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                  {!n.is_read && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--brand)' }} />}
+                  <button onClick={(e) => deleteNotif(n.id, e)}
+                    title="删除"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--text-tertiary)', opacity: 0.5, transition: 'opacity 0.15s' }}
+                    onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                    onMouseLeave={e => (e.currentTarget.style.opacity = '0.5')}>
+                    <X size={14} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
