@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Users, Shield, AppWindow, UserPlus, ChevronRight, UserPlus2, Pencil } from 'lucide-react'
+import { Users, Shield, AppWindow, UserPlus, ChevronRight, UserPlus2, Pencil, Trash2 } from 'lucide-react'
 import ProjectRoleList from './ProjectRoleList'
 import AppTab from './AppTab'
 import JoinRequestsTab from './JoinRequestsTab'
@@ -20,11 +20,15 @@ interface Props {
   isOwner: boolean
   canManageRole: boolean
   canApproveJoin: boolean
+  canEdit?: boolean
+  canDelete?: boolean
   pendingJoinCount: number
   onRefreshProject: () => void
   onRefreshJoinCount: () => void
   onOpenAddMember: () => void
   onMemberClick?: (member: any) => void
+  onEditProject?: () => void
+  onDeleteProject?: () => void
 }
 
 const roleLabel: Record<string, string> = {
@@ -41,7 +45,7 @@ const settingsItems: { key: SubTab; label: string; icon: any; desc: string; cond
   { key: 'join_requests', label: '加入申请', icon: UserPlus, desc: '审批成员加入请求', condition: 'canApproveJoin' },
 ]
 
-export default function ProjectSettingsTab({ project, projectId, isOwner, canManageRole, canApproveJoin, pendingJoinCount, onRefreshProject, onRefreshJoinCount, onOpenAddMember, onMemberClick }: Props) {
+export default function ProjectSettingsTab({ project, projectId, isOwner, canManageRole, canApproveJoin, canEdit, canDelete, pendingJoinCount, onRefreshProject, onRefreshJoinCount, onOpenAddMember, onMemberClick, onEditProject, onDeleteProject }: Props) {
   const [sub, setSub] = useState<SubTab | null>(null)
   const user = useUserStore(s => s.user)
   const members = project.members || []
@@ -183,6 +187,21 @@ export default function ProjectSettingsTab({ project, projectId, isOwner, canMan
           </button>
         ))}
       </div>
+
+      {(canEdit || canDelete) && (
+        <div style={{ display: 'flex', gap: 10, marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border-primary)' }}>
+          {canEdit && (
+            <Button onClick={onEditProject}>
+              <Pencil size={14} /> 编辑项目
+            </Button>
+          )}
+          {canDelete && (
+            <button onClick={onDeleteProject} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: 'none', background: 'rgba(239,68,68,0.08)', color: '#ef4444', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
+              <Trash2 size={14} /> 删除项目
+            </button>
+          )}
+        </div>
+      )}
     </div>
   )
 }

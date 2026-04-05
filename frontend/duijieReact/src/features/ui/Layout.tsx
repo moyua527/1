@@ -16,7 +16,7 @@ import EnterpriseSwitcher from './EnterpriseSwitcher'
 import UserGuide from './UserGuide'
 import OnboardingChecklist from './OnboardingChecklist'
 // inline pull-to-refresh (lightweight, only for mobile)
-import { navItems, navItemsByGroup } from '../../data/routeManifest'
+import { navItems, navItemsByGroup, type RouteEntry } from '../../data/routeManifest'
 
 const SIDEBAR_W = 228
 const SIDEBAR_COLLAPSED_W = 68
@@ -233,9 +233,10 @@ export default function Layout() {
                   )}
                   {g.items.map(item => {
                     const isActive = item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)
+                    const visibleChildren = ((item as any).children || []).filter((c: RouteEntry) => c.showInNav)
                     return (
+                    <div key={item.path}>
                     <div
-                      key={item.path}
                       onClick={() => navigate(item.path)}
                       title={sidebarCollapsed ? item.label : undefined}
                       style={{
@@ -266,6 +267,29 @@ export default function Layout() {
                           top: sidebarCollapsed ? 4 : undefined, right: sidebarCollapsed ? 8 : undefined,
                         }}>{dmUnread > 99 ? '99+' : dmUnread}</span>
                       )}
+                    </div>
+                    {isActive && !sidebarCollapsed && visibleChildren.length > 0 && (
+                      <div style={{ marginLeft: 20, borderLeft: '2px solid var(--border-secondary)', paddingLeft: 8, marginBottom: 4 }}>
+                        {visibleChildren.map((child: RouteEntry) => {
+                          const childActive = location.pathname === child.path
+                          return (
+                            <div key={child.path} onClick={() => navigate(child.path)}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px',
+                                borderRadius: 6, cursor: 'pointer', marginBottom: 1, fontSize: 12,
+                                color: childActive ? 'var(--brand)' : 'var(--text-tertiary)',
+                                background: childActive ? 'var(--bg-selected)' : 'transparent',
+                                fontWeight: childActive ? 600 : 500, transition: 'background 0.12s',
+                              }}
+                              onMouseEnter={e => { if (!childActive) e.currentTarget.style.background = 'var(--bg-hover)' }}
+                              onMouseLeave={e => { if (!childActive) e.currentTarget.style.background = 'transparent' }}>
+                              <child.icon size={14} style={{ flexShrink: 0 }} />
+                              <span>{child.label}</span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
                     </div>
                     )
                   })}

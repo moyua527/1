@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
-import { ArrowLeft, Trash2, MoreVertical, Pencil, X, Megaphone, Check } from 'lucide-react'
+import { ArrowLeft, X, Megaphone, Pencil, Check } from 'lucide-react'
 import useProjectTabStore from '../../../stores/useProjectTabStore'
 import { can } from '../../../stores/permissions'
 import useProjectPerms from '../../../hooks/useProjectPerms'
@@ -14,7 +14,6 @@ import { confirm } from '../../ui/ConfirmDialog'
 import { toast } from '../../ui/Toast'
 import TaskTab from './TaskTab'
 import MilestoneTab from './MilestoneTab'
-import ProjectHomeTab from './ProjectHomeTab'
 import ProjectFileTab from './ProjectFileTab'
 import ProjectSettingsTab from './ProjectSettingsTab'
 import MessagePanel from '../../message/components/MessagePanel'
@@ -61,10 +60,10 @@ export default function ProjectDetail() {
   const [hasNewSubmitted, setHasNewSubmitted] = useState(false)
   const [selectedMember, setSelectedMember] = useState<any>(null)
   const [searchParams, setSearchParams] = useSearchParams()
-  const validTabs = ['home', 'tasks', 'files', 'milestones', 'messages', 'settings'] as const
+  const validTabs = ['tasks', 'files', 'milestones', 'messages', 'settings'] as const
   type Tab = typeof validTabs[number]
   const urlTab = searchParams.get('tab') as Tab
-  const tab: Tab = validTabs.includes(urlTab as any) ? urlTab! : 'home'
+  const tab: Tab = validTabs.includes(urlTab as any) ? urlTab! : 'tasks'
   const setTab = (t: Tab) => {
     setSearchParams({ tab: t }, { replace: true })
     if (t === 'tasks') {
@@ -81,7 +80,6 @@ export default function ProjectDetail() {
   const [clientData, setClientData] = useState<any>(null)
   const [projectRoles] = useState<any[]>([])
   const [showSetClient, setShowSetClient] = useState(false)
-  const [showActionMenu, setShowActionMenu] = useState(false)
   const [showEditProject, setShowEditProject] = useState(false)
   const [pendingJoinCount, setPendingJoinCount] = useState(0)
   const [showProjectGuide, setShowProjectGuide] = useState(false)
@@ -271,7 +269,7 @@ export default function ProjectDetail() {
         <div style={{ width: 1, height: 20, background: 'var(--border-primary)', flexShrink: 0, margin: '0 2px' }} />
 
         <div data-tour="project-tabs" style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-          {([['home','首页'],['tasks','需求'],['files','资料库'],['milestones','待办'],['messages','消息'],['settings','设置']] as [string, string][]).map(([k,v]) => (
+          {([['tasks','需求'],['files','资料库'],['milestones','待办'],['messages','消息'],['settings','设置']] as [string, string][]).map(([k,v]) => (
             <button key={k} data-tour={`tab-${k}`} onClick={() => setTab(k as any)} style={{
               padding: '6px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, position: 'relative', whiteSpace: 'nowrap', flexShrink: 0,
               background: tab === k ? 'var(--brand)' : 'var(--bg-tertiary)', color: tab === k ? 'var(--bg-primary)' : 'var(--text-secondary)',
@@ -288,19 +286,6 @@ export default function ProjectDetail() {
             </button>
           ))}
         </div>
-
-        {(canEdit || canDelete) && (
-          <div style={{ position: 'relative', flexShrink: 0 }}>
-            <button onClick={() => setShowActionMenu(v => !v)} style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', borderRadius: 6, cursor: 'pointer', padding: '5px 6px', display: 'flex', alignItems: 'center', color: 'var(--text-secondary)' }}><MoreVertical size={16} /></button>
-            {showActionMenu && <>
-              <div style={{ position: 'fixed', inset: 0, zIndex: 99 }} onClick={() => setShowActionMenu(false)} />
-              <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)', borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 100, minWidth: 140, overflow: 'hidden' }}>
-                {canEdit && <button onClick={() => { setShowActionMenu(false); setShowEditProject(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Pencil size={14} /> 编辑项目</button>}
-                {canDelete && <button onClick={() => { setShowActionMenu(false); handleDelete() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: '#ef4444', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Trash2 size={14} /> 删除项目</button>}
-              </div>
-            </>}
-          </div>
-        )}
       </div>
       <EditProjectModal open={showEditProject} project={project} onClose={() => setShowEditProject(false)}
         onSave={async (data) => {
@@ -387,8 +372,6 @@ export default function ProjectDetail() {
           onRefreshAvailable={refreshClientAvailableUsers}
         />
 
-      {tab === 'home' && <ProjectHomeTab project={project} projectId={id!} tasks={tasks} milestones={milestones} onTabSwitch={t => setTab(t as any)} isMobile={isMobile} />}
-
       {tab === 'tasks' && <TaskTab tasks={tasks} canEdit={canCreateTask} projectId={id!} loadTasks={loadTasks} />}
 
       {tab === 'files' && <ProjectFileTab projectId={id!} canEdit={canEdit} />}
@@ -397,7 +380,7 @@ export default function ProjectDetail() {
 
       {tab === 'messages' && <div style={{ background: 'var(--bg-primary)', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16, overflow: 'hidden' }}><MessagePanel projectId={id!} /></div>}
 
-      {tab === 'settings' && <ProjectSettingsTab project={project} projectId={id!} isOwner={isOwner} canManageRole={canManageRole} canApproveJoin={canApproveJoin} pendingJoinCount={pendingJoinCount} onRefreshProject={loadProject} onRefreshJoinCount={loadPendingJoinCount} onOpenAddMember={() => { setShowAddMember(true); refreshAvailableUsers() }} onMemberClick={setSelectedMember} />}
+      {tab === 'settings' && <ProjectSettingsTab project={project} projectId={id!} isOwner={isOwner} canManageRole={canManageRole} canApproveJoin={canApproveJoin} canEdit={canEdit} canDelete={canDelete} pendingJoinCount={pendingJoinCount} onRefreshProject={loadProject} onRefreshJoinCount={loadPendingJoinCount} onOpenAddMember={() => { setShowAddMember(true); refreshAvailableUsers() }} onMemberClick={setSelectedMember} onEditProject={() => setShowEditProject(true)} onDeleteProject={handleDelete} />}
 
 
       <SetClientModal open={showSetClient} hasExternalEnterprise={false}

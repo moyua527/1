@@ -2,7 +2,7 @@ import { type ComponentType } from 'react'
 import {
   LayoutDashboard, FolderKanban, Users, ListTodo, Building2,
   MessageSquare, CalendarDays, FileText, BellRing,
-  Shield, ScrollText, Plug2, Settings,
+  Shield, ScrollText, Plug2, Settings, Home,
 } from 'lucide-react'
 
 export interface RouteEntry {
@@ -29,6 +29,7 @@ const ROUTES: RouteEntry[] = [
     importFn: () => import('../features/project/index'),
     showInNav: true, prefetch: true, group: 'business',
     children: [
+      { path: '/projects/home', label: '首页', icon: Home, perm: 'project:view', importFn: () => import('../features/project/components/ProjectManagementHome'), showInNav: true },
       { path: '/projects/:id', label: '项目详情', icon: FolderKanban, perm: 'project:view', importFn: () => import('../features/project/components/ProjectDetail'), showInNav: false },
     ],
   },
