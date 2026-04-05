@@ -1,3 +1,4 @@
+process.env.TZ = 'Asia/Shanghai';
 const http = require('http');
 const app = require('./app');
 const logger = require('./config/logger');

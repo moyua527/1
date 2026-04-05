@@ -4,12 +4,14 @@ const logger = require('../config/logger');
 
 async function checkReminders() {
   try {
+    const now = new Date();
     const [rows] = await db.query(
       `SELECT r.*, m.title AS milestone_title, m.project_id
        FROM duijie_milestone_reminders r
        JOIN duijie_milestones m ON m.id = r.milestone_id AND m.is_deleted = 0
-       WHERE r.is_sent = 0 AND r.remind_at <= NOW()
-       LIMIT 50`
+       WHERE r.is_sent = 0 AND r.remind_at <= ?
+       LIMIT 50`,
+      [now]
     );
     for (const r of rows) {
       const noteStr = r.note ? ` — ${r.note}` : '';

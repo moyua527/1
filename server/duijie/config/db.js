@@ -9,6 +9,7 @@ const poolConfig = {
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  timezone: '+08:00',
 };
 
 // 启用 DB SSL（当 DB_SSL=true 时）
@@ -17,5 +18,9 @@ if (process.env.DB_SSL === 'true') {
 }
 
 const pool = mysql.createPool(poolConfig);
+
+pool.on('connection', (conn) => {
+  conn.query("SET time_zone = '+08:00'");
+});
 
 module.exports = pool;
