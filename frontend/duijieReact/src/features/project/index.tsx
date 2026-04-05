@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import { Plus, FolderKanban, Loader2, Download, Search, Trash2, RotateCcw, Upload, Link, MoreVertical, Pencil } from 'lucide-react'
 import { projectApi } from './services/api'
@@ -12,6 +12,7 @@ import { toast } from '../ui/Toast'
 import PageHeader from '../ui/PageHeader'
 import EmptyState from '../ui/EmptyState'
 import useLiveData from '../../hooks/useLiveData'
+import { onSocket } from '../ui/smartSocket'
 
 const statusMap: Record<string, string> = {
   planning: '规划中', in_progress: '进行中', review: '审核中', completed: '已完成', on_hold: '已暂停',
@@ -46,8 +47,40 @@ export default function ProjectList() {
   const { user, isMobile } = useOutletContext<{ user: any; isMobile?: boolean }>()
   const canCreate = can(user?.role || '', 'project:create')
 
+  const [unreadProjects, setUnreadProjects] = useState<Set<number>>(() => {
+    try { const s = localStorage.getItem('unread_projects'); return new Set(s ? JSON.parse(s) : []) } catch { return new Set() }
+  })
+
   const load = useCallback(() => invalidate('projects'), [invalidate])
   useLiveData(['project'], load)
+
+  useEffect(() => {
+    const offNotif = onSocket('new_notification', (payload: any) => {
+      const link = payload?.link || ''
+      const m = link.match(/\/projects\/(\d+)/)
+      if (m) {
+        const pid = Number(m[1])
+        setUnreadProjects(prev => {
+          const next = new Set(prev)
+          next.add(pid)
+          localStorage.setItem('unread_projects', JSON.stringify([...next]))
+          return next
+        })
+      }
+    })
+    const offMsg = onSocket('new_message', (payload: any) => {
+      if (payload?.project_id) {
+        const pid = Number(payload.project_id)
+        setUnreadProjects(prev => {
+          const next = new Set(prev)
+          next.add(pid)
+          localStorage.setItem('unread_projects', JSON.stringify([...next]))
+          return next
+        })
+      }
+    })
+    return () => { offNotif(); offMsg() }
+  }, [])
 
   const filtered = projects.filter((p: any) => {
     if (search) {
@@ -168,7 +201,15 @@ export default function ProjectList() {
             const displayName = p.my_nickname || p.name
             return (
               <div key={p.id}
-                onClick={() => nav(`/projects/${p.id}`)}
+                onClick={() => {
+                  setUnreadProjects(prev => {
+                    const next = new Set(prev)
+                    next.delete(p.id)
+                    localStorage.setItem('unread_projects', JSON.stringify([...next]))
+                    return next
+                  })
+                  nav(`/projects/${p.id}`)
+                }}
                 onContextMenu={e => { e.preventDefault(); openNicknameEdit(p) }}
                 onTouchStart={() => { longPressTimer.current = setTimeout(() => openNicknameEdit(p), 600) }}
                 onTouchEnd={() => { if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null } }}
@@ -176,8 +217,9 @@ export default function ProjectList() {
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '14px 16px' : '12px 16px', background: 'var(--bg-primary)', borderRadius: isMobile ? 0 : 10, cursor: 'pointer', borderBottom: isMobile ? '1px solid var(--border-primary)' : 'none', transition: 'background 0.12s' }}
                 onMouseEnter={e => { if (!isMobile) e.currentTarget.style.background = 'var(--bg-secondary)' }}
                 onMouseLeave={e => { if (!isMobile) e.currentTarget.style.background = 'var(--bg-primary)' }}>
-                <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+                <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
                   {displayName}
+                  {unreadProjects.has(p.id) && <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', flexShrink: 0, display: 'inline-block' }} />}
                 </span>
                 {p.my_nickname && <span style={{ fontSize: 11, color: 'var(--text-tertiary)', marginLeft: 8, flexShrink: 0 }}>({p.name})</span>}
                 <button onClick={e => { e.stopPropagation(); openNicknameEdit(p) }}
