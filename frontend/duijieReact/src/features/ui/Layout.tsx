@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { Menu, X, LogOut, User, ChevronRight, ChevronLeft, Palette, Bell, Settings, Search, HelpCircle } from 'lucide-react'
+import { Menu, X, LogOut, User, ChevronRight, ChevronLeft, Palette, Bell, Settings, Search, HelpCircle, Volume2 } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
 import { can } from '../../stores/permissions'
@@ -28,7 +28,7 @@ export default function Layout() {
   const { user, updateProfile, logout: storeLogout } = useUserStore()
   const [profileOpen, setProfileOpen] = useState(false)
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false)
-  const [settingsTab, setSettingsTab] = useState<null | 'account' | 'appearance' | 'notification'>(null)
+  const [settingsTab, setSettingsTab] = useState<null | 'account' | 'sound' | 'appearance' | 'notification'>(null)
   const avatarMenuRef = useRef<HTMLDivElement>(null)
   const [dmUnread, setDmUnread] = useState(0)
   const [guideOpen, setGuideOpen] = useState(false)
@@ -170,6 +170,7 @@ export default function Layout() {
                     <div style={{ padding: '6px 0' }}>
                       {[
                         { icon: User, label: '账号与安全', tab: 'account' as const },
+                        { icon: Volume2, label: '声音设置', tab: 'sound' as const },
                         { icon: Palette, label: '外观与语言', tab: 'appearance' as const },
                         { icon: Bell, label: '通知偏好', tab: 'notification' as const },
                       ].map(item => (

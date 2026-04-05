@@ -45,12 +45,15 @@ function getWavUrl(): string {
   return cachedWavUrl
 }
 
+function getVolume(): number {
+  try { return Number(localStorage.getItem('sound_volume') ?? 100) / 100 } catch { return 1 }
+}
+
 function getAudio(): HTMLAudioElement {
   const free = audioPool.find(a => a.paused || a.ended)
   if (free) return free
   const a = new Audio()
   a.src = getWavUrl()
-  a.volume = 1.0
   audioPool.push(a)
   return a
 }
@@ -58,6 +61,7 @@ function getAudio(): HTMLAudioElement {
 function playViaAudioElement(): boolean {
   try {
     const a = getAudio()
+    a.volume = getVolume()
     a.currentTime = 0
     const p = a.play()
     if (p) {
@@ -97,7 +101,7 @@ function playViaAudioContext() {
     const src = ctx.createBufferSource()
     src.buffer = buffer
     const gain = ctx.createGain()
-    gain.gain.value = 1.0
+    gain.gain.value = getVolume()
     src.connect(gain)
     gain.connect(ctx.destination)
     src.start()

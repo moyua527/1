@@ -2,6 +2,7 @@ import { io, Socket } from 'socket.io-client'
 import { BACKEND_URL, getToken } from '../../bootstrap'
 import { isCapacitor, SERVER_URL } from '../../utils/capacitor'
 import { playNotificationSound } from '../../utils/notificationSound'
+import { isSoundEnabled } from './SettingsPanel'
 
 type Listener = (payload?: any) => void
 
@@ -49,11 +50,11 @@ function getSocket(): Socket {
     }
   })
 
-  socket.on('new_dm', (payload: any) => { playNotificationSound(); emit('new_dm', payload) })
-  socket.on('new_notification', (payload: any) => { playNotificationSound(); emit('new_notification', payload) })
-  socket.on('task_created', (payload: any) => { playNotificationSound(); emit('task_created', payload); emit('data_changed', { entity: 'task', action: 'created', ...payload }) })
+  socket.on('new_dm', (payload: any) => { if (isSoundEnabled('sound_dm')) playNotificationSound(); emit('new_dm', payload) })
+  socket.on('new_notification', (payload: any) => { if (isSoundEnabled('sound_notification')) playNotificationSound(); emit('new_notification', payload) })
+  socket.on('task_created', (payload: any) => { if (isSoundEnabled('sound_task')) playNotificationSound(); emit('task_created', payload); emit('data_changed', { entity: 'task', action: 'created', ...payload }) })
   socket.on('new_message', (payload: any) => {
-    if (payload?.sender_id !== currentUserId) playNotificationSound()
+    if (payload?.sender_id !== currentUserId && isSoundEnabled('sound_message')) playNotificationSound()
     emit('new_message', payload)
   })
   socket.on('data_changed', (payload: any) => emit('data_changed', payload))
