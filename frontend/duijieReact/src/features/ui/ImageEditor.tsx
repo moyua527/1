@@ -382,9 +382,10 @@ export default function ImageEditor({ imageFile, imageSrc, onConfirm, onCancel }
         {(tool === 'draw' || tool === 'text') && <>
           {COLORS.map(c => (
             <button key={c} onClick={() => setColor(c)} style={{
-              width: 24, height: 24, borderRadius: '50%', background: c,
-              border: color === c ? '2.5px solid #22c55e' : '1.5px solid rgba(255,255,255,0.3)',
-              cursor: 'pointer',
+              width: color === c ? 28 : 24, height: color === c ? 28 : 24, borderRadius: '50%', background: c,
+              border: color === c ? '3px solid #22c55e' : '1.5px solid rgba(255,255,255,0.3)',
+              cursor: 'pointer', transition: 'all 0.15s',
+              boxShadow: color === c ? '0 0 0 2px rgba(34,197,94,0.4)' : 'none',
             }} />
           ))}
         </>}
@@ -392,10 +393,12 @@ export default function ImageEditor({ imageFile, imageSrc, onConfirm, onCancel }
           <div style={{ width: 1, background: 'rgba(255,255,255,0.2)', margin: '0 2px' }} />
           {SIZES.map(s => (
             <button key={s} onClick={() => setLineWidth(s)} style={{
-              width: 30, height: 30, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: lineWidth === s ? 'rgba(255,255,255,0.2)' : 'transparent', border: 'none', cursor: 'pointer',
+              width: 34, height: 34, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: lineWidth === s ? 'rgba(34,197,94,0.25)' : 'transparent',
+              border: lineWidth === s ? '2px solid #22c55e' : '2px solid transparent',
+              cursor: 'pointer', transition: 'all 0.15s',
             }}>
-              <span style={{ width: s * 2 + 2, height: s * 2 + 2, borderRadius: '50%', background: color }} />
+              <span style={{ width: s * 2 + 2, height: s * 2 + 2, borderRadius: '50%', background: lineWidth === s ? '#22c55e' : color }} />
             </button>
           ))}
         </>}

@@ -1,6 +1,6 @@
 {
-  "version": "1.1.93.2",
-  "versionCode": 120,
+  "version": "1.1.93.3",
+  "versionCode": 121,
   "minVersion": "1.0.0",
-  "changelog": "手机画笔流畅度优化"
+  "changelog": "画笔大小和颜色选择器视觉优化"
 }
