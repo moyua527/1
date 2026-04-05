@@ -82,10 +82,12 @@ export default function TaskTitleSelector({
       if (!active) return
       setLoading(false)
       if (r.success) {
-        setOptions({
-          presets: Array.isArray(r.data?.presets) ? r.data.presets : [],
-          history: Array.isArray(r.data?.history) ? r.data.history : [],
-        })
+        const presets = Array.isArray(r.data?.presets) ? r.data.presets : []
+        const history = Array.isArray(r.data?.history) ? r.data.history : []
+        setOptions({ presets, history })
+        if (mode === 'history' && !value && history.length > 0) {
+          onChange(history[0].title)
+        }
         return
       }
       toast(r.message || '需求标题选项加载失败', 'error')
