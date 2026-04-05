@@ -11,6 +11,7 @@ import { toast } from '../../ui/Toast'
 import { formatDateTime } from '../../../utils/datetime'
 import useUserStore from '../../../stores/useUserStore'
 import ImageViewer from '../../ui/ImageViewer'
+import ImageEditor from '../../ui/ImageEditor'
 
 const taskStatusMap: Record<string, { label: string; color: string }> = {
   todo: { label: '待办', color: 'gray' },
@@ -53,6 +54,9 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
   const [showPointsModal, setShowPointsModal] = useState<{ taskId: number; roundType: 'initial' | 'acceptance'; taskTitle: string } | null>(null)
   const [pointInputs, setPointInputs] = useState<string[]>([''])
   const [responseInputs, setResponseInputs] = useState<Record<number, string>>({})
+  const [editingImage, setEditingImage] = useState<File | null>(null)
+  const [pendingImages, setPendingImages] = useState<File[]>([])
+  const [editingExistingIdx, setEditingExistingIdx] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -62,7 +66,14 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
   }, [])
 
   const addTaskFiles = useCallback((newFiles: FileList | File[]) => {
-    setTaskFiles(prev => [...prev, ...Array.from(newFiles)])
+    const arr = Array.from(newFiles)
+    const nonImages = arr.filter(f => !f.type.startsWith('image/'))
+    const images = arr.filter(f => f.type.startsWith('image/'))
+    if (nonImages.length) setTaskFiles(prev => [...prev, ...nonImages])
+    if (images.length) {
+      setEditingImage(images[0])
+      setPendingImages(images.slice(1))
+    }
   }, [])
 
   const handleFileDragOver = useCallback((e: DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true) }, [])
@@ -98,6 +109,27 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
     document.addEventListener('paste', onPaste)
     return () => document.removeEventListener('paste', onPaste)
   }, [showCreateTask, addTaskFiles])
+
+  const handleEditorConfirm = useCallback((editedFile: File) => {
+    if (editingExistingIdx !== null) {
+      setTaskFiles(prev => prev.map((f, i) => i === editingExistingIdx ? editedFile : f))
+      setEditingExistingIdx(null)
+    } else {
+      setTaskFiles(prev => [...prev, editedFile])
+    }
+    setEditingImage(null)
+    if (pendingImages.length > 0) {
+      setTimeout(() => { setEditingImage(pendingImages[0]); setPendingImages(prev => prev.slice(1)) }, 100)
+    }
+  }, [editingExistingIdx, pendingImages])
+
+  const handleEditorCancel = useCallback(() => {
+    if (editingExistingIdx !== null) setEditingExistingIdx(null)
+    setEditingImage(null)
+    if (pendingImages.length > 0) {
+      setTimeout(() => { setEditingImage(pendingImages[0]); setPendingImages(prev => prev.slice(1)) }, 100)
+    }
+  }, [editingExistingIdx, pendingImages])
 
   const handleMove = async (taskId: number, newStatus: string) => {
     const r = await taskApi.move(String(taskId), newStatus)
@@ -505,8 +537,10 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                     return (
                       <div key={i} style={{ position: 'relative', display: 'inline-flex' }}>
                         {isImg ? (
-                          <div style={{ width: 56, height: 56, borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border-primary)' }}>
+                          <div style={{ width: 56, height: 56, borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border-primary)', position: 'relative' }}>
                             <img src={URL.createObjectURL(f)} alt={f.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <button onClick={(e) => { e.stopPropagation(); setEditingExistingIdx(i); setEditingImage(f) }}
+                              style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 10, padding: '2px 0', textAlign: 'center' }}>编辑</button>
                           </div>
                         ) : (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', background: 'var(--bg-primary)', borderRadius: 6, border: '1px solid var(--border-primary)', fontSize: 12, color: 'var(--text-body)' }}>
@@ -649,6 +683,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
       </Modal>
 
       {previewImg && <ImageViewer src={previewImg} onClose={() => setPreviewImg(null)} />}
+      {editingImage && <ImageEditor imageFile={editingImage} onConfirm={handleEditorConfirm} onCancel={handleEditorCancel} />}
     </div>
   )
 }

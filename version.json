@@ -1,6 +1,6 @@
 {
-  "version": "1.1.87.1",
-  "versionCode": 102,
+  "version": "1.1.88",
+  "versionCode": 103,
   "minVersion": "1.0.0",
-  "changelog": "添加按钮提取到外部"
+  "changelog": "图片编辑器：上传前可标注画线"
 }
