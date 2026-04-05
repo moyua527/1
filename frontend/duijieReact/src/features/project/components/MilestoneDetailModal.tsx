@@ -150,11 +150,12 @@ export default function MilestoneDetailModal({ milestoneId, currentUserId, membe
             <div>
               {/* Input */}
               {canTrack && (
-                <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-                  <input value={progressInput} onChange={e => setProgressInput(e.target.value)}
-                    placeholder="填写跟踪进度，例如：已注册到xxx，预计1-3日通过..."
-                    onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) handleAddProgress() }}
-                    style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-secondary)', color: 'var(--text-heading)' }} />
+                <div style={{ display: 'flex', gap: 8, marginBottom: 20, alignItems: 'flex-end' }}>
+                  <textarea value={progressInput} onChange={e => setProgressInput(e.target.value)}
+                    placeholder="填写跟踪进度…（Enter 换行，Ctrl+Enter 发送）"
+                    onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey && !e.nativeEvent.isComposing) { e.preventDefault(); handleAddProgress() } }}
+                    rows={2}
+                    style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-secondary)', color: 'var(--text-heading)', resize: 'vertical', minHeight: 44, maxHeight: 120, fontFamily: 'inherit', lineHeight: 1.5 }} />
                   <Button onClick={handleAddProgress} disabled={submitting || !progressInput.trim()}>
                     {submitting ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={14} />}
                   </Button>
@@ -174,7 +175,11 @@ export default function MilestoneDetailModal({ milestoneId, currentUserId, membe
                       <div style={{ background: 'var(--bg-secondary)', borderRadius: 10, padding: '12px 14px', border: '1px solid var(--border-primary)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 14, color: 'var(--text-heading)', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{p.content}</div>
+                            <div style={{ fontSize: 14, color: 'var(--text-heading)', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                              {p.content.split(/(@\S+)/g).map((part: string, pi: number) =>
+                                /^@\S+/.test(part) ? <span key={pi} style={{ color: 'var(--brand)', fontWeight: 500, cursor: 'default' }}>{part}</span> : part
+                              )}
+                            </div>
                             <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 6 }}>
                               {p.author_name || '未知'} · {new Date(p.created_at).toLocaleString('zh-CN')}
                             </div>

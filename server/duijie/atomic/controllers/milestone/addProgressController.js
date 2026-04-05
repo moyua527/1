@@ -1,13 +1,14 @@
 const db = require('../../../config/db');
+const { notifyMany } = require('../../utils/notify');
 
 module.exports = async (req, res) => {
   try {
     const { id } = req.params;
-    const { content } = req.body;
+    const { content, mentioned_user_ids } = req.body;
     if (!content?.trim()) return res.status(400).json({ success: false, message: '请输入跟踪内容' });
 
     const [[ms]] = await db.query(
-      'SELECT id, project_id, created_by FROM duijie_milestones WHERE id = ? AND is_deleted = 0',
+      'SELECT id, project_id, title, created_by FROM duijie_milestones WHERE id = ? AND is_deleted = 0',
       [id]
     );
     if (!ms) return res.status(404).json({ success: false, message: '代办不存在' });
@@ -32,6 +33,20 @@ module.exports = async (req, res) => {
        WHERE p.id = ?`,
       [result.insertId]
     );
+
+    if (Array.isArray(mentioned_user_ids) && mentioned_user_ids.length > 0) {
+      const ids = mentioned_user_ids.filter(uid => uid !== req.userId);
+      if (ids.length > 0) {
+        const authorName = row.author_name || '某人';
+        notifyMany(
+          ids,
+          'task_comment',
+          `${authorName} 在代办「${ms.title}」中@了你`,
+          content.trim().slice(0, 100),
+          `/projects/${ms.project_id}?tab=milestone`
+        );
+      }
+    }
 
     res.json({ success: true, data: row });
   } catch (e) {
