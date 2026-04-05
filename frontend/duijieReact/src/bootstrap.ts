@@ -73,19 +73,22 @@ async function parseApiResponse(res: Response) {
 }
 
 export async function fetchApi(path: string, options?: RequestInit) {
+  const { headers: extraHeaders, ...restOpts } = options || {}
+  const mergedHeaders = { 'Content-Type': 'application/json', ...authHeaders(), ...(extraHeaders as Record<string, string>) }
   const res = await fetch(`${BACKEND_URL}${path}`, {
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...authHeaders(), ...options?.headers },
-    ...options,
+    ...restOpts,
+    headers: mergedHeaders,
   })
   // 401 时自动尝试刷新 token 并重试一次
   if (res.status === 401 && !path.includes('/auth/refresh') && !path.includes('/auth/login')) {
     const refreshed = await tryRefreshToken()
     if (refreshed) {
+      const retryHeaders = { 'Content-Type': 'application/json', ...authHeaders(), ...(extraHeaders as Record<string, string>) }
       const retryRes = await fetch(`${BACKEND_URL}${path}`, {
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...authHeaders(), ...options?.headers },
-        ...options,
+        ...restOpts,
+        headers: retryHeaders,
       })
       return parseApiResponse(retryRes)
     }
