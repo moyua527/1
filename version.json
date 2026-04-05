@@ -1,6 +1,6 @@
 {
-  "version": "1.1.93.3",
-  "versionCode": 121,
+  "version": "1.1.93.4",
+  "versionCode": 122,
   "minVersion": "1.0.0",
-  "changelog": "画笔大小和颜色选择器视觉优化"
+  "changelog": "需求红点只在有新提交时显示"
 }

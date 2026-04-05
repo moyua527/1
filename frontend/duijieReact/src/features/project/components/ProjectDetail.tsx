@@ -176,13 +176,20 @@ export default function ProjectDetail() {
   const [projectError, setProjectError] = useState('')
   const [tasks, setTasks] = useState<any[]>([])
   const [milestones, setMilestones] = useState<any[]>([])
+  const [hasNewSubmitted, setHasNewSubmitted] = useState(false)
   const [selectedMember, setSelectedMember] = useState<any>(null)
   const [searchParams, setSearchParams] = useSearchParams()
   const validTabs = ['overview', 'tasks', 'milestones', 'messages', 'app', 'roles', 'join_requests'] as const
   type Tab = typeof validTabs[number]
   const urlTab = searchParams.get('tab') as Tab
   const tab: Tab = validTabs.includes(urlTab as any) ? urlTab! : 'overview'
-  const setTab = (t: Tab) => setSearchParams({ tab: t }, { replace: true })
+  const setTab = (t: Tab) => {
+    setSearchParams({ tab: t }, { replace: true })
+    if (t === 'tasks') {
+      localStorage.setItem(`task_view_${user?.id}_${id}`, new Date().toISOString())
+      setHasNewSubmitted(false)
+    }
+  }
 
   const [showAddMember, setShowAddMember] = useState(false)
   const [showAddClientMember, setShowAddClientMember] = useState(false)
@@ -252,11 +259,25 @@ export default function ProjectDetail() {
     })
   }, [id])
 
+  const taskViewKey = `task_view_${user?.id}_${id}`
+
   const loadTasks = useCallback(() => {
     if (!id) return
-    taskApi.list(id).then(r => { if (r.success) setTasks(r.data || []) })
+    taskApi.list(id).then(r => {
+      if (!r.success) return
+      const data = r.data || []
+      setTasks(data)
+      const lastView = localStorage.getItem(taskViewKey)
+      const submitted = data.filter((t: any) => t.status === 'submitted')
+      if (!lastView) {
+        setHasNewSubmitted(submitted.length > 0)
+      } else {
+        const lastTs = new Date(lastView).getTime()
+        setHasNewSubmitted(submitted.some((t: any) => new Date(t.created_at).getTime() > lastTs))
+      }
+    })
     milestoneApi.list(id).then(r => { if (r.success) setMilestones(r.data || []) })
-  }, [id])
+  }, [id, taskViewKey])
 
   useEffect(() => {
     if (!id) return
@@ -270,6 +291,10 @@ export default function ProjectDetail() {
 
   useEffect(() => {
     if (!id) return
+    if (tab === 'tasks' && user?.id) {
+      localStorage.setItem(`task_view_${user.id}_${id}`, new Date().toISOString())
+      setHasNewSubmitted(false)
+    }
     const timer = window.setTimeout(() => {
       loadProject()
       loadTasks()
@@ -370,7 +395,7 @@ export default function ProjectDetail() {
             background: tab === k ? 'var(--brand)' : 'var(--bg-tertiary)', color: tab === k ? 'var(--bg-primary)' : 'var(--text-secondary)',
           }}>
             {v}
-            {k === 'tasks' && tasks.filter(t => t.status === 'submitted').length > 0 && tab !== 'tasks' && (
+            {k === 'tasks' && hasNewSubmitted && tab !== 'tasks' && (
               <span style={{ position: 'absolute', top: -2, right: -2, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
             )}
             {k === 'join_requests' && pendingJoinCount > 0 && (
