@@ -146,7 +146,7 @@ export default function ProjectRoleList({ canEdit, projectId }: Props) {
       </div>
 
       {roles.length === 0 && !editMode ? (
-        <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-tertiary)', fontSize: 14 }}>暂无自定义角色</div>
+        <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-tertiary)', fontSize: 14 }}>暂无角色，点击「编辑」添加</div>
       ) : (
         <>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>

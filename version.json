@@ -1,6 +1,6 @@
 {
-  "version": "1.1.84",
-  "versionCode": 94,
+  "version": "1.1.84.1",
+  "versionCode": 95,
   "minVersion": "1.0.0",
-  "changelog": "新手引导升级: driver.js元素高亮引导 + 任务清单追踪"
+  "changelog": "修复项目角色列表不显示默认角色的问题"
 }

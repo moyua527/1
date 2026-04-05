@@ -1,12 +1,13 @@
 const db = require('../../../config/db');
 const { broadcast } = require('../../utils/broadcast');
-const { PROJECT_ROLE_FIELDS, ensureDefaultEnterpriseProjectRoles } = require('../../utils/projectRoles');
+const { PROJECT_ROLE_FIELDS, ensureDefaultProjectRoles, ensureDefaultEnterpriseProjectRoles } = require('../../utils/projectRoles');
 
 // ========== 项目级角色（兼容旧路由） ==========
 
 exports.list = async (req, res) => {
   try {
     const { id } = req.params;
+    await ensureDefaultProjectRoles(id, req.userId);
     const [roles] = await db.query(
       `SELECT * FROM project_roles
        WHERE is_deleted = 0 AND project_id = ?
