@@ -31,7 +31,7 @@ module.exports = async (req, res) => {
     }
 
     const [participants] = await db.query(
-      `SELECT mp.*, u.display_name, u.avatar_url
+      `SELECT mp.*, COALESCE(u.nickname, u.username) AS display_name, u.avatar AS avatar_url
        FROM duijie_milestone_participants mp
        LEFT JOIN voice_users u ON u.id = mp.user_id
        WHERE mp.milestone_id = ?`,

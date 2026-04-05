@@ -26,7 +26,7 @@ module.exports = async (req, res) => {
     );
 
     const [[row]] = await db.query(
-      `SELECT p.*, u.display_name AS author_name
+      `SELECT p.*, COALESCE(u.nickname, u.username) AS author_name
        FROM duijie_milestone_progress p
        LEFT JOIN voice_users u ON u.id = p.created_by
        WHERE p.id = ?`,

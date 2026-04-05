@@ -8,6 +8,15 @@
       "env": {
         "WUKONG_SESSION": "1"
       }
+    },
+    "my-mcp-2": {
+      "command": "node",
+      "args": [
+        "C:/Users/CEO/.cursor/my-mcp-server/index.mjs"
+      ],
+      "env": {
+        "WUKONG_SESSION": "2"
+      }
     }
   }
 }
