@@ -14,7 +14,7 @@ interface CheckItem {
 const CHECKLIST: CheckItem[] = [
   { id: 'create_project', label: '创建第一个项目', desc: '前往项目管理，创建一个新项目', route: '/projects' },
   { id: 'invite_member', label: '邀请一位成员', desc: '在项目概览中点击 + 邀请团队成员' },
-  { id: 'create_task', label: '创建一个任务', desc: '在项目的任务标签页中创建任务' },
+  { id: 'create_task', label: '创建一个需求', desc: '在项目的需求标签页中创建需求' },
   { id: 'set_milestone', label: '设置里程碑', desc: '使用里程碑功能规划项目阶段' },
   { id: 'send_message', label: '发送一条消息', desc: '在消息模块与团队成员沟通', route: '/messaging' },
 ]
@@ -125,7 +125,7 @@ export default function OnboardingChecklist() {
         {!collapsed && (
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 600 }}>
-              {allDone ? '🎉 全部完成！' : '新手任务'}
+              {allDone ? '🎉 全部完成！' : '新手清单'}
             </div>
             <div style={{ fontSize: 11, opacity: 0.85, marginTop: 1 }}>
               {allDone ? '你已经掌握了基本操作' : `${doneCount}/${CHECKLIST.length} 已完成`}

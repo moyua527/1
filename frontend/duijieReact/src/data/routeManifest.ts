@@ -41,7 +41,7 @@ const ROUTES: RouteEntry[] = [
     ],
   },
   {
-    path: '/tasks', label: '任务看板', icon: ListTodo, perm: 'task:view',
+    path: '/tasks', label: '需求看板', icon: ListTodo, perm: 'task:view',
     importFn: () => import('../features/task/index'),
     showInNav: true, prefetch: true, group: 'business',
   },

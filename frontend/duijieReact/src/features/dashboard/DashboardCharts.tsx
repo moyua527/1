@@ -97,7 +97,7 @@ export default function DashboardCharts({ chartData, days, onDaysChange, canClie
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(360px, 1fr))', gap: 16 }}>
         {chartData.taskTrend?.length > 0 && (
           <div style={{ background: 'var(--bg-primary)', borderRadius: 16, padding: isMobile ? 16 : 24, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid var(--border-primary)' }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-heading)', marginBottom: 16 }}>任务趋势</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-heading)', marginBottom: 16 }}>需求趋势</div>
             <ResponsiveContainer width="100%" height={240}>
               <AreaChart data={fillDates(chartData.taskTrend, days, ['created', 'completed'])}>
                 <defs>
@@ -123,7 +123,7 @@ export default function DashboardCharts({ chartData, days, onDaysChange, canClie
         )}
         {chartData.taskDist?.length > 0 && (
           <div style={{ background: 'var(--bg-primary)', borderRadius: 16, padding: isMobile ? 16 : 24, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', border: '1px solid var(--border-primary)' }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-heading)', marginBottom: 16 }}>任务状态分布</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-heading)', marginBottom: 16 }}>需求状态分布</div>
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
                 <Pie

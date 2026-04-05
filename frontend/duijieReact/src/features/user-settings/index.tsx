@@ -24,9 +24,9 @@ const roleLabel: Record<string, string> = { admin: '管理员', manager: '经理
 
 /* 通知开关项（localStorage 存储） */
 const NOTIF_PREFS = [
-  { key: 'notif_task_assign', label: '任务分配', desc: '当有人给你分配新任务时通知' },
-  { key: 'notif_task_status', label: '任务状态变更', desc: '你参与的任务状态发生变化时通知' },
-  { key: 'notif_task_comment', label: '任务评论', desc: '你参与的任务有新评论时通知' },
+  { key: 'notif_task_assign', label: '需求分配', desc: '当有人给你分配新需求时通知' },
+  { key: 'notif_task_status', label: '需求状态变更', desc: '你参与的需求状态发生变化时通知' },
+  { key: 'notif_task_comment', label: '需求评论', desc: '你参与的需求有新评论时通知' },
   { key: 'notif_project_update', label: '项目更新', desc: '你参与的项目信息更新时通知' },
   { key: 'notif_follow_reminder', label: '跟进提醒', desc: '客户跟进到期提醒' },
   { key: 'notif_ticket_reply', label: '工单回复', desc: '你提交的工单有新回复时通知' },

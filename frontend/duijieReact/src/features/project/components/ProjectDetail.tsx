@@ -58,7 +58,7 @@ function TaskDistribution({ tasks }: { tasks: any[] }) {
 
   return (
     <div style={section}>
-      <h3 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>任务状态分布</h3>
+      <h3 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>需求状态分布</h3>
       <div style={{ display: 'flex', height: 10, borderRadius: 5, overflow: 'hidden', marginBottom: 14, background: 'var(--bg-tertiary)' }}>
         {entries.map(([key, cfg]) => (
           <div key={key} style={{ width: `${((counts[key] || 0) / total) * 100}%`, background: cfg.color, transition: 'width 0.3s ease' }}
@@ -111,7 +111,7 @@ function ActivityFeed({ projectId }: { projectId: string }) {
   const descOf = (item: any) => {
     const actor = item.actor_name || item.actor_username || '未知用户'
     switch (item.type) {
-      case 'task_created': return <><b>{actor}</b> 创建了任务 <b>{item.title}</b></>
+      case 'task_created': return <><b>{actor}</b> 创建了需求 <b>{item.title}</b></>
       case 'milestone_created': return <><b>{actor}</b> 创建了里程碑 <b>{item.title}</b></>
       case 'milestone_completed': return <>里程碑 <b>{item.title}</b> 已完成</>
       case 'member_joined': return <><b>{item.title}</b> 加入了项目</>
@@ -353,7 +353,7 @@ export default function ProjectDetail() {
         }} />
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 0, flexShrink: 0, ...(isMobile ? { overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' } : { flexWrap: 'wrap' }) } as any}>
-        {([['overview','概览'],['tasks','任务'],['milestones','里程碑'],['messages','消息'], ...(project.app_url ? [['app', project.app_name || '应用']] : []), ...((isOwner || canManageRole) ? [['roles', '角色管理']] : []), ...(canApproveJoin ? [['join_requests', '加入申请']] : [])] as [string, string][]).map(([k,v]) => (
+        {([['overview','概览'],['tasks','需求'],['milestones','里程碑'],['messages','消息'], ...(project.app_url ? [['app', project.app_name || '应用']] : []), ...((isOwner || canManageRole) ? [['roles', '角色管理']] : []), ...(canApproveJoin ? [['join_requests', '加入申请']] : [])] as [string, string][]).map(([k,v]) => (
           <button key={k} onClick={() => setTab(k as any)} style={{
             padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500, position: 'relative', whiteSpace: 'nowrap', flexShrink: 0,
             background: tab === k ? 'var(--brand)' : 'var(--bg-tertiary)', color: tab === k ? 'var(--bg-primary)' : 'var(--text-secondary)',
@@ -415,7 +415,7 @@ export default function ProjectDetail() {
                 <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>创建者</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.creator_name || project.creator_username || '—'}</div></div>
                 <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>创建时间</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{formatDateTime(project.created_at)}</div></div>
                 <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>最后更新</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{formatDateTime(project.updated_at)}</div></div>
-                <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>任务数</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{tasks.length}</div></div>
+                <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>需求数</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{tasks.length}</div></div>
               </div>
             </div>
 

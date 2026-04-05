@@ -107,7 +107,7 @@ export default function TaskCreateModal({ open, onClose, onCreated, projects }: 
   const handleCreate = async () => {
     if (!currentProjectId) { toast('请选择项目', 'error'); return }
     const title = createForm.title.trim()
-    if (!title) { toast('请输入任务标题', 'error'); return }
+    if (!title) { toast('请输入需求标题', 'error'); return }
     setSubmitting(true)
     const fd = new FormData()
     fd.append('project_id', currentProjectId)
@@ -122,15 +122,15 @@ export default function TaskCreateModal({ open, onClose, onCreated, projects }: 
     setSubmitting(false)
     if (r.success) {
       const rememberResult = await projectApi.rememberTaskTitle(currentProjectId, title)
-      if (!rememberResult.success) toast(rememberResult.message || '任务标题历史保存失败', 'error')
-      toast('任务已创建', 'success')
+      if (!rememberResult.success) toast(rememberResult.message || '需求标题历史保存失败', 'error')
+      toast('需求已创建', 'success')
       handleClose()
       onCreated()
     } else toast(r.message || '创建失败', 'error')
   }
 
   return (
-    <Modal open={open} onClose={handleClose} title="新建任务">
+    <Modal open={open} onClose={handleClose} title="新建需求">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div>
           <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>所属项目 *</label>
@@ -140,10 +140,10 @@ export default function TaskCreateModal({ open, onClose, onCreated, projects }: 
             {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
         </div>
-        <TaskTitleSelector key={`task-title-${open ? 'open' : 'closed'}-${currentProjectId || 'none'}`} label="任务标题" open={open} projectId={currentProjectId} value={createForm.title} onChange={title => setCreateForm({ ...createForm, title })} required />
+        <TaskTitleSelector key={`task-title-${open ? 'open' : 'closed'}-${currentProjectId || 'none'}`} label="需求标题" open={open} projectId={currentProjectId} value={createForm.title} onChange={title => setCreateForm({ ...createForm, title })} required />
         <div>
           <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>描述</label>
-          <textarea value={createForm.description} onChange={e => setCreateForm({ ...createForm, description: e.target.value })} placeholder="任务描述（可选）"
+          <textarea value={createForm.description} onChange={e => setCreateForm({ ...createForm, description: e.target.value })} placeholder="需求描述（可选）"
             style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', minHeight: 60, fontFamily: 'inherit', boxSizing: 'border-box' }} />
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -213,7 +213,7 @@ export default function TaskCreateModal({ open, onClose, onCreated, projects }: 
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
           <Button variant="secondary" onClick={handleClose}>取消</Button>
-          <Button disabled={submitting} onClick={handleCreate}>{submitting ? '创建中...' : '创建任务'}</Button>
+          <Button disabled={submitting} onClick={handleCreate}>{submitting ? '创建中...' : '创建需求'}</Button>
         </div>
       </div>
     </Modal>

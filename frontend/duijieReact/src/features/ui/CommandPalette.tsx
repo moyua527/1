@@ -18,7 +18,7 @@ const NAV_DEFS = [
   { path: '/projects', label: '项目管理', icon: FolderKanban, perm: 'project:view', keywords: 'project 项目列表' },
   { path: '/clients', label: '客户管理', icon: Users, perm: 'client:manage', keywords: 'client customer 客户列表' },
   { path: '/opportunities', label: '商机管理', icon: TrendingUp, perm: 'opportunity:view', keywords: 'opportunity sales 销售管道 商机' },
-  { path: '/tasks', label: '任务看板', icon: ListTodo, perm: 'task:view', keywords: 'task kanban 任务 看板' },
+  { path: '/tasks', label: '需求看板', icon: ListTodo, perm: 'task:view', keywords: 'task kanban 需求 看板' },
   { path: '/enterprise', label: '企业管理', icon: Building2, perm: 'enterprise:view', keywords: 'enterprise company 企业 组织' },
   { path: '/messaging', label: '站内消息', icon: MessageSquare, perm: 'messaging:view', keywords: 'message chat dm 消息 聊天' },
   { path: '/tickets', label: '工单系统', icon: Ticket, perm: 'ticket:view', keywords: 'ticket issue 工单 问题 需求 咨询' },

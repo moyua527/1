@@ -146,7 +146,7 @@ export default function GanttChart({ tasks, onTaskClick }: GanttChartProps) {
         {/* Task labels */}
         <div style={{ minWidth: labelWidth, maxWidth: labelWidth, borderRight: '1px solid var(--border-primary)', flexShrink: 0 }}>
           <div style={{ height: headerHeight, borderBottom: '1px solid var(--border-primary)', display: 'flex', alignItems: 'center', padding: '0 12px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>
-            任务名称
+            需求名称
           </div>
           {validTasks.map(task => (
             <div
@@ -165,7 +165,7 @@ export default function GanttChart({ tasks, onTaskClick }: GanttChartProps) {
           ))}
           {validTasks.length === 0 && (
             <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 13 }}>
-              暂无带日期的任务
+              暂无带日期的需求
             </div>
           )}
         </div>

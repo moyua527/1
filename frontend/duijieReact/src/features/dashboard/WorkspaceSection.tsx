@@ -34,7 +34,7 @@ export default function WorkspaceSection({ isMobile = false }: { isMobile?: bool
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16, marginTop: 24 }}>
-      {/* 我的待办任务 */}
+      {/* 我的待办需求 */}
       {myTasks?.length > 0 && (
         <div style={{ background: 'var(--bg-primary)', borderRadius: 12, padding: isMobile ? 16 : 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>

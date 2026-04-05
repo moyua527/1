@@ -33,7 +33,7 @@ export default function EnterpriseOnboarding() {
         开始之前，请先创建您的企业或加入已有企业
       </p>
       <p style={{ fontSize: 13, color: 'var(--text-tertiary)', marginBottom: 40, textAlign: 'center' }}>
-        企业是协作的基础，所有项目、客户、任务都在企业下管理
+        企业是协作的基础，所有项目、客户、需求都在企业下管理
       </p>
 
       <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', justifyContent: 'center' }}>

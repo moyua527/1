@@ -62,15 +62,15 @@ export default function TaskBoard() {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>任务看板</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>需求看板</h1>
           <p style={{ color: 'var(--text-secondary)', margin: '4px 0 0', fontSize: 14 }}>
-            共 {filtered.length} 个任务{filterProject ? '' : '（全部项目）'}
+            共 {filtered.length} 个需求{filterProject ? '' : '（全部项目）'}
           </p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <div style={{ position: 'relative' }}>
             <Search size={14} color="#94a3b8" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
-            <input value={searchText} onChange={e => setSearchText(e.target.value)} placeholder="搜索任务..."
+            <input value={searchText} onChange={e => setSearchText(e.target.value)} placeholder="搜索需求..."
               style={{ padding: '8px 12px 8px 32px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none', width: 180 }} />
           </div>
           <select value={filterProject} onChange={e => setFilterProject(e.target.value)}
@@ -94,7 +94,7 @@ export default function TaskBoard() {
           {canAddTask && (
             <button onClick={() => setShowCreateModal(true)}
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, background: 'var(--brand)', color: 'var(--bg-primary)', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>
-              <Plus size={14} /> 新建任务
+              <Plus size={14} /> 新建需求
             </button>
           )}
         </div>
@@ -103,7 +103,7 @@ export default function TaskBoard() {
       {/* 卡片网格布局 */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12, paddingBottom: 8 }}>
         {filtered.length === 0 && (
-          <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 40, color: 'var(--text-disabled)', fontSize: 14 }}>暂无任务</div>
+          <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 40, color: 'var(--text-disabled)', fontSize: 14 }}>暂无需求</div>
         )}
         {filtered.map(task => {
           const pr = priorityMap[task.priority] || priorityMap.medium

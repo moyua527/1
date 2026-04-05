@@ -14,7 +14,7 @@ const typeIcon: Record<string, string> = {
 const CATEGORIES = [
   { key: 'all', label: '全部' },
   { key: 'project', label: '项目' },
-  { key: 'task', label: '任务' },
+  { key: 'task', label: '需求' },
   { key: 'approval', label: '审批' },
   { key: 'system', label: '系统' },
 ]

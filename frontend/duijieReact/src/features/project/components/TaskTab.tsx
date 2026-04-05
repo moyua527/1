@@ -146,7 +146,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
   const handleRestore = async (taskId: number) => {
     const r = await taskApi.restore(String(taskId))
     if (r.success) {
-      toast('已恢复任务', 'success')
+      toast('已恢复需求', 'success')
       setTrashTasks(prev => prev.filter(t => t.id !== taskId))
       loadTasks()
     } else toast(r.message || '恢复失败', 'error')
@@ -284,7 +284,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <div style={{ ...section, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, marginBottom: 0, overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>任务列表</h3>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>需求列表</h3>
           {canEdit && <div ref={dropdownRef} style={{ position: 'relative' }}>
             <button onClick={() => setDropdownOpen(!dropdownOpen)} style={{
               display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8,
@@ -294,7 +294,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
               <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'var(--bg-primary)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid var(--border-primary)', minWidth: 120, zIndex: 10, overflow: 'hidden' }}>
                 <button onClick={() => { setDropdownOpen(false); setShowCreateTask(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)' }}
                   onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-tertiary)')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-                  <Plus size={14} color="var(--brand)" /> 添加任务
+                  <Plus size={14} color="var(--brand)" /> 添加需求
                 </button>
                 <button onClick={() => { setDropdownOpen(false); setDeleteSelected(new Set()); setShowDeleteTask(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--color-danger)' }}
                   onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
@@ -328,7 +328,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
         <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
         {(() => {
           const filtered = statusFilter ? tasks.filter(t => t.status === statusFilter) : tasks
-          return filtered.length === 0 ? <div style={{ color: 'var(--text-tertiary)', fontSize: 14 }}>暂无任务</div> : (
+          return filtered.length === 0 ? <div style={{ color: 'var(--text-tertiary)', fontSize: 14 }}>暂无需求</div> : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {filtered.map((t: any) => {
               const ts = taskStatusMap[t.status] || taskStatusMap.submitted
@@ -438,7 +438,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
         title={showPointsModal?.roundType === 'initial' ? `提出疑问 - ${showPointsModal?.taskTitle}` : `驳回并列出问题 - ${showPointsModal?.taskTitle}`} width={560}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-            {showPointsModal?.roundType === 'initial' ? '请列出需要任务创建者补充说明的要点：' : '请列出验收不通过的具体问题：'}
+            {showPointsModal?.roundType === 'initial' ? '请列出需要需求创建者补充说明的要点：' : '请列出验收不通过的具体问题：'}
           </div>
           {pointInputs.map((val, i) => (
             <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -469,8 +469,8 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
         </div>
       </Modal>
 
-      {/* 创建任务模态框 */}
-      <Modal open={showCreateTask} onClose={() => { setShowCreateTask(false); resetCreateForm() }} title="添加任务" width={560}>
+      {/* 创建需求模态框 */}
+      <Modal open={showCreateTask} onClose={() => { setShowCreateTask(false); resetCreateForm() }} title="添加需求" width={560}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <TaskTitleSelector open={showCreateTask} projectId={projectId} value={taskForm.title} onChange={title => setTaskForm({ ...taskForm, title })} required />
           <div style={{ display: 'flex', gap: 12 }}>
@@ -494,7 +494,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
             <div onDragOver={handleFileDragOver} onDragLeave={handleFileDragLeave} onDrop={handleFileDrop}
               style={{ borderRadius: 12, border: `1px solid ${isDragging ? 'var(--brand)' : '#cbd5e1'}`, background: isDragging ? 'var(--bg-selected)' : 'var(--bg-secondary)', transition: 'all 0.15s', overflow: 'hidden' }}>
               <textarea value={taskForm.description} onChange={e => setTaskForm({ ...taskForm, description: e.target.value })} onPaste={handleFilePaste}
-                placeholder="输入任务描述，可直接粘贴图片或拖入文件..." rows={3}
+                placeholder="输入需求描述，可直接粘贴图片或拖入文件..." rows={3}
                 style={{ width: '100%', padding: '10px 12px', border: 'none', fontSize: 14, outline: 'none', resize: 'vertical', minHeight: 60, fontFamily: 'inherit', background: 'transparent', color: 'var(--text-body)' }} />
               {taskFiles.length > 0 && (
                 <div style={{ padding: '6px 12px 8px', display: 'flex', flexWrap: 'wrap', gap: 6, borderTop: '1px solid var(--border-primary)' }}>
@@ -539,13 +539,13 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
             <Button variant="secondary" onClick={() => { setShowCreateTask(false); resetCreateForm() }}>取消</Button>
             <Button disabled={submitting} onClick={async () => {
               const title = taskForm.title.trim()
-              if (!title) { toast('请输入任务标题', 'error'); return }
+              if (!title) { toast('请输入需求标题', 'error'); return }
               setSubmitting(true)
               const r = await taskApi.create({ project_id: Number(projectId), title, description: taskForm.description, due_date: taskForm.due_date || undefined, priority: taskForm.priority, status: 'submitted' }, taskFiles.length > 0 ? taskFiles : undefined)
               if (r.success) {
                 const rememberResult = await projectApi.rememberTaskTitle(projectId, title)
-                if (!rememberResult.success) toast(rememberResult.message || '任务标题历史保存失败', 'error')
-                toast('任务创建成功', 'success')
+                if (!rememberResult.success) toast(rememberResult.message || '需求标题历史保存失败', 'error')
+                toast('需求创建成功', 'success')
                 window.dispatchEvent(new CustomEvent('onboarding-done', { detail: { type: 'create_task' } }))
                 setShowCreateTask(false)
                 resetCreateForm()
@@ -557,11 +557,11 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
         </div>
       </Modal>
 
-      {/* 删除任务模态框 */}
-      <Modal open={showDeleteTask} onClose={() => setShowDeleteTask(false)} title="删除任务" width={560}>
+      {/* 删除需求模态框 */}
+      <Modal open={showDeleteTask} onClose={() => setShowDeleteTask(false)} title="删除需求" width={560}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {tasks.length === 0 ? <div style={{ color: 'var(--text-tertiary)', fontSize: 14, textAlign: 'center', padding: 20 }}>暂无任务</div> : (<>
-            <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>选择要删除的任务（删除后可在回收站恢复）：</div>
+          {tasks.length === 0 ? <div style={{ color: 'var(--text-tertiary)', fontSize: 14, textAlign: 'center', padding: 20 }}>暂无需求</div> : (<>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>选择要删除的需求（删除后可在回收站恢复）：</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 300, overflowY: 'auto' }}>
               {tasks.map((t: any) => {
                 const isAccepted = t.status === 'accepted'
@@ -600,7 +600,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                 <Button variant="danger" disabled={deleteSelected.size === 0 || submitting} onClick={async () => {
                   setSubmitting(true)
                   for (const tid of deleteSelected) await taskApi.remove(String(tid))
-                  toast(`已删除 ${deleteSelected.size} 个任务`, 'success')
+                  toast(`已删除 ${deleteSelected.size} 个需求`, 'success')
                   setShowDeleteTask(false)
                   setDeleteSelected(new Set())
                   loadTasks()
@@ -615,7 +615,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
       {/* 回收站模态框 */}
       <Modal open={showTrash} onClose={() => setShowTrash(false)} title="回收站" width={560}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>项目成员（管理员/成员）可以恢复已删除的任务</div>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>项目成员（管理员/成员）可以恢复已删除的需求</div>
           {trashLoading ? <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)' }}>加载中...</div> :
            trashTasks.length === 0 ? <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 14 }}>回收站为空</div> :
            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 400, overflowY: 'auto' }}>

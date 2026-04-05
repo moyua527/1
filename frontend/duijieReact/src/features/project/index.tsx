@@ -207,7 +207,7 @@ export default function ProjectList() {
             {form.task_title_presets.length > 0 && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{form.task_title_presets.map((p, i) => (
               <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 999, background: 'var(--bg-tertiary)', fontSize: 13, color: 'var(--text-body)' }}>{p}<button type="button" onClick={() => setForm(f => ({ ...f, task_title_presets: f.task_title_presets.filter((_, j) => j !== i) }))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text-tertiary)', fontSize: 14, lineHeight: 1 }} onMouseEnter={e => e.currentTarget.style.color = 'var(--color-danger)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}>×</button></span>
             ))}</div>}
-            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>创建任务时可直接从这些固定功能名称中选择</div>
+            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>创建需求时可直接从这些固定功能名称中选择</div>
           </div>
           <p style={{ fontSize: 12, color: 'var(--text-tertiary)', margin: 0 }}>创建后可在项目详情中添加成员、关联应用等</p>
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column-reverse' : 'row', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>

@@ -39,13 +39,13 @@ const tabButton = (active: boolean): React.CSSProperties => ({
 })
 
 export default function TaskTitleSelector({
-  label = '任务标题',
+  label = '需求标题',
   open,
   projectId,
   value,
   onChange,
   required,
-  placeholder = '输入任务标题',
+  placeholder = '输入需求标题',
 }: Props) {
   const [mode, setMode] = useState<'preset' | 'history'>('preset')
   const [options, setOptions] = useState<TaskTitleOptions>({ presets: [], history: [] })
@@ -77,7 +77,7 @@ export default function TaskTitleSelector({
         })
         return
       }
-      toast(r.message || '任务标题选项加载失败', 'error')
+      toast(r.message || '需求标题选项加载失败', 'error')
     }, 0)
     return () => {
       active = false
@@ -202,7 +202,7 @@ export default function TaskTitleSelector({
               })}
             </div>
           )}
-          <div style={{ fontSize: 11, color: 'var(--text-disabled)', marginTop: 4 }}>创建任务后标题会自动记录到历史</div>
+          <div style={{ fontSize: 11, color: 'var(--text-disabled)', marginTop: 4 }}>创建需求后标题会自动记录到历史</div>
         </div>
       )}
     </div>

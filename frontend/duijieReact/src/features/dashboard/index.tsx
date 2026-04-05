@@ -61,8 +61,8 @@ export default function Dashboard() {
       { label: '客户总数', value: stats.totalClients, icon: Users, bg: '#f3e8ff', color: 'var(--color-purple)', path: '/clients' },
     ] : []),
     ...(canTasks ? [
-      { label: '总任务', value: stats.totalTasks, icon: ListTodo, bg: '#e0f2fe', color: '#0284c7', path: '/tasks' },
-      { label: '待办任务', value: stats.pendingTasks, icon: Clock, bg: '#fee2e2', color: 'var(--color-danger)', path: '/tasks' },
+      { label: '总需求', value: stats.totalTasks, icon: ListTodo, bg: '#e0f2fe', color: '#0284c7', path: '/tasks' },
+      { label: '待办需求', value: stats.pendingTasks, icon: Clock, bg: '#fee2e2', color: 'var(--color-danger)', path: '/tasks' },
     ] : []),
   ] : []
 

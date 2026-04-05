@@ -95,7 +95,7 @@ export default function CalendarPage() {
 
   const selectedEvents = selectedDate ? (eventsByDate[selectedDate] || []) : []
 
-  const typeLabel: Record<string, string> = { task: '任务', followup: '跟进', milestone: '里程碑' }
+  const typeLabel: Record<string, string> = { task: '需求', followup: '跟进', milestone: '里程碑' }
   const typeColors: Record<string, string> = { task: '#2563eb', followup: '#f59e0b', milestone: '#8b5cf6' }
 
   return (
@@ -103,11 +103,11 @@ export default function CalendarPage() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>日历日程</h1>
-          <p style={{ color: 'var(--text-secondary)', margin: '4px 0 0', fontSize: 14 }}>任务截止、跟进提醒一览</p>
+          <p style={{ color: 'var(--text-secondary)', margin: '4px 0 0', fontSize: 14 }}>需求截止、跟进提醒一览</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 12, color: 'var(--text-secondary)' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Circle size={8} fill="#2563eb" stroke="none" /> 任务</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Circle size={8} fill="#2563eb" stroke="none" /> 需求</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Circle size={8} fill="#f59e0b" stroke="none" /> 跟进</span>
           </div>
         </div>

@@ -71,7 +71,7 @@ export default function EditProjectModal({ open, project, onClose, onSave }: Pro
               ))}
             </div>
           )}
-          <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>任务创建时可直接下拉选择这些固定功能名称</div>
+          <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>需求创建时可直接下拉选择这些固定功能名称</div>
         </div>
         <div>
           <label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>状态</label>

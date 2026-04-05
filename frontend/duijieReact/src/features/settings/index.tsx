@@ -14,7 +14,7 @@ const CONFIG_GROUPS = [
     { key: 'TIMEZONE', label: '时区', desc: '系统默认时区', placeholder: 'Asia/Shanghai' },
   ]},
   { title: '业务设置', icon: '📊', items: [
-    { key: 'TASK_DEFAULT_PRIORITY', label: '任务默认优先级', desc: '新建任务时的默认优先级 (low/medium/high/urgent)', placeholder: 'medium' },
+    { key: 'TASK_DEFAULT_PRIORITY', label: '需求默认优先级', desc: '新建需求时的默认优先级 (low/medium/high/urgent)', placeholder: 'medium' },
     { key: 'FOLLOW_UP_REMINDER_DAYS', label: '跟进提醒天数', desc: '跟进即将到期的提前提醒天数', placeholder: '3' },
     { key: 'CONTRACT_ALERT_DAYS', label: '合同到期提醒天数', desc: '合同到期前多少天开始提醒', placeholder: '30' },
     { key: 'DEFAULT_CLIENT_STAGE', label: '默认客户阶段', desc: '新建客户时的默认阶段 (potential/intent/signed)', placeholder: 'potential' },
@@ -23,8 +23,8 @@ const CONFIG_GROUPS = [
     { key: 'DEFAULT_CURRENCY', label: '默认货币', desc: '合同/商机金额的默认货币单位', placeholder: 'CNY' },
   ]},
   { title: '通知设置', icon: '🔔', items: [
-    { key: 'NOTIFY_TASK_ASSIGN', label: '任务分配通知', desc: '分配任务时是否发站内通知 (true/false)', placeholder: 'true' },
-    { key: 'NOTIFY_TASK_STATUS', label: '任务状态变更通知', desc: '任务状态变更时通知相关人 (true/false)', placeholder: 'true' },
+    { key: 'NOTIFY_TASK_ASSIGN', label: '需求分配通知', desc: '分配需求时是否发站内通知 (true/false)', placeholder: 'true' },
+    { key: 'NOTIFY_TASK_STATUS', label: '需求状态变更通知', desc: '需求状态变更时通知相关人 (true/false)', placeholder: 'true' },
     { key: 'NOTIFY_PROJECT_UPDATE', label: '项目更新通知', desc: '项目信息更新时通知团队成员 (true/false)', placeholder: 'true' },
     { key: 'NOTIFY_JOIN_REQUEST', label: '企业加入申请通知', desc: '有人申请加入企业时通知管理员 (true/false)', placeholder: 'true' },
     { key: 'DIGEST_FREQUENCY', label: '摘要频率', desc: '定期发送的工作摘要频率 (daily/weekly/off)', placeholder: 'weekly' },

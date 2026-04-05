@@ -21,7 +21,7 @@ const TOUR_STEPS: DriveStep[] = [
     element: '[data-tour="sidebar"]',
     popover: {
       title: '侧边导航',
-      description: '这里是你的工作空间入口。可以切换到项目管理、任务看板、消息等不同模块。',
+      description: '这里是你的工作空间入口。可以切换到项目管理、需求看板、消息等不同模块。',
       side: 'right',
       align: 'start',
     },
@@ -30,7 +30,7 @@ const TOUR_STEPS: DriveStep[] = [
     element: '[data-tour="search"]',
     popover: {
       title: '全局搜索',
-      description: '快速搜索项目、任务、成员等。也可以按 ⌘K / Ctrl+K 直接打开。',
+      description: '快速搜索项目、需求、成员等。也可以按 ⌘K / Ctrl+K 直接打开。',
       side: 'bottom',
       align: 'center',
     },

@@ -7,8 +7,8 @@ import useI18nStore, { Locale } from '../../stores/useI18nStore'
 import Input from './Input'
 
 const NOTIF_ITEMS = [
-  { key: 'notif_task_assign', label: '任务分配' },
-  { key: 'notif_task_status', label: '任务状态' },
+  { key: 'notif_task_assign', label: '需求分配' },
+  { key: 'notif_task_status', label: '需求状态' },
   { key: 'notif_project_update', label: '项目更新' },
   { key: 'notif_follow_reminder', label: '跟进提醒' },
   { key: 'notif_system', label: '系统通知' },
