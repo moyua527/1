@@ -1,6 +1,6 @@
 {
-  "version": "1.2.2.1",
-  "versionCode": 144,
+  "version": "1.2.3",
+  "versionCode": 145,
   "minVersion": "1.0.0",
-  "changelog": "设置页增加项目成员显示"
+  "changelog": "代办重构为生命周期阶段追踪器"
 }

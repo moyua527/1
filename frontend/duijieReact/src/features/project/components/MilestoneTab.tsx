@@ -1,85 +1,205 @@
 import { useState } from 'react'
-import { Plus, CheckCircle, Circle } from 'lucide-react'
+import { Plus, CheckCircle2, Circle, Clock, ChevronRight, Pencil, Trash2 } from 'lucide-react'
 import { milestoneApi } from '../../milestone/services/api'
 import Button from '../../ui/Button'
 import { toast } from '../../ui/Toast'
 
 const section: React.CSSProperties = { background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16 }
 
+const TEMPLATES = [
+  { name: '软件开发 (SDLC)', stages: ['需求分析', '系统设计', '开发编码', '测试验证', '部署上线', '运维维护'] },
+  { name: '项目管理', stages: ['立项规划', '执行推进', '交付验收', '收尾总结'] },
+  { name: '产品迭代', stages: ['需求调研', '原型设计', '开发实现', '内测优化', '正式发布'] },
+]
+
 interface MilestoneTabProps {
   milestones: any[]
   projectId: string
   canEdit: boolean
   onRefresh: () => void
+  isMobile?: boolean
 }
 
-export default function MilestoneTab({ milestones, projectId, canEdit, onRefresh }: MilestoneTabProps) {
-  const [showMsForm, setShowMsForm] = useState(false)
-  const [editingMs, setEditingMs] = useState<any>(null)
-  const [msForm, setMsForm] = useState({ title: '', description: '', due_date: '' })
+export default function MilestoneTab({ milestones, projectId, canEdit, onRefresh, isMobile }: MilestoneTabProps) {
+  const [showForm, setShowForm] = useState(false)
+  const [editing, setEditing] = useState<any>(null)
+  const [form, setForm] = useState({ title: '', description: '', due_date: '' })
+  const [showTemplates, setShowTemplates] = useState(false)
+
+  const sorted = [...milestones].sort((a, b) => {
+    if (a.is_completed && !b.is_completed) return -1
+    if (!a.is_completed && b.is_completed) return 1
+    if (a.due_date && b.due_date) return new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
+    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  })
+
+  const completed = sorted.filter(m => m.is_completed).length
+  const total = sorted.length
+  const progress = total > 0 ? Math.round((completed / total) * 100) : 0
+
+  const handleSave = async () => {
+    if (!form.title.trim()) { toast('请输入阶段名称', 'error'); return }
+    const r = editing
+      ? await milestoneApi.update(String(editing.id), form)
+      : await milestoneApi.create({ project_id: Number(projectId), ...form })
+    if (r.success) {
+      toast(editing ? '已更新' : '阶段已创建', 'success')
+      if (!editing) window.dispatchEvent(new CustomEvent('onboarding-done', { detail: { type: 'set_milestone' } }))
+      setShowForm(false); setEditing(null); setForm({ title: '', description: '', due_date: '' }); onRefresh()
+    } else toast(r.message || '操作失败', 'error')
+  }
+
+  const handleTemplate = async (stages: string[]) => {
+    setShowTemplates(false)
+    for (const title of stages) {
+      await milestoneApi.create({ project_id: Number(projectId), title, description: '', due_date: '' })
+    }
+    toast(`已创建 ${stages.length} 个阶段`, 'success')
+    onRefresh()
+  }
 
   return (
     <div style={section}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>代办</h3>
-        {canEdit && <Button onClick={() => { setEditingMs(null); setMsForm({ title: '', description: '', due_date: '' }); setShowMsForm(!showMsForm) }}><Plus size={14} /> 新增</Button>}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>代办</h3>
+          {total > 0 && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>进度 {completed}/{total}</span>}
+        </div>
+        {canEdit && (
+          <div style={{ display: 'flex', gap: 6 }}>
+            {total === 0 && (
+              <div style={{ position: 'relative' }}>
+                <Button variant="secondary" onClick={() => setShowTemplates(v => !v)}>模板</Button>
+                {showTemplates && (
+                  <>
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 99 }} onClick={() => setShowTemplates(false)} />
+                    <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)', borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 100, minWidth: 220, overflow: 'hidden' }}>
+                      {TEMPLATES.map(t => (
+                        <button key={t.name} onClick={() => handleTemplate(t.stages)}
+                          style={{ display: 'block', width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: 13 }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                          <div style={{ fontWeight: 500, color: 'var(--text-heading)' }}>{t.name}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>{t.stages.join(' → ')}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+            <Button onClick={() => { setEditing(null); setForm({ title: '', description: '', due_date: '' }); setShowForm(!showForm) }}>
+              <Plus size={14} /> 新增
+            </Button>
+          </div>
+        )}
       </div>
-      {showMsForm && (
+
+      {total > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <div style={{ flex: 1, height: 6, borderRadius: 3, background: 'var(--bg-tertiary)', overflow: 'hidden' }}>
+              <div style={{ width: `${progress}%`, height: '100%', borderRadius: 3, background: progress === 100 ? '#22c55e' : 'var(--brand)', transition: 'width 0.3s' }} />
+            </div>
+            <span style={{ fontSize: 12, fontWeight: 600, color: progress === 100 ? '#22c55e' : 'var(--brand)', minWidth: 36, textAlign: 'right' }}>{progress}%</span>
+          </div>
+
+          {!isMobile && total <= 8 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 0, overflowX: 'auto', paddingBottom: 4 }}>
+              {sorted.map((m, i) => {
+                const isActive = !m.is_completed && (i === 0 || sorted[i - 1]?.is_completed)
+                return (
+                  <div key={m.id} style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: m.is_completed ? '#22c55e' : isActive ? 'var(--brand)' : 'var(--bg-tertiary)',
+                        color: m.is_completed || isActive ? '#fff' : 'var(--text-tertiary)',
+                        boxShadow: isActive ? '0 0 0 3px rgba(59,130,246,0.2)' : 'none', transition: 'all 0.2s' }}>
+                        {m.is_completed ? <CheckCircle2 size={16} /> : isActive ? <Clock size={14} /> : <Circle size={14} />}
+                      </div>
+                      <span style={{ fontSize: 10, color: m.is_completed ? '#22c55e' : isActive ? 'var(--brand)' : 'var(--text-tertiary)', fontWeight: isActive ? 600 : 400, whiteSpace: 'nowrap', maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'center' }}>
+                        {m.title}
+                      </span>
+                    </div>
+                    {i < sorted.length - 1 && (
+                      <div style={{ width: 20, minWidth: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: -16 }}>
+                        <ChevronRight size={14} color={sorted[i + 1]?.is_completed || (isActive && sorted[i + 1]) ? 'var(--brand)' : 'var(--border-primary)'} />
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {showForm && (
         <div style={{ background: 'var(--bg-secondary)', borderRadius: 10, padding: 16, marginBottom: 16, border: '1px solid var(--border-primary)' }}>
-          <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-            <div style={{ flex: 2 }}>
-              <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>标题</label>
-              <input value={msForm.title} onChange={e => setMsForm({ ...msForm, title: e.target.value })} placeholder="代办标题"
+          <div style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: isMobile ? 'wrap' : 'nowrap' as any }}>
+            <div style={{ flex: 2, minWidth: isMobile ? '100%' : 'auto' }}>
+              <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>阶段名称</label>
+              <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="例如：需求分析、开发编码"
                 style={{ width: '100%', padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
             </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>达到日期</label>
-              <input type="date" value={msForm.due_date} onChange={e => setMsForm({ ...msForm, due_date: e.target.value })}
+            <div style={{ flex: 1, minWidth: isMobile ? '100%' : 'auto' }}>
+              <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>目标日期</label>
+              <input type="date" value={form.due_date} onChange={e => setForm({ ...form, due_date: e.target.value })}
                 style={{ width: '100%', padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
             </div>
           </div>
-          <textarea value={msForm.description} onChange={e => setMsForm({ ...msForm, description: e.target.value })}
+          <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
             placeholder="描述（可选）" rows={2}
             style={{ width: '100%', padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none', resize: 'vertical', fontFamily: 'inherit', marginBottom: 12, boxSizing: 'border-box' }} />
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-            <Button variant="secondary" onClick={() => { setShowMsForm(false); setEditingMs(null) }}>取消</Button>
-            <Button onClick={async () => {
-              if (!msForm.title.trim()) { toast('请输入标题', 'error'); return }
-              const r = editingMs
-                ? await milestoneApi.update(String(editingMs.id), msForm)
-                : await milestoneApi.create({ project_id: Number(projectId), ...msForm })
-              if (r.success) { toast(editingMs ? '代办已更新' : '代办已创建', 'success'); if (!editingMs) window.dispatchEvent(new CustomEvent('onboarding-done', { detail: { type: 'set_milestone' } })); setShowMsForm(false); setEditingMs(null); setMsForm({ title: '', description: '', due_date: '' }); onRefresh() }
-              else toast(r.message || '操作失败', 'error')
-            }}>{editingMs ? '保存修改' : '创建'}</Button>
+            <Button variant="secondary" onClick={() => { setShowForm(false); setEditing(null) }}>取消</Button>
+            <Button onClick={handleSave}>{editing ? '保存修改' : '创建'}</Button>
           </div>
         </div>
       )}
-      {milestones.length === 0 ? <div style={{ color: 'var(--text-tertiary)', fontSize: 14 }}>暂无代办</div> : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {milestones.map((m: any) => (
-            <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: 'var(--bg-secondary)', borderRadius: 8 }}>
-              <div style={{ cursor: canEdit ? 'pointer' : 'default' }}
-                onClick={canEdit ? async () => { await milestoneApi.toggle(String(m.id)); onRefresh() } : undefined}>
-                {m.is_completed ? <CheckCircle size={20} color="var(--color-success)" /> : <Circle size={20} color="#94a3b8" />}
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 500, color: m.is_completed ? 'var(--text-tertiary)' : 'var(--text-heading)', textDecoration: m.is_completed ? 'line-through' : 'none' }}>{m.title}</div>
-                {m.description && <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>{m.description}</div>}
-                <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                  {m.due_date && <span style={{ fontSize: 11, color: new Date(m.due_date) < new Date() && !m.is_completed ? 'var(--color-danger)' : 'var(--text-tertiary)' }}>达到日期: {m.due_date.slice(0, 10)}</span>}
-                  {m.completed_at && <span style={{ fontSize: 11, color: 'var(--color-success)' }}>已完成</span>}
+
+      {total === 0 ? (
+        <div style={{ textAlign: 'center', padding: 30, color: 'var(--text-tertiary)' }}>
+          <div style={{ fontSize: 14, marginBottom: 6 }}>暂无代办阶段</div>
+          {canEdit && <div style={{ fontSize: 12 }}>点击「新增」添加阶段，或使用「模板」快速创建</div>}
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {sorted.map((m, i) => {
+            const isActive = !m.is_completed && (i === 0 || sorted[i - 1]?.is_completed)
+            const overdue = m.due_date && new Date(m.due_date) < new Date() && !m.is_completed
+            return (
+              <div key={m.id}
+                style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px', borderRadius: 10, transition: 'background 0.15s',
+                  background: isActive ? 'rgba(59,130,246,0.06)' : 'var(--bg-secondary)',
+                  border: isActive ? '1px solid rgba(59,130,246,0.2)' : '1px solid transparent' }}>
+                <div style={{ cursor: canEdit ? 'pointer' : 'default', paddingTop: 2, flexShrink: 0 }}
+                  onClick={canEdit ? async () => { await milestoneApi.toggle(String(m.id)); onRefresh() } : undefined}>
+                  {m.is_completed ? <CheckCircle2 size={22} color="#22c55e" /> : isActive ? <Clock size={22} color="var(--brand)" /> : <Circle size={22} color="#cbd5e1" />}
                 </div>
-              </div>
-              {canEdit && (
-                <div style={{ display: 'flex', gap: 4 }}>
-                  <button onClick={() => { setEditingMs(m); setMsForm({ title: m.title || '', description: m.description || '', due_date: m.due_date ? m.due_date.slice(0, 10) : '' }); setShowMsForm(true) }}
-                    style={{ fontSize: 11, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>编辑</button>
-                  <button onClick={async () => { const r = await milestoneApi.remove(String(m.id)); if (r.success) { toast('已删除', 'success'); onRefresh() } else toast(r.message || '删除失败', 'error') }}
-                    style={{ fontSize: 11, color: 'var(--color-danger)', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>删除</button>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: m.is_completed ? 'var(--text-tertiary)' : 'var(--text-heading)', textDecoration: m.is_completed ? 'line-through' : 'none' }}>
+                      {m.title}
+                    </span>
+                    {isActive && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: 'var(--brand)', color: '#fff', fontWeight: 600 }}>进行中</span>}
+                    {m.is_completed && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: '#dcfce7', color: '#16a34a', fontWeight: 600 }}>已完成</span>}
+                    {overdue && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: '#fef2f2', color: '#dc2626', fontWeight: 600 }}>已逾期</span>}
+                  </div>
+                  {m.description && <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4, lineHeight: 1.5 }}>{m.description}</div>}
+                  {m.due_date && <div style={{ fontSize: 11, color: overdue ? 'var(--color-danger)' : 'var(--text-tertiary)', marginTop: 4 }}>目标: {m.due_date.slice(0, 10)}</div>}
                 </div>
-              )}
-            </div>
-          ))}
+                {canEdit && (
+                  <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+                    <button onClick={() => { setEditing(m); setForm({ title: m.title || '', description: m.description || '', due_date: m.due_date ? m.due_date.slice(0, 10) : '' }); setShowForm(true) }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)' }}><Pencil size={14} /></button>
+                    <button onClick={async () => { const r = await milestoneApi.remove(String(m.id)); if (r.success) { toast('已删除', 'success'); onRefresh() } else toast(r.message || '删除失败', 'error') }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)' }}><Trash2 size={14} /></button>
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
     </div>
