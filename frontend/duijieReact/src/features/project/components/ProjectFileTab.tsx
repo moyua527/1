@@ -76,6 +76,7 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
   const [modalTab, setModalTab] = useState('image')
   const [urlInput, setUrlInput] = useState('')
   const [urlTitle, setUrlTitle] = useState('')
+  const [urlDesc, setUrlDesc] = useState('')
   const [addingUrl, setAddingUrl] = useState(false)
   const [noteTitle, setNoteTitle] = useState('')
   const [noteContent, setNoteContent] = useState('')
@@ -128,12 +129,13 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
     if (!url) { toast('请输入网址', 'error'); return }
     if (!/^https?:\/\/.+/i.test(url)) { toast('请输入有效的网址（以 http:// 或 https:// 开头）', 'error'); return }
     setAddingUrl(true)
-    const r = await fileApi.addUrl(projectId, url, urlTitle.trim() || undefined)
+    const r = await fileApi.addUrl(projectId, url, urlTitle.trim() || undefined, urlDesc.trim() || undefined)
     setAddingUrl(false)
     if (r.success) {
       toast('网址已添加', 'success')
       setUrlInput('')
       setUrlTitle('')
+      setUrlDesc('')
       setShowAddModal(false)
       load()
     } else {
@@ -298,6 +300,11 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
                   <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {isUrl ? f.path : isNote ? `${f.path?.substring(0, 40)}...` : `${formatSize(f.size || 0)} · ${new Date(f.created_at).toLocaleDateString('zh-CN')}`}
                   </div>
+                  {isUrl && f.description && (
+                    <div style={{ fontSize: 11, color: 'var(--brand)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontStyle: 'italic' }}>
+                      {f.description}
+                    </div>
+                  )}
                 </div>
                 {/* 操作条 */}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 2, padding: '0 8px 8px', flexWrap: 'wrap' }}>
@@ -384,15 +391,19 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
               </button>
             </div>
 
-            {/* 类型选择下拉框 */}
+            {/* 类型选择按钮组 */}
             <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--border-primary)' }}>
-              <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)', marginBottom: 6, display: 'block' }}>资料类型</label>
-              <select value={modalTab} onChange={e => setModalTab(e.target.value)}
-                style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-secondary)', color: 'var(--text-heading)', cursor: 'pointer', appearance: 'auto' }}>
-                {addTypes.map(t => (
-                  <option key={t.key} value={t.key}>{t.label} — {t.desc}</option>
-                ))}
-              </select>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {addTypes.map(t => {
+                  const active = modalTab === t.key
+                  return (
+                    <button key={t.key} onClick={() => setModalTab(t.key)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 20, border: active ? `1.5px solid ${t.color}` : '1px solid var(--border-primary)', background: active ? `color-mix(in srgb, ${t.color} 8%, var(--bg-primary))` : 'var(--bg-secondary)', cursor: 'pointer', fontSize: 13, fontWeight: active ? 600 : 400, color: active ? t.color : 'var(--text-secondary)', transition: 'all 0.15s' }}>
+                      <t.icon size={14} /> {t.label}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             {/* 内容区 */}
@@ -466,8 +477,13 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
                       autoFocus />
                   </div>
                   <div>
-                    <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)', marginBottom: 6, display: 'block' }}>标题（选填）</label>
-                    <input value={urlTitle} onChange={e => setUrlTitle(e.target.value)} placeholder="网站名称"
+                    <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)', marginBottom: 6, display: 'block' }}>名称（选填）</label>
+                    <input value={urlTitle} onChange={e => setUrlTitle(e.target.value)} placeholder="例如：官网、后台、文档"
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-secondary)', boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)', marginBottom: 6, display: 'block' }}>引导/备注（选填）</label>
+                    <input value={urlDesc} onChange={e => setUrlDesc(e.target.value)} placeholder="例如：点击跳转、需要VPN"
                       style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-secondary)', boxSizing: 'border-box' }}
                       onKeyDown={e => { if (e.key === 'Enter') handleAddUrl() }} />
                   </div>
