@@ -116,7 +116,7 @@ export default function MilestoneDetailModal({ milestoneId, currentUserId, membe
               <div style={{ display: 'flex', gap: 12, fontSize: 12, color: 'var(--text-tertiary)', flexWrap: 'wrap' }}>
                 {data.due_date && <span>目标: {data.due_date.slice(0, 10)}</span>}
                 <span>创建者: {data.creator_name || '未知'}</span>
-                <span>创建于: {new Date(data.created_at).toLocaleDateString('zh-CN')}</span>
+                <span>创建于: {new Date(data.created_at).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
               </div>
             </div>
             <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, color: 'var(--text-tertiary)', borderRadius: 8 }}>
