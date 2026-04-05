@@ -1,6 +1,6 @@
 {
-  "version": "1.2.4",
-  "versionCode": 148,
+  "version": "1.2.4.1",
+  "versionCode": 149,
   "minVersion": "1.0.0",
-  "changelog": "项目备注移至设置页"
+  "changelog": "项目头部合并为一行"
 }

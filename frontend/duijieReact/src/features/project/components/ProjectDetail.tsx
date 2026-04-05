@@ -255,24 +255,39 @@ export default function ProjectDetail() {
           })}
         </div>
       )}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-        <button onClick={() => nav('/projects')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', padding: 4 }}><ArrowLeft size={20} /></button>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>{project.name}</h1>
-            {project.join_code && <span style={{ fontSize: 12, color: 'var(--text-tertiary)', fontFamily: 'monospace', padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: 4, cursor: 'pointer', userSelect: 'none' }}
-              title="点击复制项目 ID"
-              onClick={() => { const text = project.join_code; if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text) } else { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta) } toast('项目 ID 已复制', 'success') }}>
-              ID: {project.join_code}
-            </span>}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
-            <Badge color={st.color}>{st.label}</Badge>
-          </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexShrink: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' } as any}>
+        <button onClick={() => nav('/projects')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', padding: 4, flexShrink: 0 }}><ArrowLeft size={20} /></button>
+        <h1 style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, color: 'var(--text-heading)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flexShrink: 1, minWidth: 0, cursor: project.join_code ? 'pointer' : 'default' }}
+          title={project.join_code ? `点击复制项目 ID: ${project.join_code}` : undefined}
+          onClick={() => { if (!project.join_code) return; const text = project.join_code; if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text) } else { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta) } toast('项目 ID 已复制', 'success') }}>
+          {project.name}
+        </h1>
+        <Badge color={st.color}>{st.label}</Badge>
+
+        <div style={{ width: 1, height: 20, background: 'var(--border-primary)', flexShrink: 0, margin: '0 2px' }} />
+
+        <div data-tour="project-tabs" style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+          {([['home','首页'],['tasks','需求'],['files','资料库'],['milestones','待办'],['settings','设置']] as [string, string][]).map(([k,v]) => (
+            <button key={k} data-tour={`tab-${k}`} onClick={() => setTab(k as any)} style={{
+              padding: '6px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, position: 'relative', whiteSpace: 'nowrap', flexShrink: 0,
+              background: tab === k ? 'var(--brand)' : 'var(--bg-tertiary)', color: tab === k ? 'var(--bg-primary)' : 'var(--text-secondary)',
+            }}>
+              {v}
+              {k === 'tasks' && hasNewSubmitted && tab !== 'tasks' && (
+                <span style={{ position: 'absolute', top: -2, right: -2, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
+              )}
+              {k === 'settings' && pendingJoinCount > 0 && (
+                <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16, borderRadius: 8, background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', lineHeight: 1 }}>
+                  {pendingJoinCount}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
+
         {(canEdit || canDelete) && (
-          <div style={{ position: 'relative' }}>
-            <button onClick={() => setShowActionMenu(v => !v)} style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', borderRadius: 8, cursor: 'pointer', padding: '6px 8px', display: 'flex', alignItems: 'center', color: 'var(--text-secondary)' }}><MoreVertical size={18} /></button>
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <button onClick={() => setShowActionMenu(v => !v)} style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', borderRadius: 6, cursor: 'pointer', padding: '5px 6px', display: 'flex', alignItems: 'center', color: 'var(--text-secondary)' }}><MoreVertical size={16} /></button>
             {showActionMenu && <>
               <div style={{ position: 'fixed', inset: 0, zIndex: 99 }} onClick={() => setShowActionMenu(false)} />
               <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)', borderRadius: 10, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 100, minWidth: 140, overflow: 'hidden' }}>
@@ -289,25 +304,6 @@ export default function ProjectDetail() {
           if (r.success) { toast('已更新', 'success'); loadProject(); return true }
           toast(r.message || '更新失败', 'error'); return false
         }} />
-
-      <div data-tour="project-tabs" style={{ display: 'flex', gap: 8, marginBottom: 0, flexShrink: 0, ...(isMobile ? { overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' } : { flexWrap: 'wrap' }) } as any}>
-        {([['home','首页'],['tasks','需求'],['files','资料库'],['milestones','待办'],['settings','设置']] as [string, string][]).map(([k,v]) => (
-          <button key={k} data-tour={`tab-${k}`} onClick={() => setTab(k as any)} style={{
-            padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500, position: 'relative', whiteSpace: 'nowrap', flexShrink: 0,
-            background: tab === k ? 'var(--brand)' : 'var(--bg-tertiary)', color: tab === k ? 'var(--bg-primary)' : 'var(--text-secondary)',
-          }}>
-            {v}
-            {k === 'tasks' && hasNewSubmitted && tab !== 'tasks' && (
-              <span style={{ position: 'absolute', top: -2, right: -2, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
-            )}
-            {k === 'settings' && pendingJoinCount > 0 && (
-              <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 18, height: 18, borderRadius: 9, background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px', lineHeight: 1 }}>
-                {pendingJoinCount}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
 
       <div style={{ flex: 1, minHeight: 0, paddingTop: 16, ...(tab === 'tasks' ? { display: 'flex', flexDirection: 'column' as const, overflow: 'hidden' } : { overflowY: 'auto' as const }) }}>
       <ManageMembersModal
