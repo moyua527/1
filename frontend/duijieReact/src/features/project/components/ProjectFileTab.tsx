@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Loader2, Trash2, Download, Eye, FileText, Image, FileSpreadsheet, Film, File, CheckSquare, Square, Search, Pencil, Link2, Plus, ExternalLink, X, StickyNote } from 'lucide-react'
+import { Loader2, Trash2, Download, Eye, FileText, Image, FileSpreadsheet, Film, File, CheckSquare, Square, Search, Pencil, Link2, Plus, ExternalLink, X, StickyNote, Paperclip } from 'lucide-react'
 import { fetchApi, BACKEND_URL } from '../../../bootstrap'
 import { fileApi } from '../../file/services/api'
 import Button from '../../ui/Button'
@@ -80,8 +80,11 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
   const [noteTitle, setNoteTitle] = useState('')
   const [noteContent, setNoteContent] = useState('')
   const [addingNote, setAddingNote] = useState(false)
+  const [noteFiles, setNoteFiles] = useState<File[]>([])
+  const [noteDragging, setNoteDragging] = useState(false)
   const [viewNote, setViewNote] = useState<any>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const noteFileRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(() => {
     setLoading(true)
@@ -140,19 +143,36 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
 
   const handleAddNote = async () => {
     const content = noteContent.trim()
-    if (!content) { toast('请输入内容', 'error'); return }
+    if (!content && noteFiles.length === 0) { toast('请输入内容或添加附件', 'error'); return }
     setAddingNote(true)
-    const r = await fileApi.addNote(projectId, content, noteTitle.trim() || undefined)
-    setAddingNote(false)
-    if (r.success) {
-      toast('笔记已创建', 'success')
-      setNoteTitle('')
-      setNoteContent('')
-      setShowAddModal(false)
-      load()
-    } else {
-      toast(r.message || '创建失败', 'error')
+    if (content) {
+      const r = await fileApi.addNote(projectId, content, noteTitle.trim() || undefined)
+      if (!r.success) { toast(r.message || '创建失败', 'error'); setAddingNote(false); return }
     }
+    for (const f of noteFiles) {
+      await fileApi.upload(projectId, f)
+    }
+    setAddingNote(false)
+    toast(noteFiles.length > 0 ? '笔记和附件已创建' : '笔记已创建', 'success')
+    setNoteTitle(''); setNoteContent(''); setNoteFiles([])
+    setShowAddModal(false)
+    load()
+  }
+
+  const handleNoteDragOver = (e: React.DragEvent) => { e.preventDefault(); setNoteDragging(true) }
+  const handleNoteDragLeave = () => setNoteDragging(false)
+  const handleNoteDrop = (e: React.DragEvent) => { e.preventDefault(); setNoteDragging(false); if (e.dataTransfer.files.length) setNoteFiles(prev => [...prev, ...Array.from(e.dataTransfer.files)]) }
+  const handleNotePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+    const imgs: File[] = []
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        const f = items[i].getAsFile()
+        if (f) imgs.push(f)
+      }
+    }
+    if (imgs.length) { e.preventDefault(); setNoteFiles(prev => [...prev, ...imgs]) }
   }
 
   const handleDelete = async (f: any) => {
@@ -379,6 +399,7 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
             <div style={{ padding: 20, flex: 1, overflow: 'auto' }}>
               {currentAddType && currentAddType.key === 'note' ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <input ref={noteFileRef} type="file" multiple style={{ display: 'none' }} onChange={e => { if (e.target.files) setNoteFiles(prev => [...prev, ...Array.from(e.target.files!)]); if (noteFileRef.current) noteFileRef.current.value = '' }} />
                   <div>
                     <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)', marginBottom: 6, display: 'block' }}>标题（选填）</label>
                     <input value={noteTitle} onChange={e => setNoteTitle(e.target.value)} placeholder="笔记标题"
@@ -386,10 +407,50 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
                       autoFocus />
                   </div>
                   <div>
-                    <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)', marginBottom: 6, display: 'block' }}>内容 <span style={{ color: 'var(--color-danger)' }}>*</span></label>
-                    <textarea value={noteContent} onChange={e => setNoteContent(e.target.value)} placeholder="输入文字内容..."
-                      rows={6}
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-secondary)', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.6 }} />
+                    <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)', marginBottom: 6, display: 'block' }}>内容 / 附件</label>
+                    <div onDragOver={handleNoteDragOver} onDragLeave={handleNoteDragLeave} onDrop={handleNoteDrop}
+                      style={{ borderRadius: 12, border: `1px solid ${noteDragging ? 'var(--brand)' : 'var(--border-primary)'}`, background: noteDragging ? 'var(--bg-selected)' : 'var(--bg-secondary)', transition: 'all 0.15s', overflow: 'hidden' }}>
+                      <textarea value={noteContent} onChange={e => setNoteContent(e.target.value)} onPaste={handleNotePaste}
+                        placeholder="输入文字内容，可直接粘贴图片或拖入文件..." rows={4}
+                        style={{ width: '100%', padding: '10px 12px', border: 'none', fontSize: 14, outline: 'none', resize: 'vertical', minHeight: 60, fontFamily: 'inherit', background: 'transparent', color: 'var(--text-body)', lineHeight: 1.6, boxSizing: 'border-box' }} />
+                      {noteFiles.length > 0 && (
+                        <div style={{ padding: '6px 12px 8px', display: 'flex', flexWrap: 'wrap', gap: 6, borderTop: '1px solid var(--border-primary)' }}>
+                          {noteFiles.map((f, i) => {
+                            const isImg = f.type.startsWith('image/')
+                            return (
+                              <div key={i} style={{ position: 'relative', display: 'inline-flex' }}>
+                                {isImg ? (
+                                  <div style={{ width: 56, height: 56, borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border-primary)' }}>
+                                    <img src={URL.createObjectURL(f)} alt={f.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                  </div>
+                                ) : (
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', background: 'var(--bg-primary)', borderRadius: 6, border: '1px solid var(--border-primary)', fontSize: 12, color: 'var(--text-body)' }}>
+                                    <FileText size={12} />
+                                    <span style={{ maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
+                                  </div>
+                                )}
+                                <button onClick={() => setNoteFiles(prev => prev.filter((_, j) => j !== i))}
+                                  style={{ position: 'absolute', top: -4, right: -4, width: 16, height: 16, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>×</button>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderTop: '1px solid var(--border-primary)', background: 'var(--bg-primary)' }}>
+                        <button onClick={() => noteFileRef.current?.click()} title="添加文件"
+                          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 12 }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-tertiary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                          <Paperclip size={14} /> 文件
+                        </button>
+                        <button onClick={() => { if (noteFileRef.current) { noteFileRef.current.accept = 'image/*'; noteFileRef.current.click(); setTimeout(() => { if (noteFileRef.current) noteFileRef.current.accept = '' }, 100) } }} title="添加图片"
+                          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', borderRadius: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 12 }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-tertiary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                          <Image size={14} /> 图片
+                        </button>
+                        <span style={{ flex: 1 }} />
+                        <span style={{ fontSize: 11, color: 'var(--text-disabled)' }}>支持拖拽 / Ctrl+V 粘贴</span>
+                      </div>
+                    </div>
                   </div>
                   <Button disabled={addingNote} onClick={handleAddNote} style={{ alignSelf: 'flex-end', marginTop: 4 }}>
                     {addingNote ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Plus size={14} />}
