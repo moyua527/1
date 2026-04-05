@@ -15,7 +15,7 @@ import SettingsPanel from './SettingsPanel'
 import EnterpriseSwitcher from './EnterpriseSwitcher'
 import UserGuide from './UserGuide'
 import OnboardingChecklist from './OnboardingChecklist'
-// PullToRefresh removed - interfered with normal mobile scrolling
+// inline pull-to-refresh (lightweight, only for mobile)
 import { navItems, navItemsByGroup } from '../../data/routeManifest'
 
 const SIDEBAR_W = 228
@@ -32,6 +32,11 @@ export default function Layout() {
   const avatarMenuRef = useRef<HTMLDivElement>(null)
   const [dmUnread, setDmUnread] = useState(0)
   const [guideOpen, setGuideOpen] = useState(false)
+  const mainRef = useRef<HTMLElement>(null)
+  const [ptrY, setPtrY] = useState(0)
+  const [ptrRefreshing, setPtrRefreshing] = useState(false)
+  const ptrStart = useRef(0)
+  const ptrActive = useRef(false)
   const navigate = useNavigate()
   const location = useLocation()
   const role = user?.role || 'member'
@@ -328,8 +333,46 @@ export default function Layout() {
         )}
 
         {/* ===== 主内容区 ===== */}
-        <main data-tour="main-content" style={{ flex: 1, overflow: 'auto', minHeight: 0, padding: isMobile ? 12 : 24, WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain' }}>
+        <main ref={mainRef} data-tour="main-content"
+          onTouchStart={isMobile ? (e) => {
+            if (ptrRefreshing) return
+            const el = mainRef.current
+            if (!el || el.scrollTop > 0) return
+            ptrStart.current = e.touches[0].clientY
+            ptrActive.current = false
+          } : undefined}
+          onTouchMove={isMobile ? (e) => {
+            if (ptrRefreshing || !ptrStart.current) return
+            const el = mainRef.current
+            if (!el || el.scrollTop > 0) { ptrStart.current = 0; ptrActive.current = false; setPtrY(0); return }
+            const diff = e.touches[0].clientY - ptrStart.current
+            if (diff < 0) { ptrActive.current = false; setPtrY(0); return }
+            if (!ptrActive.current && diff < 30) return
+            if (!ptrActive.current) { ptrActive.current = true }
+            e.preventDefault()
+            setPtrY(Math.min((diff - 30) * 0.35, 90))
+          } : undefined}
+          onTouchEnd={isMobile ? async () => {
+            if (!ptrActive.current) { ptrStart.current = 0; return }
+            ptrActive.current = false; ptrStart.current = 0
+            if (ptrY >= 55) {
+              setPtrRefreshing(true); setPtrY(55)
+              await new Promise(r => setTimeout(r, 300))
+              window.location.reload()
+            } else { setPtrY(0) }
+          } : undefined}
+          style={{ flex: 1, overflow: 'auto', minHeight: 0, padding: isMobile ? 12 : 24, WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain' }}>
+          {isMobile && (ptrY > 0 || ptrRefreshing) && (
+            <div style={{ display: 'flex', justifyContent: 'center', height: ptrY || 55, overflow: 'hidden', transition: ptrY > 0 ? 'none' : 'height 0.25s ease' }}>
+              <div style={{ width: 24, height: 24, borderRadius: '50%', border: '2.5px solid #e5e7eb', borderTopColor: 'var(--brand)', margin: 'auto',
+                animation: ptrRefreshing ? 'ptr-spin .7s linear infinite' : 'none',
+                transform: ptrRefreshing ? 'none' : `rotate(${Math.min(ptrY / 55, 1) * 360}deg)`,
+                opacity: Math.min(ptrY / 30, 1),
+              }} />
+            </div>
+          )}
           <Outlet context={{ user, isMobile }} />
+          {isMobile && <style>{`@keyframes ptr-spin{to{transform:rotate(360deg)}}`}</style>}
         </main>
       </div>
 
