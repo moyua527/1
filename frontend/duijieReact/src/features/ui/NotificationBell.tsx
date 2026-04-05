@@ -84,7 +84,7 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 8, width: 380, maxHeight: 520, background: 'var(--bg-primary)', borderRadius: 12, boxShadow: '0 10px 40px rgba(0,0,0,0.12)', border: '1px solid var(--border-primary)', zIndex: 100, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ position: 'fixed', right: 8, top: 52, width: 'min(380px, calc(100vw - 16px))', maxHeight: 'min(520px, calc(100vh - 70px))', background: 'var(--bg-primary)', borderRadius: 12, boxShadow: '0 10px 40px rgba(0,0,0,0.12)', border: '1px solid var(--border-primary)', zIndex: 100, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid var(--border-secondary)' }}>
             {selected ? (
               <>

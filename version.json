@@ -1,6 +1,6 @@
 {
-  "version": "1.1.86",
-  "versionCode": 99,
+  "version": "1.1.86.1",
+  "versionCode": 100,
   "minVersion": "1.0.0",
-  "changelog": "图片查看器支持手势缩放"
+  "changelog": "移动端适配优化"
 }

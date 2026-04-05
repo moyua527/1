@@ -156,7 +156,7 @@ const PROJECT_DETAIL_TIMEOUT_MS = 8000
 export default function ProjectDetail() {
   const { id } = useParams()
   const nav = useNavigate()
-  const { user } = useOutletContext<{ user: any }>()
+  const { user, isMobile } = useOutletContext<{ user: any; isMobile?: boolean }>()
   const role = user?.role || ''
   const platformCanEdit = can(role, 'project:edit')
   const platformCanDelete = can(role, 'project:delete')
@@ -352,10 +352,10 @@ export default function ProjectDetail() {
           toast(r.message || '更新失败', 'error'); return false
         }} />
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 0, flexWrap: 'wrap', flexShrink: 0 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 0, flexShrink: 0, ...(isMobile ? { overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' } : { flexWrap: 'wrap' }) } as any}>
         {([['overview','概览'],['tasks','任务'],['milestones','里程碑'],['messages','消息'], ...(project.app_url ? [['app', project.app_name || '应用']] : []), ...((isOwner || canManageRole) ? [['roles', '角色管理']] : []), ...(canApproveJoin ? [['join_requests', '加入申请']] : [])] as [string, string][]).map(([k,v]) => (
           <button key={k} onClick={() => setTab(k as any)} style={{
-            padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500, position: 'relative',
+            padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500, position: 'relative', whiteSpace: 'nowrap', flexShrink: 0,
             background: tab === k ? 'var(--brand)' : 'var(--bg-tertiary)', color: tab === k ? 'var(--bg-primary)' : 'var(--text-secondary)',
           }}>
             {v}
@@ -370,9 +370,9 @@ export default function ProjectDetail() {
 
       <div style={{ flex: 1, minHeight: 0, paddingTop: 16, ...(tab === 'tasks' ? { display: 'flex', flexDirection: 'column' as const, overflow: 'hidden' } : { overflowY: 'auto' as const }) }}>
       {tab === 'overview' && (<>
-        <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexDirection: isMobile ? 'column' : 'row' }}>
           {/* 左栏：项目详情 + 关联应用 */}
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ flex: 1, minWidth: 0, width: isMobile ? '100%' : undefined }}>
             <div style={section}>
               {project.description && <div style={{ marginBottom: 16 }}><div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>描述</div><div style={{ fontSize: 14, color: 'var(--text-body)', lineHeight: 1.6 }}>{project.description}</div></div>}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 16 }}>
@@ -462,7 +462,7 @@ export default function ProjectDetail() {
           </div>
 
           {/* 右栏：项目成员 */}
-          <div style={{ ...section, width: 220, flexShrink: 0, marginBottom: 0, position: 'sticky', top: 0 }}>
+          <div style={{ ...section, width: isMobile ? '100%' : 220, flexShrink: 0, marginBottom: 0, position: isMobile ? 'static' : 'sticky', top: 0 }}>
             <MembersSection
               projectId={id!}
               myMembers={allMembers}
