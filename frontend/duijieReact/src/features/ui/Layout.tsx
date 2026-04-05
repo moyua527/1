@@ -4,7 +4,7 @@ import { Menu, X, LogOut, User, ChevronRight, ChevronLeft, Palette, Bell, Settin
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
 import { can } from '../../stores/permissions'
-import { onSocket } from './smartSocket'
+import { onSocket, setSocketUserId } from './smartSocket'
 import Avatar from './Avatar'
 import useIsMobile from './useIsMobile'
 import NotificationBell from './NotificationBell'
@@ -55,6 +55,8 @@ export default function Layout() {
       return () => clearTimeout(t)
     }
   }, [user])
+
+  useEffect(() => { setSocketUserId(user?.id ?? null) }, [user?.id])
 
   const dmLastFetch = useRef(0)
   const loadDmUnread = () => {

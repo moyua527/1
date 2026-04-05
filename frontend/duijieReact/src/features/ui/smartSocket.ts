@@ -9,6 +9,7 @@ let socket: Socket | null = null
 let heartbeatTimer: any = null
 let rttSamples: number[] = []
 let currentInterval = 30000
+let currentUserId: number | null = null
 const listeners: Map<string, Set<Listener>> = new Map()
 const joinedProjects = new Set<string>()
 
@@ -51,7 +52,10 @@ function getSocket(): Socket {
   socket.on('new_dm', (payload: any) => { playNotificationSound(); emit('new_dm', payload) })
   socket.on('new_notification', (payload: any) => { playNotificationSound(); emit('new_notification', payload) })
   socket.on('task_created', (payload: any) => { playNotificationSound(); emit('task_created', payload); emit('data_changed', { entity: 'task', action: 'created', ...payload }) })
-  socket.on('new_message', (payload: any) => { playNotificationSound(); emit('new_message', payload) })
+  socket.on('new_message', (payload: any) => {
+    if (payload?.sender_id !== currentUserId) playNotificationSound()
+    emit('new_message', payload)
+  })
   socket.on('data_changed', (payload: any) => emit('data_changed', payload))
 
   socket.on('disconnect', () => {
@@ -99,6 +103,10 @@ export function leaveProject(projectId: string) {
 
 export function isConnected() {
   return socket?.connected ?? false
+}
+
+export function setSocketUserId(uid: number | null) {
+  currentUserId = uid
 }
 
 export function getHeartbeatInfo() {
