@@ -299,7 +299,7 @@ export default function MilestoneDetailModal({ milestoneId, currentUserId, membe
                         <Bell size={16} color={r.is_sent ? 'var(--text-tertiary)' : isPast ? 'var(--color-danger)' : 'var(--brand)'} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, color: 'var(--text-heading)' }}>
-                            {new Date(r.remind_at).toLocaleString('zh-CN')}
+                            {r.remind_at_display || new Date(r.remind_at).toLocaleString('zh-CN', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}
                             {r.is_sent && <span style={{ fontSize: 11, color: 'var(--text-tertiary)', marginLeft: 6 }}>已发送</span>}
                             {!r.is_sent && isPast && <span style={{ fontSize: 11, color: 'var(--color-danger)', marginLeft: 6 }}>待发送</span>}
                           </div>

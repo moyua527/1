@@ -26,7 +26,8 @@ module.exports = async (req, res) => {
     );
 
     const [reminders] = await db.query(
-      'SELECT * FROM duijie_milestone_reminders WHERE milestone_id = ? AND user_id = ? ORDER BY remind_at ASC',
+      `SELECT *, DATE_FORMAT(remind_at, '%Y/%c/%e %H:%i') AS remind_at_display
+       FROM duijie_milestone_reminders WHERE milestone_id = ? AND user_id = ? ORDER BY remind_at ASC`,
       [id, req.userId]
     );
 
