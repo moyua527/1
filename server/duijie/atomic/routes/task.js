@@ -52,4 +52,11 @@ router.delete('/files/:id', auth, require('../controllers/file/deleteController'
 router.get('/files/:id/download', auth, require('../controllers/file/downloadController'));
 router.get('/files/:id/preview', auth, require('../controllers/file/previewController'));
 
+// Resource Groups
+router.post('/resource-groups', auth, require('../controllers/resource/createGroupController'));
+router.get('/resource-groups', auth, require('../controllers/resource/listGroupsController'));
+router.get('/resource-groups/:id', auth, require('../controllers/resource/groupDetailController'));
+router.delete('/resource-groups/:id', auth, require('../controllers/resource/deleteGroupController'));
+router.post('/resource-groups/items', auth, upload.single('file'), require('../controllers/resource/addItemController'));
+
 module.exports = router;

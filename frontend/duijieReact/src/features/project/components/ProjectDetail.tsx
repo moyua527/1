@@ -393,7 +393,7 @@ export default function ProjectDetail() {
 
       {tab === 'tasks' && <TaskTab tasks={tasks} canEdit={canCreateTask} projectId={id!} loadTasks={loadTasks} />}
 
-      {tab === 'files' && <ProjectFileTab projectId={id!} canEdit={canEdit} />}
+      {tab === 'files' && <ProjectFileTab projectId={id!} canEdit={canEdit} members={allMembers} currentUserId={user?.id} />}
 
       {tab === 'milestones' && <MilestoneTab milestones={milestones} projectId={id!} canEdit={canManageMilestone} onRefresh={loadTasks} isMobile={isMobile} members={allMembers} currentUserId={user?.id} />}
 

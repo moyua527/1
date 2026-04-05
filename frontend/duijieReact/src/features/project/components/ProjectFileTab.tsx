@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Loader2, Trash2, Download, Eye, FileText, Image, FileSpreadsheet, Film, File, CheckSquare, Square, Search, Pencil, Link2, Plus, ExternalLink, X, StickyNote, Paperclip } from 'lucide-react'
+import { Loader2, Trash2, Download, Eye, FileText, Image, FileSpreadsheet, Film, File, CheckSquare, Square, Search, Pencil, Link2, Plus, ExternalLink, X, StickyNote, Paperclip, FolderOpen, Users, Lock, Globe } from 'lucide-react'
 import { fetchApi, BACKEND_URL } from '../../../bootstrap'
-import { fileApi } from '../../file/services/api'
+import { fileApi, resourceGroupApi } from '../../file/services/api'
 import Button from '../../ui/Button'
 import { toast } from '../../ui/Toast'
 import { confirm } from '../../ui/ConfirmDialog'
@@ -61,9 +61,101 @@ const addTypes = [
 interface Props {
   projectId: string
   canEdit: boolean
+  members?: any[]
+  currentUserId?: number
 }
 
-export default function ProjectFileTab({ projectId, canEdit }: Props) {
+export default function ProjectFileTab({ projectId, canEdit, members = [], currentUserId }: Props) {
+  const [viewMode, setViewMode] = useState<'groups' | 'files'>('groups')
+  const [groups, setGroups] = useState<any[]>([])
+  const [groupsLoading, setGroupsLoading] = useState(true)
+  const [showCreateGroup, setShowCreateGroup] = useState(false)
+  const [groupName, setGroupName] = useState('')
+  const [groupVisibility, setGroupVisibility] = useState<'all' | 'selected'>('all')
+  const [groupSelectedUsers, setGroupSelectedUsers] = useState<number[]>([])
+  const [creatingGroup, setCreatingGroup] = useState(false)
+  const [activeGroup, setActiveGroup] = useState<any>(null)
+  const [groupDetail, setGroupDetail] = useState<any>(null)
+  const [groupDetailLoading, setGroupDetailLoading] = useState(false)
+  const [addingItem, setAddingItem] = useState(false)
+  const [itemType, setItemType] = useState<'url' | 'text' | 'file' | ''>('')
+  const [itemUrl, setItemUrl] = useState('')
+  const [itemTitle, setItemTitle] = useState('')
+  const [itemContent, setItemContent] = useState('')
+  const groupFileRef = useRef<HTMLInputElement>(null)
+
+  const loadGroups = useCallback(() => {
+    setGroupsLoading(true)
+    resourceGroupApi.list(projectId).then(r => {
+      setGroups(r.success ? r.data || [] : [])
+      setGroupsLoading(false)
+    })
+  }, [projectId])
+
+  useEffect(() => { loadGroups() }, [loadGroups])
+
+  const handleCreateGroup = async () => {
+    if (!groupName.trim()) { toast('请输入资料名称', 'error'); return }
+    setCreatingGroup(true)
+    const r = await resourceGroupApi.create({
+      project_id: projectId,
+      name: groupName.trim(),
+      visibility: groupVisibility,
+      visible_users: groupVisibility === 'selected' ? groupSelectedUsers : undefined,
+    })
+    setCreatingGroup(false)
+    if (r.success) {
+      toast('资料已创建', 'success')
+      setGroupName(''); setGroupVisibility('all'); setGroupSelectedUsers([])
+      setShowCreateGroup(false)
+      loadGroups()
+    } else toast(r.message || '创建失败', 'error')
+  }
+
+  const openGroupDetail = async (g: any) => {
+    setActiveGroup(g)
+    setGroupDetailLoading(true)
+    const r = await resourceGroupApi.detail(String(g.id))
+    setGroupDetailLoading(false)
+    if (r.success) setGroupDetail(r.data)
+    else toast(r.message || '加载失败', 'error')
+  }
+
+  const handleDeleteGroup = async (g: any) => {
+    if (!(await confirm({ message: `确定删除「${g.name}」及其所有内容？`, danger: true }))) return
+    const r = await resourceGroupApi.remove(String(g.id))
+    if (r.success) { toast('已删除', 'success'); setActiveGroup(null); setGroupDetail(null); loadGroups() }
+    else toast(r.message || '删除失败', 'error')
+  }
+
+  const handleAddGroupItem = async () => {
+    if (!groupDetail) return
+    if (itemType === 'url') {
+      if (!itemUrl.trim()) { toast('请输入网址', 'error'); return }
+      setAddingItem(true)
+      await resourceGroupApi.addItem({ group_id: groupDetail.id, type: 'url', url: itemUrl.trim(), title: itemTitle.trim() || undefined, content: itemContent.trim() || undefined })
+    } else if (itemType === 'text') {
+      if (!itemContent.trim()) { toast('请输入文字内容', 'error'); return }
+      setAddingItem(true)
+      await resourceGroupApi.addItem({ group_id: groupDetail.id, type: 'text', content: itemContent.trim(), title: itemTitle.trim() || undefined })
+    }
+    setAddingItem(false)
+    setItemType(''); setItemUrl(''); setItemTitle(''); setItemContent('')
+    openGroupDetail(activeGroup)
+  }
+
+  const handleGroupFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fl = e.target.files
+    if (!fl?.length || !groupDetail) return
+    setAddingItem(true)
+    for (let i = 0; i < fl.length; i++) {
+      await resourceGroupApi.addFile(groupDetail.id, fl[i])
+    }
+    setAddingItem(false)
+    toast(`${fl.length}个文件已添加`, 'success')
+    e.target.value = ''
+    openGroupDetail(activeGroup)
+  }
   const [files, setFiles] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
@@ -204,7 +296,6 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
     return `${BACKEND_URL}/api/files/${f.id}/preview?token=${token}`
   }
 
-  const totalSize = files.reduce((s, f) => s + (f.size || 0), 0)
   const currentAddType = addTypes.find(t => t.key === modalTab)
 
   return (
@@ -212,15 +303,27 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
         <div>
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>资料库</h3>
-          <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{files.length} 个文件 · {formatSize(totalSize)}</span>
+          <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
+            {(['groups', 'files'] as const).map(m => (
+              <button key={m} onClick={() => setViewMode(m)}
+                style={{ padding: '3px 10px', borderRadius: 6, border: 'none', fontSize: 12, cursor: 'pointer', fontWeight: 500, background: viewMode === m ? 'var(--brand)' : 'var(--bg-tertiary)', color: viewMode === m ? '#fff' : 'var(--text-secondary)', transition: 'all 0.15s' }}>
+                {m === 'groups' ? '资料组' : '全部文件'}
+              </button>
+            ))}
+          </div>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          {editing && selected.size > 0 && (
+          {viewMode === 'files' && editing && selected.size > 0 && (
             <button onClick={handleBatchDelete} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: 'none', background: 'var(--bg-danger-hover)', color: 'var(--color-danger)', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
               <Trash2 size={14} /> 删除 ({selected.size})
             </button>
           )}
-          {canEdit && (
+          {canEdit && viewMode === 'groups' && (
+            <Button onClick={() => setShowCreateGroup(true)}>
+              <Plus size={14} /> 添加
+            </Button>
+          )}
+          {canEdit && viewMode === 'files' && (
             <>
               <Button onClick={() => { setShowAddModal(true); setModalTab('image') }}>
                 <Plus size={14} /> 添加
@@ -234,6 +337,48 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
         </div>
       </div>
 
+      {viewMode === 'groups' ? (
+        <div>
+          {groupsLoading ? (
+            <div style={{ textAlign: 'center', padding: 40 }}><Loader2 size={28} style={{ animation: 'spin 1s linear infinite', color: 'var(--text-tertiary)' }} /></div>
+          ) : groups.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)' }}>
+              <FolderOpen size={32} style={{ marginBottom: 8, opacity: 0.5 }} />
+              <div style={{ fontSize: 14 }}>暂无资料</div>
+              {canEdit && <div style={{ fontSize: 12, marginTop: 4 }}>点击「添加」创建资料</div>}
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+              {groups.map((g: any) => (
+                <div key={g.id}
+                  onClick={() => openGroupDetail(g)}
+                  style={{ position: 'relative', padding: 16, borderRadius: 12, cursor: 'pointer', border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', transition: 'all 0.15s' }}
+                  onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+                  onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                    <FolderOpen size={20} color="var(--brand)" />
+                    <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{g.name}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-tertiary)' }}>
+                    <span>{g.item_count || 0} 项</span>
+                    <span>·</span>
+                    <span>{g.creator_name || g.creator_username}</span>
+                    {g.visibility === 'selected' && <Lock size={11} />}
+                  </div>
+                  {canEdit && g.created_by === currentUserId && (
+                    <button onClick={e => { e.stopPropagation(); handleDeleteGroup(g) }}
+                      style={{ position: 'absolute', top: 8, right: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)', borderRadius: 4 }}
+                      onMouseEnter={e => e.currentTarget.style.color = '#dc2626'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}>
+                      <Trash2 size={13} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+      <>
       <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
         <div style={{ position: 'relative', flex: 1, minWidth: 160, maxWidth: 260 }}>
           <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
@@ -375,7 +520,174 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
         </div>
       )}
 
-      {/* 添加资料弹窗 */}
+      </>
+      )}
+
+      {/* 创建资料组弹窗 */}
+      {showCreateGroup && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={e => { if (e.target === e.currentTarget) setShowCreateGroup(false) }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }} />
+          <div style={{ position: 'relative', background: 'var(--bg-primary)', borderRadius: 16, width: '90%', maxWidth: 480, boxShadow: '0 20px 60px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border-primary)' }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>创建资料</h3>
+              <button onClick={() => setShowCreateGroup(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)' }}><X size={18} /></button>
+            </div>
+            <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)', marginBottom: 6, display: 'block' }}>资料名称 <span style={{ color: '#ef4444' }}>*</span></label>
+                <input value={groupName} onChange={e => setGroupName(e.target.value)} placeholder="例如：项目文档、设计稿、链接合集"
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-secondary)', boxSizing: 'border-box' }}
+                  autoFocus onKeyDown={e => { if (e.key === 'Enter') handleCreateGroup() }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)', marginBottom: 6, display: 'block' }}>可见性</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button onClick={() => setGroupVisibility('all')}
+                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 12px', borderRadius: 10, border: groupVisibility === 'all' ? '2px solid var(--brand)' : '1px solid var(--border-primary)', background: groupVisibility === 'all' ? 'rgba(59,130,246,0.06)' : 'var(--bg-secondary)', cursor: 'pointer', fontSize: 13, fontWeight: groupVisibility === 'all' ? 600 : 400, color: groupVisibility === 'all' ? 'var(--brand)' : 'var(--text-secondary)' }}>
+                    <Globe size={14} /> 全部可见
+                  </button>
+                  <button onClick={() => setGroupVisibility('selected')}
+                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 12px', borderRadius: 10, border: groupVisibility === 'selected' ? '2px solid #f59e0b' : '1px solid var(--border-primary)', background: groupVisibility === 'selected' ? 'rgba(245,158,11,0.06)' : 'var(--bg-secondary)', cursor: 'pointer', fontSize: 13, fontWeight: groupVisibility === 'selected' ? 600 : 400, color: groupVisibility === 'selected' ? '#f59e0b' : 'var(--text-secondary)' }}>
+                    <Lock size={14} /> 指定成员
+                  </button>
+                </div>
+              </div>
+              {groupVisibility === 'selected' && (
+                <div>
+                  <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)', marginBottom: 6, display: 'block' }}>选择可查看的成员</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, maxHeight: 140, overflow: 'auto' }}>
+                    {members.map((m: any) => {
+                      const uid = m.user_id || m.id
+                      const name = m.nickname || m.username || '?'
+                      const sel = groupSelectedUsers.includes(uid)
+                      return (
+                        <button key={uid} onClick={() => setGroupSelectedUsers(prev => sel ? prev.filter(id => id !== uid) : [...prev, uid])}
+                          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 8, border: sel ? '1.5px solid var(--brand)' : '1px solid var(--border-primary)', background: sel ? 'rgba(59,130,246,0.08)' : 'var(--bg-secondary)', cursor: 'pointer', fontSize: 12, color: sel ? 'var(--brand)' : 'var(--text-secondary)', fontWeight: sel ? 600 : 400 }}>
+                          <Users size={12} /> {name}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  {groupSelectedUsers.length === 0 && <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 4 }}>请至少选择一位成员</div>}
+                </div>
+              )}
+              <Button disabled={creatingGroup} onClick={handleCreateGroup} style={{ alignSelf: 'flex-end' }}>
+                {creatingGroup ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Plus size={14} />}
+                {creatingGroup ? '创建中...' : '创建资料'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 资料组详情弹窗 */}
+      {activeGroup && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={e => { if (e.target === e.currentTarget) { setActiveGroup(null); setGroupDetail(null); setItemType('') } }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }} />
+          <div style={{ position: 'relative', background: 'var(--bg-primary)', borderRadius: 16, width: '90%', maxWidth: 600, maxHeight: '80vh', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border-primary)' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>{activeGroup.name}</h3>
+                <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{activeGroup.creator_name || activeGroup.creator_username} · {activeGroup.visibility === 'selected' ? '指定成员可见' : '全部可见'}</span>
+              </div>
+              <button onClick={() => { setActiveGroup(null); setGroupDetail(null); setItemType('') }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)' }}><X size={18} /></button>
+            </div>
+            <div style={{ flex: 1, overflow: 'auto', padding: 20 }}>
+              {groupDetailLoading ? (
+                <div style={{ textAlign: 'center', padding: 30 }}><Loader2 size={24} style={{ animation: 'spin 1s linear infinite', color: 'var(--text-tertiary)' }} /></div>
+              ) : groupDetail && (
+                <>
+                  {(groupDetail.items || []).length === 0 && !itemType ? (
+                    <div style={{ textAlign: 'center', padding: 30, color: 'var(--text-tertiary)' }}>
+                      <div style={{ fontSize: 14 }}>暂无内容</div>
+                      <div style={{ fontSize: 12, marginTop: 4 }}>点击下方按钮添加内容</div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {(groupDetail.items || []).map((item: any) => {
+                        const isUrl = item.mime_type === 'text/x-url'
+                        const isNote = item.mime_type === 'text/x-note'
+                        return (
+                          <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', cursor: isUrl ? 'pointer' : 'default' }}
+                            onClick={() => { if (isUrl) window.open(item.path, '_blank') }}>
+                            {iconByType(item.mime_type)}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 13, fontWeight: 500, color: isUrl ? 'var(--brand)' : 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.original_name}</div>
+                              <div style={{ fontSize: 11, color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {isUrl ? item.path : isNote ? item.path?.substring(0, 60) : formatSize(item.size || 0)}
+                              </div>
+                              {isUrl && item.description && <div style={{ fontSize: 11, color: 'var(--brand)', fontStyle: 'italic' }}>{item.description}</div>}
+                            </div>
+                            {isUrl && <ExternalLink size={14} color="var(--brand)" />}
+                            {!isUrl && !isNote && (
+                              <button onClick={e => { e.stopPropagation(); window.open(`${BACKEND_URL}/api/files/${item.id}/download`, '_blank') }}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--brand)' }}><Download size={14} /></button>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  {itemType && (
+                    <div style={{ marginTop: 12, padding: 14, borderRadius: 10, border: '1px solid var(--brand)', background: 'rgba(59,130,246,0.04)' }}>
+                      {itemType === 'url' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                          <input value={itemUrl} onChange={e => setItemUrl(e.target.value)} placeholder="https://example.com" autoFocus
+                            style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-secondary)', boxSizing: 'border-box' }} />
+                          <input value={itemTitle} onChange={e => setItemTitle(e.target.value)} placeholder="名称（选填）：官网、后台"
+                            style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-secondary)', boxSizing: 'border-box' }} />
+                          <input value={itemContent} onChange={e => setItemContent(e.target.value)} placeholder="引导/备注（选填）：点击跳转"
+                            style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-secondary)', boxSizing: 'border-box' }}
+                            onKeyDown={e => { if (e.key === 'Enter') handleAddGroupItem() }} />
+                        </div>
+                      )}
+                      {itemType === 'text' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                          <input value={itemTitle} onChange={e => setItemTitle(e.target.value)} placeholder="标题（选填）" autoFocus
+                            style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-secondary)', boxSizing: 'border-box' }} />
+                          <textarea value={itemContent} onChange={e => setItemContent(e.target.value)} placeholder="输入文字内容..." rows={3}
+                            style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-secondary)', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }} />
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 10 }}>
+                        <button onClick={() => { setItemType(''); setItemUrl(''); setItemTitle(''); setItemContent('') }}
+                          style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', cursor: 'pointer', fontSize: 12, color: 'var(--text-secondary)' }}>取消</button>
+                        <Button disabled={addingItem} onClick={handleAddGroupItem}>
+                          {addingItem ? <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <Plus size={12} />}
+                          添加
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+            {canEdit && !itemType && (
+              <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border-primary)', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <input ref={groupFileRef} type="file" multiple style={{ display: 'none' }} onChange={handleGroupFileUpload} />
+                <button onClick={() => setItemType('url')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', cursor: 'pointer', fontSize: 12, color: 'var(--text-secondary)' }}>
+                  <Link2 size={13} /> 网址
+                </button>
+                <button onClick={() => setItemType('text')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', cursor: 'pointer', fontSize: 12, color: 'var(--text-secondary)' }}>
+                  <StickyNote size={13} /> 文字
+                </button>
+                <button onClick={() => groupFileRef.current?.click()} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', cursor: 'pointer', fontSize: 12, color: 'var(--text-secondary)' }}>
+                  <Paperclip size={13} /> 文件
+                </button>
+                <button onClick={() => { if (groupFileRef.current) { groupFileRef.current.accept = 'image/*'; groupFileRef.current.click(); setTimeout(() => { if (groupFileRef.current) groupFileRef.current.accept = '' }, 100) } }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', cursor: 'pointer', fontSize: 12, color: 'var(--text-secondary)' }}>
+                  <Image size={13} /> 图片
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 添加资料弹窗 (文件模式) */}
       {showAddModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={e => { if (e.target === e.currentTarget) setShowAddModal(false) }}>
