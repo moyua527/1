@@ -48,9 +48,29 @@ export default function ProjectList() {
   const projectTabs = useProjectTabStore(s => s.tabs)
   const closeTab = useProjectTabStore(s => s.closeTab)
 
-  const [unreadProjects, setUnreadProjects] = useState<Set<number>>(() => {
-    try { const s = localStorage.getItem('unread_projects'); return new Set(s ? JSON.parse(s) : []) } catch { return new Set() }
+  type UnreadInfo = { tasks?: boolean; members?: boolean; messages?: boolean }
+  const [unreadMap, setUnreadMap] = useState<Record<number, UnreadInfo>>(() => {
+    try { const s = localStorage.getItem('unread_project_map'); return s ? JSON.parse(s) : {} } catch { return {} }
   })
+  const unreadProjects = new Set(Object.keys(unreadMap).map(Number).filter(k => {
+    const v = unreadMap[k]; return v && (v.tasks || v.members || v.messages)
+  }))
+
+  const markUnread = useCallback((pid: number, category: keyof UnreadInfo) => {
+    setUnreadMap(prev => {
+      const next = { ...prev, [pid]: { ...prev[pid], [category]: true } }
+      localStorage.setItem('unread_project_map', JSON.stringify(next))
+      return next
+    })
+  }, [])
+
+  const clearUnread = useCallback((pid: number) => {
+    setUnreadMap(prev => {
+      const next = { ...prev }; delete next[pid]
+      localStorage.setItem('unread_project_map', JSON.stringify(next))
+      return next
+    })
+  }, [])
 
   const load = useCallback(() => invalidate('projects'), [invalidate])
   useLiveData(['project'], load)
@@ -59,29 +79,22 @@ export default function ProjectList() {
     const offNotif = onSocket('new_notification', (payload: any) => {
       const link = payload?.link || ''
       const m = link.match(/\/projects\/(\d+)/)
-      if (m) {
-        const pid = Number(m[1])
-        setUnreadProjects(prev => {
-          const next = new Set(prev)
-          next.add(pid)
-          localStorage.setItem('unread_projects', JSON.stringify([...next]))
-          return next
-        })
-      }
+      if (m) markUnread(Number(m[1]), 'tasks')
     })
     const offMsg = onSocket('new_message', (payload: any) => {
-      if (payload?.project_id) {
-        const pid = Number(payload.project_id)
-        setUnreadProjects(prev => {
-          const next = new Set(prev)
-          next.add(pid)
-          localStorage.setItem('unread_projects', JSON.stringify([...next]))
-          return next
-        })
-      }
+      if (payload?.project_id) markUnread(Number(payload.project_id), 'messages')
     })
-    return () => { offNotif(); offMsg() }
-  }, [])
+    const offData = onSocket('data_changed', (payload: any) => {
+      const pid = payload?.project_id ? Number(payload.project_id) : 0
+      if (!pid) return
+      if (payload.entity === 'task') markUnread(pid, 'tasks')
+      else if (payload.entity === 'project' && (payload.action === 'member_added' || payload.action === 'member_joined' || payload.action === 'member_role_updated' || payload.action === 'join_approved')) markUnread(pid, 'members')
+    })
+    const offTask = onSocket('task_created', (payload: any) => {
+      if (payload?.project_id) markUnread(Number(payload.project_id), 'tasks')
+    })
+    return () => { offNotif(); offMsg(); offData(); offTask() }
+  }, [markUnread])
 
   const filtered = projects.filter((p: any) => {
     if (search) {
@@ -207,19 +220,27 @@ export default function ProjectList() {
             return (
               <div key={p.id}
                 onClick={() => {
-                  setUnreadProjects(prev => {
-                    const next = new Set(prev)
-                    next.delete(p.id)
-                    localStorage.setItem('unread_projects', JSON.stringify([...next]))
-                    return next
-                  })
+                  clearUnread(p.id)
                   openTab(p.id, displayName)
                   nav(`/projects/${p.id}`)
                 }}
                 style={{ position: 'relative', display: 'flex', flexDirection: 'column', padding: isMobile ? 14 : 20, background: 'var(--bg-primary)', borderRadius: 14, cursor: 'pointer', border: '1px solid var(--border-primary)', transition: 'box-shadow 0.2s, transform 0.2s', minHeight: isMobile ? 100 : 120 }}
                 onMouseEnter={e => { if (!isMobile) { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)' } }}
                 onMouseLeave={e => { if (!isMobile) { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' } }}>
-                {unreadProjects.has(p.id) && <span style={{ position: 'absolute', top: 10, right: 10, width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }} />}
+                {unreadProjects.has(p.id) && (() => {
+                  const info = unreadMap[p.id] || {}
+                  const badges: { color: string; label: string }[] = []
+                  if (info.tasks) badges.push({ color: '#8b5cf6', label: '需求' })
+                  if (info.members) badges.push({ color: '#3b82f6', label: '成员' })
+                  if (info.messages) badges.push({ color: '#22c55e', label: '消息' })
+                  return badges.length > 0 ? (
+                    <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 3 }}>
+                      {badges.map(b => (
+                        <span key={b.label} style={{ fontSize: 9, padding: '1px 5px', borderRadius: 6, background: b.color, color: '#fff', fontWeight: 700, lineHeight: '14px' }}>{b.label}</span>
+                      ))}
+                    </div>
+                  ) : <span style={{ position: 'absolute', top: 10, right: 10, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
+                })()}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                   {(() => { const Icon = getProjectIcon(p.icon); return <Icon size={isMobile ? 18 : 22} style={{ color: p.icon_color || 'var(--brand)', flexShrink: 0 }} /> })()}
                   <span style={{ fontSize: isMobile ? 14 : 16, fontWeight: 600, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
