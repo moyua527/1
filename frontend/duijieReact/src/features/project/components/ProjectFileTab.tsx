@@ -281,21 +281,15 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
               </button>
             </div>
 
-            {/* 类型选择标签 */}
-            <div style={{ display: 'flex', gap: 4, padding: '12px 20px', borderBottom: '1px solid var(--border-primary)', overflowX: 'auto' }}>
-              {addTypes.map(t => (
-                <button key={t.key} onClick={() => setModalTab(t.key)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderRadius: 8,
-                    border: modalTab === t.key ? `1.5px solid ${t.color}` : '1.5px solid transparent',
-                    background: modalTab === t.key ? `color-mix(in srgb, ${t.color} 8%, var(--bg-primary))` : 'var(--bg-secondary)',
-                    color: modalTab === t.key ? t.color : 'var(--text-secondary)',
-                    fontSize: 13, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.15s',
-                  }}>
-                  <t.icon size={15} />
-                  {t.label}
-                </button>
-              ))}
+            {/* 类型选择下拉框 */}
+            <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--border-primary)' }}>
+              <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)', marginBottom: 6, display: 'block' }}>资料类型</label>
+              <select value={modalTab} onChange={e => setModalTab(e.target.value)}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-secondary)', color: 'var(--text-heading)', cursor: 'pointer', appearance: 'auto' }}>
+                {addTypes.map(t => (
+                  <option key={t.key} value={t.key}>{t.label} — {t.desc}</option>
+                ))}
+              </select>
             </div>
 
             {/* 内容区 */}
