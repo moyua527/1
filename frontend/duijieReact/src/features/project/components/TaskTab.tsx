@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, DragEvent, ClipboardEvent } from 'react'
-import { ChevronDown, ChevronRight, Plus, Trash2, FileText, Image, Paperclip, Download, AlertTriangle, Check, X } from 'lucide-react'
+import { ChevronDown, ChevronRight, Plus, Trash2, FileText, Image, Paperclip, Download, AlertTriangle, Check, X, Archive } from 'lucide-react'
 import Modal from '../../ui/Modal'
 import Button from '../../ui/Button'
 import Badge from '../../ui/Badge'
@@ -42,6 +42,29 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
   const [showDeleteTask, setShowDeleteTask] = useState(false)
   const [taskForm, setTaskForm] = useState({ title: '', description: '' })
   const [taskFiles, setTaskFiles] = useState<File[]>([])
+  const [showDrafts, setShowDrafts] = useState(false)
+  const draftKey = `task_drafts_${projectId}`
+  const getDrafts = useCallback((): { id: string; title: string; description: string; savedAt: string }[] => {
+    try { return JSON.parse(localStorage.getItem(draftKey) || '[]') } catch { return [] }
+  }, [draftKey])
+  const saveDraft = useCallback(() => {
+    const t = taskForm.title.trim(); const d = taskForm.description.trim()
+    if (!t && !d) { toast('草稿内容为空', 'error'); return }
+    const drafts = getDrafts()
+    drafts.unshift({ id: Date.now().toString(), title: t, description: d, savedAt: new Date().toLocaleString('zh-CN') })
+    if (drafts.length > 20) drafts.length = 20
+    localStorage.setItem(draftKey, JSON.stringify(drafts))
+    toast('草稿已保存', 'success')
+  }, [taskForm, getDrafts, draftKey])
+  const deleteDraft = useCallback((id: string) => {
+    const drafts = getDrafts().filter(d => d.id !== id)
+    localStorage.setItem(draftKey, JSON.stringify(drafts))
+  }, [getDrafts, draftKey])
+  const loadDraft = useCallback((draft: { title: string; description: string; id: string }) => {
+    setTaskForm({ title: draft.title, description: draft.description })
+    deleteDraft(draft.id)
+    setShowDrafts(false); setShowCreateTask(true)
+  }, [deleteDraft])
   const [deleteSelected, setDeleteSelected] = useState<Set<number>>(new Set())
   const [submitting, setSubmitting] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
@@ -340,6 +363,10 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
               display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8,
               background: 'var(--brand)', color: 'var(--bg-primary)', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500,
             }}><Plus size={14} /> 添加</button>
+            <button onClick={() => setShowDrafts(true)} style={{
+              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, position: 'relative',
+              background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)', cursor: 'pointer', fontSize: 13, fontWeight: 500,
+            }}><Archive size={14} /> 草稿{getDrafts().length > 0 && <span style={{ position: 'absolute', top: -4, right: -4, width: 16, height: 16, borderRadius: '50%', background: 'var(--brand)', color: '#fff', fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{getDrafts().length}</span>}</button>
             <div ref={dropdownRef} style={{ position: 'relative' }}>
               <button onClick={() => setDropdownOpen(!dropdownOpen)} style={{
                 display: 'flex', alignItems: 'center', padding: '8px 10px', borderRadius: 8,
@@ -581,6 +608,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
             <Button variant="secondary" onClick={() => { setShowCreateTask(false); resetCreateForm() }}>取消</Button>
+            <Button variant="secondary" onClick={() => { saveDraft(); }}>保存草稿</Button>
             <Button disabled={submitting} onClick={async () => {
               const title = taskForm.title.trim()
               if (!title) { toast('请输入需求标题', 'error'); return }
@@ -598,6 +626,30 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
               setSubmitting(false)
             }}>{submitting ? '创建中...' : '创建'}</Button>
           </div>
+        </div>
+      </Modal>
+
+      {/* 草稿箱模态框 */}
+      <Modal open={showDrafts} onClose={() => setShowDrafts(false)} title="草稿箱" width={480}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {getDrafts().length === 0 ? (
+            <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 14, padding: '32px 0' }}>暂无草稿</div>
+          ) : getDrafts().map(d => (
+            <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', cursor: 'pointer', transition: 'box-shadow .15s' }}
+              onClick={() => loadDraft(d)}
+              onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)')}
+              onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.title || '(无标题)'}</div>
+                {d.description && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.description}</div>}
+                <div style={{ fontSize: 11, color: 'var(--text-quaternary)', marginTop: 4 }}>{d.savedAt}</div>
+              </div>
+              <button onClick={e => { e.stopPropagation(); deleteDraft(d.id); }} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', padding: 4, borderRadius: 6, flexShrink: 0 }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--color-danger)')} onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-tertiary)')}>
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
         </div>
       </Modal>
 
