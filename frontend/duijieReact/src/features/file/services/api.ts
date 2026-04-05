@@ -11,6 +11,8 @@ export const fileApi = {
   },
   addUrl: (project_id: string, url: string, title?: string) =>
     fetchApi('/api/files/url', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ project_id, url, title }) }),
+  addNote: (project_id: string, content: string, title?: string) =>
+    fetchApi('/api/files/note', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ project_id, content, title }) }),
   remove: (id: string) => fetchApi(`/api/files/${id}`, { method: 'DELETE' }),
   downloadUrl: (id: string) => `/api/files/${id}/download`,
 }

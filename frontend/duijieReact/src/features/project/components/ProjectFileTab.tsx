@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Loader2, Trash2, Download, Eye, FileText, Image, FileSpreadsheet, Film, File, CheckSquare, Square, Search, Pencil, Link2, Plus, ExternalLink, X } from 'lucide-react'
+import { Loader2, Trash2, Download, Eye, FileText, Image, FileSpreadsheet, Film, File, CheckSquare, Square, Search, Pencil, Link2, Plus, ExternalLink, X, StickyNote } from 'lucide-react'
 import { fetchApi, BACKEND_URL } from '../../../bootstrap'
 import { fileApi } from '../../file/services/api'
 import Button from '../../ui/Button'
@@ -17,6 +17,7 @@ const formatSize = (bytes: number) => {
 
 const iconByType = (mime: string) => {
   if (mime === 'text/x-url') return <Link2 size={18} color="var(--color-info, #3b82f6)" />
+  if (mime === 'text/x-note') return <StickyNote size={18} color="#f59e0b" />
   if (mime?.startsWith('image/')) return <Image size={18} color="var(--color-purple)" />
   if (mime?.includes('spreadsheet') || mime?.includes('excel') || mime?.includes('csv')) return <FileSpreadsheet size={18} color="var(--color-success)" />
   if (mime?.includes('video') || mime?.includes('audio')) return <Film size={18} color="var(--color-danger)" />
@@ -24,10 +25,11 @@ const iconByType = (mime: string) => {
 }
 
 const canPreview = (mime: string) =>
-  mime && mime !== 'text/x-url' && (mime.startsWith('image/') || mime === 'application/pdf' || mime.startsWith('video/') || mime.startsWith('audio/') || mime.startsWith('text/') || mime === 'application/json')
+  mime && mime !== 'text/x-url' && mime !== 'text/x-note' && (mime.startsWith('image/') || mime === 'application/pdf' || mime.startsWith('video/') || mime.startsWith('audio/') || mime.startsWith('text/') || mime === 'application/json')
 
 const getCategory = (mime: string) => {
   if (mime === 'text/x-url') return 'url'
+  if (mime === 'text/x-note') return 'note'
   if (mime?.startsWith('image/')) return 'image'
   if (mime?.startsWith('video/') || mime?.startsWith('audio/')) return 'media'
   if (mime?.includes('pdf') || mime?.includes('word') || mime?.includes('document') || mime?.includes('text/')) return 'doc'
@@ -39,6 +41,7 @@ const categoryTabs = [
   { key: '', label: '全部' },
   { key: 'image', label: '图片' },
   { key: 'doc', label: '文档' },
+  { key: 'note', label: '文字' },
   { key: 'url', label: '网址' },
   { key: 'sheet', label: '表格' },
   { key: 'media', label: '音视频' },
@@ -48,6 +51,7 @@ const categoryTabs = [
 const addTypes = [
   { key: 'image', label: '图片', desc: '上传图片文件', icon: Image, accept: 'image/*', color: '#a855f7' },
   { key: 'doc', label: '文档', desc: 'PDF、Word、TXT 等', icon: FileText, accept: '.pdf,.doc,.docx,.txt,.md,.rtf', color: '#3b82f6' },
+  { key: 'note', label: '文字', desc: '创建文字笔记', icon: StickyNote, accept: '', color: '#f59e0b' },
   { key: 'url', label: '网址', desc: '添加网址书签', icon: Link2, accept: '', color: '#06b6d4' },
   { key: 'sheet', label: '表格', desc: 'Excel、CSV 等', icon: FileSpreadsheet, accept: '.xlsx,.xls,.csv,.ppt,.pptx', color: '#22c55e' },
   { key: 'media', label: '音视频', desc: 'MP4、MP3 等', icon: Film, accept: 'video/*,audio/*,.mp4,.mp3,.wav', color: '#ef4444' },
@@ -73,6 +77,10 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
   const [urlInput, setUrlInput] = useState('')
   const [urlTitle, setUrlTitle] = useState('')
   const [addingUrl, setAddingUrl] = useState(false)
+  const [noteTitle, setNoteTitle] = useState('')
+  const [noteContent, setNoteContent] = useState('')
+  const [addingNote, setAddingNote] = useState(false)
+  const [expandedNote, setExpandedNote] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(() => {
@@ -127,6 +135,23 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
       load()
     } else {
       toast(r.message || '添加失败', 'error')
+    }
+  }
+
+  const handleAddNote = async () => {
+    const content = noteContent.trim()
+    if (!content) { toast('请输入内容', 'error'); return }
+    setAddingNote(true)
+    const r = await fileApi.addNote(projectId, content, noteTitle.trim() || undefined)
+    setAddingNote(false)
+    if (r.success) {
+      toast('笔记已创建', 'success')
+      setNoteTitle('')
+      setNoteContent('')
+      setShowAddModal(false)
+      load()
+    } else {
+      toast(r.message || '创建失败', 'error')
     }
   }
 
@@ -213,48 +238,60 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {filtered.map(f => {
             const isUrl = f.mime_type === 'text/x-url'
+            const isNote = f.mime_type === 'text/x-note'
+            const isSpecial = isUrl || isNote
             return (
-              <div key={f.id}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, background: selected.has(f.id) ? 'var(--bg-selected)' : 'transparent', transition: 'background 0.1s' }}
-                onMouseEnter={e => { if (!selected.has(f.id)) e.currentTarget.style.background = 'var(--bg-secondary)' }}
-                onMouseLeave={e => { if (!selected.has(f.id)) e.currentTarget.style.background = 'transparent' }}>
-                {editing && (
-                  <button onClick={() => setSelected(prev => { const s = new Set(prev); s.has(f.id) ? s.delete(f.id) : s.add(f.id); return s })}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: selected.has(f.id) ? 'var(--brand)' : 'var(--text-tertiary)', display: 'flex', flexShrink: 0 }}>
-                    {selected.has(f.id) ? <CheckSquare size={16} /> : <Square size={16} />}
-                  </button>
-                )}
-                {iconByType(f.mime_type)}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  {isUrl ? (
-                    <a href={f.path} target="_blank" rel="noopener noreferrer"
-                      style={{ fontSize: 13, fontWeight: 500, color: 'var(--brand)', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}
-                      onMouseEnter={e => { e.currentTarget.style.textDecoration = 'underline' }}
-                      onMouseLeave={e => { e.currentTarget.style.textDecoration = 'none' }}>
-                      {f.original_name}
-                    </a>
-                  ) : (
-                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.original_name}</div>
+              <div key={f.id}>
+                <div
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, background: selected.has(f.id) ? 'var(--bg-selected)' : 'transparent', transition: 'background 0.1s', cursor: isNote ? 'pointer' : 'default' }}
+                  onMouseEnter={e => { if (!selected.has(f.id)) e.currentTarget.style.background = 'var(--bg-secondary)' }}
+                  onMouseLeave={e => { if (!selected.has(f.id)) e.currentTarget.style.background = 'transparent' }}
+                  onClick={() => { if (isNote) setExpandedNote(prev => prev === f.id ? null : f.id) }}>
+                  {editing && (
+                    <button onClick={e => { e.stopPropagation(); setSelected(prev => { const s = new Set(prev); s.has(f.id) ? s.delete(f.id) : s.add(f.id); return s }) }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: selected.has(f.id) ? 'var(--brand)' : 'var(--text-tertiary)', display: 'flex', flexShrink: 0 }}>
+                      {selected.has(f.id) ? <CheckSquare size={16} /> : <Square size={16} />}
+                    </button>
                   )}
-                  <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
+                  {iconByType(f.mime_type)}
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     {isUrl ? (
-                      <><span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block', maxWidth: 300, verticalAlign: 'bottom' }}>{f.path}</span> · {new Date(f.created_at).toLocaleDateString('zh-CN')}</>
+                      <a href={f.path} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                        style={{ fontSize: 13, fontWeight: 500, color: 'var(--brand)', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}
+                        onMouseEnter={e => { e.currentTarget.style.textDecoration = 'underline' }}
+                        onMouseLeave={e => { e.currentTarget.style.textDecoration = 'none' }}>
+                        {f.original_name}
+                      </a>
                     ) : (
-                      <>{formatSize(f.size || 0)} · {new Date(f.created_at).toLocaleDateString('zh-CN')}</>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: isNote ? '#f59e0b' : 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.original_name}</div>
                     )}
+                    <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
+                      {isUrl ? (
+                        <><span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block', maxWidth: 300, verticalAlign: 'bottom' }}>{f.path}</span> · {new Date(f.created_at).toLocaleDateString('zh-CN')}</>
+                      ) : isNote ? (
+                        <>{f.path?.substring(0, 60)}{f.path?.length > 60 ? '...' : ''} · {new Date(f.created_at).toLocaleDateString('zh-CN')}</>
+                      ) : (
+                        <>{formatSize(f.size || 0)} · {new Date(f.created_at).toLocaleDateString('zh-CN')}</>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+                    {isUrl && (
+                      <a href={f.path} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--brand)', display: 'flex' }} title="打开链接">
+                        <ExternalLink size={16} />
+                      </a>
+                    )}
+                    {!isSpecial && canPreview(f.mime_type) && <button onClick={() => setPreview(f)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--color-purple)' }} title="预览"><Eye size={16} /></button>}
+                    {!isSpecial && <button onClick={() => handleDownload(f)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--brand)' }} title="下载"><Download size={16} /></button>}
+                    {editing && <button onClick={e => { e.stopPropagation(); handleDelete(f) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--color-danger)' }} title="删除"><Trash2 size={16} /></button>}
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
-                  {isUrl && (
-                    <a href={f.path} target="_blank" rel="noopener noreferrer"
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--brand)', display: 'flex' }} title="打开链接">
-                      <ExternalLink size={16} />
-                    </a>
-                  )}
-                  {!isUrl && canPreview(f.mime_type) && <button onClick={() => setPreview(f)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--color-purple)' }} title="预览"><Eye size={16} /></button>}
-                  {!isUrl && <button onClick={() => handleDownload(f)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--brand)' }} title="下载"><Download size={16} /></button>}
-                  {editing && <button onClick={() => handleDelete(f)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--color-danger)' }} title="删除"><Trash2 size={16} /></button>}
-                </div>
+                {isNote && expandedNote === f.id && (
+                  <div style={{ margin: '4px 0 8px 38px', padding: '10px 14px', background: 'var(--bg-secondary)', borderRadius: 8, fontSize: 13, lineHeight: 1.7, color: 'var(--text-primary)', whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: 200, overflow: 'auto' }}>
+                    {f.path}
+                  </div>
+                )}
               </div>
             )
           })}
@@ -294,7 +331,26 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
 
             {/* 内容区 */}
             <div style={{ padding: 20, flex: 1, overflow: 'auto' }}>
-              {currentAddType && currentAddType.key === 'url' ? (
+              {currentAddType && currentAddType.key === 'note' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)', marginBottom: 6, display: 'block' }}>标题（选填）</label>
+                    <input value={noteTitle} onChange={e => setNoteTitle(e.target.value)} placeholder="笔记标题"
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-secondary)', boxSizing: 'border-box' }}
+                      autoFocus />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)', marginBottom: 6, display: 'block' }}>内容 <span style={{ color: 'var(--color-danger)' }}>*</span></label>
+                    <textarea value={noteContent} onChange={e => setNoteContent(e.target.value)} placeholder="输入文字内容..."
+                      rows={6}
+                      style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-secondary)', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.6 }} />
+                  </div>
+                  <Button disabled={addingNote} onClick={handleAddNote} style={{ alignSelf: 'flex-end', marginTop: 4 }}>
+                    {addingNote ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Plus size={14} />}
+                    {addingNote ? '创建中...' : '创建笔记'}
+                  </Button>
+                </div>
+              ) : currentAddType && currentAddType.key === 'url' ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div>
                     <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)', marginBottom: 6, display: 'block' }}>网址 <span style={{ color: 'var(--color-danger)' }}>*</span></label>

@@ -39,6 +39,7 @@ router.patch('/milestones/:id/toggle', auth, require('../controllers/milestone/t
 // Files
 router.post('/files/upload', auth, upload.single('file'), require('../controllers/file/uploadController'));
 router.post('/files/url', auth, require('../controllers/file/addUrlController'));
+router.post('/files/note', auth, require('../controllers/file/addNoteController'));
 router.get('/files/all', auth, require('../controllers/file/listAllController'));
 router.get('/files', auth, require('../controllers/file/listController'));
 router.delete('/files/:id', auth, require('../controllers/file/deleteController'));
