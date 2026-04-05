@@ -1,6 +1,6 @@
 {
-  "version": "1.1.91.1",
-  "versionCode": 112,
+  "version": "1.1.91.2",
+  "versionCode": 113,
   "minVersion": "1.0.0",
-  "changelog": "用户引导只触发一次"
+  "changelog": "移除下拉刷新"
 }
