@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { authApi } from './services/api'
-import { setToken } from '../../bootstrap'
+import { setToken, setRefreshToken } from '../../bootstrap'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
 import { confirm } from '../ui/ConfirmDialog'
@@ -43,7 +43,7 @@ export default function LoginForm({ onLogin, onSwitchToForgot }: LoginFormProps)
     setError(''); setSuccess(''); setLoading(true)
     try {
       const res = await authApi.login(username, password)
-      if (res.success) { if (res.token) setToken(res.token); onLogin(res.data) }
+      if (res.success) { if (res.token) setToken(res.token); if (res.refresh_token) setRefreshToken(res.refresh_token); onLogin(res.data) }
       else setError(res.message || '登录失败')
     } catch { setError('网络错误') }
     setLoading(false)
@@ -70,7 +70,7 @@ export default function LoginForm({ onLogin, onSwitchToForgot }: LoginFormProps)
     setError(''); setSuccess(''); setLoading(true)
     try {
       const res = await authApi.loginByCode('email', email, code)
-      if (res.success) { if (res.token) setToken(res.token); onLogin(res.data) }
+      if (res.success) { if (res.token) setToken(res.token); if (res.refresh_token) setRefreshToken(res.refresh_token); onLogin(res.data) }
       else setError(res.message || '登录失败')
     } catch { setError('网络错误') }
     setLoading(false)

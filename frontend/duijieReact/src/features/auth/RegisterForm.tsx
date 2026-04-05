@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { authApi } from './services/api'
-import { setToken, fetchApi } from '../../bootstrap'
+import { setToken, setRefreshToken, fetchApi } from '../../bootstrap'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
 import { confirm } from '../ui/ConfirmDialog'
@@ -82,7 +82,7 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
         invite_token: inviteToken || undefined,
       })
       if (res.success) {
-        if (res.token) { setToken(res.token); onRegistered(res.data) }
+        if (res.token) { setToken(res.token); if (res.refresh_token) setRefreshToken(res.refresh_token); onRegistered(res.data) }
         else { setTimeout(() => onSwitchToLogin(), 1500) }
       } else setError(res.message || '注册失败')
     } catch { setError('网络错误') }

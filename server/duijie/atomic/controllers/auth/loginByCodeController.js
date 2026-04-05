@@ -1,4 +1,4 @@
-﻿const db = require('../../../config/db');
+const db = require('../../../config/db');
 const logger = require('../../../config/logger');
 const { buildUserPayload, signAccessToken, createRefreshToken, parseDeviceName } = require('../../utils/authToken');
 const { notify } = require('../../utils/notify');
@@ -50,6 +50,7 @@ module.exports = async (req, res) => {
       success: true,
       data: buildUserPayload(user),
       token,
+      refresh_token: refreshToken,
     });
   } catch (e) {
     logger.error(`loginByCode: ${e.message}`);

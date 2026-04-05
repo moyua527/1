@@ -23,7 +23,7 @@ module.exports = async (req, res) => {
     res.cookie('token', newAccessToken, { httpOnly: true, sameSite: 'lax', maxAge: 2 * 60 * 60 * 1000 });
     res.cookie('refresh_token', result.newRefreshToken, { httpOnly: true, sameSite: 'lax', maxAge: 30 * 24 * 60 * 60 * 1000, path: '/api/auth/refresh' });
 
-    res.json({ success: true, token: newAccessToken });
+    res.json({ success: true, token: newAccessToken, refresh_token: result.newRefreshToken });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });
   }

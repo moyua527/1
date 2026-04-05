@@ -15,8 +15,10 @@ function authHeaders(): Record<string, string> {
 }
 
 export function setToken(token: string) { localStorage.setItem('token', token) }
-export function clearToken() { localStorage.removeItem('token') }
+export function clearToken() { localStorage.removeItem('token'); localStorage.removeItem('refresh_token') }
 export function getToken() { return localStorage.getItem('token') }
+export function setRefreshToken(rt: string) { localStorage.setItem('refresh_token', rt) }
+export function getRefreshToken() { return localStorage.getItem('refresh_token') }
 
 const HTTP_STATUS_MSG: Record<number, string> = {
   429: '请求过于频繁，请稍后再试',
@@ -32,15 +34,18 @@ async function tryRefreshToken(): Promise<boolean> {
   if (refreshPromise) return refreshPromise
   refreshPromise = (async () => {
     try {
+      const rt = getRefreshToken()
       const res = await fetch(`${BACKEND_URL}/api/auth/refresh`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
+        body: rt ? JSON.stringify({ refresh_token: rt }) : undefined,
       })
       if (!res.ok) return false
       const data = await res.json()
       if (data.success && data.token) {
         setToken(data.token)
+        if (data.refresh_token) setRefreshToken(data.refresh_token)
         return true
       }
       return false

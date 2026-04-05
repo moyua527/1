@@ -1,4 +1,4 @@
-﻿const loginService = require('../../services/auth/loginService');
+const loginService = require('../../services/auth/loginService');
 const { notify } = require('../../utils/notify');
 
 module.exports = async (req, res) => {
@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
     res.cookie('token', result.token, { httpOnly: true, sameSite: 'lax', maxAge: 2 * 60 * 60 * 1000 });
     // refresh token cookie (30天, HTTP-Only, 仅 /api/auth/refresh 路径)
     res.cookie('refresh_token', result.refreshToken, { httpOnly: true, sameSite: 'lax', maxAge: 30 * 24 * 60 * 60 * 1000, path: '/api/auth/refresh' });
-    res.json({ success: true, data: result.user, token: result.token });
+    res.json({ success: true, data: result.user, token: result.token, refresh_token: result.refreshToken });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });
   }
