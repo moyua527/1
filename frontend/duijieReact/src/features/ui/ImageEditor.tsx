@@ -24,8 +24,17 @@ export default function ImageEditor({ imageFile, imageSrc, onConfirm, onCancel }
   const [imgLoaded, setImgLoaded] = useState(false)
   const imgRef = useRef<HTMLImageElement | null>(null)
   const lastPos = useRef<{ x: number; y: number } | null>(null)
-  const [drawing, setDrawing] = useState(false)
+  const drawingRef = useRef(false)
   const scaleRatio = useRef(1)
+  const rafId = useRef(0)
+  const toolRef = useRef<Tool>('draw')
+  const colorRef = useRef('#ef4444')
+  const lineWidthRef = useRef(4)
+  const pointsBuffer = useRef<{ x: number; y: number }[]>([])
+
+  toolRef.current = tool
+  colorRef.current = color
+  lineWidthRef.current = lineWidth
 
   const [textInput, setTextInput] = useState('')
   const [textPos, setTextPos] = useState<{ x: number; y: number } | null>(null)
@@ -62,6 +71,19 @@ export default function ImageEditor({ imageFile, imageSrc, onConfirm, onCancel }
     }
   }, [imageFile, imageSrc])
 
+  const getNativePos = useCallback((e: TouchEvent | MouseEvent) => {
+    const canvas = canvasRef.current
+    if (!canvas) return { x: 0, y: 0 }
+    const rect = canvas.getBoundingClientRect()
+    const scaleX = canvas.width / rect.width
+    const scaleY = canvas.height / rect.height
+    if ('touches' in e) {
+      const t = e.touches[0] || e.changedTouches[0]
+      return { x: (t.clientX - rect.left) * scaleX, y: (t.clientY - rect.top) * scaleY }
+    }
+    return { x: ((e as MouseEvent).clientX - rect.left) * scaleX, y: ((e as MouseEvent).clientY - rect.top) * scaleY }
+  }, [])
+
   const getPos = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     const canvas = canvasRef.current
     if (!canvas) return { x: 0, y: 0 }
@@ -82,59 +104,113 @@ export default function ImageEditor({ imageFile, imageSrc, onConfirm, onCancel }
     setHistory(prev => [...prev, ctx.getImageData(0, 0, canvas.width, canvas.height)])
   }, [])
 
-  // === Draw tool ===
-  const startDraw = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    if (tool !== 'draw' && tool !== 'mosaic') return
-    e.preventDefault()
-    setDrawing(true)
-    lastPos.current = getPos(e)
-  }, [tool, getPos])
+  const flushDraw = useCallback(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    const pts = pointsBuffer.current
+    if (pts.length < 2) return
 
-  const doDraw = useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    if (!drawing || !lastPos.current) return
-    e.preventDefault()
-    const ctx = canvasRef.current?.getContext('2d')
-    if (!ctx || !canvasRef.current) return
-    const pos = getPos(e)
-
-    if (tool === 'draw') {
+    if (toolRef.current === 'draw') {
       ctx.beginPath()
-      ctx.moveTo(lastPos.current.x, lastPos.current.y)
-      ctx.lineTo(pos.x, pos.y)
-      ctx.strokeStyle = color
-      ctx.lineWidth = lineWidth * scaleRatio.current
+      ctx.strokeStyle = colorRef.current
+      ctx.lineWidth = lineWidthRef.current * scaleRatio.current
       ctx.lineCap = 'round'
       ctx.lineJoin = 'round'
+      ctx.moveTo(pts[0].x, pts[0].y)
+      if (pts.length === 2) {
+        ctx.lineTo(pts[1].x, pts[1].y)
+      } else {
+        for (let i = 1; i < pts.length - 1; i++) {
+          const mx = (pts[i].x + pts[i + 1].x) / 2
+          const my = (pts[i].y + pts[i + 1].y) / 2
+          ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my)
+        }
+        ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y)
+      }
       ctx.stroke()
-    } else if (tool === 'mosaic') {
+    } else if (toolRef.current === 'mosaic') {
       const bs = Math.round(MOSAIC_BLOCK * scaleRatio.current)
       const r = Math.round(20 * scaleRatio.current)
-      const cx = Math.floor(pos.x)
-      const cy = Math.floor(pos.y)
+      const pos = pts[pts.length - 1]
+      const cx = Math.floor(pos.x), cy = Math.floor(pos.y)
       for (let bx = cx - r; bx < cx + r; bx += bs) {
         for (let by = cy - r; by < cy + r; by += bs) {
-          if (bx < 0 || by < 0 || bx >= canvasRef.current.width || by >= canvasRef.current.height) continue
-          const imgData = ctx.getImageData(bx, by, Math.min(bs, canvasRef.current.width - bx), Math.min(bs, canvasRef.current.height - by))
+          if (bx < 0 || by < 0 || bx >= canvas.width || by >= canvas.height) continue
+          const w = Math.min(bs, canvas.width - bx), h = Math.min(bs, canvas.height - by)
+          const imgData = ctx.getImageData(bx, by, w, h)
           let tr = 0, tg = 0, tb = 0, cnt = 0
           for (let i = 0; i < imgData.data.length; i += 4) {
             tr += imgData.data[i]; tg += imgData.data[i + 1]; tb += imgData.data[i + 2]; cnt++
           }
           if (cnt > 0) {
             ctx.fillStyle = `rgb(${Math.round(tr / cnt)},${Math.round(tg / cnt)},${Math.round(tb / cnt)})`
-            ctx.fillRect(bx, by, Math.min(bs, canvasRef.current.width - bx), Math.min(bs, canvasRef.current.height - by))
+            ctx.fillRect(bx, by, w, h)
           }
         }
       }
     }
-    lastPos.current = pos
-  }, [drawing, tool, color, lineWidth, getPos])
+    pointsBuffer.current = [pts[pts.length - 1]]
+    rafId.current = 0
+  }, [])
 
-  const endDraw = useCallback(() => {
-    if (!drawing) return
-    setDrawing(false)
-    lastPos.current = null
-    saveState()
-  }, [drawing, saveState])
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const onStart = (e: TouchEvent | MouseEvent) => {
+      if (toolRef.current !== 'draw' && toolRef.current !== 'mosaic') return
+      e.preventDefault()
+      drawingRef.current = true
+      const pos = getNativePos(e)
+      lastPos.current = pos
+      pointsBuffer.current = [pos]
+    }
+    const onMove = (e: TouchEvent | MouseEvent) => {
+      if (!drawingRef.current || !lastPos.current) return
+      e.preventDefault()
+      const pos = getNativePos(e)
+      pointsBuffer.current.push(pos)
+      if (!rafId.current) {
+        rafId.current = requestAnimationFrame(flushDraw)
+      }
+    }
+    const onEnd = () => {
+      if (!drawingRef.current) return
+      if (rafId.current) {
+        cancelAnimationFrame(rafId.current)
+        rafId.current = 0
+        flushDraw()
+      }
+      drawingRef.current = false
+      lastPos.current = null
+      pointsBuffer.current = []
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        setHistory(prev => [...prev, ctx.getImageData(0, 0, canvas.width, canvas.height)])
+      }
+    }
+
+    canvas.addEventListener('touchstart', onStart, { passive: false })
+    canvas.addEventListener('touchmove', onMove, { passive: false })
+    canvas.addEventListener('touchend', onEnd)
+    canvas.addEventListener('mousedown', onStart)
+    canvas.addEventListener('mousemove', onMove)
+    canvas.addEventListener('mouseup', onEnd)
+    canvas.addEventListener('mouseleave', onEnd)
+
+    return () => {
+      canvas.removeEventListener('touchstart', onStart)
+      canvas.removeEventListener('touchmove', onMove)
+      canvas.removeEventListener('touchend', onEnd)
+      canvas.removeEventListener('mousedown', onStart)
+      canvas.removeEventListener('mousemove', onMove)
+      canvas.removeEventListener('mouseup', onEnd)
+      canvas.removeEventListener('mouseleave', onEnd)
+      if (rafId.current) cancelAnimationFrame(rafId.current)
+    }
+  }, [imgLoaded, getNativePos, flushDraw])
 
   // === Text tool ===
   const handleCanvasClick = useCallback((e: React.MouseEvent) => {
@@ -257,7 +333,10 @@ export default function ImageEditor({ imageFile, imageSrc, onConfirm, onCancel }
 
   useEffect(() => {
     const handler = (e: TouchEvent) => {
-      if (canvasRef.current?.contains(e.target as Node)) e.preventDefault()
+      const el = e.target as Node
+      if (canvasRef.current?.contains(el)) return
+      const editorRoot = canvasRef.current?.closest('[data-image-editor]')
+      if (editorRoot?.contains(el)) e.preventDefault()
     }
     document.addEventListener('touchmove', handler, { passive: false })
     return () => document.removeEventListener('touchmove', handler)
@@ -279,15 +358,13 @@ export default function ImageEditor({ imageFile, imageSrc, onConfirm, onCancel }
     onMouseDown: cropDown, onMouseMove: cropMove, onMouseUp: cropUp,
     onTouchStart: cropDown, onTouchMove: cropMove, onTouchEnd: cropUp,
   } : {
-    onMouseDown: startDraw, onMouseMove: doDraw, onMouseUp: endDraw, onMouseLeave: endDraw,
-    onTouchStart: startDraw, onTouchMove: doDraw, onTouchEnd: endDraw,
     onClick: handleCanvasClick,
   }
 
   const canvasRect = canvasRef.current?.getBoundingClientRect()
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 9999, display: 'flex', flexDirection: 'column', touchAction: 'none' }}>
+    <div data-image-editor style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 9999, display: 'flex', flexDirection: 'column', touchAction: 'none' }}>
       {/* header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', flexShrink: 0 }}>
         <button onClick={onCancel} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
