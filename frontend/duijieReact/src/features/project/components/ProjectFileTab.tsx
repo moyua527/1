@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Upload, Loader2, Trash2, Download, Eye, FileText, Image, FileSpreadsheet, Film, File, CheckSquare, Square, Search, Pencil, Link2, Plus, ExternalLink } from 'lucide-react'
+import { Loader2, Trash2, Download, Eye, FileText, Image, FileSpreadsheet, Film, File, CheckSquare, Square, Search, Pencil, Link2, Plus, ExternalLink } from 'lucide-react'
 import { fetchApi, BACKEND_URL } from '../../../bootstrap'
 import { fileApi } from '../../file/services/api'
 import Button from '../../ui/Button'
@@ -45,14 +45,14 @@ const categoryTabs = [
   { key: 'other', label: '其他' },
 ]
 
-const acceptMap: Record<string, string> = {
-  '': '',
-  image: 'image/*',
-  doc: '.pdf,.doc,.docx,.txt,.md,.rtf',
-  sheet: '.xlsx,.xls,.csv,.ppt,.pptx',
-  media: 'video/*,audio/*,.mp4,.mp3,.wav',
-  other: '',
-}
+const uploadActions = [
+  { key: 'image', label: '图片', icon: Image, accept: 'image/*', color: 'var(--color-purple)' },
+  { key: 'doc', label: '文档', icon: FileText, accept: '.pdf,.doc,.docx,.txt,.md,.rtf', color: 'var(--brand)' },
+  { key: 'url', label: '网址', icon: Link2, accept: '', color: 'var(--color-info, #3b82f6)' },
+  { key: 'sheet', label: '表格', icon: FileSpreadsheet, accept: '.xlsx,.xls,.csv,.ppt,.pptx', color: 'var(--color-success)' },
+  { key: 'media', label: '音视频', icon: Film, accept: 'video/*,audio/*,.mp4,.mp3,.wav', color: 'var(--color-danger)' },
+  { key: 'other', label: '其他文件', icon: File, accept: '', color: 'var(--text-secondary)' },
+]
 
 interface Props {
   projectId: string
@@ -73,6 +73,7 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
   const [urlTitle, setUrlTitle] = useState('')
   const [addingUrl, setAddingUrl] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const currentAcceptRef = useRef('')
 
   const load = useCallback(() => {
     setLoading(true)
@@ -89,6 +90,14 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
     if (search.trim()) return (f.original_name || '').toLowerCase().includes(search.toLowerCase())
     return true
   })
+
+  const handleUploadByType = (accept: string) => {
+    if (fileInputRef.current) {
+      currentAcceptRef.current = accept
+      fileInputRef.current.accept = accept
+      fileInputRef.current.click()
+    }
+  }
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = e.target.files
@@ -149,23 +158,12 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
   }
 
   const totalSize = files.reduce((s, f) => s + (f.size || 0), 0)
-  const isUrlCategory = category === 'url'
 
-  const uploadLabel = (() => {
-    switch (category) {
-      case 'image': return '上传图片'
-      case 'doc': return '上传文档'
-      case 'sheet': return '上传表格'
-      case 'media': return '上传音视频'
-      default: return '上传文件'
-    }
-  })()
-
-  const handleUploadClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.accept = acceptMap[category] || ''
-      fileInputRef.current.click()
-    }
+  const actionBtnStyle: React.CSSProperties = {
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+    padding: '12px 16px', borderRadius: 10, border: '1px solid var(--border-primary)',
+    background: 'var(--bg-primary)', cursor: 'pointer', minWidth: 72, transition: 'all 0.15s',
+    fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)',
   }
 
   return (
@@ -181,17 +179,6 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
               <Trash2 size={14} /> 删除 ({selected.size})
             </button>
           )}
-          {editing && !isUrlCategory && (
-            <Button disabled={uploading} onClick={handleUploadClick}>
-              {uploading ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Upload size={14} />}
-              {uploading ? '上传中...' : uploadLabel}
-            </Button>
-          )}
-          {editing && isUrlCategory && (
-            <Button onClick={() => setShowUrlForm(v => !v)}>
-              <Plus size={14} /> 添加网址
-            </Button>
-          )}
           {canEdit && (
             <Button variant={editing ? 'secondary' : 'primary'} onClick={() => { setEditing(v => !v); setSelected(new Set()); setShowUrlForm(false) }}>
               {editing ? '完成' : <><Pencil size={14} /> 编辑</>}
@@ -201,24 +188,56 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
         </div>
       </div>
 
-      {/* URL input form */}
-      {editing && showUrlForm && (
-        <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap', alignItems: 'flex-end', padding: 12, background: 'var(--bg-secondary)', borderRadius: 10 }}>
-          <div style={{ flex: 1, minWidth: 200 }}>
-            <label style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 4, display: 'block' }}>网址 *</label>
-            <input value={urlInput} onChange={e => setUrlInput(e.target.value)} placeholder="https://example.com"
-              style={{ width: '100%', padding: '7px 10px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', boxSizing: 'border-box' }} />
+      {/* 编辑模式：操作面板 */}
+      {editing && (
+        <div style={{ marginBottom: 16, padding: 14, background: 'var(--bg-secondary)', borderRadius: 12 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 10, fontWeight: 500 }}>选择要创建的类型</div>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {uploadActions.map(a => {
+              const Icon = a.icon
+              if (a.key === 'url') {
+                return (
+                  <button key={a.key} onClick={() => setShowUrlForm(v => !v)}
+                    style={{ ...actionBtnStyle, borderColor: showUrlForm ? a.color : 'var(--border-primary)', background: showUrlForm ? `color-mix(in srgb, ${a.color} 8%, var(--bg-primary))` : 'var(--bg-primary)' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = a.color; e.currentTarget.style.transform = 'translateY(-1px)' }}
+                    onMouseLeave={e => { if (!showUrlForm) e.currentTarget.style.borderColor = 'var(--border-primary)'; e.currentTarget.style.transform = 'none' }}>
+                    <Icon size={22} color={a.color} />
+                    <span>{a.label}</span>
+                  </button>
+                )
+              }
+              return (
+                <button key={a.key} onClick={() => handleUploadByType(a.accept)} disabled={uploading}
+                  style={{ ...actionBtnStyle, opacity: uploading ? 0.6 : 1 }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = a.color; e.currentTarget.style.transform = 'translateY(-1px)' }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-primary)'; e.currentTarget.style.transform = 'none' }}>
+                  <Icon size={22} color={a.color} />
+                  <span>{uploading ? '上传中...' : a.label}</span>
+                </button>
+              )
+            })}
           </div>
-          <div style={{ flex: 1, minWidth: 160 }}>
-            <label style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 4, display: 'block' }}>标题（选填）</label>
-            <input value={urlTitle} onChange={e => setUrlTitle(e.target.value)} placeholder="网站名称"
-              style={{ width: '100%', padding: '7px 10px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', boxSizing: 'border-box' }}
-              onKeyDown={e => { if (e.key === 'Enter') handleAddUrl() }} />
-          </div>
-          <Button disabled={addingUrl} onClick={handleAddUrl}>
-            {addingUrl ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Plus size={14} />}
-            {addingUrl ? '添加中...' : '添加'}
-          </Button>
+
+          {/* 网址输入表单 */}
+          {showUrlForm && (
+            <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <label style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 4, display: 'block' }}>网址 *</label>
+                <input value={urlInput} onChange={e => setUrlInput(e.target.value)} placeholder="https://example.com"
+                  style={{ width: '100%', padding: '7px 10px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', boxSizing: 'border-box' }} />
+              </div>
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <label style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 4, display: 'block' }}>标题（选填）</label>
+                <input value={urlTitle} onChange={e => setUrlTitle(e.target.value)} placeholder="网站名称"
+                  style={{ width: '100%', padding: '7px 10px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', boxSizing: 'border-box' }}
+                  onKeyDown={e => { if (e.key === 'Enter') handleAddUrl() }} />
+              </div>
+              <Button disabled={addingUrl} onClick={handleAddUrl}>
+                {addingUrl ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Plus size={14} />}
+                {addingUrl ? '添加中...' : '添加'}
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
@@ -229,7 +248,7 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
             style={{ width: '100%', padding: '6px 10px 6px 30px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-secondary)', boxSizing: 'border-box' }} />
         </div>
         {categoryTabs.map(t => (
-          <button key={t.key} onClick={() => { setCategory(t.key); setSelected(new Set()); setShowUrlForm(false) }}
+          <button key={t.key} onClick={() => { setCategory(t.key); setSelected(new Set()) }}
             style={{ padding: '4px 10px', borderRadius: 6, border: 'none', fontSize: 12, cursor: 'pointer', fontWeight: 500, background: category === t.key ? 'var(--brand)' : 'var(--bg-tertiary)', color: category === t.key ? '#fff' : 'var(--text-secondary)', transition: 'all 0.15s' }}>
             {t.label}
           </button>
@@ -240,9 +259,9 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
         <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)' }}><Loader2 size={28} style={{ animation: 'spin 1s linear infinite' }} /></div>
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)' }}>
-          {isUrlCategory ? <Link2 size={32} style={{ marginBottom: 8, opacity: 0.5 }} /> : <FileText size={32} style={{ marginBottom: 8, opacity: 0.5 }} />}
-          <div style={{ fontSize: 14 }}>{search || category ? (isUrlCategory ? '暂无网址' : '未找到匹配文件') : '暂无文件'}</div>
-          {!search && canEdit && <div style={{ fontSize: 12, marginTop: 4 }}>点击「编辑」{isUrlCategory ? '添加网址' : '上传文件'}</div>}
+          {category === 'url' ? <Link2 size={32} style={{ marginBottom: 8, opacity: 0.5 }} /> : <FileText size={32} style={{ marginBottom: 8, opacity: 0.5 }} />}
+          <div style={{ fontSize: 14 }}>{search || category ? (category === 'url' ? '暂无网址' : '未找到匹配文件') : '暂无文件'}</div>
+          {!search && canEdit && !editing && <div style={{ fontSize: 12, marginTop: 4 }}>点击「编辑」开始管理资料</div>}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -273,11 +292,10 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
                   )}
                   <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
                     {isUrl ? (
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block', maxWidth: 300 }}>{f.path}</span>
+                      <><span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block', maxWidth: 300, verticalAlign: 'bottom' }}>{f.path}</span> · {new Date(f.created_at).toLocaleDateString('zh-CN')}</>
                     ) : (
                       <>{formatSize(f.size || 0)} · {new Date(f.created_at).toLocaleDateString('zh-CN')}</>
                     )}
-                    {' · '}{new Date(f.created_at).toLocaleDateString('zh-CN')}
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
