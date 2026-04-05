@@ -16,7 +16,8 @@ module.exports = async (id) => {
   );
   if (!rows[0]) return null;
   const [members] = await db.query(
-    `SELECT pm.id as pm_id, pm.role as member_role, pm.source, pm.enterprise_role_id, pm.project_role_id,
+    `SELECT pm.id as pm_id, pm.user_id, pm.role as member_role, pm.source, pm.enterprise_role_id, pm.project_role_id,
+            pm.nickname as project_nickname,
             er.name as enterprise_role_name, er.color as enterprise_role_color,
             pr.name as project_role_name, pr.color as project_role_color, pr.role_key as project_role_key,
             u.id, u.username, u.nickname, u.avatar

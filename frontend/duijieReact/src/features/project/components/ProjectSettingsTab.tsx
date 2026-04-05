@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Users, Shield, AppWindow, UserPlus, ChevronRight, MessageSquare, UserPlus2 } from 'lucide-react'
+import { Users, Shield, AppWindow, UserPlus, ChevronRight, MessageSquare, UserPlus2, Pencil } from 'lucide-react'
 import MessagePanel from '../../message/components/MessagePanel'
 import ProjectRoleList from './ProjectRoleList'
 import AppTab from './AppTab'
@@ -7,10 +7,13 @@ import JoinRequestsTab from './JoinRequestsTab'
 import Avatar from '../../ui/Avatar'
 import Badge from '../../ui/Badge'
 import Button from '../../ui/Button'
+import { toast } from '../../ui/Toast'
+import { projectApi } from '../services/api'
+import useUserStore from '../../../stores/useUserStore'
 
 const section: React.CSSProperties = { background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16 }
 
-type SubTab = 'members' | 'messages' | 'roles' | 'app' | 'join_requests'
+type SubTab = 'members' | 'messages' | 'roles' | 'app' | 'join_requests' | 'nickname'
 
 interface Props {
   project: any
@@ -32,6 +35,7 @@ const roleLabel: Record<string, string> = {
 }
 
 const settingsItems: { key: SubTab; label: string; icon: any; desc: string; condition?: string }[] = [
+  { key: 'nickname', label: '项目备注', icon: Pencil, desc: '设置仅自己可见的项目备注名' },
   { key: 'members', label: '项目成员', icon: Users, desc: '查看和管理项目成员' },
   { key: 'messages', label: '消息', icon: MessageSquare, desc: '项目成员间的实时消息' },
   { key: 'roles', label: '角色管理', icon: Shield, desc: '自定义角色与权限配置', condition: 'canManageRole' },
@@ -41,6 +45,24 @@ const settingsItems: { key: SubTab; label: string; icon: any; desc: string; cond
 
 export default function ProjectSettingsTab({ project, projectId, isOwner, canManageRole, canApproveJoin, pendingJoinCount, onRefreshProject, onRefreshJoinCount, onOpenAddMember, onMemberClick }: Props) {
   const [sub, setSub] = useState<SubTab | null>(null)
+  const user = useUserStore(s => s.user)
+  const members = project.members || []
+  const myMember = members.find((m: any) => (m.user_id || m.id) === user?.id)
+  const currentNickname = myMember?.project_nickname || ''
+  const [nicknameInput, setNicknameInput] = useState(currentNickname)
+  const [nicknameSaving, setNicknameSaving] = useState(false)
+
+  const saveNickname = async () => {
+    setNicknameSaving(true)
+    const r = await projectApi.setNickname(projectId, nicknameInput.trim())
+    setNicknameSaving(false)
+    if (r.success) {
+      toast('备注已保存', 'success')
+      onRefreshProject()
+    } else {
+      toast(r.message || '保存失败', 'error')
+    }
+  }
 
   const conditionMap: Record<string, boolean> = {
     canManageRole: isOwner || canManageRole,
@@ -49,7 +71,6 @@ export default function ProjectSettingsTab({ project, projectId, isOwner, canMan
   }
 
   const visible = settingsItems.filter(i => !i.condition || conditionMap[i.condition])
-  const members = project.members || []
 
   if (sub) {
     return (
@@ -58,6 +79,29 @@ export default function ProjectSettingsTab({ project, projectId, isOwner, canMan
           style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0', marginBottom: 12 }}>
           ← 返回设置
         </button>
+        {sub === 'nickname' && (
+          <div style={section}>
+            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>项目备注</h3>
+            <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 12 }}>
+              项目原名：<b>{project.name}</b>
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>备注名称</label>
+              <input
+                value={nicknameInput}
+                onChange={e => setNicknameInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && saveNickname()}
+                placeholder="输入备注名（留空则显示原名）"
+                style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', boxSizing: 'border-box', background: 'var(--bg-secondary)', color: 'var(--text-heading)' }}
+              />
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 16 }}>备注仅自己可见，不影响其他成员</div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <Button variant="secondary" onClick={() => { setNicknameInput(currentNickname); setSub(null) }}>取消</Button>
+              <Button onClick={saveNickname} disabled={nicknameSaving}>{nicknameSaving ? '保存中...' : '保存'}</Button>
+            </div>
+          </div>
+        )}
         {sub === 'members' && (
           <div style={section}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -104,7 +148,7 @@ export default function ProjectSettingsTab({ project, projectId, isOwner, canMan
       <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>设置</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {visible.map(item => (
-          <button key={item.key} onClick={() => setSub(item.key)}
+          <button key={item.key} onClick={() => { if (item.key === 'nickname') setNicknameInput(currentNickname); setSub(item.key) }}
             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 12px', borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'background 0.15s' }}
             onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'}
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
@@ -121,7 +165,9 @@ export default function ProjectSettingsTab({ project, projectId, isOwner, canMan
               </div>
               <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{item.desc}</div>
             </div>
-            {item.key === 'members' && members.length > 0 ? (
+            {item.key === 'nickname' && currentNickname ? (
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 0 }}>{currentNickname}</span>
+            ) : item.key === 'members' && members.length > 0 ? (
               <div style={{ display: 'flex', marginRight: 4 }}>
                 {members.slice(0, 4).map((m: any, i: number) => (
                   <div key={m.user_id || m.id} style={{ marginLeft: i > 0 ? -8 : 0, zIndex: 4 - i }}>

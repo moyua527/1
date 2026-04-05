@@ -1,6 +1,6 @@
 {
-  "version": "1.2.3.2",
-  "versionCode": 147,
+  "version": "1.2.4",
+  "versionCode": 148,
   "minVersion": "1.0.0",
-  "changelog": "项目卡片隐藏项目进度状态"
+  "changelog": "项目备注移至设置页"
 }

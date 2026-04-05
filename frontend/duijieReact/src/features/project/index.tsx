@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { Plus, FolderKanban, Loader2, Download, Search, Trash2, RotateCcw, Upload, Link, MoreVertical, Pencil, Users, ListTodo } from 'lucide-react'
+import { Plus, FolderKanban, Loader2, Download, Search, Trash2, RotateCcw, Upload, Link, MoreVertical, Users, ListTodo } from 'lucide-react'
 import { projectApi } from './services/api'
 import { can } from '../../stores/permissions'
 import { useProjects, useInvalidate } from '../../hooks/useApi'
@@ -40,10 +40,6 @@ export default function ProjectList() {
   const [showJoinLink, setShowJoinLink] = useState(false)
   const [inviteLink, setInviteLink] = useState('')
   const [joinLinkSubmitting, setJoinLinkSubmitting] = useState(false)
-  const [editingNickname, setEditingNickname] = useState<{ id: number; name: string; nickname: string } | null>(null)
-  const [nicknameInput, setNicknameInput] = useState('')
-  const [nicknameSaving, setNicknameSaving] = useState(false)
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const nav = useNavigate()
   const { user, isMobile } = useOutletContext<{ user: any; isMobile?: boolean }>()
   const canCreate = can(user?.role || '', 'project:create')
@@ -92,25 +88,6 @@ export default function ProjectList() {
     }
     return true
   })
-
-  const openNicknameEdit = (p: any) => {
-    setEditingNickname({ id: p.id, name: p.name, nickname: p.my_nickname || '' })
-    setNicknameInput(p.my_nickname || '')
-  }
-
-  const saveNickname = async () => {
-    if (!editingNickname) return
-    setNicknameSaving(true)
-    const r = await projectApi.setNickname(String(editingNickname.id), nicknameInput.trim())
-    setNicknameSaving(false)
-    if (r.success) {
-      toast('备注已保存', 'success')
-      setEditingNickname(null)
-      load()
-    } else {
-      toast(r.message || '保存失败', 'error')
-    }
-  }
 
   const handleCreate = async () => {
     if (!form.name.trim()) { toast('请输入项目名称', 'error'); return }
@@ -213,10 +190,6 @@ export default function ProjectList() {
                   openTab(p.id, displayName)
                   nav(`/projects/${p.id}`)
                 }}
-                onContextMenu={e => { e.preventDefault(); openNicknameEdit(p) }}
-                onTouchStart={() => { longPressTimer.current = setTimeout(() => openNicknameEdit(p), 600) }}
-                onTouchEnd={() => { if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null } }}
-                onTouchMove={() => { if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null } }}
                 style={{ position: 'relative', display: 'flex', flexDirection: 'column', padding: isMobile ? 14 : 20, background: 'var(--bg-primary)', borderRadius: 14, cursor: 'pointer', border: '1px solid var(--border-primary)', transition: 'box-shadow 0.2s, transform 0.2s', minHeight: isMobile ? 100 : 120 }}
                 onMouseEnter={e => { if (!isMobile) { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)' } }}
                 onMouseLeave={e => { if (!isMobile) { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' } }}>
@@ -229,36 +202,15 @@ export default function ProjectList() {
                 </div>
                 {p.my_nickname && <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>原名: {p.name}</div>}
                 {p.description && <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4, marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' } as any}>{p.description}</div>}
-                <div style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 8 }}>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 12, color: 'var(--text-tertiary)' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Users size={12} /> {p.member_count ?? 0}</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><ListTodo size={12} /> {p.task_count ?? 0}</span>
-                </div>
-                <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'flex-end' }}>
-                  <button onClick={e => { e.stopPropagation(); openNicknameEdit(p) }}
-                    style={{ padding: 4, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', opacity: 0.5 }}
-                    title="修改备注名">
-                    <Pencil size={13} />
-                  </button>
                 </div>
               </div>
             )
           })}
         </div>
       )}
-
-      {/* 修改备注名弹窗 */}
-      <Modal open={!!editingNickname} onClose={() => setEditingNickname(null)} title="项目备注名">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>原名称：<b>{editingNickname?.name}</b></div>
-          <Input label="备注名称" placeholder="输入你的备注名（留空则显示原名）" value={nicknameInput} onChange={e => setNicknameInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && saveNickname()} />
-          <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>备注仅自己可见，不影响其他成员</div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-            <Button variant="secondary" onClick={() => setEditingNickname(null)}>取消</Button>
-            <Button onClick={saveNickname} disabled={nicknameSaving}>{nicknameSaving ? '保存中...' : '保存'}</Button>
-          </div>
-        </div>
-      </Modal>
 
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title="新建项目">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
