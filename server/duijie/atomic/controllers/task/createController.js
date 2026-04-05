@@ -1,7 +1,7 @@
 const createTask = require('../../services/task/createTask');
 const db = require('../../../config/db');
 const { broadcast } = require('../../utils/broadcast');
-const { notify } = require('../../utils/notify');
+const { notify, notifyMany } = require('../../utils/notify');
 
 module.exports = async (req, res) => {
   try {
@@ -17,6 +17,19 @@ module.exports = async (req, res) => {
 
     if (req.body.assignee_id && req.body.assignee_id !== req.userId) {
       await notify(req.body.assignee_id, 'task_assigned', '新任务指派', `你被指派了任务「${req.body.title}」`, `/tasks`);
+    }
+
+    if (req.body.project_id) {
+      const [members] = await db.query(
+        'SELECT user_id FROM duijie_project_members WHERE project_id = ? AND user_id != ?',
+        [req.body.project_id, req.userId]
+      );
+      const otherIds = members
+        .map(m => m.user_id)
+        .filter(uid => uid !== Number(req.body.assignee_id));
+      if (otherIds.length > 0) {
+        await notifyMany(otherIds, 'task_assigned', '新需求', `项目有新需求「${req.body.title}」`, `/tasks`);
+      }
     }
 
     broadcast('task', 'created', { id, project_id: req.body.project_id, userId: req.userId });

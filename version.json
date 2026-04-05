@@ -1,6 +1,6 @@
 {
-  "version": "1.1.95.1",
-  "versionCode": 130,
+  "version": "1.1.95.2",
+  "versionCode": 131,
   "minVersion": "1.0.0",
-  "changelog": "修复自己发消息也播放提示音的问题"
+  "changelog": "新需求创建时通知所有项目成员并播放提示音"
 }
