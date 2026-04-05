@@ -1,6 +1,6 @@
 {
-  "version": "1.2.2",
-  "versionCode": 143,
+  "version": "1.2.2.1",
+  "versionCode": 144,
   "minVersion": "1.0.0",
-  "changelog": "项目标签页重构：需求/资料库/待办/设置"
+  "changelog": "设置页增加项目成员显示"
 }
