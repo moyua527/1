@@ -1,6 +1,6 @@
 {
-  "version": "1.1.94",
-  "versionCode": 126,
+  "version": "1.1.94.1",
+  "versionCode": 127,
   "minVersion": "1.0.0",
-  "changelog": "通知中心支持删除通知"
+  "changelog": "消息输入框支持粘贴图片"
 }

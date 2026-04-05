@@ -125,6 +125,19 @@ export default function MessagePanel({ projectId }: Props) {
     if (imgInputRef.current) imgInputRef.current.value = ''
   }
 
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        e.preventDefault()
+        const file = items[i].getAsFile()
+        if (file) setPendingImage(file)
+        return
+      }
+    }
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 400 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 12px' }}>
@@ -182,8 +195,8 @@ export default function MessagePanel({ projectId }: Props) {
           style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', padding: 4, display: 'flex', alignItems: 'center' }}>
           <ImagePlus size={20} />
         </button>
-        <input value={text} onChange={e => setText(e.target.value)} onKeyDown={handleKeyDown} disabled={!!pendingImage}
-          placeholder={pendingImage ? '点击发送图片...' : '输入消息...'} style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-body)' }} />
+        <input value={text} onChange={e => setText(e.target.value)} onKeyDown={handleKeyDown} onPaste={handlePaste} disabled={!!pendingImage}
+          placeholder={pendingImage ? '点击发送图片...' : '输入消息... (可粘贴图片)'} style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-body)' }} />
         <button onClick={handleSend} disabled={sending}
           style={{ background: 'var(--brand)', border: 'none', borderRadius: 8, padding: '8px 14px', cursor: 'pointer', color: '#fff', display: 'flex', alignItems: 'center', opacity: sending ? 0.6 : 1 }}>
           <Send size={16} />
