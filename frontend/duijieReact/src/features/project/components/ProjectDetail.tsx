@@ -235,8 +235,15 @@ export default function ProjectDetail() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px - 48px)', overflow: 'hidden' }}>
-      {projectTabs.length > 1 && (
+      {projectTabs.length > 0 && (
         <div style={{ display: 'flex', gap: 4, marginBottom: 10, flexShrink: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', paddingBottom: 2 } as any}>
+          <div onClick={() => nav('/projects')}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 500, flexShrink: 0, transition: 'background 0.15s',
+              background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-tertiary)'}>
+            首页
+          </div>
           {projectTabs.map(pt => {
             const isActive = String(pt.id) === String(id)
             return (
