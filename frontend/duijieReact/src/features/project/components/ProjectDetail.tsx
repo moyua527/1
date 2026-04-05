@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
-import { ArrowLeft, Trash2, MoreVertical, Pencil, X } from 'lucide-react'
+import { ArrowLeft, Trash2, MoreVertical, Pencil, X, Megaphone, Check } from 'lucide-react'
 import useProjectTabStore from '../../../stores/useProjectTabStore'
 import { can } from '../../../stores/permissions'
 import useProjectPerms from '../../../hooks/useProjectPerms'
@@ -84,6 +84,9 @@ export default function ProjectDetail() {
   const [showEditProject, setShowEditProject] = useState(false)
   const [pendingJoinCount, setPendingJoinCount] = useState(0)
   const [showProjectGuide, setShowProjectGuide] = useState(false)
+  const [editingAnnouncement, setEditingAnnouncement] = useState(false)
+  const [announcementInput, setAnnouncementInput] = useState('')
+  const [announcementSaving, setAnnouncementSaving] = useState(false)
 
   const _openClientModal = (clientId: number) => {
     setClientModal(true)
@@ -305,7 +308,62 @@ export default function ProjectDetail() {
           toast(r.message || '更新失败', 'error'); return false
         }} />
 
-      <div style={{ flex: 1, minHeight: 0, paddingTop: 16, ...(tab === 'tasks' ? { display: 'flex', flexDirection: 'column' as const, overflow: 'hidden' } : { overflowY: 'auto' as const }) }}>
+      {(project.announcement || isOwner) && (
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 12px', borderRadius: 8, background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)', marginBottom: 4, flexShrink: 0 }}>
+          <Megaphone size={15} style={{ color: 'var(--brand)', flexShrink: 0, marginTop: 2 }} />
+          {editingAnnouncement ? (
+            <div style={{ flex: 1, display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input
+                value={announcementInput}
+                onChange={e => setAnnouncementInput(e.target.value)}
+                onKeyDown={async e => {
+                  if (e.key === 'Enter') {
+                    setAnnouncementSaving(true)
+                    const r = await projectApi.update(id!, { announcement: announcementInput.trim() || null })
+                    setAnnouncementSaving(false)
+                    if (r.success) { toast('公告已更新', 'success'); loadProject(); setEditingAnnouncement(false) }
+                    else toast(r.message || '更新失败', 'error')
+                  }
+                  if (e.key === 'Escape') setEditingAnnouncement(false)
+                }}
+                placeholder="输入项目公告..."
+                autoFocus
+                style={{ flex: 1, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-heading)' }}
+              />
+              <button
+                disabled={announcementSaving}
+                onClick={async () => {
+                  setAnnouncementSaving(true)
+                  const r = await projectApi.update(id!, { announcement: announcementInput.trim() || null })
+                  setAnnouncementSaving(false)
+                  if (r.success) { toast('公告已更新', 'success'); loadProject(); setEditingAnnouncement(false) }
+                  else toast(r.message || '更新失败', 'error')
+                }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--brand)', display: 'flex' }}>
+                <Check size={16} />
+              </button>
+              <button onClick={() => setEditingAnnouncement(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)', display: 'flex' }}>
+                <X size={16} />
+              </button>
+            </div>
+          ) : (
+            <>
+              <span style={{ flex: 1, fontSize: 13, color: project.announcement ? 'var(--text-heading)' : 'var(--text-tertiary)', lineHeight: 1.5 }}>
+                {project.announcement || '暂无公告'}
+              </span>
+              {isOwner && (
+                <button onClick={() => { setAnnouncementInput(project.announcement || ''); setEditingAnnouncement(true) }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)', display: 'flex', flexShrink: 0 }}>
+                  <Pencil size={13} />
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      <div style={{ flex: 1, minHeight: 0, paddingTop: 8, ...(tab === 'tasks' ? { display: 'flex', flexDirection: 'column' as const, overflow: 'hidden' } : { overflowY: 'auto' as const }) }}>
       <ManageMembersModal
           open={showAddMember}
           onClose={() => setShowAddMember(false)}
