@@ -285,27 +285,29 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
       <div style={{ ...section, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, marginBottom: 0, overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>需求列表</h3>
-          {canEdit && <div ref={dropdownRef} style={{ position: 'relative' }}>
-            <button onClick={() => setDropdownOpen(!dropdownOpen)} style={{
+          {canEdit && <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button onClick={() => setShowCreateTask(true)} style={{
               display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8,
               background: 'var(--brand)', color: 'var(--bg-primary)', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500,
-            }}>操作 <ChevronDown size={14} /></button>
-            {dropdownOpen && (
-              <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'var(--bg-primary)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid var(--border-primary)', minWidth: 120, zIndex: 10, overflow: 'hidden' }}>
-                <button onClick={() => { setDropdownOpen(false); setShowCreateTask(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-tertiary)')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-                  <Plus size={14} color="var(--brand)" /> 添加需求
-                </button>
-                <button onClick={() => { setDropdownOpen(false); setDeleteSelected(new Set()); setShowDeleteTask(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--color-danger)' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-                  <Trash2 size={14} /> 删除
-                </button>
-                <button onClick={() => { setDropdownOpen(false); setShowTrash(true); loadTrash() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-secondary)' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-tertiary)')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-                  🗑️ 回收站
-                </button>
-              </div>
-            )}
+            }}><Plus size={14} /> 添加</button>
+            <div ref={dropdownRef} style={{ position: 'relative' }}>
+              <button onClick={() => setDropdownOpen(!dropdownOpen)} style={{
+                display: 'flex', alignItems: 'center', padding: '8px 10px', borderRadius: 8,
+                background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)', cursor: 'pointer',
+              }}><ChevronDown size={16} /></button>
+              {dropdownOpen && (
+                <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'var(--bg-primary)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid var(--border-primary)', minWidth: 120, zIndex: 10, overflow: 'hidden' }}>
+                  <button onClick={() => { setDropdownOpen(false); setDeleteSelected(new Set()); setShowDeleteTask(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--color-danger)' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                    <Trash2 size={14} /> 删除
+                  </button>
+                  <button onClick={() => { setDropdownOpen(false); setShowTrash(true); loadTrash() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-secondary)' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-tertiary)')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                    🗑️ 回收站
+                  </button>
+                </div>
+              )}
+            </div>
           </div>}
         </div>
 
