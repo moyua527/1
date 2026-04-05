@@ -1,6 +1,6 @@
 {
-  "version": "1.2.1",
-  "versionCode": 142,
+  "version": "1.2.2",
+  "versionCode": 143,
   "minVersion": "1.0.0",
-  "changelog": "里程碑改名为代办"
+  "changelog": "项目标签页重构：需求/资料库/待办/设置"
 }

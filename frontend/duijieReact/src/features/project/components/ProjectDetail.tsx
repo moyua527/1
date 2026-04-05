@@ -10,19 +10,17 @@ import { taskApi } from '../../task/services/api'
 import { milestoneApi } from '../../milestone/services/api'
 import Button from '../../ui/Button'
 import Badge from '../../ui/Badge'
-import MessagePanel from '../../message/components/MessagePanel'
 import { confirm } from '../../ui/ConfirmDialog'
 import { toast } from '../../ui/Toast'
 import TaskTab from './TaskTab'
 import MilestoneTab from './MilestoneTab'
+import ProjectFileTab from './ProjectFileTab'
+import ProjectSettingsTab from './ProjectSettingsTab'
 import { ManageMembersModal, ManageClientMembersModal, MemberInfoModal, ClientInfoModal } from './ProjectModals'
 import useLiveData from '../../../hooks/useLiveData'
 import { onSocket } from '../../ui/smartSocket'
 import EditProjectModal from './EditProjectModal'
 import SetClientModal from './SetClientModal'
-import JoinRequestsTab from './JoinRequestsTab'
-import AppTab from './AppTab'
-import ProjectRoleList from './ProjectRoleList'
 import ProjectGuide from '../../ui/ProjectGuide'
 
 const statusMap: Record<string, { label: string; color: string }> = {
@@ -34,8 +32,6 @@ const statusMap: Record<string, { label: string; color: string }> = {
 }
 
 
-
-const section: React.CSSProperties = { background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16 }
 
 const PROJECT_DETAIL_TIMEOUT_MS = 8000
 
@@ -63,7 +59,7 @@ export default function ProjectDetail() {
   const [hasNewSubmitted, setHasNewSubmitted] = useState(false)
   const [selectedMember, setSelectedMember] = useState<any>(null)
   const [searchParams, setSearchParams] = useSearchParams()
-  const validTabs = ['tasks', 'milestones', 'messages', 'app', 'roles', 'join_requests'] as const
+  const validTabs = ['tasks', 'files', 'milestones', 'settings'] as const
   type Tab = typeof validTabs[number]
   const urlTab = searchParams.get('tab') as Tab
   const tab: Tab = validTabs.includes(urlTab as any) ? urlTab! : 'tasks'
@@ -294,7 +290,7 @@ export default function ProjectDetail() {
         }} />
 
       <div data-tour="project-tabs" style={{ display: 'flex', gap: 8, marginBottom: 0, flexShrink: 0, ...(isMobile ? { overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' } : { flexWrap: 'wrap' }) } as any}>
-        {([['tasks','需求'],['milestones','代办'],['messages','消息'], ...(project.app_url ? [['app', project.app_name || '应用']] : []), ...((isOwner || canManageRole) ? [['roles', '角色管理']] : []), ...(canApproveJoin ? [['join_requests', '加入申请']] : [])] as [string, string][]).map(([k,v]) => (
+        {([['tasks','需求'],['files','资料库'],['milestones','待办'],['settings','设置']] as [string, string][]).map(([k,v]) => (
           <button key={k} data-tour={`tab-${k}`} onClick={() => setTab(k as any)} style={{
             padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500, position: 'relative', whiteSpace: 'nowrap', flexShrink: 0,
             background: tab === k ? 'var(--brand)' : 'var(--bg-tertiary)', color: tab === k ? 'var(--bg-primary)' : 'var(--text-secondary)',
@@ -303,7 +299,7 @@ export default function ProjectDetail() {
             {k === 'tasks' && hasNewSubmitted && tab !== 'tasks' && (
               <span style={{ position: 'absolute', top: -2, right: -2, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
             )}
-            {k === 'join_requests' && pendingJoinCount > 0 && (
+            {k === 'settings' && pendingJoinCount > 0 && (
               <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 18, height: 18, borderRadius: 9, background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px', lineHeight: 1 }}>
                 {pendingJoinCount}
               </span>
@@ -322,7 +318,7 @@ export default function ProjectDetail() {
           projectRoles={projectRoles}
           onRefresh={loadProject}
           onRefreshAvailable={refreshAvailableUsers}
-          onGoToRoles={(isOwner || canManageRole) ? () => setTab('roles') : undefined}
+          onGoToRoles={(isOwner || canManageRole) ? () => setTab('settings') : undefined}
         />
 
         <ManageClientMembersModal
@@ -337,15 +333,11 @@ export default function ProjectDetail() {
 
       {tab === 'tasks' && <TaskTab tasks={tasks} canEdit={canCreateTask} projectId={id!} loadTasks={loadTasks} />}
 
+      {tab === 'files' && <ProjectFileTab projectId={id!} canEdit={canEdit} />}
+
       {tab === 'milestones' && <MilestoneTab milestones={milestones} projectId={id!} canEdit={canManageMilestone} onRefresh={loadTasks} />}
 
-      {tab === 'messages' && <div style={section}><MessagePanel projectId={id!} /></div>}
-
-      {tab === 'app' && <AppTab project={project} />}
-
-      {tab === 'roles' && <ProjectRoleList canEdit={isOwner || canManageRole} projectId={id!} />}
-
-      {tab === 'join_requests' && <JoinRequestsTab projectId={id!} joinCode={project.join_code} onRefresh={() => { loadProject(); loadPendingJoinCount() }} />}
+      {tab === 'settings' && <ProjectSettingsTab project={project} projectId={id!} isOwner={isOwner} canManageRole={canManageRole} canApproveJoin={canApproveJoin} pendingJoinCount={pendingJoinCount} onRefreshProject={loadProject} onRefreshJoinCount={loadPendingJoinCount} onOpenAddMember={() => { setShowAddMember(true); refreshAvailableUsers() }} />}
 
 
       <SetClientModal open={showSetClient} hasExternalEnterprise={false}
