@@ -27,6 +27,7 @@ import JoinRequestsTab from './JoinRequestsTab'
 import AppTab from './AppTab'
 import ProjectRoleList from './ProjectRoleList'
 import ProjectGuide from '../../ui/ProjectGuide'
+import useNicknameStore from '../../../stores/useNicknameStore'
 
 const statusMap: Record<string, { label: string; color: string }> = {
   planning: { label: '规划中', color: 'blue' },
@@ -89,6 +90,7 @@ const ACTIVITY_ICONS: Record<string, { icon: string; color: string; bg: string }
 function ActivityFeed({ projectId }: { projectId: string }) {
   const [items, setItems] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const getDisplayName = useNicknameStore(s => s.getDisplayName)
 
   useEffect(() => {
     setLoading(true)
@@ -110,12 +112,16 @@ function ActivityFeed({ projectId }: { projectId: string }) {
   }
 
   const descOf = (item: any) => {
-    const actor = item.actor_name || item.actor_username || '未知用户'
+    const rawName = item.actor_name || item.actor_username || '未知用户'
+    const actor = item.actor_id ? getDisplayName(item.actor_id, rawName) : rawName
     switch (item.type) {
       case 'task_created': return <><b>{actor}</b> 创建了需求 <b>{item.title}</b></>
       case 'milestone_created': return <><b>{actor}</b> 创建了里程碑 <b>{item.title}</b></>
       case 'milestone_completed': return <>里程碑 <b>{item.title}</b> 已完成</>
-      case 'member_joined': return <><b>{item.title}</b> 加入了项目</>
+      case 'member_joined': {
+        const memberName = item.actor_id ? getDisplayName(item.actor_id, item.title) : item.title
+        return <><b>{memberName}</b> 加入了项目</>
+      }
       default: return <>{item.title}</>
     }
   }
