@@ -43,23 +43,27 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
   const [taskForm, setTaskForm] = useState({ title: '', description: '' })
   const [taskFiles, setTaskFiles] = useState<File[]>([])
   const [showDrafts, setShowDrafts] = useState(false)
+  const [draftVer, setDraftVer] = useState(0)
   const draftKey = `task_drafts_${projectId}`
-  const getDrafts = useCallback((): { id: string; title: string; description: string; savedAt: string }[] => {
+  const drafts: { id: string; title: string; description: string; savedAt: string }[] = (() => {
+    void draftVer
     try { return JSON.parse(localStorage.getItem(draftKey) || '[]') } catch { return [] }
-  }, [draftKey])
+  })()
   const saveDraft = useCallback(() => {
     const t = taskForm.title.trim(); const d = taskForm.description.trim()
     if (!t && !d) { toast('草稿内容为空', 'error'); return }
-    const drafts = getDrafts()
-    drafts.unshift({ id: Date.now().toString(), title: t, description: d, savedAt: new Date().toLocaleString('zh-CN') })
-    if (drafts.length > 20) drafts.length = 20
-    localStorage.setItem(draftKey, JSON.stringify(drafts))
+    const cur: any[] = (() => { try { return JSON.parse(localStorage.getItem(draftKey) || '[]') } catch { return [] } })()
+    cur.unshift({ id: Date.now().toString(), title: t, description: d, savedAt: new Date().toLocaleString('zh-CN') })
+    if (cur.length > 20) cur.length = 20
+    localStorage.setItem(draftKey, JSON.stringify(cur))
+    setDraftVer(v => v + 1)
     toast('草稿已保存', 'success')
-  }, [taskForm, getDrafts, draftKey])
+  }, [taskForm, draftKey])
   const deleteDraft = useCallback((id: string) => {
-    const drafts = getDrafts().filter(d => d.id !== id)
-    localStorage.setItem(draftKey, JSON.stringify(drafts))
-  }, [getDrafts, draftKey])
+    const cur: any[] = (() => { try { return JSON.parse(localStorage.getItem(draftKey) || '[]') } catch { return [] } })()
+    localStorage.setItem(draftKey, JSON.stringify(cur.filter((d: any) => d.id !== id)))
+    setDraftVer(v => v + 1)
+  }, [draftKey])
   const loadDraft = useCallback((draft: { title: string; description: string; id: string }) => {
     setTaskForm({ title: draft.title, description: draft.description })
     deleteDraft(draft.id)
@@ -366,7 +370,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
             <button onClick={() => setShowDrafts(true)} style={{
               display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, position: 'relative',
               background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)', cursor: 'pointer', fontSize: 13, fontWeight: 500,
-            }}><Archive size={14} /> 草稿{getDrafts().length > 0 && <span style={{ position: 'absolute', top: -4, right: -4, width: 16, height: 16, borderRadius: '50%', background: 'var(--brand)', color: '#fff', fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{getDrafts().length}</span>}</button>
+            }}><Archive size={14} /> 草稿{drafts.length > 0 && <span style={{ position: 'absolute', top: -4, right: -4, width: 16, height: 16, borderRadius: '50%', background: 'var(--brand)', color: '#fff', fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{drafts.length}</span>}</button>
             <div ref={dropdownRef} style={{ position: 'relative' }}>
               <button onClick={() => setDropdownOpen(!dropdownOpen)} style={{
                 display: 'flex', alignItems: 'center', padding: '8px 10px', borderRadius: 8,
@@ -632,9 +636,9 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
       {/* 草稿箱模态框 */}
       <Modal open={showDrafts} onClose={() => setShowDrafts(false)} title="草稿箱" width={480}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {getDrafts().length === 0 ? (
+          {drafts.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 14, padding: '32px 0' }}>暂无草稿</div>
-          ) : getDrafts().map(d => (
+          ) : drafts.map(d => (
             <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', cursor: 'pointer', transition: 'box-shadow .15s' }}
               onClick={() => loadDraft(d)}
               onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)')}
