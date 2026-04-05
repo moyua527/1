@@ -3,7 +3,7 @@ import { ChevronDown, ChevronRight, Plus, Trash2, FileText, Image, Paperclip, Do
 import Modal from '../../ui/Modal'
 import Button from '../../ui/Button'
 import Badge from '../../ui/Badge'
-import Input from '../../ui/Input'
+
 import TaskTitleSelector from '../../task/components/TaskTitleSelector'
 import { projectApi } from '../services/api'
 import { taskApi } from '../../task/services/api'
@@ -40,7 +40,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [showCreateTask, setShowCreateTask] = useState(false)
   const [showDeleteTask, setShowDeleteTask] = useState(false)
-  const [taskForm, setTaskForm] = useState({ title: '', description: '', due_date: '', priority: 'medium' })
+  const [taskForm, setTaskForm] = useState({ title: '', description: '' })
   const [taskFiles, setTaskFiles] = useState<File[]>([])
   const [deleteSelected, setDeleteSelected] = useState<Set<number>>(new Set())
   const [submitting, setSubmitting] = useState(false)
@@ -64,7 +64,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const resetCreateForm = useCallback(() => {
-    setTaskForm({ title: '', description: '', due_date: '', priority: 'medium' })
+    setTaskForm({ title: '', description: '' })
     setTaskFiles([])
   }, [])
 
@@ -527,18 +527,6 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
       <Modal open={showCreateTask} onClose={() => { setShowCreateTask(false); resetCreateForm() }} title="添加需求" width={560}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <TaskTitleSelector open={showCreateTask} projectId={projectId} value={taskForm.title} onChange={title => setTaskForm({ ...taskForm, title })} required />
-          <div style={{ display: 'flex', gap: 12 }}>
-            <div style={{ flex: 1 }}>
-              <Input label="截止日期" type="date" value={taskForm.due_date} onChange={e => setTaskForm({ ...taskForm, due_date: e.target.value })} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>优先级</label>
-              <select value={taskForm.priority} onChange={e => setTaskForm({ ...taskForm, priority: e.target.value })}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', background: 'var(--bg-primary)' }}>
-                <option value="low">低</option><option value="medium">中</option><option value="high">高</option>
-              </select>
-            </div>
-          </div>
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>内容 / 附件</label>
             <input ref={fileInputRef} type="file" multiple style={{ display: 'none' }} onChange={e => {
@@ -597,7 +585,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
               const title = taskForm.title.trim()
               if (!title) { toast('请输入需求标题', 'error'); return }
               setSubmitting(true)
-              const r = await taskApi.create({ project_id: Number(projectId), title, description: taskForm.description, due_date: taskForm.due_date || undefined, priority: taskForm.priority, status: 'submitted' }, taskFiles.length > 0 ? taskFiles : undefined)
+              const r = await taskApi.create({ project_id: Number(projectId), title, description: taskForm.description, status: 'submitted' }, taskFiles.length > 0 ? taskFiles : undefined)
               if (r.success) {
                 const rememberResult = await projectApi.rememberTaskTitle(projectId, title)
                 if (!rememberResult.success) toast(rememberResult.message || '需求标题历史保存失败', 'error')
