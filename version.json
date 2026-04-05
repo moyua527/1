@@ -1,6 +1,6 @@
 {
-  "version": "1.2.5",
-  "versionCode": 150,
+  "version": "1.2.5.1",
+  "versionCode": 151,
   "minVersion": "1.0.0",
-  "changelog": "项目公告功能"
+  "changelog": "资料库编辑模式"
 }

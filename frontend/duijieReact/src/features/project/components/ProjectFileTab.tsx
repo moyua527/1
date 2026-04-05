@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Upload, Loader2, Trash2, Download, Eye, FileText, Image, FileSpreadsheet, FileCode, Film, File, CheckSquare, Square, Search } from 'lucide-react'
+import { Upload, Loader2, Trash2, Download, Eye, FileText, Image, FileSpreadsheet, FileCode, Film, File, CheckSquare, Square, Search, Pencil } from 'lucide-react'
 import { fetchApi, BACKEND_URL } from '../../../bootstrap'
 import { fileApi } from '../../file/services/api'
 import Button from '../../ui/Button'
@@ -56,6 +56,7 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
   const [category, setCategory] = useState('')
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [preview, setPreview] = useState<any>(null)
+  const [editing, setEditing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(() => {
@@ -124,15 +125,20 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
           <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{files.length} 个文件 · {formatSize(totalSize)}</span>
         </div>
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          {selected.size > 0 && (
+          {editing && selected.size > 0 && (
             <button onClick={handleBatchDelete} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: 'none', background: 'var(--bg-danger-hover)', color: 'var(--color-danger)', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
               <Trash2 size={14} /> 删除 ({selected.size})
             </button>
           )}
-          {canEdit && (
+          {editing && (
             <Button disabled={uploading} onClick={() => fileInputRef.current?.click()}>
               {uploading ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Upload size={14} />}
               {uploading ? '上传中...' : '上传文件'}
+            </Button>
+          )}
+          {canEdit && (
+            <Button variant={editing ? 'secondary' : 'primary'} onClick={() => { setEditing(v => !v); setSelected(new Set()) }}>
+              {editing ? '完成' : <><Pencil size={14} /> 编辑</>}
             </Button>
           )}
           <input ref={fileInputRef} type="file" multiple onChange={handleUpload} style={{ display: 'none' }} />
@@ -159,7 +165,7 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
         <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)' }}>
           <FileText size={32} style={{ marginBottom: 8, opacity: 0.5 }} />
           <div style={{ fontSize: 14 }}>{search || category ? '未找到匹配文件' : '暂无文件'}</div>
-          {!search && !category && canEdit && <div style={{ fontSize: 12, marginTop: 4 }}>点击「上传文件」开始</div>}
+          {!search && !category && canEdit && <div style={{ fontSize: 12, marginTop: 4 }}>点击「编辑」上传文件</div>}
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -168,7 +174,7 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
               style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, background: selected.has(f.id) ? 'var(--bg-selected)' : 'transparent', transition: 'background 0.1s' }}
               onMouseEnter={e => { if (!selected.has(f.id)) e.currentTarget.style.background = 'var(--bg-secondary)' }}
               onMouseLeave={e => { if (!selected.has(f.id)) e.currentTarget.style.background = 'transparent' }}>
-              {canEdit && (
+              {editing && (
                 <button onClick={() => setSelected(prev => { const s = new Set(prev); s.has(f.id) ? s.delete(f.id) : s.add(f.id); return s })}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: selected.has(f.id) ? 'var(--brand)' : 'var(--text-tertiary)', display: 'flex', flexShrink: 0 }}>
                   {selected.has(f.id) ? <CheckSquare size={16} /> : <Square size={16} />}
@@ -182,7 +188,7 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
               <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
                 {canPreview(f.mime_type) && <button onClick={() => setPreview(f)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--color-purple)' }} title="预览"><Eye size={16} /></button>}
                 <button onClick={() => handleDownload(f)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--brand)' }} title="下载"><Download size={16} /></button>
-                {canEdit && <button onClick={() => handleDelete(f)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--color-danger)' }} title="删除"><Trash2 size={16} /></button>}
+                {editing && <button onClick={() => handleDelete(f)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--color-danger)' }} title="删除"><Trash2 size={16} /></button>}
               </div>
             </div>
           ))}
