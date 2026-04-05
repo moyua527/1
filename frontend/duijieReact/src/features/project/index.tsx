@@ -196,9 +196,11 @@ export default function ProjectList() {
           subtitle={projects.length === 0 ? '点击右上角新建项目' : '调整筛选条件试试'}
           action={projects.length === 0 && canCreate ? { label: '新建项目', onClick: () => setShowCreate(true) } : undefined} />
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 1 : 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(200px, 1fr))', gap: isMobile ? 10 : 16 }}>
           {filtered.map((p: any) => {
             const displayName = p.my_nickname || p.name
+            const statusLabel = statusMap[p.status] || p.status || ''
+            const statusColor = p.status === 'completed' ? '#22c55e' : p.status === 'in_progress' ? '#3b82f6' : p.status === 'on_hold' ? '#f59e0b' : '#94a3b8'
             return (
               <div key={p.id}
                 onClick={() => {
@@ -214,19 +216,25 @@ export default function ProjectList() {
                 onTouchStart={() => { longPressTimer.current = setTimeout(() => openNicknameEdit(p), 600) }}
                 onTouchEnd={() => { if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null } }}
                 onTouchMove={() => { if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null } }}
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: isMobile ? '14px 16px' : '12px 16px', background: 'var(--bg-primary)', borderRadius: isMobile ? 0 : 10, cursor: 'pointer', borderBottom: isMobile ? '1px solid var(--border-primary)' : 'none', transition: 'background 0.12s' }}
-                onMouseEnter={e => { if (!isMobile) e.currentTarget.style.background = 'var(--bg-secondary)' }}
-                onMouseLeave={e => { if (!isMobile) e.currentTarget.style.background = 'var(--bg-primary)' }}>
-                <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {displayName}
-                  {unreadProjects.has(p.id) && <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', flexShrink: 0, display: 'inline-block' }} />}
-                </span>
-                {p.my_nickname && <span style={{ fontSize: 11, color: 'var(--text-tertiary)', marginLeft: 8, flexShrink: 0 }}>({p.name})</span>}
-                <button onClick={e => { e.stopPropagation(); openNicknameEdit(p) }}
-                  style={{ marginLeft: 8, padding: 4, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', flexShrink: 0, opacity: 0.5 }}
-                  title="修改备注名">
-                  <Pencil size={14} />
-                </button>
+                style={{ position: 'relative', display: 'flex', flexDirection: 'column', padding: isMobile ? 14 : 20, background: 'var(--bg-primary)', borderRadius: 14, cursor: 'pointer', border: '1px solid var(--border-primary)', transition: 'box-shadow 0.2s, transform 0.2s', minHeight: isMobile ? 100 : 120 }}
+                onMouseEnter={e => { if (!isMobile) { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)' } }}
+                onMouseLeave={e => { if (!isMobile) { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' } }}>
+                {unreadProjects.has(p.id) && <span style={{ position: 'absolute', top: 10, right: 10, width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }} />}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <FolderKanban size={isMobile ? 18 : 22} style={{ color: 'var(--brand)', flexShrink: 0 }} />
+                  <span style={{ fontSize: isMobile ? 14 : 16, fontWeight: 600, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+                    {displayName}
+                  </span>
+                </div>
+                {p.my_nickname && <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>原名: {p.name}</div>}
+                <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  {statusLabel && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 999, background: statusColor + '18', color: statusColor, fontWeight: 500 }}>{statusLabel}</span>}
+                  <button onClick={e => { e.stopPropagation(); openNicknameEdit(p) }}
+                    style={{ padding: 4, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', opacity: 0.5, marginLeft: 'auto' }}
+                    title="修改备注名">
+                    <Pencil size={13} />
+                  </button>
+                </div>
               </div>
             )
           })}

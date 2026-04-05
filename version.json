@@ -1,6 +1,6 @@
 {
-  "version": "1.1.97.1",
-  "versionCode": 135,
+  "version": "1.1.98",
+  "versionCode": 136,
   "minVersion": "1.0.0",
-  "changelog": "通知下拉面板支持删除"
+  "changelog": "项目列表卡片式布局"
 }
