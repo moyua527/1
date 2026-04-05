@@ -128,22 +128,24 @@ function ActivityFeed({ projectId }: { projectId: string }) {
       {items.length === 0 ? (
         <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 13, padding: 16 }}>暂无动态</div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-          {items.map((item, i) => {
-            const cfg = ACTIVITY_ICONS[item.type] || ACTIVITY_ICONS.task_created
-            return (
-              <div key={`${item.type}-${item.entity_id}-${i}`} style={{ display: 'flex', gap: 12, position: 'relative', paddingLeft: 28, paddingBottom: i < items.length - 1 ? 16 : 0, minHeight: 36 }}>
-                {i < items.length - 1 && <div style={{ position: 'absolute', left: 13, top: 28, bottom: 0, width: 2, background: 'var(--border-primary)' }} />}
-                <div style={{ position: 'absolute', left: 2, top: 2, width: 24, height: 24, borderRadius: '50%', background: cfg.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0, zIndex: 1 }}>
-                  {cfg.icon}
+        <div style={{ maxHeight: 360, overflowY: 'auto', paddingRight: 4 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            {items.map((item, i) => {
+              const cfg = ACTIVITY_ICONS[item.type] || ACTIVITY_ICONS.task_created
+              return (
+                <div key={`${item.type}-${item.entity_id}-${i}`} style={{ display: 'flex', gap: 12, position: 'relative', paddingLeft: 28, paddingBottom: i < items.length - 1 ? 16 : 0, minHeight: 36 }}>
+                  {i < items.length - 1 && <div style={{ position: 'absolute', left: 13, top: 28, bottom: 0, width: 2, background: 'var(--border-primary)' }} />}
+                  <div style={{ position: 'absolute', left: 2, top: 2, width: 24, height: 24, borderRadius: '50%', background: cfg.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0, zIndex: 1 }}>
+                    {cfg.icon}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, color: 'var(--text-body)', lineHeight: 1.5 }}>{descOf(item)}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{fmtTime(item.happened_at)}</div>
+                  </div>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, color: 'var(--text-body)', lineHeight: 1.5 }}>{descOf(item)}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{fmtTime(item.happened_at)}</div>
-                </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
       )}
     </div>

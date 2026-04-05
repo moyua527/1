@@ -1,6 +1,6 @@
 {
-  "version": "1.1.93.4",
-  "versionCode": 122,
+  "version": "1.1.93.5",
+  "versionCode": 123,
   "minVersion": "1.0.0",
-  "changelog": "需求红点只在有新提交时显示"
+  "changelog": "最近动态固定高度滚动区域"
 }
