@@ -12,54 +12,54 @@ const TOUR_STEPS: DriveStep[] = [
     element: '[data-tour="logo"]',
     popover: {
       title: '欢迎使用 DuiJie 👋',
-      description: '这是一个轻量级的项目协作平台。点击 Logo 可随时回到首页仪表盘。',
-      side: 'bottom',
-      align: 'start',
+      description: '这是一个轻量级的项目协作平台，帮你管理项目、分配需求、追踪进度。点击 Logo 可随时回到首页。',
+      side: 'bottom', align: 'start',
     },
   },
   {
     element: '[data-tour="sidebar"]',
     popover: {
       title: '侧边导航',
-      description: '这里是你的工作空间入口。可以切换到项目管理、需求看板、消息等不同模块。',
-      side: 'right',
-      align: 'start',
+      description: '你的工作空间入口：\n• 仪表盘 — 查看整体数据\n• 项目管理 — 创建和管理项目\n• 需求看板 — 查看全部需求\n• 消息 — 与团队沟通',
+      side: 'right', align: 'start',
     },
   },
   {
     element: '[data-tour="search"]',
     popover: {
       title: '全局搜索',
-      description: '快速搜索项目、需求、成员等。也可以按 ⌘K / Ctrl+K 直接打开。',
-      side: 'bottom',
-      align: 'center',
+      description: '快速搜索项目、需求、成员。按 Ctrl+K 快捷打开，输入关键字即可跳转。',
+      side: 'bottom', align: 'center',
     },
   },
   {
     element: '[data-tour="toolbar"]',
     popover: {
       title: '工具栏',
-      description: '查看通知、切换主题、管理个人账号。点击头像可以修改个人信息和设置。',
-      side: 'bottom',
-      align: 'end',
+      description: '通知铃铛 — 接收需求分配、成员加入等提醒\n主题切换 — 亮色/暗色模式\n头像 — 点击修改个人信息和密码',
+      side: 'bottom', align: 'end',
     },
   },
   {
     element: '[data-tour="main-content"]',
     popover: {
-      title: '主内容区',
-      description: '所有页面内容都在这里展示。试着前往「项目管理」创建你的第一个项目吧！',
-      side: 'left',
-      align: 'center',
+      title: '开始第一步：创建项目',
+      description: '前往「项目管理」→ 点击「创建」按钮 → 输入项目名称和描述 → 项目创建完成后，你会自动成为「创建者」角色并拥有全部权限。',
+      side: 'left', align: 'center',
+    },
+  },
+  {
+    popover: {
+      title: '项目内的功能',
+      description: '创建项目后，你可以：\n• 创建需求 — 分配给成员\n• 上传附件 — 支持图片编辑标注\n• 设置里程碑 — 规划阶段节点\n• 邀请成员 — 通过ID、链接或快速邀请\n• 管理角色 — 自定义权限',
     },
   },
   {
     element: '[data-tour="guide-btn"]',
     popover: {
-      title: '随时重新学习',
-      description: '如果忘记了操作，点击这个按钮可以重新打开新手引导。祝你使用愉快！',
-      side: 'right',
-      align: 'end',
+      title: '随时重新查看',
+      description: '忘记操作？点击这里重新打开引导。进入项目后也有专属的项目功能引导。',
+      side: 'right', align: 'end',
     },
   },
 ]

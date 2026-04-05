@@ -26,6 +26,7 @@ import SetClientModal from './SetClientModal'
 import JoinRequestsTab from './JoinRequestsTab'
 import AppTab from './AppTab'
 import ProjectRoleList from './ProjectRoleList'
+import ProjectGuide from '../../ui/ProjectGuide'
 
 const statusMap: Record<string, { label: string; color: string }> = {
   planning: { label: '规划中', color: 'blue' },
@@ -196,6 +197,7 @@ export default function ProjectDetail() {
   const [showActionMenu, setShowActionMenu] = useState(false)
   const [showEditProject, setShowEditProject] = useState(false)
   const [pendingJoinCount, setPendingJoinCount] = useState(0)
+  const [showProjectGuide, setShowProjectGuide] = useState(false)
 
   const _openClientModal = (clientId: number) => {
     setClientModal(true)
@@ -276,6 +278,15 @@ export default function ProjectDetail() {
     return () => window.clearTimeout(timer)
   }, [id, loadProject, loadTasks, loadPendingJoinCount])
 
+  useEffect(() => {
+    if (!project || !user) return
+    const key = `project_guide_shown_${user.id}`
+    if (!localStorage.getItem(key)) {
+      const t = setTimeout(() => { setShowProjectGuide(true); localStorage.setItem(key, '1') }, 800)
+      return () => clearTimeout(t)
+    }
+  }, [project, user])
+
   if (projectLoading) return <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}>加载中...</div>
   if (projectError) return (
     <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
@@ -352,9 +363,9 @@ export default function ProjectDetail() {
           toast(r.message || '更新失败', 'error'); return false
         }} />
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 0, flexShrink: 0, ...(isMobile ? { overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' } : { flexWrap: 'wrap' }) } as any}>
+      <div data-tour="project-tabs" style={{ display: 'flex', gap: 8, marginBottom: 0, flexShrink: 0, ...(isMobile ? { overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' } : { flexWrap: 'wrap' }) } as any}>
         {([['overview','概览'],['tasks','需求'],['milestones','里程碑'],['messages','消息'], ...(project.app_url ? [['app', project.app_name || '应用']] : []), ...((isOwner || canManageRole) ? [['roles', '角色管理']] : []), ...(canApproveJoin ? [['join_requests', '加入申请']] : [])] as [string, string][]).map(([k,v]) => (
-          <button key={k} onClick={() => setTab(k as any)} style={{
+          <button key={k} data-tour={`tab-${k}`} onClick={() => setTab(k as any)} style={{
             padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500, position: 'relative', whiteSpace: 'nowrap', flexShrink: 0,
             background: tab === k ? 'var(--brand)' : 'var(--bg-tertiary)', color: tab === k ? 'var(--bg-primary)' : 'var(--text-secondary)',
           }}>
@@ -465,7 +476,7 @@ export default function ProjectDetail() {
           </div>
 
           {/* 右栏：项目成员 */}
-          <div style={{ ...section, width: isMobile ? '100%' : 220, flexShrink: 0, marginBottom: 0, position: isMobile ? 'static' : 'sticky', top: 0 }}>
+          <div data-tour="project-members" style={{ ...section, width: isMobile ? '100%' : 220, flexShrink: 0, marginBottom: 0, position: isMobile ? 'static' : 'sticky', top: 0 }}>
             <MembersSection
               projectId={id!}
               myMembers={allMembers}
@@ -550,6 +561,7 @@ export default function ProjectDetail() {
 
       <MemberInfoModal member={selectedMember} onClose={() => setSelectedMember(null)} />
       <ClientInfoModal open={clientModal} onClose={() => setClientModal(false)} clientData={clientData} />
+      <ProjectGuide open={showProjectGuide} onClose={() => setShowProjectGuide(false)} />
       </div>
     </div>
   )
