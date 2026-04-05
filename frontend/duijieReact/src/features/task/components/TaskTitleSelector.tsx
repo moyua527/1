@@ -47,7 +47,18 @@ export default function TaskTitleSelector({
   required,
   placeholder = '输入需求标题',
 }: Props) {
-  const [mode, setMode] = useState<'preset' | 'history'>('preset')
+  const storageKey = projectId ? `task_title_mode_${projectId}` : ''
+  const [mode, _setMode] = useState<'preset' | 'history'>(() => {
+    if (storageKey) {
+      const saved = localStorage.getItem(storageKey)
+      if (saved === 'history') return 'history'
+    }
+    return 'preset'
+  })
+  const setMode = (m: 'preset' | 'history') => {
+    _setMode(m)
+    if (storageKey) localStorage.setItem(storageKey, m)
+  }
   const [options, setOptions] = useState<TaskTitleOptions>({ presets: [], history: [] })
   const [loading, setLoading] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
