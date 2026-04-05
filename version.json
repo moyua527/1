@@ -1,6 +1,6 @@
 {
-  "version": "1.2.0.1",
-  "versionCode": 140,
+  "version": "1.2.0.2",
+  "versionCode": 141,
   "minVersion": "1.0.0",
-  "changelog": "移除项目概览标签页，默认显示需求"
+  "changelog": "移除项目统计面板"
 }
