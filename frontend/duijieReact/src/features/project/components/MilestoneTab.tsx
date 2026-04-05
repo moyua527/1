@@ -3,6 +3,7 @@ import { Plus, CheckCircle2, Circle, Clock, ChevronRight, Pencil, Trash2 } from 
 import { milestoneApi } from '../../milestone/services/api'
 import Button from '../../ui/Button'
 import { toast } from '../../ui/Toast'
+import MilestoneDetailModal from './MilestoneDetailModal'
 
 const section: React.CSSProperties = { background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16 }
 
@@ -18,13 +19,16 @@ interface MilestoneTabProps {
   canEdit: boolean
   onRefresh: () => void
   isMobile?: boolean
+  members?: any[]
+  currentUserId?: number
 }
 
-export default function MilestoneTab({ milestones, projectId, canEdit, onRefresh, isMobile }: MilestoneTabProps) {
+export default function MilestoneTab({ milestones, projectId, canEdit, onRefresh, isMobile, members = [], currentUserId = 0 }: MilestoneTabProps) {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<any>(null)
   const [form, setForm] = useState({ title: '', description: '', due_date: '' })
   const [showTemplates, setShowTemplates] = useState(false)
+  const [detailId, setDetailId] = useState<string | null>(null)
 
   const sorted = [...milestones].sort((a, b) => {
     if (a.is_completed && !b.is_completed) return -1
@@ -170,11 +174,14 @@ export default function MilestoneTab({ milestones, projectId, canEdit, onRefresh
             const overdue = m.due_date && new Date(m.due_date) < new Date() && !m.is_completed
             return (
               <div key={m.id}
-                style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px', borderRadius: 10, transition: 'background 0.15s',
+                style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px', borderRadius: 10, transition: 'all 0.15s', cursor: 'pointer',
                   background: isActive ? 'rgba(59,130,246,0.06)' : 'var(--bg-secondary)',
-                  border: isActive ? '1px solid rgba(59,130,246,0.2)' : '1px solid transparent' }}>
+                  border: isActive ? '1px solid rgba(59,130,246,0.2)' : '1px solid transparent' }}
+                onClick={() => setDetailId(String(m.id))}
+                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--bg-hover)' }}
+                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'var(--bg-secondary)' }}>
                 <div style={{ cursor: canEdit ? 'pointer' : 'default', paddingTop: 2, flexShrink: 0 }}
-                  onClick={canEdit ? async () => { await milestoneApi.toggle(String(m.id)); onRefresh() } : undefined}>
+                  onClick={canEdit ? (e) => { e.stopPropagation(); milestoneApi.toggle(String(m.id)).then(() => onRefresh()) } : undefined}>
                   {m.is_completed ? <CheckCircle2 size={22} color="#22c55e" /> : isActive ? <Clock size={22} color="var(--brand)" /> : <Circle size={22} color="#cbd5e1" />}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -189,18 +196,31 @@ export default function MilestoneTab({ milestones, projectId, canEdit, onRefresh
                   {m.description && <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4, lineHeight: 1.5 }}>{m.description}</div>}
                   {m.due_date && <div style={{ fontSize: 11, color: overdue ? 'var(--color-danger)' : 'var(--text-tertiary)', marginTop: 4 }}>目标: {m.due_date.slice(0, 10)}</div>}
                 </div>
-                {canEdit && (
-                  <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
-                    <button onClick={() => { setEditing(m); setForm({ title: m.title || '', description: m.description || '', due_date: m.due_date ? m.due_date.slice(0, 10) : '' }); setShowForm(true) }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)' }}><Pencil size={14} /></button>
-                    <button onClick={async () => { const r = await milestoneApi.remove(String(m.id)); if (r.success) { toast('已删除', 'success'); onRefresh() } else toast(r.message || '删除失败', 'error') }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)' }}><Trash2 size={14} /></button>
-                  </div>
-                )}
+                <div style={{ display: 'flex', gap: 2, flexShrink: 0, alignItems: 'center' }}>
+                  {canEdit && (
+                    <>
+                      <button onClick={(e) => { e.stopPropagation(); setEditing(m); setForm({ title: m.title || '', description: m.description || '', due_date: m.due_date ? m.due_date.slice(0, 10) : '' }); setShowForm(true) }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)' }}><Pencil size={14} /></button>
+                      <button onClick={async (e) => { e.stopPropagation(); const r = await milestoneApi.remove(String(m.id)); if (r.success) { toast('已删除', 'success'); onRefresh() } else toast(r.message || '删除失败', 'error') }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)' }}><Trash2 size={14} /></button>
+                    </>
+                  )}
+                  <ChevronRight size={16} color="var(--text-tertiary)" />
+                </div>
               </div>
             )
           })}
         </div>
+      )}
+
+      {detailId && (
+        <MilestoneDetailModal
+          milestoneId={detailId}
+          currentUserId={currentUserId}
+          members={members}
+          onClose={() => setDetailId(null)}
+          onRefresh={onRefresh}
+        />
       )}
     </div>
   )

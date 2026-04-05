@@ -35,6 +35,12 @@ router.get('/milestones', auth, require('../controllers/milestone/listController
 router.put('/milestones/:id', auth, V.updateMilestone, validate, require('../controllers/milestone/updateController'));
 router.delete('/milestones/:id', auth, require('../controllers/milestone/deleteController'));
 router.patch('/milestones/:id/toggle', auth, require('../controllers/milestone/toggleController'));
+router.get('/milestones/:id/detail', auth, require('../controllers/milestone/detailController'));
+router.post('/milestones/:id/progress', auth, require('../controllers/milestone/addProgressController'));
+router.delete('/milestones/progress/:progressId', auth, require('../controllers/milestone/deleteProgressController'));
+router.post('/milestones/:id/participants', auth, require('../controllers/milestone/setParticipantsController'));
+router.post('/milestones/:id/reminders', auth, require('../controllers/milestone/addReminderController'));
+router.delete('/milestones/reminders/:reminderId', auth, require('../controllers/milestone/deleteReminderController'));
 
 // Files
 router.post('/files/upload', auth, upload.single('file'), require('../controllers/file/uploadController'));

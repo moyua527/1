@@ -103,7 +103,7 @@ def main():
                 sftp.put(lp, rp)
                 upload_count += 1
 
-    for d in ['atomic', 'config', 'socket', 'listeners', 'scripts', 'events']:
+    for d in ['atomic', 'config', 'socket', 'listeners', 'scripts', 'events', 'jobs']:
         ld = os.path.join(local_server, d)
         if os.path.isdir(ld):
             ensure_remote_dir(f'{remote_server}/{d}')

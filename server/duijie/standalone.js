@@ -6,6 +6,7 @@ const db = require('./config/db');
 require('./listeners/projectListener');
 require('./listeners/taskListener');
 require('./listeners/messageListener');
+const milestoneReminder = require('./jobs/milestoneReminder');
 
 const PORT = process.env.PORT || 1800;
 const server = http.createServer(app);
@@ -13,6 +14,7 @@ initSocket(server);
 
 server.listen(PORT, () => {
   logger.info(`后端服务启动: http://localhost:${PORT}`);
+  milestoneReminder.start();
 });
 
 // 优雅关闭：关闭连接池和 Socket.IO
