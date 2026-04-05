@@ -1,32 +1,47 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { Pen, Type, Crop, Grid3X3, RotateCcw, Check, X } from 'lucide-react'
 
 interface Props {
-  imageFile: File
+  imageFile?: File
+  imageSrc?: string
   onConfirm: (editedFile: File) => void
   onCancel: () => void
 }
 
+type Tool = 'draw' | 'text' | 'crop' | 'mosaic'
+
 const COLORS = ['#ef4444', '#3b82f6', '#000000', '#22c55e', '#eab308', '#ffffff']
 const SIZES = [2, 4, 8]
+const MOSAIC_BLOCK = 12
 
-export default function ImageEditor({ imageFile, onConfirm, onCancel }: Props) {
+export default function ImageEditor({ imageFile, imageSrc, onConfirm, onCancel }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [drawing, setDrawing] = useState(false)
+  const [tool, setTool] = useState<Tool>('draw')
   const [color, setColor] = useState('#ef4444')
   const [lineWidth, setLineWidth] = useState(4)
   const [history, setHistory] = useState<ImageData[]>([])
   const [imgLoaded, setImgLoaded] = useState(false)
   const imgRef = useRef<HTMLImageElement | null>(null)
   const lastPos = useRef<{ x: number; y: number } | null>(null)
+  const [drawing, setDrawing] = useState(false)
+
+  const [textInput, setTextInput] = useState('')
+  const [textPos, setTextPos] = useState<{ x: number; y: number } | null>(null)
+  const [textSize, setTextSize] = useState(20)
+
+  const [cropRect, setCropRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
+  const [cropDragging, setCropDragging] = useState<string | null>(null)
+  const cropStart = useRef({ mx: 0, my: 0, ox: 0, oy: 0, ow: 0, oh: 0 })
 
   useEffect(() => {
     const img = new Image()
+    img.crossOrigin = 'anonymous'
     img.onload = () => {
       imgRef.current = img
       const canvas = canvasRef.current
       if (!canvas) return
-      const maxW = Math.min(window.innerWidth - 32, 800)
-      const maxH = Math.min(window.innerHeight - 200, 600)
+      const maxW = Math.min(window.innerWidth - 24, 800)
+      const maxH = Math.min(window.innerHeight - 180, 600)
       const scale = Math.min(maxW / img.width, maxH / img.height, 1)
       canvas.width = img.width * scale
       canvas.height = img.height * scale
@@ -35,9 +50,13 @@ export default function ImageEditor({ imageFile, onConfirm, onCancel }: Props) {
       setHistory([ctx.getImageData(0, 0, canvas.width, canvas.height)])
       setImgLoaded(true)
     }
-    img.src = URL.createObjectURL(imageFile)
-    return () => URL.revokeObjectURL(img.src)
-  }, [imageFile])
+    if (imageFile) {
+      img.src = URL.createObjectURL(imageFile)
+      return () => URL.revokeObjectURL(img.src)
+    } else if (imageSrc) {
+      img.src = imageSrc
+    }
+  }, [imageFile, imageSrc])
 
   const getPos = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     const canvas = canvasRef.current
@@ -52,68 +71,184 @@ export default function ImageEditor({ imageFile, onConfirm, onCancel }: Props) {
     return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY }
   }, [])
 
+  const saveState = useCallback(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')!
+    setHistory(prev => [...prev, ctx.getImageData(0, 0, canvas.width, canvas.height)])
+  }, [])
+
+  // === Draw tool ===
   const startDraw = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (tool !== 'draw' && tool !== 'mosaic') return
     e.preventDefault()
     setDrawing(true)
     lastPos.current = getPos(e)
-  }, [getPos])
+  }, [tool, getPos])
 
-  const draw = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+  const doDraw = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     if (!drawing || !lastPos.current) return
     e.preventDefault()
     const ctx = canvasRef.current?.getContext('2d')
-    if (!ctx) return
+    if (!ctx || !canvasRef.current) return
     const pos = getPos(e)
-    ctx.beginPath()
-    ctx.moveTo(lastPos.current.x, lastPos.current.y)
-    ctx.lineTo(pos.x, pos.y)
-    ctx.strokeStyle = color
-    ctx.lineWidth = lineWidth
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-    ctx.stroke()
+
+    if (tool === 'draw') {
+      ctx.beginPath()
+      ctx.moveTo(lastPos.current.x, lastPos.current.y)
+      ctx.lineTo(pos.x, pos.y)
+      ctx.strokeStyle = color
+      ctx.lineWidth = lineWidth
+      ctx.lineCap = 'round'
+      ctx.lineJoin = 'round'
+      ctx.stroke()
+    } else if (tool === 'mosaic') {
+      const bs = MOSAIC_BLOCK
+      const r = 20
+      const cx = Math.floor(pos.x)
+      const cy = Math.floor(pos.y)
+      for (let bx = cx - r; bx < cx + r; bx += bs) {
+        for (let by = cy - r; by < cy + r; by += bs) {
+          if (bx < 0 || by < 0 || bx >= canvasRef.current.width || by >= canvasRef.current.height) continue
+          const imgData = ctx.getImageData(bx, by, Math.min(bs, canvasRef.current.width - bx), Math.min(bs, canvasRef.current.height - by))
+          let tr = 0, tg = 0, tb = 0, cnt = 0
+          for (let i = 0; i < imgData.data.length; i += 4) {
+            tr += imgData.data[i]; tg += imgData.data[i + 1]; tb += imgData.data[i + 2]; cnt++
+          }
+          if (cnt > 0) {
+            ctx.fillStyle = `rgb(${Math.round(tr / cnt)},${Math.round(tg / cnt)},${Math.round(tb / cnt)})`
+            ctx.fillRect(bx, by, Math.min(bs, canvasRef.current.width - bx), Math.min(bs, canvasRef.current.height - by))
+          }
+        }
+      }
+    }
     lastPos.current = pos
-  }, [drawing, color, lineWidth, getPos])
+  }, [drawing, tool, color, lineWidth, getPos])
 
   const endDraw = useCallback(() => {
     if (!drawing) return
     setDrawing(false)
     lastPos.current = null
+    saveState()
+  }, [drawing, saveState])
+
+  // === Text tool ===
+  const handleCanvasClick = useCallback((e: React.MouseEvent) => {
+    if (tool !== 'text') return
+    const pos = getPos(e)
+    setTextPos(pos)
+    setTextInput('')
+  }, [tool, getPos])
+
+  const confirmText = useCallback(() => {
+    if (!textPos || !textInput.trim()) { setTextPos(null); return }
+    const ctx = canvasRef.current?.getContext('2d')
+    if (!ctx) return
+    ctx.font = `${textSize}px sans-serif`
+    ctx.fillStyle = color
+    ctx.textBaseline = 'top'
+    ctx.fillText(textInput, textPos.x, textPos.y)
+    setTextPos(null)
+    setTextInput('')
+    saveState()
+  }, [textPos, textInput, textSize, color, saveState])
+
+  // === Crop tool ===
+  const initCrop = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const ctx = canvas.getContext('2d')!
-    setHistory(prev => [...prev, ctx.getImageData(0, 0, canvas.width, canvas.height)])
-  }, [drawing])
+    const margin = 0.15
+    setCropRect({
+      x: canvas.width * margin, y: canvas.height * margin,
+      w: canvas.width * (1 - margin * 2), h: canvas.height * (1 - margin * 2),
+    })
+  }, [])
 
+  useEffect(() => {
+    if (tool === 'crop' && !cropRect) initCrop()
+    if (tool !== 'crop') setCropRect(null)
+  }, [tool, cropRect, initCrop])
+
+  const getCropHandle = useCallback((pos: { x: number; y: number }) => {
+    if (!cropRect) return null
+    const t = 14
+    const { x, y, w, h } = cropRect
+    if (Math.abs(pos.x - x) < t && Math.abs(pos.y - y) < t) return 'tl'
+    if (Math.abs(pos.x - (x + w)) < t && Math.abs(pos.y - y) < t) return 'tr'
+    if (Math.abs(pos.x - x) < t && Math.abs(pos.y - (y + h)) < t) return 'bl'
+    if (Math.abs(pos.x - (x + w)) < t && Math.abs(pos.y - (y + h)) < t) return 'br'
+    if (pos.x > x && pos.x < x + w && pos.y > y && pos.y < y + h) return 'move'
+    return null
+  }, [cropRect])
+
+  const cropDown = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (tool !== 'crop' || !cropRect) return
+    e.preventDefault()
+    const pos = getPos(e)
+    const handle = getCropHandle(pos)
+    if (!handle) return
+    setCropDragging(handle)
+    cropStart.current = { mx: pos.x, my: pos.y, ox: cropRect.x, oy: cropRect.y, ow: cropRect.w, oh: cropRect.h }
+  }, [tool, cropRect, getPos, getCropHandle])
+
+  const cropMove = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (!cropDragging || !cropRect || !canvasRef.current) return
+    e.preventDefault()
+    const pos = getPos(e)
+    const dx = pos.x - cropStart.current.mx
+    const dy = pos.y - cropStart.current.my
+    const { ox, oy, ow, oh } = cropStart.current
+    const cw = canvasRef.current.width, ch = canvasRef.current.height
+    let nx = cropRect.x, ny = cropRect.y, nw = cropRect.w, nh = cropRect.h
+
+    if (cropDragging === 'move') {
+      nx = Math.max(0, Math.min(cw - ow, ox + dx)); ny = Math.max(0, Math.min(ch - oh, oy + dy)); nw = ow; nh = oh
+    } else {
+      if (cropDragging.includes('l')) { nx = Math.max(0, Math.min(ox + ow - 30, ox + dx)); nw = ow - (nx - ox) }
+      if (cropDragging.includes('r')) { nw = Math.max(30, Math.min(cw - ox, ow + dx)) }
+      if (cropDragging.includes('t')) { ny = Math.max(0, Math.min(oy + oh - 30, oy + dy)); nh = oh - (ny - oy) }
+      if (cropDragging.includes('b')) { nh = Math.max(30, Math.min(ch - oy, oh + dy)) }
+    }
+    setCropRect({ x: nx, y: ny, w: nw, h: nh })
+  }, [cropDragging, cropRect, getPos])
+
+  const cropUp = useCallback(() => { setCropDragging(null) }, [])
+
+  const applyCrop = useCallback(() => {
+    if (!cropRect || !canvasRef.current) return
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')!
+    const { x, y, w, h } = cropRect
+    const data = ctx.getImageData(x, y, w, h)
+    canvas.width = w; canvas.height = h
+    ctx.putImageData(data, 0, 0)
+    setCropRect(null)
+    setTool('draw')
+    saveState()
+  }, [cropRect, saveState])
+
+  // === Undo ===
   const undo = useCallback(() => {
     if (history.length <= 1) return
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')!
-    const newHistory = history.slice(0, -1)
-    ctx.putImageData(newHistory[newHistory.length - 1], 0, 0)
-    setHistory(newHistory)
+    const newH = history.slice(0, -1)
+    const last = newH[newH.length - 1]
+    canvas.width = last.width; canvas.height = last.height
+    ctx.putImageData(last, 0, 0)
+    setHistory(newH)
   }, [history])
 
-  const reset = useCallback(() => {
-    if (history.length <= 1) return
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const ctx = canvas.getContext('2d')!
-    ctx.putImageData(history[0], 0, 0)
-    setHistory([history[0]])
-  }, [history])
-
+  // === Confirm ===
   const handleConfirm = useCallback(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     canvas.toBlob((blob) => {
       if (!blob) return
-      const ext = imageFile.name.split('.').pop() || 'png'
-      const name = imageFile.name.replace(/\.[^.]+$/, '') + '_edited.' + ext
-      const file = new File([blob], name, { type: blob.type })
-      onConfirm(file)
-    }, imageFile.type || 'image/png', 0.92)
+      const name = imageFile ? imageFile.name.replace(/\.[^.]+$/, '') + '_edited.png' : 'edited.png'
+      onConfirm(new File([blob], name, { type: 'image/png' }))
+    }, 'image/png', 0.92)
   }, [imageFile, onConfirm])
 
   useEffect(() => {
@@ -124,46 +259,158 @@ export default function ImageEditor({ imageFile, onConfirm, onCancel }: Props) {
     return () => document.removeEventListener('touchmove', handler)
   }, [])
 
-  const toolBtnStyle = (active: boolean): React.CSSProperties => ({
-    padding: '6px 12px', borderRadius: 8, border: active ? '2px solid var(--brand)' : '1px solid var(--border-primary)',
-    background: active ? 'var(--bg-selected)' : 'var(--bg-primary)', cursor: 'pointer', fontSize: 13, fontWeight: 500,
-    color: 'var(--text-body)', display: 'flex', alignItems: 'center', gap: 4,
-  })
+  const isActive = (t: Tool) => tool === t
+  const toolBtn = (t: Tool, icon: React.ReactNode, label: string) => (
+    <button key={t} onClick={() => { setTool(t); setTextPos(null) }} style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+      background: 'none', border: 'none', cursor: 'pointer',
+      color: isActive(t) ? '#22c55e' : '#fff', fontSize: 11, padding: '4px 10px',
+      opacity: isActive(t) ? 1 : 0.7,
+    }}>
+      {icon}<span>{label}</span>
+    </button>
+  )
+
+  const canvasHandlers = tool === 'crop' ? {
+    onMouseDown: cropDown, onMouseMove: cropMove, onMouseUp: cropUp,
+    onTouchStart: cropDown, onTouchMove: cropMove, onTouchEnd: cropUp,
+  } : {
+    onMouseDown: startDraw, onMouseMove: doDraw, onMouseUp: endDraw, onMouseLeave: endDraw,
+    onTouchStart: startDraw, onTouchMove: doDraw, onTouchEnd: endDraw,
+    onClick: handleCanvasClick,
+  }
+
+  const canvasRect = canvasRef.current?.getBoundingClientRect()
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', touchAction: 'none' }}>
-      {/* toolbar */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap', justifyContent: 'center', padding: '0 16px' }}>
-        {COLORS.map(c => (
-          <button key={c} onClick={() => setColor(c)} style={{
-            width: 28, height: 28, borderRadius: '50%', background: c, border: color === c ? '3px solid var(--brand)' : '2px solid rgba(255,255,255,0.3)',
-            cursor: 'pointer', boxShadow: color === c ? '0 0 0 2px var(--bg-primary)' : 'none',
-          }} />
-        ))}
-        <div style={{ width: 1, background: 'rgba(255,255,255,0.2)', margin: '0 4px' }} />
-        {SIZES.map(s => (
-          <button key={s} onClick={() => setLineWidth(s)} style={toolBtnStyle(lineWidth === s)}>
-            <span style={{ width: s * 2, height: s * 2, borderRadius: '50%', background: color }} />
+    <div style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 9999, display: 'flex', flexDirection: 'column', touchAction: 'none' }}>
+      {/* header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', flexShrink: 0 }}>
+        <button onClick={onCancel} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <X size={18} /> 取消
+        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={undo} disabled={history.length <= 1} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 13, cursor: 'pointer', opacity: history.length <= 1 ? 0.3 : 0.8, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <RotateCcw size={16} /> 撤销
           </button>
-        ))}
-        <div style={{ width: 1, background: 'rgba(255,255,255,0.2)', margin: '0 4px' }} />
-        <button onClick={undo} disabled={history.length <= 1} style={{ ...toolBtnStyle(false), opacity: history.length <= 1 ? 0.4 : 1, color: '#fff' }}>↩ 撤销</button>
-        <button onClick={reset} disabled={history.length <= 1} style={{ ...toolBtnStyle(false), opacity: history.length <= 1 ? 0.4 : 1, color: '#fff' }}>🔄 重置</button>
+        </div>
       </div>
 
-      {/* canvas */}
-      <div style={{ position: 'relative', maxWidth: 'calc(100vw - 32px)', maxHeight: 'calc(100vh - 200px)' }}>
-        <canvas ref={canvasRef}
-          onMouseDown={startDraw} onMouseMove={draw} onMouseUp={endDraw} onMouseLeave={endDraw}
-          onTouchStart={startDraw} onTouchMove={draw} onTouchEnd={endDraw}
-          style={{ borderRadius: 8, cursor: 'crosshair', maxWidth: '100%', maxHeight: '100%', touchAction: 'none', display: imgLoaded ? 'block' : 'none' }} />
-        {!imgLoaded && <div style={{ color: '#fff', fontSize: 14 }}>加载中...</div>}
+      {/* tool options */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 6, padding: '4px 12px', flexWrap: 'wrap', flexShrink: 0 }}>
+        {(tool === 'draw' || tool === 'text') && <>
+          {COLORS.map(c => (
+            <button key={c} onClick={() => setColor(c)} style={{
+              width: 24, height: 24, borderRadius: '50%', background: c,
+              border: color === c ? '2.5px solid #22c55e' : '1.5px solid rgba(255,255,255,0.3)',
+              cursor: 'pointer',
+            }} />
+          ))}
+        </>}
+        {tool === 'draw' && <>
+          <div style={{ width: 1, background: 'rgba(255,255,255,0.2)', margin: '0 2px' }} />
+          {SIZES.map(s => (
+            <button key={s} onClick={() => setLineWidth(s)} style={{
+              width: 30, height: 30, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: lineWidth === s ? 'rgba(255,255,255,0.2)' : 'transparent', border: 'none', cursor: 'pointer',
+            }}>
+              <span style={{ width: s * 2 + 2, height: s * 2 + 2, borderRadius: '50%', background: color }} />
+            </button>
+          ))}
+        </>}
+        {tool === 'text' && <>
+          <div style={{ width: 1, background: 'rgba(255,255,255,0.2)', margin: '0 2px' }} />
+          {[16, 20, 28, 36].map(s => (
+            <button key={s} onClick={() => setTextSize(s)} style={{
+              padding: '2px 8px', borderRadius: 6, fontSize: 12, color: '#fff', cursor: 'pointer',
+              background: textSize === s ? 'rgba(255,255,255,0.2)' : 'transparent', border: 'none',
+            }}>{s}px</button>
+          ))}
+        </>}
+        {tool === 'crop' && cropRect && (
+          <button onClick={applyCrop} style={{
+            padding: '6px 16px', borderRadius: 6, background: '#22c55e', color: '#fff', border: 'none',
+            cursor: 'pointer', fontSize: 13, fontWeight: 500,
+          }}>确认裁剪</button>
+        )}
       </div>
 
-      {/* action buttons */}
-      <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
-        <button onClick={onCancel} style={{ padding: '10px 24px', borderRadius: 8, background: 'rgba(255,255,255,0.15)', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 14, fontWeight: 500 }}>取消</button>
-        <button onClick={handleConfirm} style={{ padding: '10px 24px', borderRadius: 8, background: 'var(--brand)', border: 'none', cursor: 'pointer', color: '#fff', fontSize: 14, fontWeight: 500 }}>确认上传</button>
+      {/* canvas area */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ position: 'relative' }} {...canvasHandlers}>
+          <canvas ref={canvasRef} style={{
+            borderRadius: 4, maxWidth: 'calc(100vw - 24px)', maxHeight: 'calc(100vh - 180px)',
+            cursor: tool === 'crop' ? 'crosshair' : tool === 'text' ? 'text' : 'crosshair',
+            touchAction: 'none', display: imgLoaded ? 'block' : 'none',
+          }} />
+          {!imgLoaded && <div style={{ color: '#fff', fontSize: 14 }}>加载中...</div>}
+
+          {/* crop overlay */}
+          {tool === 'crop' && cropRect && canvasRect && (() => {
+            const sx = canvasRect.width / (canvasRef.current?.width || 1)
+            const sy = canvasRect.height / (canvasRef.current?.height || 1)
+            const rx = cropRect.x * sx, ry = cropRect.y * sy, rw = cropRect.w * sx, rh = cropRect.h * sy
+            return (
+              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: ry, background: 'rgba(0,0,0,0.5)' }} />
+                <div style={{ position: 'absolute', top: ry + rh, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)' }} />
+                <div style={{ position: 'absolute', top: ry, left: 0, width: rx, height: rh, background: 'rgba(0,0,0,0.5)' }} />
+                <div style={{ position: 'absolute', top: ry, left: rx + rw, right: 0, height: rh, background: 'rgba(0,0,0,0.5)' }} />
+                <div style={{ position: 'absolute', top: ry, left: rx, width: rw, height: rh, border: '2px solid #fff' }}>
+                  {['tl', 'tr', 'bl', 'br'].map(h => (
+                    <div key={h} style={{
+                      position: 'absolute', width: 16, height: 16, background: '#fff', borderRadius: 2,
+                      ...(h.includes('t') ? { top: -6 } : { bottom: -6 }),
+                      ...(h.includes('l') ? { left: -6 } : { right: -6 }),
+                      pointerEvents: 'auto', cursor: h === 'tl' || h === 'br' ? 'nwse-resize' : 'nesw-resize',
+                    }} />
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+        </div>
+
+        {/* text input overlay */}
+        {tool === 'text' && textPos && canvasRect && (
+          <div style={{
+            position: 'absolute',
+            left: canvasRect.left + textPos.x * (canvasRect.width / (canvasRef.current?.width || 1)) - canvasRect.left,
+            top: canvasRect.top + textPos.y * (canvasRect.height / (canvasRef.current?.height || 1)) - canvasRect.top,
+            display: 'flex', gap: 4, zIndex: 10,
+          }} onClick={(e) => e.stopPropagation()}>
+            <input autoFocus value={textInput} onChange={e => setTextInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') confirmText() }}
+              placeholder="输入文字..." style={{
+                padding: '4px 8px', borderRadius: 4, border: '1px solid #22c55e', background: 'rgba(0,0,0,0.7)',
+                color: color, fontSize: textSize * 0.6, outline: 'none', minWidth: 120,
+              }} />
+            <button onClick={confirmText} style={{
+              padding: '4px 10px', borderRadius: 4, background: '#22c55e', color: '#fff', border: 'none',
+              cursor: 'pointer', fontSize: 12,
+            }}>确定</button>
+          </div>
+        )}
+      </div>
+
+      {/* bottom toolbar */}
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        padding: '8px 16px 16px', flexShrink: 0, borderTop: '1px solid rgba(255,255,255,0.1)',
+      }}>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {toolBtn('draw', <Pen size={20} />, '绘画')}
+          {toolBtn('text', <Type size={20} />, '文字')}
+          {toolBtn('crop', <Crop size={20} />, '裁剪')}
+          {toolBtn('mosaic', <Grid3X3 size={20} />, '马赛克')}
+        </div>
+        <button onClick={handleConfirm} style={{
+          padding: '8px 20px', borderRadius: 6, background: '#22c55e', border: 'none',
+          cursor: 'pointer', color: '#fff', fontSize: 14, fontWeight: 600,
+          display: 'flex', alignItems: 'center', gap: 4,
+        }}>
+          <Check size={16} /> 完成
+        </button>
       </div>
     </div>
   )

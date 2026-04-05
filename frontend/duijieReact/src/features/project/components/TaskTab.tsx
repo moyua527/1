@@ -46,6 +46,9 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
   const [submitting, setSubmitting] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [previewImg, setPreviewImg] = useState<string | null>(null)
+  const [previewImages, setPreviewImages] = useState<string[]>([])
+  const [previewStartIdx, setPreviewStartIdx] = useState(0)
+  const [editingSrc, setEditingSrc] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState('')
   const [showTrash, setShowTrash] = useState(false)
   const [trashTasks, setTrashTasks] = useState<any[]>([])
@@ -400,8 +403,10 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                             const isImage = a.mime_type?.startsWith('image/')
                             const fileUrl = `/uploads/${a.filename}`
                             if (isImage) {
+                              const allImgs = t.attachments.filter((x: any) => x.mime_type?.startsWith('image/')).map((x: any) => `/uploads/${x.filename}`)
+                              const imgIdx = allImgs.indexOf(fileUrl)
                               return (
-                                <div key={a.id} onClick={() => setPreviewImg(fileUrl)} style={{ cursor: 'pointer', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border-primary)', width: 80, height: 80, flexShrink: 0 }}>
+                                <div key={a.id} onClick={() => { setPreviewImg(fileUrl); setPreviewImages(allImgs); setPreviewStartIdx(Math.max(0, imgIdx)) }} style={{ cursor: 'pointer', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border-primary)', width: 80, height: 80, flexShrink: 0 }}>
                                   <img src={fileUrl} alt={a.original_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 </div>
                               )
@@ -682,7 +687,10 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
         </div>
       </Modal>
 
-      {previewImg && <ImageViewer src={previewImg} onClose={() => setPreviewImg(null)} />}
+      {previewImg && <ImageViewer src={previewImg} onClose={() => { setPreviewImg(null); setPreviewImages([]) }}
+        images={previewImages.length > 1 ? previewImages : undefined} startIndex={previewStartIdx}
+        onEdit={(s) => { setPreviewImg(null); setEditingSrc(s) }} />}
+      {editingSrc && <ImageEditor imageSrc={editingSrc} onConfirm={() => { setEditingSrc(null) }} onCancel={() => setEditingSrc(null)} />}
       {editingImage && <ImageEditor imageFile={editingImage} onConfirm={handleEditorConfirm} onCancel={handleEditorCancel} />}
     </div>
   )

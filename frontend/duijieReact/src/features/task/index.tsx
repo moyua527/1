@@ -39,6 +39,8 @@ export default function TaskBoard() {
   const [selectedTask, setSelectedTask] = useState<any>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [previewImg, setPreviewImg] = useState<string | null>(null)
+  const [previewImages, setPreviewImages] = useState<string[]>([])
+  const [previewStartIdx, setPreviewStartIdx] = useState(0)
 
   const { data: allTasks = [], isLoading: _tasksLoading } = useTasks(filterProject || undefined)
   const { data: projectsData = [] } = useProjects()
@@ -142,11 +144,12 @@ export default function TaskBoard() {
               {/* 图片缩略图 */}
               {imgs.length > 0 && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 4 }}>
-                  {imgs.map((a: any) => (
-                    <img key={a.id} src={`${BACKEND_URL}/uploads/${a.filename}`} alt={a.original_name}
-                      onClick={e => { e.stopPropagation(); setPreviewImg(`${BACKEND_URL}/uploads/${a.filename}`) }}
+                  {imgs.map((a: any, i: number) => {
+                    const allImgs = imgs.map((x: any) => `${BACKEND_URL}/uploads/${x.filename}`)
+                    return <img key={a.id} src={`${BACKEND_URL}/uploads/${a.filename}`} alt={a.original_name}
+                      onClick={e => { e.stopPropagation(); setPreviewImg(`${BACKEND_URL}/uploads/${a.filename}`); setPreviewImages(allImgs); setPreviewStartIdx(i) }}
                       style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border-primary)', display: 'block', cursor: 'pointer' }} />
-                  ))}
+                  })}
                 </div>
               )}
               {/* 非图片附件 */}
@@ -175,7 +178,8 @@ export default function TaskBoard() {
 
       <TaskCreateModal open={showCreateModal} onClose={() => setShowCreateModal(false)} onCreated={reload} projects={projects} />
 
-      {previewImg && <ImageViewer src={previewImg} onClose={() => setPreviewImg(null)} />}
+      {previewImg && <ImageViewer src={previewImg} onClose={() => { setPreviewImg(null); setPreviewImages([]) }}
+        images={previewImages.length > 1 ? previewImages : undefined} startIndex={previewStartIdx} />}
     </div>
   )
 }

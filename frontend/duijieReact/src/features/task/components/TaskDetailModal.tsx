@@ -39,6 +39,7 @@ interface Props {
 
 export default function TaskDetailModal({ task, open, onClose }: Props) {
   const [previewImg, setPreviewImg] = useState<string | null>(null)
+  const [previewStartIdx, setPreviewStartIdx] = useState(0)
   if (!task) return null
 
   const st = statusMap[task.status] || statusMap.submitted
@@ -90,9 +91,9 @@ export default function TaskDetailModal({ task, open, onClose }: Props) {
           <div>
             <div style={{ ...lbl, marginBottom: 8 }}><Paperclip size={14} /> 图片 ({imgs.length})</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {imgs.map((a: any) => (
+              {imgs.map((a: any, i: number) => (
                 <img key={a.id} src={`${BACKEND_URL}/uploads/${a.filename}`} alt={a.original_name}
-                  onClick={() => setPreviewImg(`${BACKEND_URL}/uploads/${a.filename}`)}
+                  onClick={() => { setPreviewImg(`${BACKEND_URL}/uploads/${a.filename}`); setPreviewStartIdx(i) }}
                   style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border-primary)', display: 'block', cursor: 'pointer' }} />
               ))}
             </div>
@@ -135,7 +136,9 @@ export default function TaskDetailModal({ task, open, onClose }: Props) {
       </div>
     </Modal>
 
-      {previewImg && <ImageViewer src={previewImg} onClose={() => setPreviewImg(null)} />}
+      {previewImg && <ImageViewer src={previewImg} onClose={() => setPreviewImg(null)}
+        images={imgs.length > 1 ? imgs.map((a: any) => `${BACKEND_URL}/uploads/${a.filename}`) : undefined}
+        startIndex={previewStartIdx} />}
     </>
   )
 }
