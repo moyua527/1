@@ -80,7 +80,7 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
   const [noteTitle, setNoteTitle] = useState('')
   const [noteContent, setNoteContent] = useState('')
   const [addingNote, setAddingNote] = useState(false)
-  const [expandedNote, setExpandedNote] = useState<number | null>(null)
+  const [viewNote, setViewNote] = useState<any>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(() => {
@@ -235,62 +235,83 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
           {!search && canEdit && <div style={{ fontSize: 12, marginTop: 4 }}>点击「添加」上传文件或添加网址</div>}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
           {filtered.map(f => {
             const isUrl = f.mime_type === 'text/x-url'
             const isNote = f.mime_type === 'text/x-note'
             const isSpecial = isUrl || isNote
+            const isImg = f.mime_type?.startsWith('image/')
+            const thumbUrl = isImg ? `${BACKEND_URL}/api/files/${f.id}/preview?token=${localStorage.getItem('token') || ''}` : ''
             return (
-              <div key={f.id}>
-                <div
-                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, background: selected.has(f.id) ? 'var(--bg-selected)' : 'transparent', transition: 'background 0.1s', cursor: isNote ? 'pointer' : 'default' }}
-                  onMouseEnter={e => { if (!selected.has(f.id)) e.currentTarget.style.background = 'var(--bg-secondary)' }}
-                  onMouseLeave={e => { if (!selected.has(f.id)) e.currentTarget.style.background = 'transparent' }}
-                  onClick={() => { if (isNote) setExpandedNote(prev => prev === f.id ? null : f.id) }}>
-                  {editing && (
-                    <button onClick={e => { e.stopPropagation(); setSelected(prev => { const s = new Set(prev); s.has(f.id) ? s.delete(f.id) : s.add(f.id); return s }) }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: selected.has(f.id) ? 'var(--brand)' : 'var(--text-tertiary)', display: 'flex', flexShrink: 0 }}>
-                      {selected.has(f.id) ? <CheckSquare size={16} /> : <Square size={16} />}
-                    </button>
+              <div key={f.id}
+                style={{
+                  position: 'relative', borderRadius: 12, border: selected.has(f.id) ? '2px solid var(--brand)' : '1px solid var(--border-primary)',
+                  background: 'var(--bg-primary)', overflow: 'hidden', transition: 'all 0.15s', cursor: 'pointer',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
+                onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}
+                onClick={() => {
+                  if (isNote) setViewNote(f)
+                  else if (isUrl) window.open(f.path, '_blank')
+                  else if (canPreview(f.mime_type)) setPreview(f)
+                }}>
+                {/* 缩略图 / 图标区域 */}
+                <div style={{
+                  height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: isImg ? '#000' : 'var(--bg-secondary)',
+                  overflow: 'hidden',
+                }}>
+                  {isImg ? (
+                    <img src={thumbUrl} alt="" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'cover', width: '100%', height: '100%' }} />
+                  ) : (
+                    <div style={{ transform: 'scale(1.8)', opacity: 0.6 }}>{iconByType(f.mime_type)}</div>
                   )}
-                  {iconByType(f.mime_type)}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    {isUrl ? (
-                      <a href={f.path} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-                        style={{ fontSize: 13, fontWeight: 500, color: 'var(--brand)', textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}
-                        onMouseEnter={e => { e.currentTarget.style.textDecoration = 'underline' }}
-                        onMouseLeave={e => { e.currentTarget.style.textDecoration = 'none' }}>
-                        {f.original_name}
-                      </a>
-                    ) : (
-                      <div style={{ fontSize: 13, fontWeight: 500, color: isNote ? '#f59e0b' : 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.original_name}</div>
-                    )}
-                    <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
-                      {isUrl ? (
-                        <><span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block', maxWidth: 300, verticalAlign: 'bottom' }}>{f.path}</span> · {new Date(f.created_at).toLocaleDateString('zh-CN')}</>
-                      ) : isNote ? (
-                        <>{f.path?.substring(0, 60)}{f.path?.length > 60 ? '...' : ''} · {new Date(f.created_at).toLocaleDateString('zh-CN')}</>
-                      ) : (
-                        <>{formatSize(f.size || 0)} · {new Date(f.created_at).toLocaleDateString('zh-CN')}</>
-                      )}
-                    </div>
+                </div>
+                {/* 信息区 */}
+                <div style={{ padding: '10px 12px' }}>
+                  <div style={{
+                    fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    color: isUrl ? 'var(--brand)' : isNote ? '#f59e0b' : 'var(--text-heading)',
+                  }}>
+                    {f.original_name}
                   </div>
-                  <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
-                    {isUrl && (
-                      <a href={f.path} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--brand)', display: 'flex' }} title="打开链接">
-                        <ExternalLink size={16} />
-                      </a>
-                    )}
-                    {!isSpecial && canPreview(f.mime_type) && <button onClick={() => setPreview(f)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--color-purple)' }} title="预览"><Eye size={16} /></button>}
-                    {!isSpecial && <button onClick={() => handleDownload(f)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--brand)' }} title="下载"><Download size={16} /></button>}
-                    {editing && <button onClick={e => { e.stopPropagation(); handleDelete(f) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--color-danger)' }} title="删除"><Trash2 size={16} /></button>}
+                  <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {isUrl ? f.path : isNote ? `${f.path?.substring(0, 40)}...` : `${formatSize(f.size || 0)} · ${new Date(f.created_at).toLocaleDateString('zh-CN')}`}
                   </div>
                 </div>
-                {isNote && expandedNote === f.id && (
-                  <div style={{ margin: '4px 0 8px 38px', padding: '10px 14px', background: 'var(--bg-secondary)', borderRadius: 8, fontSize: 13, lineHeight: 1.7, color: 'var(--text-primary)', whiteSpace: 'pre-wrap', wordBreak: 'break-word', maxHeight: 200, overflow: 'auto' }}>
-                    {f.path}
-                  </div>
+                {/* 操作条 */}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 2, padding: '0 8px 8px', flexWrap: 'wrap' }}>
+                  {isUrl && (
+                    <button onClick={e => { e.stopPropagation(); window.open(f.path, '_blank') }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--brand)', display: 'flex', borderRadius: 4 }} title="打开链接">
+                      <ExternalLink size={14} />
+                    </button>
+                  )}
+                  {!isSpecial && canPreview(f.mime_type) && (
+                    <button onClick={e => { e.stopPropagation(); setPreview(f) }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--color-purple)', display: 'flex', borderRadius: 4 }} title="预览">
+                      <Eye size={14} />
+                    </button>
+                  )}
+                  {!isSpecial && (
+                    <button onClick={e => { e.stopPropagation(); handleDownload(f) }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--brand)', display: 'flex', borderRadius: 4 }} title="下载">
+                      <Download size={14} />
+                    </button>
+                  )}
+                  {editing && (
+                    <button onClick={e => { e.stopPropagation(); handleDelete(f) }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--color-danger)', display: 'flex', borderRadius: 4 }} title="删除">
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+                {/* 选中复选框 */}
+                {editing && (
+                  <button onClick={e => { e.stopPropagation(); setSelected(prev => { const s = new Set(prev); s.has(f.id) ? s.delete(f.id) : s.add(f.id); return s }) }}
+                    style={{ position: 'absolute', top: 6, left: 6, background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer', padding: 2, borderRadius: 4, color: selected.has(f.id) ? 'var(--brand)' : 'var(--text-tertiary)', display: 'flex', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
+                    {selected.has(f.id) ? <CheckSquare size={16} /> : <Square size={16} />}
+                  </button>
                 )}
               </div>
             )
@@ -300,6 +321,31 @@ export default function ProjectFileTab({ projectId, canEdit }: Props) {
 
       {preview && (
         <FilePreviewModal file={preview} previewUrl={getPreviewUrl(preview)} onDownload={handleDownload} onClose={() => setPreview(null)} />
+      )}
+
+      {/* 笔记查看弹窗 */}
+      {viewNote && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={e => { if (e.target === e.currentTarget) setViewNote(null) }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }} />
+          <div style={{ position: 'relative', background: 'var(--bg-primary)', borderRadius: 16, width: '90%', maxWidth: 520, maxHeight: '70vh', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border-primary)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <StickyNote size={18} color="#f59e0b" />
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>{viewNote.original_name}</h3>
+              </div>
+              <button onClick={() => setViewNote(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)', borderRadius: 6 }}>
+                <X size={18} />
+              </button>
+            </div>
+            <div style={{ padding: 20, overflow: 'auto', flex: 1, fontSize: 14, lineHeight: 1.8, color: 'var(--text-primary)', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              {viewNote.path}
+            </div>
+            <div style={{ padding: '10px 20px', borderTop: '1px solid var(--border-primary)', fontSize: 11, color: 'var(--text-tertiary)' }}>
+              创建于 {new Date(viewNote.created_at).toLocaleString('zh-CN')}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* 添加资料弹窗 */}
