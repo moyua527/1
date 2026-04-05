@@ -36,6 +36,8 @@ const statusMap: Record<string, { label: string; color: string }> = {
 
 const PROJECT_DETAIL_TIMEOUT_MS = 8000
 
+const _projectCache = new Map<string, { project: any; tasks: any[]; milestones: any[]; ts: number }>()
+
 export default function ProjectDetail() {
   const { id } = useParams()
   const nav = useNavigate()
@@ -51,12 +53,13 @@ export default function ProjectDetail() {
   const canManageMilestone = isAdmin || !!projectPerms?.can_create_milestone || !!projectPerms?.can_edit_milestone || !!projectPerms?.can_delete_milestone || !!projectPerms?.can_toggle_milestone
   const canCreateTask = isAdmin || !!projectPerms?.can_create_task
   const canManageRole = isAdmin || !!projectPerms?.can_create_role || !!projectPerms?.can_edit_role_name || !!projectPerms?.can_delete_role
-  const [project, setProject] = useState<any>(null)
-  const projectRef = useRef<any>(null)
-  const [projectLoading, setProjectLoading] = useState(true)
+  const cached = id ? _projectCache.get(id) : undefined
+  const [project, setProject] = useState<any>(cached?.project ?? null)
+  const projectRef = useRef<any>(cached?.project ?? null)
+  const [projectLoading, setProjectLoading] = useState(!cached)
   const [projectError, setProjectError] = useState('')
-  const [tasks, setTasks] = useState<any[]>([])
-  const [milestones, setMilestones] = useState<any[]>([])
+  const [tasks, setTasks] = useState<any[]>(cached?.tasks ?? [])
+  const [milestones, setMilestones] = useState<any[]>(cached?.milestones ?? [])
   const [hasNewSubmitted, setHasNewSubmitted] = useState(false)
   const [selectedMember, setSelectedMember] = useState<any>(null)
   const [searchParams, setSearchParams] = useSearchParams()
@@ -110,6 +113,8 @@ export default function ProjectDetail() {
           setProject(r.data)
           setProjectError('')
           setProjectLoading(false)
+          const prev = _projectCache.get(id!) || { project: null, tasks: [], milestones: [], ts: 0 }
+          _projectCache.set(id!, { ...prev, project: r.data, ts: Date.now() })
           return
         }
 
@@ -148,6 +153,8 @@ export default function ProjectDetail() {
       if (!r.success) return
       const data = r.data || []
       setTasks(data)
+      const prev = _projectCache.get(id!) || { project: null, tasks: [], milestones: [], ts: 0 }
+      _projectCache.set(id!, { ...prev, tasks: data })
       const lastView = localStorage.getItem(taskViewKey)
       const submitted = data.filter((t: any) => t.status === 'submitted')
       if (!lastView) {
@@ -157,7 +164,12 @@ export default function ProjectDetail() {
         setHasNewSubmitted(submitted.some((t: any) => new Date(t.created_at).getTime() > lastTs))
       }
     })
-    milestoneApi.list(id).then(r => { if (r.success) setMilestones(r.data || []) })
+    milestoneApi.list(id).then(r => {
+      if (!r.success) return
+      setMilestones(r.data || [])
+      const prev = _projectCache.get(id!) || { project: null, tasks: [], milestones: [], ts: 0 }
+      _projectCache.set(id!, { ...prev, milestones: r.data || [] })
+    })
   }, [id, taskViewKey])
 
   useEffect(() => {
