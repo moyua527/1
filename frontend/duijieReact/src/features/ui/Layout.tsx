@@ -42,9 +42,10 @@ export default function Layout() {
   useEffect(() => { if (isMobile) setMobileMenuOpen(false) }, [location.pathname, isMobile])
 
   useEffect(() => {
-    if (!user) return
+    if (!user?.id) return
     const key = `guide_done_${user.id}`
     if (!localStorage.getItem(key)) {
+      localStorage.setItem(key, '1')
       const t = setTimeout(() => setGuideOpen(true), 800)
       return () => clearTimeout(t)
     }
