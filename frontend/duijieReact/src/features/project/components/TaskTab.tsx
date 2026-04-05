@@ -69,14 +69,29 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
   }, [])
 
   const addTaskFiles = useCallback((newFiles: FileList | File[]) => {
+    const MAX_FILES = 20
+    const MAX_TOTAL_SIZE = 100 * 1024 * 1024
     const arr = Array.from(newFiles)
-    const nonImages = arr.filter(f => !f.type.startsWith('image/'))
-    const images = arr.filter(f => f.type.startsWith('image/'))
-    if (nonImages.length) setTaskFiles(prev => [...prev, ...nonImages])
-    if (images.length) {
-      setEditingImage(images[0])
-      setPendingImages(images.slice(1))
-    }
+    setTaskFiles(prev => {
+      const currentTotal = prev.reduce((s, f) => s + f.size, 0)
+      const remaining = MAX_FILES - prev.length
+      if (remaining <= 0) { toast(`最多上传 ${MAX_FILES} 个文件`, 'error'); return prev }
+      const allowed = arr.slice(0, remaining)
+      let sizeSum = currentTotal
+      const filtered = allowed.filter(f => {
+        if (sizeSum + f.size > MAX_TOTAL_SIZE) return false
+        sizeSum += f.size
+        return true
+      })
+      if (filtered.length < arr.length) toast(`文件数量上限 ${MAX_FILES}，总大小上限 100MB`, 'error')
+      const nonImages = filtered.filter(f => !f.type.startsWith('image/'))
+      const images = filtered.filter(f => f.type.startsWith('image/'))
+      if (images.length) {
+        setEditingImage(images[0])
+        setPendingImages(images.slice(1))
+      }
+      return [...prev, ...nonImages]
+    })
   }, [])
 
   const handleFileDragOver = useCallback((e: DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true) }, [])

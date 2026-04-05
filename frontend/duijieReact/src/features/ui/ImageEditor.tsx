@@ -13,6 +13,7 @@ type Tool = 'draw' | 'text' | 'crop' | 'mosaic'
 const COLORS = ['#ef4444', '#3b82f6', '#000000', '#22c55e', '#eab308', '#ffffff']
 const SIZES = [2, 4, 8]
 const MOSAIC_BLOCK = 12
+const MAX_DIM = 2048
 
 export default function ImageEditor({ imageFile, imageSrc, onConfirm, onCancel }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -24,6 +25,7 @@ export default function ImageEditor({ imageFile, imageSrc, onConfirm, onCancel }
   const imgRef = useRef<HTMLImageElement | null>(null)
   const lastPos = useRef<{ x: number; y: number } | null>(null)
   const [drawing, setDrawing] = useState(false)
+  const scaleRatio = useRef(1)
 
   const [textInput, setTextInput] = useState('')
   const [textPos, setTextPos] = useState<{ x: number; y: number } | null>(null)
@@ -40,11 +42,13 @@ export default function ImageEditor({ imageFile, imageSrc, onConfirm, onCancel }
       imgRef.current = img
       const canvas = canvasRef.current
       if (!canvas) return
-      const maxW = Math.min(window.innerWidth - 24, 800)
-      const maxH = Math.min(window.innerHeight - 180, 600)
-      const scale = Math.min(maxW / img.width, maxH / img.height, 1)
-      canvas.width = img.width * scale
-      canvas.height = img.height * scale
+      const capScale = Math.min(MAX_DIM / img.width, MAX_DIM / img.height, 1)
+      canvas.width = Math.round(img.width * capScale)
+      canvas.height = Math.round(img.height * capScale)
+      const displayMaxW = Math.min(window.innerWidth - 24, 800)
+      const displayMaxH = Math.min(window.innerHeight - 180, 600)
+      const displayScale = Math.min(displayMaxW / canvas.width, displayMaxH / canvas.height, 1)
+      scaleRatio.current = 1 / displayScale
       const ctx = canvas.getContext('2d')!
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
       setHistory([ctx.getImageData(0, 0, canvas.width, canvas.height)])
@@ -98,13 +102,13 @@ export default function ImageEditor({ imageFile, imageSrc, onConfirm, onCancel }
       ctx.moveTo(lastPos.current.x, lastPos.current.y)
       ctx.lineTo(pos.x, pos.y)
       ctx.strokeStyle = color
-      ctx.lineWidth = lineWidth
+      ctx.lineWidth = lineWidth * scaleRatio.current
       ctx.lineCap = 'round'
       ctx.lineJoin = 'round'
       ctx.stroke()
     } else if (tool === 'mosaic') {
-      const bs = MOSAIC_BLOCK
-      const r = 20
+      const bs = Math.round(MOSAIC_BLOCK * scaleRatio.current)
+      const r = Math.round(20 * scaleRatio.current)
       const cx = Math.floor(pos.x)
       const cy = Math.floor(pos.y)
       for (let bx = cx - r; bx < cx + r; bx += bs) {
@@ -144,7 +148,7 @@ export default function ImageEditor({ imageFile, imageSrc, onConfirm, onCancel }
     if (!textPos || !textInput.trim()) { setTextPos(null); return }
     const ctx = canvasRef.current?.getContext('2d')
     if (!ctx) return
-    ctx.font = `${textSize}px sans-serif`
+    ctx.font = `${Math.round(textSize * scaleRatio.current)}px sans-serif`
     ctx.fillStyle = color
     ctx.textBaseline = 'top'
     ctx.fillText(textInput, textPos.x, textPos.y)
@@ -171,7 +175,7 @@ export default function ImageEditor({ imageFile, imageSrc, onConfirm, onCancel }
 
   const getCropHandle = useCallback((pos: { x: number; y: number }) => {
     if (!cropRect) return null
-    const t = 14
+    const t = 14 * scaleRatio.current
     const { x, y, w, h } = cropRect
     if (Math.abs(pos.x - x) < t && Math.abs(pos.y - y) < t) return 'tl'
     if (Math.abs(pos.x - (x + w)) < t && Math.abs(pos.y - y) < t) return 'tr'
@@ -246,9 +250,9 @@ export default function ImageEditor({ imageFile, imageSrc, onConfirm, onCancel }
     if (!canvas) return
     canvas.toBlob((blob) => {
       if (!blob) return
-      const name = imageFile ? imageFile.name.replace(/\.[^.]+$/, '') + '_edited.png' : 'edited.png'
-      onConfirm(new File([blob], name, { type: 'image/png' }))
-    }, 'image/png', 0.92)
+      const name = imageFile ? imageFile.name.replace(/\.[^.]+$/, '') + '_edited.jpg' : 'edited.jpg'
+      onConfirm(new File([blob], name, { type: 'image/jpeg' }))
+    }, 'image/jpeg', 0.92)
   }, [imageFile, onConfirm])
 
   useEffect(() => {

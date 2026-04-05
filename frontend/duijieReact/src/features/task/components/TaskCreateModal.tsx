@@ -56,7 +56,22 @@ export default function TaskCreateModal({ open, onClose, onCreated, projects }: 
   }, [onClose, resetCreateState])
 
   const addFiles = useCallback((files: FileList | File[]) => {
-    setCreateFiles(prev => [...prev, ...Array.from(files)])
+    const MAX_FILES = 20
+    const MAX_TOTAL_SIZE = 100 * 1024 * 1024
+    const arr = Array.from(files)
+    setCreateFiles(prev => {
+      const currentTotal = prev.reduce((s, f) => s + f.size, 0)
+      const remaining = MAX_FILES - prev.length
+      if (remaining <= 0) { toast(`最多上传 ${MAX_FILES} 个文件`, 'error'); return prev }
+      let sizeSum = currentTotal
+      const filtered = arr.slice(0, remaining).filter(f => {
+        if (sizeSum + f.size > MAX_TOTAL_SIZE) return false
+        sizeSum += f.size
+        return true
+      })
+      if (filtered.length < arr.length) toast(`文件数量上限 ${MAX_FILES}，总大小上限 100MB`, 'error')
+      return [...prev, ...filtered]
+    })
   }, [])
 
   const handleDragOver = useCallback((e: DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true) }, [])

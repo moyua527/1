@@ -25,4 +25,4 @@ function fileFilter(req, file, cb) {
   cb(new Error(`不允许上传 ${ext} 类型的文件`), false);
 }
 
-module.exports = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 }, fileFilter });
+module.exports = multer({ storage, limits: { fileSize: 100 * 1024 * 1024, files: 20 }, fileFilter });
