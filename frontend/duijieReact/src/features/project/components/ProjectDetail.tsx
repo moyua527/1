@@ -17,6 +17,7 @@ import MilestoneTab from './MilestoneTab'
 import ProjectHomeTab from './ProjectHomeTab'
 import ProjectFileTab from './ProjectFileTab'
 import ProjectSettingsTab from './ProjectSettingsTab'
+import MessagePanel from '../../message/components/MessagePanel'
 import { ManageMembersModal, ManageClientMembersModal, MemberInfoModal, ClientInfoModal } from './ProjectModals'
 import useLiveData from '../../../hooks/useLiveData'
 import { onSocket } from '../../ui/smartSocket'
@@ -60,7 +61,7 @@ export default function ProjectDetail() {
   const [hasNewSubmitted, setHasNewSubmitted] = useState(false)
   const [selectedMember, setSelectedMember] = useState<any>(null)
   const [searchParams, setSearchParams] = useSearchParams()
-  const validTabs = ['home', 'tasks', 'files', 'milestones', 'settings'] as const
+  const validTabs = ['home', 'tasks', 'files', 'milestones', 'messages', 'settings'] as const
   type Tab = typeof validTabs[number]
   const urlTab = searchParams.get('tab') as Tab
   const tab: Tab = validTabs.includes(urlTab as any) ? urlTab! : 'home'
@@ -270,7 +271,7 @@ export default function ProjectDetail() {
         <div style={{ width: 1, height: 20, background: 'var(--border-primary)', flexShrink: 0, margin: '0 2px' }} />
 
         <div data-tour="project-tabs" style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-          {([['home','首页'],['tasks','需求'],['files','资料库'],['milestones','待办'],['settings','设置']] as [string, string][]).map(([k,v]) => (
+          {([['home','首页'],['tasks','需求'],['files','资料库'],['milestones','待办'],['messages','消息'],['settings','设置']] as [string, string][]).map(([k,v]) => (
             <button key={k} data-tour={`tab-${k}`} onClick={() => setTab(k as any)} style={{
               padding: '6px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, position: 'relative', whiteSpace: 'nowrap', flexShrink: 0,
               background: tab === k ? 'var(--brand)' : 'var(--bg-tertiary)', color: tab === k ? 'var(--bg-primary)' : 'var(--text-secondary)',
@@ -393,6 +394,8 @@ export default function ProjectDetail() {
       {tab === 'files' && <ProjectFileTab projectId={id!} canEdit={canEdit} />}
 
       {tab === 'milestones' && <MilestoneTab milestones={milestones} projectId={id!} canEdit={canManageMilestone} onRefresh={loadTasks} isMobile={isMobile} />}
+
+      {tab === 'messages' && <div style={{ background: 'var(--bg-primary)', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16, overflow: 'hidden' }}><MessagePanel projectId={id!} /></div>}
 
       {tab === 'settings' && <ProjectSettingsTab project={project} projectId={id!} isOwner={isOwner} canManageRole={canManageRole} canApproveJoin={canApproveJoin} pendingJoinCount={pendingJoinCount} onRefreshProject={loadProject} onRefreshJoinCount={loadPendingJoinCount} onOpenAddMember={() => { setShowAddMember(true); refreshAvailableUsers() }} onMemberClick={setSelectedMember} />}
 

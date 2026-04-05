@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { Users, Shield, AppWindow, UserPlus, ChevronRight, MessageSquare, UserPlus2, Pencil } from 'lucide-react'
-import MessagePanel from '../../message/components/MessagePanel'
+import { Users, Shield, AppWindow, UserPlus, ChevronRight, UserPlus2, Pencil } from 'lucide-react'
 import ProjectRoleList from './ProjectRoleList'
 import AppTab from './AppTab'
 import JoinRequestsTab from './JoinRequestsTab'
@@ -13,7 +12,7 @@ import useUserStore from '../../../stores/useUserStore'
 
 const section: React.CSSProperties = { background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16 }
 
-type SubTab = 'members' | 'messages' | 'roles' | 'app' | 'join_requests' | 'nickname'
+type SubTab = 'members' | 'roles' | 'app' | 'join_requests' | 'nickname'
 
 interface Props {
   project: any
@@ -37,7 +36,6 @@ const roleLabel: Record<string, string> = {
 const settingsItems: { key: SubTab; label: string; icon: any; desc: string; condition?: string }[] = [
   { key: 'nickname', label: '项目备注', icon: Pencil, desc: '设置仅自己可见的项目备注名' },
   { key: 'members', label: '项目成员', icon: Users, desc: '查看和管理项目成员' },
-  { key: 'messages', label: '消息', icon: MessageSquare, desc: '项目成员间的实时消息' },
   { key: 'roles', label: '角色管理', icon: Shield, desc: '自定义角色与权限配置', condition: 'canManageRole' },
   { key: 'app', label: '关联应用', icon: AppWindow, desc: '配置项目关联的外部应用', condition: 'hasApp' },
   { key: 'join_requests', label: '加入申请', icon: UserPlus, desc: '审批成员加入请求', condition: 'canApproveJoin' },
@@ -135,7 +133,6 @@ export default function ProjectSettingsTab({ project, projectId, isOwner, canMan
             )}
           </div>
         )}
-        {sub === 'messages' && <div style={section}><MessagePanel projectId={projectId} /></div>}
         {sub === 'roles' && <ProjectRoleList canEdit={isOwner || canManageRole} projectId={projectId} />}
         {sub === 'app' && <AppTab project={project} />}
         {sub === 'join_requests' && <JoinRequestsTab projectId={projectId} joinCode={project.join_code} onRefresh={() => { onRefreshProject(); onRefreshJoinCount() }} />}
