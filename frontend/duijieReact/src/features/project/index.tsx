@@ -13,6 +13,7 @@ import PageHeader from '../ui/PageHeader'
 import EmptyState from '../ui/EmptyState'
 import useLiveData from '../../hooks/useLiveData'
 import { onSocket } from '../ui/smartSocket'
+import { getProjectIcon } from '../../utils/projectIcons'
 import useProjectTabStore from '../../stores/useProjectTabStore'
 
 const statusMap: Record<string, string> = {
@@ -220,7 +221,7 @@ export default function ProjectList() {
                 onMouseLeave={e => { if (!isMobile) { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' } }}>
                 {unreadProjects.has(p.id) && <span style={{ position: 'absolute', top: 10, right: 10, width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }} />}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <FolderKanban size={isMobile ? 18 : 22} style={{ color: 'var(--brand)', flexShrink: 0 }} />
+                  {(() => { const Icon = getProjectIcon(p.icon); return <Icon size={isMobile ? 18 : 22} style={{ color: p.icon_color || 'var(--brand)', flexShrink: 0 }} /> })()}
                   <span style={{ fontSize: isMobile ? 14 : 16, fontWeight: 600, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
                     {displayName}
                   </span>

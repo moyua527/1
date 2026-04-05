@@ -3,6 +3,7 @@ import Modal from '../../ui/Modal'
 import Input from '../../ui/Input'
 import Button from '../../ui/Button'
 import { toast } from '../../ui/Toast'
+import { PROJECT_ICONS, PROJECT_COLORS } from '../../../utils/projectIcons'
 
 const statusMap: Record<string, { label: string; color: string }> = {
   planning: { label: '规划中', color: 'blue' },
@@ -16,11 +17,11 @@ interface Props {
   open: boolean
   project: any
   onClose: () => void
-  onSave: (data: { name: string; description: string; status: string; task_title_presets: string[] }) => Promise<boolean>
+  onSave: (data: { name: string; description: string; status: string; task_title_presets: string[]; icon: string; icon_color: string }) => Promise<boolean>
 }
 
 export default function EditProjectModal({ open, project, onClose, onSave }: Props) {
-  const [form, setForm] = useState({ name: '', description: '', status: 'planning', task_title_presets: [] as string[], newPreset: '' })
+  const [form, setForm] = useState({ name: '', description: '', status: 'planning', task_title_presets: [] as string[], newPreset: '', icon: 'FolderKanban', icon_color: '#3b82f6' })
 
   useEffect(() => {
     if (open && project) {
@@ -30,6 +31,8 @@ export default function EditProjectModal({ open, project, onClose, onSave }: Pro
         status: project.status || 'planning',
         task_title_presets: Array.isArray(project.task_title_presets) ? [...project.task_title_presets] : [],
         newPreset: '',
+        icon: project.icon || 'FolderKanban',
+        icon_color: project.icon_color || '#3b82f6',
       })
     }
   }, [open, project])
@@ -45,6 +48,30 @@ export default function EditProjectModal({ open, project, onClose, onSave }: Pro
         <div>
           <label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>项目名称</label>
           <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="项目名称" />
+        </div>
+        <div>
+          <label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>卡片图标</label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+            {PROJECT_ICONS.map(i => {
+              const active = form.icon === i.key
+              return (
+                <button key={i.key} type="button" title={i.label} onClick={() => setForm(f => ({ ...f, icon: i.key }))}
+                  style={{ width: 36, height: 36, borderRadius: 8, border: active ? `2px solid ${form.icon_color}` : '1px solid var(--border-primary)', background: active ? form.icon_color + '18' : 'var(--bg-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}>
+                  <i.icon size={18} color={active ? form.icon_color : 'var(--text-tertiary)'} />
+                </button>
+              )
+            })}
+          </div>
+          <label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>图标颜色</label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 4 }}>
+            {PROJECT_COLORS.map(c => {
+              const active = form.icon_color === c.key
+              return (
+                <button key={c.key} type="button" title={c.label} onClick={() => setForm(f => ({ ...f, icon_color: c.key }))}
+                  style={{ width: 28, height: 28, borderRadius: '50%', border: active ? '3px solid var(--text-heading)' : '2px solid transparent', background: c.key, cursor: 'pointer', transition: 'all 0.15s', boxShadow: active ? '0 0 0 2px var(--bg-primary)' : 'none' }} />
+              )
+            })}
+          </div>
         </div>
         <div>
           <label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>描述</label>
@@ -84,7 +111,7 @@ export default function EditProjectModal({ open, project, onClose, onSave }: Pro
           <Button variant="secondary" onClick={onClose}>取消</Button>
           <Button onClick={async () => {
             if (!form.name.trim()) { toast('请输入项目名称', 'error'); return }
-            const ok = await onSave({ name: form.name.trim(), description: form.description.trim(), status: form.status, task_title_presets: form.task_title_presets })
+            const ok = await onSave({ name: form.name.trim(), description: form.description.trim(), status: form.status, task_title_presets: form.task_title_presets, icon: form.icon, icon_color: form.icon_color })
             if (ok) onClose()
           }}>保存</Button>
         </div>
