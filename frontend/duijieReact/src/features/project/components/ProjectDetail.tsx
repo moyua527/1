@@ -35,6 +35,120 @@ const statusMap: Record<string, { label: string; color: string }> = {
   on_hold: { label: '已暂停', color: 'gray' },
 }
 
+const TASK_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  todo: { label: '待办', color: '#94a3b8' },
+  submitted: { label: '已提出', color: '#3b82f6' },
+  disputed: { label: '待补充', color: '#eab308' },
+  in_progress: { label: '执行中', color: '#a855f7' },
+  pending_review: { label: '待验收', color: '#f97316' },
+  review_failed: { label: '验收不通过', color: '#ef4444' },
+  accepted: { label: '验收通过', color: '#22c55e' },
+}
+
+function TaskDistribution({ tasks }: { tasks: any[] }) {
+  const counts: Record<string, number> = {}
+  for (const t of tasks) {
+    const s = t.status || 'todo'
+    counts[s] = (counts[s] || 0) + 1
+  }
+  const total = tasks.length
+  if (total === 0) return null
+
+  const entries = Object.entries(TASK_STATUS_CONFIG).filter(([k]) => (counts[k] || 0) > 0)
+
+  return (
+    <div style={section}>
+      <h3 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>任务状态分布</h3>
+      <div style={{ display: 'flex', height: 10, borderRadius: 5, overflow: 'hidden', marginBottom: 14, background: 'var(--bg-tertiary)' }}>
+        {entries.map(([key, cfg]) => (
+          <div key={key} style={{ width: `${((counts[key] || 0) / total) * 100}%`, background: cfg.color, transition: 'width 0.3s ease' }}
+            title={`${cfg.label}: ${counts[key]}`} />
+        ))}
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px' }}>
+        {entries.map(([key, cfg]) => (
+          <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: cfg.color, flexShrink: 0 }} />
+            <span style={{ color: 'var(--text-secondary)' }}>{cfg.label}</span>
+            <span style={{ fontWeight: 600, color: 'var(--text-heading)' }}>{counts[key]}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const ACTIVITY_ICONS: Record<string, { icon: string; color: string; bg: string }> = {
+  task_created: { icon: '📋', color: '#3b82f6', bg: '#eff6ff' },
+  milestone_created: { icon: '🚩', color: '#f97316', bg: '#fff7ed' },
+  milestone_completed: { icon: '✅', color: '#22c55e', bg: '#f0fdf4' },
+  member_joined: { icon: '👤', color: '#a855f7', bg: '#faf5ff' },
+}
+
+function ActivityFeed({ projectId }: { projectId: string }) {
+  const [items, setItems] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    setLoading(true)
+    projectApi.getActivity(projectId, 15).then(r => {
+      if (r.success) setItems(r.data || [])
+    }).finally(() => setLoading(false))
+  }, [projectId])
+
+  const fmtTime = (ts: string) => {
+    if (!ts) return ''
+    const d = new Date(ts)
+    const now = new Date()
+    const diff = now.getTime() - d.getTime()
+    if (diff < 60_000) return '刚刚'
+    if (diff < 3_600_000) return `${Math.floor(diff / 60_000)} 分钟前`
+    if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)} 小时前`
+    if (diff < 604_800_000) return `${Math.floor(diff / 86_400_000)} 天前`
+    return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
+  }
+
+  const descOf = (item: any) => {
+    const actor = item.actor_name || item.actor_username || '未知用户'
+    switch (item.type) {
+      case 'task_created': return <><b>{actor}</b> 创建了任务 <b>{item.title}</b></>
+      case 'milestone_created': return <><b>{actor}</b> 创建了里程碑 <b>{item.title}</b></>
+      case 'milestone_completed': return <>里程碑 <b>{item.title}</b> 已完成</>
+      case 'member_joined': return <><b>{item.title}</b> 加入了项目</>
+      default: return <>{item.title}</>
+    }
+  }
+
+  if (loading) return <div style={{ ...section, textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 13, padding: 24 }}>加载动态中...</div>
+
+  return (
+    <div style={section}>
+      <h3 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>最近动态</h3>
+      {items.length === 0 ? (
+        <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 13, padding: 16 }}>暂无动态</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          {items.map((item, i) => {
+            const cfg = ACTIVITY_ICONS[item.type] || ACTIVITY_ICONS.task_created
+            return (
+              <div key={`${item.type}-${item.entity_id}-${i}`} style={{ display: 'flex', gap: 12, position: 'relative', paddingLeft: 28, paddingBottom: i < items.length - 1 ? 16 : 0, minHeight: 36 }}>
+                {i < items.length - 1 && <div style={{ position: 'absolute', left: 13, top: 28, bottom: 0, width: 2, background: 'var(--border-primary)' }} />}
+                <div style={{ position: 'absolute', left: 2, top: 2, width: 24, height: 24, borderRadius: '50%', background: cfg.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0, zIndex: 1 }}>
+                  {cfg.icon}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, color: 'var(--text-body)', lineHeight: 1.5 }}>{descOf(item)}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{fmtTime(item.happened_at)}</div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 const section: React.CSSProperties = { background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16 }
 
 const PROJECT_DETAIL_TIMEOUT_MS = 8000
@@ -302,6 +416,10 @@ export default function ProjectDetail() {
                 <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>任务数</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{tasks.length}</div></div>
               </div>
             </div>
+
+            <TaskDistribution tasks={tasks} />
+
+            <ActivityFeed projectId={id!} />
 
             <div style={section}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>

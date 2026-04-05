@@ -1,6 +1,6 @@
 {
-  "version": "1.1.84.2",
-  "versionCode": 96,
+  "version": "1.1.85",
+  "versionCode": 97,
   "minVersion": "1.0.0",
-  "changelog": "不同加入方式赋予不同默认角色"
+  "changelog": "项目概览新增任务状态分布图与最近动态"
 }

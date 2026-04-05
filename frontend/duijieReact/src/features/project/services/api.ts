@@ -73,4 +73,5 @@ export const projectApi = {
   createEntRole: (form: Record<string, any>) => fetchApi('/api/my-enterprise/project-roles', { method: 'POST', body: JSON.stringify(form) }),
   updateEntRole: (roleId: number, form: Record<string, any>) => fetchApi(`/api/my-enterprise/project-roles/${roleId}`, { method: 'PUT', body: JSON.stringify(form) }),
   removeEntRole: (roleId: number) => fetchApi(`/api/my-enterprise/project-roles/${roleId}`, { method: 'DELETE' }),
+  getActivity: (id: string, limit = 20) => fetchApi(`/api/projects/${id}/activity?limit=${limit}`),
 }
