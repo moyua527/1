@@ -89,6 +89,11 @@ export async function fetchApi(path: string, options?: RequestInit) {
       })
       return parseApiResponse(retryRes)
     }
+    // refresh 也失败，清除 token 并跳转登录页
+    clearToken()
+    if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/register')) {
+      window.location.href = '/login'
+    }
   }
   return parseApiResponse(res)
 }
