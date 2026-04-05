@@ -1,6 +1,6 @@
 {
-  "version": "1.1.93.7",
-  "versionCode": 125,
+  "version": "1.1.94",
+  "versionCode": 126,
   "minVersion": "1.0.0",
-  "changelog": "修复手机浏览器每次需重新登录"
+  "changelog": "通知中心支持删除通知"
 }
