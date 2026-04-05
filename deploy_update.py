@@ -126,7 +126,7 @@ def main():
     run_cmd(ssh, f'mkdir -p {remote_migrations}')
     if os.path.isdir(local_migrations):
         for mf in sorted(os.listdir(local_migrations)):
-            if mf.endswith('.sql'):
+            if mf.endswith('.sql') or mf.endswith('.js'):
                 sftp.put(os.path.join(local_migrations, mf), f'{remote_migrations}/{mf}')
                 print(f'    ↑ {remote_migrations}/{mf}')
     local_migrate_script = os.path.join(LOCAL_BASE, 'server', 'duijie', 'scripts', 'migrate.js')
@@ -157,9 +157,18 @@ def main():
         print(f'    ↑ {REMOTE_BASE}/version.json')
 
     # 5. Restart
-    print('\n[5/6] Restarting backend...')
+    print('\n[5/7] Restarting backend...')
     run_cmd(ssh, 'pm2 restart duijie', 'PM2 restart')
     run_cmd(ssh, 'pm2 status', 'PM2 status')
+
+    # 5.5. Run JS data migrations
+    js_migration = f'{remote_migrations}/035_backfill_default_project_roles.js'
+    try:
+        sftp.stat(js_migration)
+        print('\n[5.5/7] Backfilling default project roles...')
+        run_cmd(ssh, f'cd {remote_server} && node migrations/035_backfill_default_project_roles.js', 'Backfill roles')
+    except:
+        pass
 
     # 6. Health check
     print('\n[6/6] Health check...')

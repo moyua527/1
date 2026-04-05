@@ -81,10 +81,13 @@ async function listEnterpriseProjectRoles(enterpriseId, conn = db) {
 
 async function ensureDefaultProjectRoles(projectId, createdBy = null, conn = db) {
   const existing = await listProjectRoles(projectId, conn);
-  if (existing.length > 0) return existing;
+  const existingKeys = new Set(existing.filter(r => r.role_key).map(r => r.role_key));
+
+  const missing = DEFAULT_PROJECT_ROLE_PRESETS.filter(p => !existingKeys.has(p.role_key));
+  if (missing.length === 0) return existing;
 
   const roleCreatorId = createdBy || await getProjectCreatorId(projectId, conn);
-  for (const preset of DEFAULT_PROJECT_ROLE_PRESETS) {
+  for (const preset of missing) {
     await conn.query(
       `INSERT INTO project_roles (
         project_id, role_key, name, color, ${PROJECT_ROLE_FIELDS.join(', ')}, sort_order, is_default, created_by
@@ -103,16 +106,27 @@ async function ensureDefaultProjectRoles(projectId, createdBy = null, conn = db)
   }
 
   const roles = await listProjectRoles(projectId, conn);
+
   const roleIdMap = {};
   roles.forEach(role => {
     if (role.role_key) roleIdMap[role.role_key] = role.id;
   });
-
   for (const roleKey of Object.keys(roleIdMap)) {
     await conn.query(
       'UPDATE duijie_project_members SET project_role_id = ? WHERE project_id = ? AND role = ? AND project_role_id IS NULL',
       [roleIdMap[roleKey], projectId, roleKey]
     );
+  }
+
+  if (roleIdMap.owner) {
+    const projectCreatorId = await getProjectCreatorId(projectId, conn);
+    if (projectCreatorId) {
+      await conn.query(
+        `UPDATE duijie_project_members SET project_role_id = ?, role = 'owner'
+         WHERE project_id = ? AND user_id = ? AND (role = 'owner' OR project_role_id IS NULL)`,
+        [roleIdMap.owner, projectId, projectCreatorId]
+      );
+    }
   }
 
   return roles;
