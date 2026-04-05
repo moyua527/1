@@ -168,45 +168,54 @@ export default function MilestoneTab({ milestones, projectId, canEdit, onRefresh
           {canEdit && <div style={{ fontSize: 12 }}>点击「新增」添加阶段，或使用「模板」快速创建</div>}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
           {sorted.map((m, i) => {
             const isActive = !m.is_completed && (i === 0 || sorted[i - 1]?.is_completed)
             const overdue = m.due_date && new Date(m.due_date) < new Date() && !m.is_completed
+            const borderColor = m.is_completed ? '#22c55e' : isActive ? 'var(--brand)' : 'var(--border-primary)'
             return (
               <div key={m.id}
-                style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px', borderRadius: 10, transition: 'all 0.15s', cursor: 'pointer',
-                  background: isActive ? 'rgba(59,130,246,0.06)' : 'var(--bg-secondary)',
-                  border: isActive ? '1px solid rgba(59,130,246,0.2)' : '1px solid transparent' }}
+                style={{ position: 'relative', padding: '16px', borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s',
+                  background: 'var(--bg-secondary)', border: `1px solid ${borderColor}`,
+                  borderTop: `3px solid ${borderColor}`,
+                  boxShadow: isActive ? '0 2px 8px rgba(59,130,246,0.1)' : '0 1px 3px rgba(0,0,0,0.04)' }}
                 onClick={() => setDetailId(String(m.id))}
-                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--bg-hover)' }}
-                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'var(--bg-secondary)' }}>
-                <div style={{ cursor: canEdit ? 'pointer' : 'default', paddingTop: 2, flexShrink: 0 }}
-                  onClick={canEdit ? (e) => { e.stopPropagation(); milestoneApi.toggle(String(m.id)).then(() => onRefresh()) } : undefined}>
-                  {m.is_completed ? <CheckCircle2 size={22} color="#22c55e" /> : isActive ? <Clock size={22} color="var(--brand)" /> : <Circle size={22} color="#cbd5e1" />}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 14, fontWeight: 500, color: m.is_completed ? 'var(--text-tertiary)' : 'var(--text-heading)', textDecoration: m.is_completed ? 'line-through' : 'none' }}>
-                      {m.title}
-                    </span>
-                    {isActive && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: 'var(--brand)', color: '#fff', fontWeight: 600 }}>进行中</span>}
-                    {m.is_completed && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: '#dcfce7', color: '#16a34a', fontWeight: 600 }}>已完成</span>}
-                    {overdue && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 4, background: '#fef2f2', color: '#dc2626', fontWeight: 600 }}>已逾期</span>}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = isActive ? '0 2px 8px rgba(59,130,246,0.1)' : '0 1px 3px rgba(0,0,0,0.04)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                  <div style={{ cursor: canEdit ? 'pointer' : 'default', flexShrink: 0 }}
+                    onClick={canEdit ? (e) => { e.stopPropagation(); milestoneApi.toggle(String(m.id)).then(() => onRefresh()) } : undefined}>
+                    {m.is_completed ? <CheckCircle2 size={22} color="#22c55e" /> : isActive ? <Clock size={22} color="var(--brand)" /> : <Circle size={22} color="#cbd5e1" />}
                   </div>
-                  {m.description && <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4, lineHeight: 1.5 }}>{m.description}</div>}
-                  {m.due_date && <div style={{ fontSize: 11, color: overdue ? 'var(--color-danger)' : 'var(--text-tertiary)', marginTop: 4 }}>目标: {m.due_date.slice(0, 10)}</div>}
+                  <div style={{ display: 'flex', gap: 2 }}>
+                    {canEdit && (
+                      <>
+                        <button onClick={(e) => { e.stopPropagation(); setEditing(m); setForm({ title: m.title || '', description: m.description || '', due_date: m.due_date ? m.due_date.slice(0, 10) : '' }); setShowForm(true) }}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)', borderRadius: 4 }}
+                          onMouseEnter={e => e.currentTarget.style.color = 'var(--text-heading)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}><Pencil size={14} /></button>
+                        <button onClick={async (e) => { e.stopPropagation(); const r = await milestoneApi.remove(String(m.id)); if (r.success) { toast('已删除', 'success'); onRefresh() } else toast(r.message || '删除失败', 'error') }}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)', borderRadius: 4 }}
+                          onMouseEnter={e => e.currentTarget.style.color = '#dc2626'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}><Trash2 size={14} /></button>
+                      </>
+                    )}
+                  </div>
                 </div>
-                <div style={{ display: 'flex', gap: 2, flexShrink: 0, alignItems: 'center' }}>
-                  {canEdit && (
-                    <>
-                      <button onClick={(e) => { e.stopPropagation(); setEditing(m); setForm({ title: m.title || '', description: m.description || '', due_date: m.due_date ? m.due_date.slice(0, 10) : '' }); setShowForm(true) }}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)' }}><Pencil size={14} /></button>
-                      <button onClick={async (e) => { e.stopPropagation(); const r = await milestoneApi.remove(String(m.id)); if (r.success) { toast('已删除', 'success'); onRefresh() } else toast(r.message || '删除失败', 'error') }}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)' }}><Trash2 size={14} /></button>
-                    </>
-                  )}
-                  <ChevronRight size={16} color="var(--text-tertiary)" />
+                <div style={{ fontSize: 14, fontWeight: 600, color: m.is_completed ? 'var(--text-tertiary)' : 'var(--text-heading)', textDecoration: m.is_completed ? 'line-through' : 'none', marginBottom: 6, lineHeight: 1.4 }}>
+                  {m.title}
                 </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: m.description ? 8 : 0 }}>
+                  {isActive && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: 'var(--brand)', color: '#fff', fontWeight: 600 }}>进行中</span>}
+                  {m.is_completed && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: '#dcfce7', color: '#16a34a', fontWeight: 600 }}>已完成</span>}
+                  {overdue && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: '#fef2f2', color: '#dc2626', fontWeight: 600 }}>已逾期</span>}
+                  {!isActive && !m.is_completed && !overdue && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: 'var(--bg-tertiary)', color: 'var(--text-tertiary)', fontWeight: 500 }}>待开始</span>}
+                </div>
+                {m.description && <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any }}>{m.description}</div>}
+                {m.due_date && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: overdue ? '#dc2626' : 'var(--text-tertiary)', marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border-primary)' }}>
+                    <Clock size={12} />
+                    目标: {m.due_date.slice(0, 10)}
+                  </div>
+                )}
               </div>
             )
           })}
