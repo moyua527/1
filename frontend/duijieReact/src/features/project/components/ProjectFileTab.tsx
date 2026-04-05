@@ -90,7 +90,7 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
   const [editVisibility, setEditVisibility] = useState<'all' | 'selected'>('all')
   const [editVisibleUsers, setEditVisibleUsers] = useState<number[]>([])
 
-  const isGroupCreator = (g: any) => g && currentUserId && g.created_by === currentUserId
+  const isGroupCreator = (g: any) => g && currentUserId && String(g.created_by) === String(currentUserId)
 
   const handleUpdateVisibility = async () => {
     if (!activeGroup) return
@@ -616,15 +616,6 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
                   <span style={{ fontSize: 11, color: activeGroup.visibility === 'selected' ? 'var(--color-warning, #f59e0b)' : 'var(--color-success, #22c55e)', display: 'flex', alignItems: 'center', gap: 3 }}>
                     {activeGroup.visibility === 'selected' ? <><Lock size={10} /> 指定成员可见</> : <><Globe size={10} /> 全部可见</>}
                   </span>
-                  {isGroupCreator(activeGroup) && (
-                    <button onClick={() => {
-                      setEditVisibility(activeGroup.visibility === 'selected' ? 'selected' : 'all')
-                      setEditVisibleUsers(groupDetail?.visible_users?.map((u: any) => u.user_id) || [])
-                      setEditingVisibility(!editingVisibility)
-                    }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--brand)', display: 'flex', alignItems: 'center' }} title="修改可见性">
-                      <Pencil size={11} />
-                    </button>
-                  )}
                 </div>
               </div>
               <button onClick={() => { setActiveGroup(null); setGroupDetail(null); setItemType(''); setEditingVisibility(false) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)' }}><X size={18} /></button>
@@ -730,22 +721,35 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
                 </>
               )}
             </div>
-            {canEdit && !itemType && (
-              <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border-primary)', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <input ref={groupFileRef} type="file" multiple style={{ display: 'none' }} onChange={handleGroupFileUpload} />
-                <button onClick={() => setItemType('url')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', cursor: 'pointer', fontSize: 12, color: 'var(--text-secondary)' }}>
-                  <Link2 size={13} /> 网址
-                </button>
-                <button onClick={() => setItemType('text')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', cursor: 'pointer', fontSize: 12, color: 'var(--text-secondary)' }}>
-                  <StickyNote size={13} /> 文字
-                </button>
-                <button onClick={() => groupFileRef.current?.click()} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', cursor: 'pointer', fontSize: 12, color: 'var(--text-secondary)' }}>
-                  <Paperclip size={13} /> 文件
-                </button>
-                <button onClick={() => { if (groupFileRef.current) { groupFileRef.current.accept = 'image/*'; groupFileRef.current.click(); setTimeout(() => { if (groupFileRef.current) groupFileRef.current.accept = '' }, 100) } }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', cursor: 'pointer', fontSize: 12, color: 'var(--text-secondary)' }}>
-                  <Image size={13} /> 图片
-                </button>
+            {!itemType && (
+              <div style={{ padding: '12px 20px', borderTop: '1px solid var(--border-primary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                {isGroupCreator(activeGroup) ? (
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    <input ref={groupFileRef} type="file" multiple style={{ display: 'none' }} onChange={handleGroupFileUpload} />
+                    <button onClick={() => setItemType('url')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', cursor: 'pointer', fontSize: 12, color: 'var(--text-secondary)' }}>
+                      <Link2 size={13} /> 网址
+                    </button>
+                    <button onClick={() => setItemType('text')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', cursor: 'pointer', fontSize: 12, color: 'var(--text-secondary)' }}>
+                      <StickyNote size={13} /> 文字
+                    </button>
+                    <button onClick={() => groupFileRef.current?.click()} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', cursor: 'pointer', fontSize: 12, color: 'var(--text-secondary)' }}>
+                      <Paperclip size={13} /> 文件
+                    </button>
+                    <button onClick={() => { if (groupFileRef.current) { groupFileRef.current.accept = 'image/*'; groupFileRef.current.click(); setTimeout(() => { if (groupFileRef.current) groupFileRef.current.accept = '' }, 100) } }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', cursor: 'pointer', fontSize: 12, color: 'var(--text-secondary)' }}>
+                      <Image size={13} /> 图片
+                    </button>
+                  </div>
+                ) : <div />}
+                {isGroupCreator(activeGroup) && (
+                  <button onClick={() => {
+                    setEditVisibility(activeGroup.visibility === 'selected' ? 'selected' : 'all')
+                    setEditVisibleUsers(groupDetail?.visible_users?.map((u: any) => u.user_id) || [])
+                    setEditingVisibility(!editingVisibility)
+                  }} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', cursor: 'pointer', fontSize: 12, color: 'var(--text-secondary)', flexShrink: 0, marginLeft: 8 }}>
+                    <Users size={13} /> {activeGroup.visibility === 'selected' ? '指定可见' : '全部可见'}
+                  </button>
+                )}
               </div>
             )}
           </div>
