@@ -33,8 +33,8 @@ export default function MembersSection({ projectId, myMembers, canEditMyTeam, on
   const popupRef = useRef<HTMLDivElement>(null)
 
   const sorted = [...myMembers].sort((a, b) => {
-    if (a.member_role === 'owner') return -1
-    if (b.member_role === 'owner') return 1
+    if (a.project_role_key === 'owner') return -1
+    if (b.project_role_key === 'owner') return 1
     return 0
   })
   const visible = expanded ? sorted : sorted.slice(0, VISIBLE_COUNT)
@@ -94,10 +94,10 @@ export default function MembersSection({ projectId, myMembers, canEditMyTeam, on
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         {visible.map((m: any) => {
           const name = dn(m.id, m.nickname || m.username || '?')
-          const isOwner = m.member_role === 'owner'
+          const isOwner = m.project_role_key === 'owner'
           return (
             <div key={m.id}
-              title={`${name}${isOwner ? ' (创建者)' : m.project_role_name ? ` (${m.project_role_name})` : ''}`}
+              title={`${name}${m.project_role_name ? ` (${m.project_role_name})` : ''}`}
               onClick={() => onSelectMember(m)}
               style={{ position: 'relative', cursor: 'pointer', transition: 'transform 0.15s' }}
               onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)' }}

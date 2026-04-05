@@ -1,6 +1,6 @@
 {
-  "version": "1.1.93.5",
-  "versionCode": 123,
+  "version": "1.1.93.6",
+  "versionCode": 124,
   "minVersion": "1.0.0",
-  "changelog": "最近动态固定高度滚动区域"
+  "changelog": "负责人身份彻底替换为创建者角色"
 }

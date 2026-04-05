@@ -18,7 +18,7 @@ module.exports = async (id) => {
   const [members] = await db.query(
     `SELECT pm.id as pm_id, pm.role as member_role, pm.source, pm.enterprise_role_id, pm.project_role_id,
             er.name as enterprise_role_name, er.color as enterprise_role_color,
-            pr.name as project_role_name, pr.color as project_role_color,
+            pr.name as project_role_name, pr.color as project_role_color, pr.role_key as project_role_key,
             u.id, u.username, u.nickname, u.avatar
      FROM duijie_project_members pm
      INNER JOIN voice_users u ON pm.user_id = u.id

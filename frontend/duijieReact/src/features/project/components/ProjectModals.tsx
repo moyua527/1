@@ -112,8 +112,8 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {members && members.length > 0 && (() => {
           const sorted = [...members].sort((a, b) => {
-            if (a.member_role === 'owner') return -1
-            if (b.member_role === 'owner') return 1
+            if (a.project_role_key === 'owner') return -1
+            if (b.project_role_key === 'owner') return 1
             return new Date(a.joined_at || a.created_at || 0).getTime() - new Date(b.joined_at || b.created_at || 0).getTime()
           })
           const visible = membersExpanded ? sorted : sorted.slice(0, MEMBER_VISIBLE)
@@ -128,7 +128,7 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{dn(m.id, m.nickname || m.username)}</div>
                   </div>
-                  {m.member_role === 'owner' ? (
+                  {m.project_role_key === 'owner' ? (
                     <span style={{ fontSize: 11, color: 'var(--brand)', fontWeight: 600 }}>创建者</span>
                   ) : (
                     <>
@@ -376,9 +376,7 @@ export function MemberInfoModal({ member, onClose }: MemberInfoModalProps) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <Shield size={16} color="var(--text-secondary)" />
               <span style={{ fontSize: 13, color: 'var(--text-secondary)', minWidth: 70 }}>角色</span>
-              {member.member_role === 'owner' ? (
-                <Badge color="blue">创建者</Badge>
-              ) : member.project_role_name ? (
+              {member.project_role_name ? (
                 <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 4, background: member.project_role_color || 'var(--brand)', color: 'var(--bg-primary)', fontWeight: 500 }}>{member.project_role_name}</span>
               ) : (
                 <Badge color="gray">成员</Badge>

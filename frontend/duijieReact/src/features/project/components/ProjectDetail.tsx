@@ -324,7 +324,7 @@ export default function ProjectDetail() {
   if (!project) return <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}>项目不存在</div>
 
   const st = statusMap[project.status] || statusMap.planning
-  const isOwner = (project.members || []).some((m: any) => m.user_id === user?.id && m.role === 'owner')
+  const isOwner = (project.members || []).some((m: any) => m.user_id === user?.id && (m.project_role_key === 'owner' || m.member_role === 'owner'))
   const allMembers = project.members || []
 
   const handleDelete = async () => {
