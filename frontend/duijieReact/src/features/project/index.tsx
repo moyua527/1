@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { Plus, FolderKanban, Loader2, Download, Search, Trash2, RotateCcw, Upload, Link, MoreVertical, Pencil, Users, ListTodo } from 'lucide-react'
+import { Plus, FolderKanban, Loader2, Download, Search, Trash2, RotateCcw, Upload, Link, MoreVertical, Pencil, Users, ListTodo, TrendingUp, CheckCircle2 } from 'lucide-react'
 import { projectApi } from './services/api'
 import { can } from '../../stores/permissions'
 import { useProjects, useInvalidate } from '../../hooks/useApi'
@@ -190,6 +190,31 @@ export default function ProjectList() {
             style={{ width: '100%', padding: '8px 12px 8px 34px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', fontSize: 14, outline: 'none' }} />
         </div>
       </div>}
+
+      {!loading && projects.length > 0 && (() => {
+        const totalMembers = projects.reduce((s: number, p: any) => s + (p.member_count || 0), 0)
+        const totalTasks = projects.reduce((s: number, p: any) => s + (p.task_count || 0), 0)
+        const inProgress = projects.filter((p: any) => p.status === 'in_progress').length
+        const completed = projects.filter((p: any) => p.status === 'completed').length
+        const stats = [
+          { icon: FolderKanban, label: '项目总数', value: projects.length, color: '#3b82f6', bg: '#eff6ff' },
+          { icon: TrendingUp, label: '进行中', value: inProgress, color: '#f59e0b', bg: '#fffbeb' },
+          { icon: CheckCircle2, label: '已完成', value: completed, color: '#22c55e', bg: '#f0fdf4' },
+          { icon: Users, label: '总成员', value: totalMembers, color: '#8b5cf6', bg: '#f5f3ff' },
+          { icon: ListTodo, label: '总需求', value: totalTasks, color: '#ec4899', bg: '#fdf2f8' },
+        ]
+        return (
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : `repeat(${stats.length}, 1fr)`, gap: isMobile ? 8 : 12, marginBottom: 20 }}>
+            {stats.map(s => (
+              <div key={s.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: isMobile ? '12px 6px' : '16px 12px', background: s.bg, borderRadius: 12, gap: 6 }}>
+                <s.icon size={isMobile ? 18 : 22} style={{ color: s.color }} />
+                <span style={{ fontSize: isMobile ? 18 : 24, fontWeight: 700, color: 'var(--text-heading)', lineHeight: 1 }}>{s.value}</span>
+                <span style={{ fontSize: 11, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>{s.label}</span>
+              </div>
+            ))}
+          </div>
+        )
+      })()}
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
