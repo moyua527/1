@@ -15,6 +15,7 @@ import SettingsPanel from './SettingsPanel'
 import EnterpriseSwitcher from './EnterpriseSwitcher'
 import UserGuide from './UserGuide'
 import OnboardingChecklist from './OnboardingChecklist'
+import PullToRefresh from './PullToRefresh'
 import { navItems, navItemsByGroup } from '../../data/routeManifest'
 
 const SIDEBAR_W = 228
@@ -326,9 +327,17 @@ export default function Layout() {
         )}
 
         {/* ===== 主内容区 ===== */}
-        <main data-tour="main-content" style={{ flex: 1, overflow: 'auto', minHeight: 0, padding: isMobile ? 12 : 24, WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain' }}>
-          <Outlet context={{ user, isMobile }} />
-        </main>
+        {isMobile ? (
+          <PullToRefresh onRefresh={() => { window.location.reload() }}>
+            <div data-tour="main-content" style={{ padding: 12 }}>
+              <Outlet context={{ user, isMobile }} />
+            </div>
+          </PullToRefresh>
+        ) : (
+          <main data-tour="main-content" style={{ flex: 1, overflow: 'auto', minHeight: 0, padding: 24, WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain' }}>
+            <Outlet context={{ user, isMobile }} />
+          </main>
+        )}
       </div>
 
       <UserGuide open={guideOpen} onClose={() => {

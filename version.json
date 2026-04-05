@@ -1,6 +1,6 @@
 {
-  "version": "1.1.90",
-  "versionCode": 107,
+  "version": "1.1.90.1",
+  "versionCode": 108,
   "minVersion": "1.0.0",
-  "changelog": "用户引导系统升级：项目功能引导+主引导增强"
+  "changelog": "移动端下拉刷新"
 }
