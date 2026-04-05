@@ -8,7 +8,7 @@ const db = require('../../config/db');
 const router = express.Router();
 
 // Messages
-router.post('/messages', auth, V.sendMessage, validate, require('../controllers/message/sendController'));
+router.post('/messages', auth, upload.single('image'), require('../controllers/message/sendController'));
 router.get('/messages', auth, require('../controllers/message/listController'));
 
 // Direct Messages

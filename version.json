@@ -1,6 +1,6 @@
 {
-  "version": "1.1.92.2",
-  "versionCode": 117,
+  "version": "1.1.93",
+  "versionCode": 118,
   "minVersion": "1.0.0",
-  "changelog": "修复权限不足问题"
+  "changelog": "项目消息支持发送图片"
 }
