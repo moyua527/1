@@ -1,34 +1,29 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
-import { ArrowLeft, Trash2, AppWindow, ExternalLink, MoreVertical, Pencil, X } from 'lucide-react'
+import { ArrowLeft, Trash2, MoreVertical, Pencil, X } from 'lucide-react'
 import useProjectTabStore from '../../../stores/useProjectTabStore'
 import { can } from '../../../stores/permissions'
 import useProjectPerms from '../../../hooks/useProjectPerms'
-import Modal from '../../ui/Modal'
 import { fetchApi } from '../../../bootstrap'
 import { projectApi } from '../services/api'
 import { taskApi } from '../../task/services/api'
 import { milestoneApi } from '../../milestone/services/api'
 import Button from '../../ui/Button'
 import Badge from '../../ui/Badge'
-import Input from '../../ui/Input'
 import MessagePanel from '../../message/components/MessagePanel'
 import { confirm } from '../../ui/ConfirmDialog'
 import { toast } from '../../ui/Toast'
 import TaskTab from './TaskTab'
 import MilestoneTab from './MilestoneTab'
-import MembersSection from './MembersSection'
 import { ManageMembersModal, ManageClientMembersModal, MemberInfoModal, ClientInfoModal } from './ProjectModals'
 import useLiveData from '../../../hooks/useLiveData'
 import { onSocket } from '../../ui/smartSocket'
-import { formatDateTime } from '../../../utils/datetime'
 import EditProjectModal from './EditProjectModal'
 import SetClientModal from './SetClientModal'
 import JoinRequestsTab from './JoinRequestsTab'
 import AppTab from './AppTab'
 import ProjectRoleList from './ProjectRoleList'
 import ProjectGuide from '../../ui/ProjectGuide'
-import useNicknameStore from '../../../stores/useNicknameStore'
 
 const statusMap: Record<string, { label: string; color: string }> = {
   planning: { label: '规划中', color: 'blue' },
@@ -38,126 +33,7 @@ const statusMap: Record<string, { label: string; color: string }> = {
   on_hold: { label: '已暂停', color: 'gray' },
 }
 
-const TASK_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-  todo: { label: '待办', color: '#94a3b8' },
-  submitted: { label: '已提出', color: '#3b82f6' },
-  disputed: { label: '待补充', color: '#eab308' },
-  in_progress: { label: '执行中', color: '#a855f7' },
-  pending_review: { label: '待验收', color: '#f97316' },
-  review_failed: { label: '验收不通过', color: '#ef4444' },
-  accepted: { label: '验收通过', color: '#22c55e' },
-}
 
-function TaskDistribution({ tasks }: { tasks: any[] }) {
-  const counts: Record<string, number> = {}
-  for (const t of tasks) {
-    const s = t.status || 'todo'
-    counts[s] = (counts[s] || 0) + 1
-  }
-  const total = tasks.length
-  if (total === 0) return null
-
-  const entries = Object.entries(TASK_STATUS_CONFIG).filter(([k]) => (counts[k] || 0) > 0)
-
-  return (
-    <div style={section}>
-      <h3 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>需求状态分布</h3>
-      <div style={{ display: 'flex', height: 10, borderRadius: 5, overflow: 'hidden', marginBottom: 14, background: 'var(--bg-tertiary)' }}>
-        {entries.map(([key, cfg]) => (
-          <div key={key} style={{ width: `${((counts[key] || 0) / total) * 100}%`, background: cfg.color, transition: 'width 0.3s ease' }}
-            title={`${cfg.label}: ${counts[key]}`} />
-        ))}
-      </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px' }}>
-        {entries.map(([key, cfg]) => (
-          <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-            <span style={{ width: 10, height: 10, borderRadius: '50%', background: cfg.color, flexShrink: 0 }} />
-            <span style={{ color: 'var(--text-secondary)' }}>{cfg.label}</span>
-            <span style={{ fontWeight: 600, color: 'var(--text-heading)' }}>{counts[key]}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-const ACTIVITY_ICONS: Record<string, { icon: string; color: string; bg: string }> = {
-  task_created: { icon: '📋', color: '#3b82f6', bg: '#eff6ff' },
-  milestone_created: { icon: '🚩', color: '#f97316', bg: '#fff7ed' },
-  milestone_completed: { icon: '✅', color: '#22c55e', bg: '#f0fdf4' },
-  member_joined: { icon: '👤', color: '#a855f7', bg: '#faf5ff' },
-}
-
-function ActivityFeed({ projectId }: { projectId: string }) {
-  const [items, setItems] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const getDisplayName = useNicknameStore(s => s.getDisplayName)
-
-  useEffect(() => {
-    setLoading(true)
-    projectApi.getActivity(projectId, 15).then(r => {
-      if (r.success) setItems(r.data || [])
-    }).finally(() => setLoading(false))
-  }, [projectId])
-
-  const fmtTime = (ts: string) => {
-    if (!ts) return ''
-    const d = new Date(ts)
-    const now = new Date()
-    const diff = now.getTime() - d.getTime()
-    if (diff < 60_000) return '刚刚'
-    if (diff < 3_600_000) return `${Math.floor(diff / 60_000)} 分钟前`
-    if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)} 小时前`
-    if (diff < 604_800_000) return `${Math.floor(diff / 86_400_000)} 天前`
-    return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
-  }
-
-  const descOf = (item: any) => {
-    const rawName = item.actor_name || item.actor_username || '未知用户'
-    const actor = item.actor_id ? getDisplayName(item.actor_id, rawName) : rawName
-    switch (item.type) {
-      case 'task_created': return <><b>{actor}</b> 创建了需求 <b>{item.title}</b></>
-      case 'milestone_created': return <><b>{actor}</b> 创建了里程碑 <b>{item.title}</b></>
-      case 'milestone_completed': return <>里程碑 <b>{item.title}</b> 已完成</>
-      case 'member_joined': {
-        const memberName = item.actor_id ? getDisplayName(item.actor_id, item.title) : item.title
-        return <><b>{memberName}</b> 加入了项目</>
-      }
-      default: return <>{item.title}</>
-    }
-  }
-
-  if (loading) return <div style={{ ...section, textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 13, padding: 24 }}>加载动态中...</div>
-
-  return (
-    <div style={section}>
-      <h3 style={{ margin: '0 0 14px', fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>最近动态</h3>
-      {items.length === 0 ? (
-        <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 13, padding: 16 }}>暂无动态</div>
-      ) : (
-        <div style={{ maxHeight: 360, overflowY: 'auto', paddingRight: 4 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-            {items.map((item, i) => {
-              const cfg = ACTIVITY_ICONS[item.type] || ACTIVITY_ICONS.task_created
-              return (
-                <div key={`${item.type}-${item.entity_id}-${i}`} style={{ display: 'flex', gap: 12, position: 'relative', paddingLeft: 28, paddingBottom: i < items.length - 1 ? 16 : 0, minHeight: 36 }}>
-                  {i < items.length - 1 && <div style={{ position: 'absolute', left: 13, top: 28, bottom: 0, width: 2, background: 'var(--border-primary)' }} />}
-                  <div style={{ position: 'absolute', left: 2, top: 2, width: 24, height: 24, borderRadius: '50%', background: cfg.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0, zIndex: 1 }}>
-                    {cfg.icon}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, color: 'var(--text-body)', lineHeight: 1.5 }}>{descOf(item)}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{fmtTime(item.happened_at)}</div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
 
 const section: React.CSSProperties = { background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16 }
 
@@ -174,7 +50,6 @@ export default function ProjectDetail() {
   const isAdmin = role === 'admin'
   const canEdit = isAdmin || platformCanEdit || !!projectPerms?.can_edit_project_name || !!projectPerms?.can_edit_project_desc || !!projectPerms?.can_edit_project_status
   const canDelete = isAdmin || platformCanDelete || !!projectPerms?.can_delete_project
-  const canAddMember = isAdmin || !!projectPerms?.can_add_member
   const canApproveJoin = isAdmin || !!projectPerms?.can_approve_join
   const canManageMilestone = isAdmin || !!projectPerms?.can_create_milestone || !!projectPerms?.can_edit_milestone || !!projectPerms?.can_delete_milestone || !!projectPerms?.can_toggle_milestone
   const canCreateTask = isAdmin || !!projectPerms?.can_create_task
@@ -188,10 +63,10 @@ export default function ProjectDetail() {
   const [hasNewSubmitted, setHasNewSubmitted] = useState(false)
   const [selectedMember, setSelectedMember] = useState<any>(null)
   const [searchParams, setSearchParams] = useSearchParams()
-  const validTabs = ['overview', 'tasks', 'milestones', 'messages', 'app', 'roles', 'join_requests'] as const
+  const validTabs = ['tasks', 'milestones', 'messages', 'app', 'roles', 'join_requests'] as const
   type Tab = typeof validTabs[number]
   const urlTab = searchParams.get('tab') as Tab
-  const tab: Tab = validTabs.includes(urlTab as any) ? urlTab! : 'overview'
+  const tab: Tab = validTabs.includes(urlTab as any) ? urlTab! : 'tasks'
   const setTab = (t: Tab) => {
     setSearchParams({ tab: t }, { replace: true })
     if (t === 'tasks') {
@@ -204,11 +79,9 @@ export default function ProjectDetail() {
   const [showAddClientMember, setShowAddClientMember] = useState(false)
   const [availableUsers, setAvailableUsers] = useState<any[]>([])
   const [clientAvailableUsers, setClientAvailableUsers] = useState<any[]>([])
-  const [showAppEdit, setShowAppEdit] = useState(false)
-  const [appForm, setAppForm] = useState({ app_name: '', app_url: '' })
   const [clientModal, setClientModal] = useState(false)
   const [clientData, setClientData] = useState<any>(null)
-  const [projectRoles, setProjectRoles] = useState<any[]>([])
+  const [projectRoles] = useState<any[]>([])
   const [showSetClient, setShowSetClient] = useState(false)
   const [showActionMenu, setShowActionMenu] = useState(false)
   const [showEditProject, setShowEditProject] = useState(false)
@@ -353,15 +226,7 @@ export default function ProjectDetail() {
   const refreshAvailableUsers = () => { projectApi.availableUsers(id!).then(r => { if (r.success) setAvailableUsers(r.data || []) }) }
   const refreshClientAvailableUsers = () => { projectApi.clientAvailableUsers(id!).then(r => { if (r.success) setClientAvailableUsers(r.data || []) }) }
 
-  const loadProjectRoles = () => {
-    projectApi.listRoles(id!).then(r => { if (r.success) setProjectRoles(r.data || []) }).catch(() => {})
-  }
 
-  const openManageMembers = () => {
-    setShowAddMember(true)
-    refreshAvailableUsers()
-    loadProjectRoles()
-  }
 
   const _openManageClientMembers = () => {
     setShowAddClientMember(true)
@@ -429,7 +294,7 @@ export default function ProjectDetail() {
         }} />
 
       <div data-tour="project-tabs" style={{ display: 'flex', gap: 8, marginBottom: 0, flexShrink: 0, ...(isMobile ? { overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' } : { flexWrap: 'wrap' }) } as any}>
-        {([['overview','概览'],['tasks','需求'],['milestones','里程碑'],['messages','消息'], ...(project.app_url ? [['app', project.app_name || '应用']] : []), ...((isOwner || canManageRole) ? [['roles', '角色管理']] : []), ...(canApproveJoin ? [['join_requests', '加入申请']] : [])] as [string, string][]).map(([k,v]) => (
+        {([['tasks','需求'],['milestones','里程碑'],['messages','消息'], ...(project.app_url ? [['app', project.app_name || '应用']] : []), ...((isOwner || canManageRole) ? [['roles', '角色管理']] : []), ...(canApproveJoin ? [['join_requests', '加入申请']] : [])] as [string, string][]).map(([k,v]) => (
           <button key={k} data-tour={`tab-${k}`} onClick={() => setTab(k as any)} style={{
             padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500, position: 'relative', whiteSpace: 'nowrap', flexShrink: 0,
             background: tab === k ? 'var(--brand)' : 'var(--bg-tertiary)', color: tab === k ? 'var(--bg-primary)' : 'var(--text-secondary)',
@@ -448,133 +313,7 @@ export default function ProjectDetail() {
       </div>
 
       <div style={{ flex: 1, minHeight: 0, paddingTop: 16, ...(tab === 'tasks' ? { display: 'flex', flexDirection: 'column' as const, overflow: 'hidden' } : { overflowY: 'auto' as const }) }}>
-      {tab === 'overview' && (<>
-        <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexDirection: isMobile ? 'column' : 'row' }}>
-          {/* 左栏：项目详情 + 关联应用 */}
-          <div style={{ flex: 1, minWidth: 0, width: isMobile ? '100%' : undefined }}>
-            <div style={section}>
-              {project.description && <div style={{ marginBottom: 16 }}><div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>描述</div><div style={{ fontSize: 14, color: 'var(--text-body)', lineHeight: 1.6 }}>{project.description}</div></div>}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 16 }}>
-                <div>
-                  <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>开始日期</div>
-                  {canEdit ? (
-                    <input type="date" value={project.start_date ? project.start_date.slice(0, 10) : ''} onChange={async e => {
-                      const r = await projectApi.update(id!, { start_date: e.target.value || null })
-                      if (r.success) { toast('已更新', 'success'); loadProject() } else toast(r.message || '更新失败', 'error')
-                    }} style={{ fontSize: 14, fontWeight: 500, marginTop: 2, border: '1px solid var(--border-primary)', borderRadius: 6, padding: '4px 8px', background: 'var(--bg-primary)', color: 'var(--text-heading)', cursor: 'pointer', width: '100%' }} />
-                  ) : (
-                    <div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.start_date ? project.start_date.slice(0, 10) : '未设置'}</div>
-                  )}
-                </div>
-                <div>
-                  <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>结束日期</div>
-                  {canEdit ? (
-                    <input type="date" value={project.end_date ? project.end_date.slice(0, 10) : ''} onChange={async e => {
-                      const r = await projectApi.update(id!, { end_date: e.target.value || null })
-                      if (r.success) { toast('已更新', 'success'); loadProject() } else toast(r.message || '更新失败', 'error')
-                    }} style={{ fontSize: 14, fontWeight: 500, marginTop: 2, border: '1px solid var(--border-primary)', borderRadius: 6, padding: '4px 8px', background: 'var(--bg-primary)', color: 'var(--text-heading)', cursor: 'pointer', width: '100%' }} />
-                  ) : (
-                    <div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.end_date ? project.end_date.slice(0, 10) : '未设置'}</div>
-                  )}
-                </div>
-                <div>
-                  <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>预算</div>
-                  {canEdit ? (
-                    <input type="number" placeholder="输入预算金额" defaultValue={project.budget > 0 ? project.budget : ''} onBlur={async e => {
-                      const val = e.target.value ? Number(e.target.value) : 0
-                      if (val === (project.budget || 0)) return
-                      const r = await projectApi.update(id!, { budget: val })
-                      if (r.success) { toast('已更新', 'success'); loadProject() } else toast(r.message || '更新失败', 'error')
-                    }} onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur() }}
-                    style={{ fontSize: 14, fontWeight: 500, marginTop: 2, border: '1px solid var(--border-primary)', borderRadius: 6, padding: '4px 8px', background: 'var(--bg-primary)', color: 'var(--text-heading)', width: '100%' }} />
-                  ) : (
-                    <div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.budget > 0 ? `¥${Number(project.budget).toLocaleString()}` : '未设置'}</div>
-                  )}
-                </div>
-                <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>创建者</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{project.creator_name || project.creator_username || '—'}</div></div>
-                <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>创建时间</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{formatDateTime(project.created_at)}</div></div>
-                <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>最后更新</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{formatDateTime(project.updated_at)}</div></div>
-                <div><div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>需求数</div><div style={{ fontSize: 14, fontWeight: 500, marginTop: 2 }}>{tasks.length}</div></div>
-              </div>
-            </div>
-
-            <TaskDistribution tasks={tasks} />
-
-            <ActivityFeed projectId={id!} />
-
-            <div style={section}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <AppWindow size={16} color="var(--brand)" />
-                  <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>关联应用</h3>
-                </div>
-                {canEdit && <button onClick={() => { setAppForm({ app_name: project.app_name || '', app_url: project.app_url || '' }); setShowAppEdit(true) }}
-                  style={{ fontSize: 12, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>{project.app_url ? '编辑' : '添加'}</button>}
-              </div>
-              {project.app_url && /^https?:\/\/.+/.test(project.app_url) ? (
-                <a href={project.app_url} target="_blank" rel="noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', background: 'linear-gradient(135deg, #eff6ff, #f0f4ff)', borderRadius: 12, border: '1px solid #dbeafe', textDecoration: 'none', cursor: 'pointer', transition: 'all 0.2s' }}
-                  onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 16px rgba(37,99,235,0.15)'; e.currentTarget.style.borderColor = '#93c5fd' }}
-                  onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = 'var(--brand-light-2)' }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(37,99,235,0.3)' }}>
-                    <AppWindow size={22} color="#fff" />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{project.app_name || '应用'}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>点击打开应用</div>
-                  </div>
-                  <ExternalLink size={18} color="var(--brand)" />
-                </a>
-              ) : project.app_url ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', background: '#fef2f2', borderRadius: 12, border: '1px solid #fecaca' }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <AppWindow size={22} color="#ef4444" />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#dc2626' }}>{project.app_name || '应用'}</div>
-                    <div style={{ fontSize: 12, color: '#ef4444' }}>应用链接无效，请编辑修正（需以 http:// 或 https:// 开头）</div>
-                  </div>
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 13 }}>暂无关联应用{canEdit ? '，点击"添加"按钮关联' : ''}</div>
-              )}
-            </div>
-          </div>
-
-          {/* 右栏：项目成员 */}
-          <div data-tour="project-members" style={{ ...section, width: isMobile ? '100%' : 220, flexShrink: 0, marginBottom: 0, position: isMobile ? 'static' : 'sticky', top: 0 }}>
-            <MembersSection
-              projectId={id!}
-              myMembers={allMembers}
-              canEditMyTeam={canAddMember || isOwner}
-              onManageMyMembers={openManageMembers}
-              onSelectMember={setSelectedMember}
-              onRefresh={loadProject}
-            />
-          </div>
-        </div>
-
-        <Modal open={showAppEdit} onClose={() => setShowAppEdit(false)} title={project.app_url ? '编辑关联应用' : '添加关联应用'}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <Input label="应用名称" placeholder="如：客户门户、货联系统" value={appForm.app_name} onChange={e => setAppForm({ ...appForm, app_name: e.target.value })} />
-            <Input label="应用链接" placeholder="https://example.com" value={appForm.app_url} onChange={e => setAppForm({ ...appForm, app_url: e.target.value })} />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-              {project.app_url && <Button variant="secondary" onClick={async () => {
-                const r = await projectApi.update(id!, { app_name: '', app_url: '' })
-                if (r.success) { toast('已移除应用', 'success'); setShowAppEdit(false); loadProject() }
-                else toast(r.message || '操作失败', 'error')
-              }}>移除应用</Button>}
-              <Button onClick={async () => {
-                if (!appForm.app_url.trim()) { toast('请输入应用链接', 'error'); return }
-                if (!/^https?:\/\/.+/.test(appForm.app_url.trim())) { toast('应用链接必须以 http:// 或 https:// 开头', 'error'); return }
-                const r = await projectApi.update(id!, appForm)
-                if (r.success) { toast('应用已保存', 'success'); setShowAppEdit(false); loadProject() }
-                else toast(r.message || '保存失败', 'error')
-              }}>保存</Button>
-            </div>
-          </div>
-        </Modal>
-
-        <ManageMembersModal
+      <ManageMembersModal
           open={showAddMember}
           onClose={() => setShowAddMember(false)}
           projectId={id!}
@@ -595,8 +334,6 @@ export default function ProjectDetail() {
           onRefresh={loadProject}
           onRefreshAvailable={refreshClientAvailableUsers}
         />
-
-      </>)}
 
       {tab === 'tasks' && <TaskTab tasks={tasks} canEdit={canCreateTask} projectId={id!} loadTasks={loadTasks} />}
 
