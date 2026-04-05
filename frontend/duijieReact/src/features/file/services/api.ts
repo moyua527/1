@@ -9,6 +9,8 @@ export const fileApi = {
     fd.append('original_name', file.name)
     return uploadFile('/api/files/upload', fd)
   },
+  addUrl: (project_id: string, url: string, title?: string) =>
+    fetchApi('/api/files/url', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ project_id, url, title }) }),
   remove: (id: string) => fetchApi(`/api/files/${id}`, { method: 'DELETE' }),
   downloadUrl: (id: string) => `/api/files/${id}/download`,
 }
