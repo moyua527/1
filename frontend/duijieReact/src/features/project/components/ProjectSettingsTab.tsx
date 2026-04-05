@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Users, Shield, AppWindow, UserPlus, ChevronRight, UserPlus2, Pencil, Trash2, ClipboardList, ListTodo, Calendar } from 'lucide-react'
+import { Users, Shield, AppWindow, UserPlus, ChevronRight, UserPlus2, Pencil, Trash2, ClipboardList, ListTodo, Calendar, Copy, Check as CheckIcon } from 'lucide-react'
 import ProjectRoleList from './ProjectRoleList'
 import AppTab from './AppTab'
 import JoinRequestsTab from './JoinRequestsTab'
@@ -63,6 +63,7 @@ export default function ProjectSettingsTab({ project, projectId, isOwner, canMan
   const currentNickname = myMember?.project_nickname || ''
   const [nicknameInput, setNicknameInput] = useState(currentNickname)
   const [nicknameSaving, setNicknameSaving] = useState(false)
+  const [codeCopied, setCodeCopied] = useState(false)
 
   const saveNickname = async () => {
     setNicknameSaving(true)
@@ -176,6 +177,19 @@ export default function ProjectSettingsTab({ project, projectId, isOwner, canMan
           </div>
           {project.description && (
             <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: 4 }}>{project.description}</div>
+          )}
+          {project.join_code && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, padding: '8px 12px', borderRadius: 8, background: 'var(--bg-tertiary)' }}>
+              <span style={{ fontSize: 12, color: 'var(--text-tertiary)', flexShrink: 0 }}>项目ID</span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)', letterSpacing: 1, fontFamily: 'monospace' }}>{project.join_code}</span>
+              <button onClick={() => {
+                const text = project.join_code
+                if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text) } else { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta) }
+                setCodeCopied(true); toast('项目 ID 已复制，分享给他人即可邀请加入', 'success'); setTimeout(() => setCodeCopied(false), 2000)
+              }} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6, border: 'none', background: codeCopied ? 'rgba(34,197,94,0.1)' : 'var(--bg-secondary)', color: codeCopied ? '#22c55e' : 'var(--brand)', fontSize: 12, cursor: 'pointer', fontWeight: 500, flexShrink: 0, transition: 'all 0.2s' }}>
+                {codeCopied ? <><CheckIcon size={12} /> 已复制</> : <><Copy size={12} /> 复制</>}
+              </button>
+            </div>
           )}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
