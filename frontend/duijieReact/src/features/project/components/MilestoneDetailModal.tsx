@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { X, Plus, Trash2, Clock, Users, Bell, Send, CheckCircle2, Circle, Loader2, ChevronDown, ChevronUp } from 'lucide-react'
 import { milestoneApi } from '../../milestone/services/api'
 import Button from '../../ui/Button'
@@ -22,6 +22,11 @@ export default function MilestoneDetailModal({ milestoneId, currentUserId, membe
   const [reminderTime, setReminderTime] = useState('')
   const [reminderNote, setReminderNote] = useState('')
   const [showParticipantPicker, setShowParticipantPicker] = useState(false)
+  const [showMention, setShowMention] = useState(false)
+  const [mentionFilter, setMentionFilter] = useState('')
+  const [mentionIdx, setMentionIdx] = useState(0)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const mentionStartRef = useRef(-1)
 
   const load = useCallback(async () => {
     const r = await milestoneApi.detail(milestoneId)
@@ -45,10 +50,36 @@ export default function MilestoneDetailModal({ milestoneId, currentUserId, membe
   const isParticipant = (data.participants || []).some((p: any) => p.user_id === currentUserId)
   const canTrack = isCreator || isParticipant
 
+  const mentionableUsers = (data?.participants || []).map((p: any) => ({
+    id: p.user_id, name: p.nickname || p.username
+  }))
+  const filteredMentions = mentionableUsers.filter((u: any) =>
+    u.name.toLowerCase().includes(mentionFilter.toLowerCase())
+  )
+
+  const insertMention = useCallback((user: { id: number; name: string }) => {
+    const start = mentionStartRef.current
+    if (start < 0) return
+    const cursor = inputRef.current?.selectionStart || progressInput.length
+    const before = progressInput.slice(0, start)
+    const after = progressInput.slice(cursor)
+    const newVal = `${before}@${user.name} ${after}`
+    setProgressInput(newVal)
+    setShowMention(false)
+    setTimeout(() => {
+      const pos = start + user.name.length + 2
+      inputRef.current?.setSelectionRange(pos, pos)
+      inputRef.current?.focus()
+    }, 0)
+  }, [progressInput])
+
   const handleAddProgress = async () => {
     if (!progressInput.trim()) return
     setSubmitting(true)
-    const r = await milestoneApi.addProgress(milestoneId, progressInput.trim())
+    const mentionedIds = mentionableUsers
+      .filter((u: any) => progressInput.includes(`@${u.name}`))
+      .map((u: any) => u.id)
+    const r = await milestoneApi.addProgress(milestoneId, progressInput.trim(), mentionedIds.length > 0 ? mentionedIds : undefined)
     setSubmitting(false)
     if (r.success) {
       setProgressInput('')
@@ -150,15 +181,54 @@ export default function MilestoneDetailModal({ milestoneId, currentUserId, membe
             <div>
               {/* Input */}
               {canTrack && (
-                <div style={{ display: 'flex', gap: 8, marginBottom: 20, alignItems: 'flex-end' }}>
-                  <textarea value={progressInput} onChange={e => setProgressInput(e.target.value)}
-                    placeholder="填写跟踪进度…（Enter 换行，Ctrl+Enter 发送）"
-                    onKeyDown={e => { if (e.key === 'Enter' && e.ctrlKey && !e.nativeEvent.isComposing) { e.preventDefault(); handleAddProgress() } }}
+                <div style={{ position: 'relative', display: 'flex', gap: 8, marginBottom: 20, alignItems: 'flex-end' }}>
+                  <textarea ref={inputRef} value={progressInput}
+                    onChange={e => {
+                      const val = e.target.value
+                      setProgressInput(val)
+                      const cursor = e.target.selectionStart || 0
+                      const before = val.slice(0, cursor)
+                      const atIdx = before.lastIndexOf('@')
+                      if (atIdx >= 0 && (atIdx === 0 || /\s/.test(before[atIdx - 1]))) {
+                        const q = before.slice(atIdx + 1)
+                        if (!q.includes(' ') && !q.includes('\n')) {
+                          mentionStartRef.current = atIdx
+                          setMentionFilter(q)
+                          setShowMention(true)
+                          setMentionIdx(0)
+                          return
+                        }
+                      }
+                      setShowMention(false)
+                    }}
+                    placeholder="填写跟踪进度… 输入 @ 可提及参与人"
+                    onKeyDown={e => {
+                      if (showMention && filteredMentions.length > 0) {
+                        if (e.key === 'ArrowDown') { e.preventDefault(); setMentionIdx(i => Math.min(i + 1, filteredMentions.length - 1)); return }
+                        if (e.key === 'ArrowUp') { e.preventDefault(); setMentionIdx(i => Math.max(i - 1, 0)); return }
+                        if (e.key === 'Tab' || (e.key === 'Enter' && !e.ctrlKey)) { e.preventDefault(); insertMention(filteredMentions[mentionIdx]); return }
+                        if (e.key === 'Escape') { setShowMention(false); return }
+                      }
+                      if (e.key === 'Enter' && e.ctrlKey && !e.nativeEvent.isComposing) { e.preventDefault(); handleAddProgress() }
+                    }}
+                    onBlur={() => setTimeout(() => setShowMention(false), 200)}
                     rows={2}
                     style={{ flex: 1, padding: '10px 14px', borderRadius: 10, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-secondary)', color: 'var(--text-heading)', resize: 'vertical', minHeight: 44, maxHeight: 120, fontFamily: 'inherit', lineHeight: 1.5 }} />
                   <Button onClick={handleAddProgress} disabled={submitting || !progressInput.trim()}>
                     {submitting ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={14} />}
                   </Button>
+                  {showMention && filteredMentions.length > 0 && (
+                    <div style={{ position: 'absolute', left: 0, bottom: '100%', marginBottom: 4, background: 'var(--bg-primary)', borderRadius: 10, border: '1px solid var(--border-primary)', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 10, maxHeight: 180, overflowY: 'auto', minWidth: 180, width: '60%' }}>
+                      {filteredMentions.map((u: any, i: number) => (
+                        <button key={u.id} onMouseDown={e => { e.preventDefault(); insertMention(u) }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 14px', border: 'none', background: i === mentionIdx ? 'var(--bg-tertiary)' : 'transparent', cursor: 'pointer', fontSize: 13, color: 'var(--text-heading)', textAlign: 'left' }}
+                          onMouseEnter={() => setMentionIdx(i)}>
+                          <span style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, flexShrink: 0 }}>{u.name[0]}</span>
+                          {u.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
               {!canTrack && <div style={{ padding: '8px 12px', marginBottom: 16, borderRadius: 8, background: 'var(--bg-secondary)', fontSize: 12, color: 'var(--text-tertiary)' }}>只有发起人和参与人可以添加跟踪</div>}

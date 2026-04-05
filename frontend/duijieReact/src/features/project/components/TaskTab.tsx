@@ -44,14 +44,17 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
   const [taskFiles, setTaskFiles] = useState<File[]>([])
   const [showDrafts, setShowDrafts] = useState(false)
   const [draftVer, setDraftVer] = useState(0)
+  const draftSavedRef = useRef(false)
   const draftKey = `task_drafts_${projectId}`
   const drafts: { id: string; title: string; description: string; savedAt: string }[] = (() => {
     void draftVer
     try { return JSON.parse(localStorage.getItem(draftKey) || '[]') } catch { return [] }
   })()
-  const saveDraftAndClose = useCallback(() => {
+  const saveDraftAndClose = useCallback((silent?: boolean) => {
+    if (draftSavedRef.current) return
     const t = taskForm.title.trim(); const d = taskForm.description.trim()
-    if (!t && !d) { toast('草稿内容为空', 'error'); return }
+    if (!t && !d) { if (!silent) toast('草稿内容为空', 'error'); return }
+    draftSavedRef.current = true
     const cur: any[] = (() => { try { return JSON.parse(localStorage.getItem(draftKey) || '[]') } catch { return [] } })()
     cur.unshift({ id: Date.now().toString(), title: t, description: d, savedAt: new Date().toLocaleString('zh-CN') })
     if (cur.length > 20) cur.length = 20
@@ -60,7 +63,8 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
     setShowCreateTask(false)
     setTaskForm({ title: '', description: '' })
     setTaskFiles([])
-    toast(taskFiles.length > 0 ? '草稿已保存（附件无法保存，请重新添加）' : '草稿已保存', 'success')
+    if (!silent) toast('草稿已保存', 'success')
+    setTimeout(() => { draftSavedRef.current = false }, 300)
   }, [taskForm, taskFiles, draftKey])
   const deleteDraft = useCallback((id: string) => {
     const cur: any[] = (() => { try { return JSON.parse(localStorage.getItem(draftKey) || '[]') } catch { return [] } })()
@@ -560,7 +564,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
       {/* 创建需求模态框 */}
       <Modal open={showCreateTask} onClose={() => {
         const t = taskForm.title.trim(); const d = taskForm.description.trim()
-        if (t || d) { saveDraftAndClose() } else { setShowCreateTask(false); resetCreateForm() }
+        if (t || d) { saveDraftAndClose(true) } else { setShowCreateTask(false); resetCreateForm() }
       }} title="添加需求" width={560}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <TaskTitleSelector open={showCreateTask} projectId={projectId} value={taskForm.title} onChange={title => setTaskForm({ ...taskForm, title })} required />
@@ -618,7 +622,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
             <Button variant="secondary" onClick={() => { setShowCreateTask(false); resetCreateForm() }}>取消</Button>
-            <Button variant="secondary" onClick={saveDraftAndClose}>保存草稿</Button>
+            <Button variant="secondary" onClick={() => saveDraftAndClose()}>保存草稿</Button>
             <Button disabled={submitting} onClick={async () => {
               const title = taskForm.title.trim()
               if (!title) { toast('请输入需求标题', 'error'); return }
