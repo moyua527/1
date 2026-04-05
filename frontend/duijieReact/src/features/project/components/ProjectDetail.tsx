@@ -14,6 +14,7 @@ import { confirm } from '../../ui/ConfirmDialog'
 import { toast } from '../../ui/Toast'
 import TaskTab from './TaskTab'
 import MilestoneTab from './MilestoneTab'
+import ProjectHomeTab from './ProjectHomeTab'
 import ProjectFileTab from './ProjectFileTab'
 import ProjectSettingsTab from './ProjectSettingsTab'
 import { ManageMembersModal, ManageClientMembersModal, MemberInfoModal, ClientInfoModal } from './ProjectModals'
@@ -59,10 +60,10 @@ export default function ProjectDetail() {
   const [hasNewSubmitted, setHasNewSubmitted] = useState(false)
   const [selectedMember, setSelectedMember] = useState<any>(null)
   const [searchParams, setSearchParams] = useSearchParams()
-  const validTabs = ['tasks', 'files', 'milestones', 'settings'] as const
+  const validTabs = ['home', 'tasks', 'files', 'milestones', 'settings'] as const
   type Tab = typeof validTabs[number]
   const urlTab = searchParams.get('tab') as Tab
-  const tab: Tab = validTabs.includes(urlTab as any) ? urlTab! : 'tasks'
+  const tab: Tab = validTabs.includes(urlTab as any) ? urlTab! : 'home'
   const setTab = (t: Tab) => {
     setSearchParams({ tab: t }, { replace: true })
     if (t === 'tasks') {
@@ -290,7 +291,7 @@ export default function ProjectDetail() {
         }} />
 
       <div data-tour="project-tabs" style={{ display: 'flex', gap: 8, marginBottom: 0, flexShrink: 0, ...(isMobile ? { overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' } : { flexWrap: 'wrap' }) } as any}>
-        {([['tasks','需求'],['files','资料库'],['milestones','待办'],['settings','设置']] as [string, string][]).map(([k,v]) => (
+        {([['home','首页'],['tasks','需求'],['files','资料库'],['milestones','待办'],['settings','设置']] as [string, string][]).map(([k,v]) => (
           <button key={k} data-tour={`tab-${k}`} onClick={() => setTab(k as any)} style={{
             padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500, position: 'relative', whiteSpace: 'nowrap', flexShrink: 0,
             background: tab === k ? 'var(--brand)' : 'var(--bg-tertiary)', color: tab === k ? 'var(--bg-primary)' : 'var(--text-secondary)',
@@ -330,6 +331,8 @@ export default function ProjectDetail() {
           onRefresh={loadProject}
           onRefreshAvailable={refreshClientAvailableUsers}
         />
+
+      {tab === 'home' && <ProjectHomeTab project={project} projectId={id!} tasks={tasks} milestones={milestones} onTabSwitch={t => setTab(t as any)} isMobile={isMobile} />}
 
       {tab === 'tasks' && <TaskTab tasks={tasks} canEdit={canCreateTask} projectId={id!} loadTasks={loadTasks} />}
 

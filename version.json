@@ -1,6 +1,6 @@
 {
-  "version": "1.2.3",
-  "versionCode": 145,
+  "version": "1.2.3.1",
+  "versionCode": 146,
   "minVersion": "1.0.0",
-  "changelog": "代办重构为生命周期阶段追踪器"
+  "changelog": "项目新增首页标签"
 }
