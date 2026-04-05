@@ -95,7 +95,7 @@ export default function CalendarPage() {
 
   const selectedEvents = selectedDate ? (eventsByDate[selectedDate] || []) : []
 
-  const typeLabel: Record<string, string> = { task: '需求', followup: '跟进', milestone: '里程碑' }
+  const typeLabel: Record<string, string> = { task: '需求', followup: '跟进', milestone: '代办' }
   const typeColors: Record<string, string> = { task: '#2563eb', followup: '#f59e0b', milestone: '#8b5cf6' }
 
   return (

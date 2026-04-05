@@ -53,7 +53,7 @@ export default function ClientDashboard({ stats, nav }: { stats: Stats; nav: (p:
           { label: '我的项目', value: stats.totalProjects, icon: FolderKanban, bg: 'var(--brand-light-2)', color: 'var(--brand)', path: '/projects' },
           { label: '进行中', value: stats.activeProjects, icon: TrendingUp, bg: '#fef3c7', color: 'var(--color-warning)', path: '/projects' },
           { label: '已完成', value: stats.completedProjects, icon: CheckCircle, bg: '#dcfce7', color: 'var(--color-success)', path: '/projects' },
-          { label: '待确认里程碑', value: (stats as any).pendingMilestones || 0, icon: Star, bg: '#fef3c7', color: 'var(--color-warning)', path: '/projects' },
+          { label: '待确认代办', value: (stats as any).pendingMilestones || 0, icon: Star, bg: '#fef3c7', color: 'var(--color-warning)', path: '/projects' },
           { label: '未读消息', value: (stats as any).unreadMessages || 0, icon: MessageSquare, bg: '#fee2e2', color: 'var(--color-danger)', path: '/messaging' },
         ].map(item => (
           <div key={item.label} style={card} onClick={() => nav(item.path)}
@@ -101,10 +101,10 @@ export default function ClientDashboard({ stats, nav }: { stats: Stats; nav: (p:
         <div style={{ background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
             <Star size={18} color="var(--color-warning)" />
-            <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-heading)' }}>待确认里程碑</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-heading)' }}>待确认代办</span>
             {pendingMs.length > 0 && <span style={{ fontSize: 11, padding: '1px 8px', borderRadius: 10, background: 'var(--color-danger)', color: 'var(--bg-primary)', fontWeight: 600 }}>{pendingMs.length}</span>}
           </div>
-          {pendingMs.length === 0 ? <div style={{ color: 'var(--text-tertiary)', fontSize: 13, padding: 20, textAlign: 'center' }}>全部里程碑已确认</div> :
+          {pendingMs.length === 0 ? <div style={{ color: 'var(--text-tertiary)', fontSize: 13, padding: 20, textAlign: 'center' }}>全部代办已确认</div> :
             pendingMs.map((m: any) => (
               <div key={m.id} onClick={() => nav(`/projects/${m.project_id}?tab=milestones`)} style={{ padding: '10px 0', borderTop: '1px solid var(--border-secondary)', cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

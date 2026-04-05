@@ -21,7 +21,7 @@ export default function MilestoneTab({ milestones, projectId, canEdit, onRefresh
   return (
     <div style={section}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>里程碑</h3>
+        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>代办</h3>
         {canEdit && <Button onClick={() => { setEditingMs(null); setMsForm({ title: '', description: '', due_date: '' }); setShowMsForm(!showMsForm) }}><Plus size={14} /> 新增</Button>}
       </div>
       {showMsForm && (
@@ -29,7 +29,7 @@ export default function MilestoneTab({ milestones, projectId, canEdit, onRefresh
           <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
             <div style={{ flex: 2 }}>
               <label style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>标题</label>
-              <input value={msForm.title} onChange={e => setMsForm({ ...msForm, title: e.target.value })} placeholder="里程碑标题"
+              <input value={msForm.title} onChange={e => setMsForm({ ...msForm, title: e.target.value })} placeholder="代办标题"
                 style={{ width: '100%', padding: '6px 10px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
             </div>
             <div style={{ flex: 1 }}>
@@ -48,13 +48,13 @@ export default function MilestoneTab({ milestones, projectId, canEdit, onRefresh
               const r = editingMs
                 ? await milestoneApi.update(String(editingMs.id), msForm)
                 : await milestoneApi.create({ project_id: Number(projectId), ...msForm })
-              if (r.success) { toast(editingMs ? '里程碑已更新' : '里程碑已创建', 'success'); if (!editingMs) window.dispatchEvent(new CustomEvent('onboarding-done', { detail: { type: 'set_milestone' } })); setShowMsForm(false); setEditingMs(null); setMsForm({ title: '', description: '', due_date: '' }); onRefresh() }
+              if (r.success) { toast(editingMs ? '代办已更新' : '代办已创建', 'success'); if (!editingMs) window.dispatchEvent(new CustomEvent('onboarding-done', { detail: { type: 'set_milestone' } })); setShowMsForm(false); setEditingMs(null); setMsForm({ title: '', description: '', due_date: '' }); onRefresh() }
               else toast(r.message || '操作失败', 'error')
             }}>{editingMs ? '保存修改' : '创建'}</Button>
           </div>
         </div>
       )}
-      {milestones.length === 0 ? <div style={{ color: 'var(--text-tertiary)', fontSize: 14 }}>暂无里程碑</div> : (
+      {milestones.length === 0 ? <div style={{ color: 'var(--text-tertiary)', fontSize: 14 }}>暂无代办</div> : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {milestones.map((m: any) => (
             <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: 'var(--bg-secondary)', borderRadius: 8 }}>

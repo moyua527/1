@@ -35,8 +35,8 @@ const STEPS: DriveStep[] = [
   {
     element: '[data-tour="tab-milestones"]',
     popover: {
-      title: '里程碑',
-      description: '用里程碑规划项目的关键阶段节点。可以设置名称和目标日期，标记为已完成或进行中。',
+      title: '代办',
+      description: '用代办规划项目的关键阶段节点。可以设置名称和目标日期，标记为已完成或进行中。',
       side: 'bottom', align: 'start',
     },
   },

@@ -20,7 +20,7 @@ const PROJECT_ROLE_FIELDS = [
   // 附件与审核
   'can_upload_task_attachment', 'can_delete_task_attachment',
   'can_add_review_point', 'can_respond_review_point', 'can_confirm_review_point',
-  // 里程碑
+  // 代办
   'can_create_milestone', 'can_edit_milestone', 'can_delete_milestone', 'can_toggle_milestone',
   // 数据与应用
   'can_export_data', 'can_manage_app_config',

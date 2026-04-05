@@ -1,6 +1,6 @@
 {
-  "version": "1.2.0.2",
-  "versionCode": 141,
+  "version": "1.2.1",
+  "versionCode": 142,
   "minVersion": "1.0.0",
-  "changelog": "移除项目统计面板"
+  "changelog": "里程碑改名为代办"
 }

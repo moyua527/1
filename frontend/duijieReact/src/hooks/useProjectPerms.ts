@@ -72,7 +72,7 @@ export interface ProjectPerms {
   can_record_title_history: boolean
   can_delete_title_history: boolean
   can_edit_title_presets: boolean
-  // 里程碑
+  // 代办
   can_create_milestone: boolean
   can_edit_milestone: boolean
   can_delete_milestone: boolean
