@@ -123,24 +123,32 @@ export default function ProjectList() {
   return (
     <div>
       <PageHeader title="项目管理" subtitle={`共 ${filtered.length} 个项目`} actions={
-        <div style={{ position: 'relative' }}>
-          <button onClick={() => setShowMenu(v => !v)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: '1px solid var(--brand)', background: 'var(--brand)', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-            <MoreVertical size={16} /> 操作
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          {canCreate && <button onClick={() => setShowCreate(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 14px', borderRadius: 8, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            <Plus size={15} /> 创建
+          </button>}
+          <button onClick={() => { setShowJoin(true); setJoinCode(''); setJoinResult(null); setJoinMessage('') }}
+            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 14px', borderRadius: 8, border: '1px solid var(--brand)', background: 'transparent', color: 'var(--brand)', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            <Search size={15} /> 加入
           </button>
-          {showMenu && <>
-            <div style={{ position: 'fixed', inset: 0, zIndex: 99 }} onClick={() => setShowMenu(false)} />
-            <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 6, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 100, minWidth: 180, overflow: 'hidden' }}>
-              {canCreate && <button onClick={() => { setShowMenu(false); setShowCreate(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Plus size={15} /> 新建项目</button>}
-              <button onClick={() => { setShowMenu(false); setShowJoin(true); setJoinCode(''); setJoinResult(null); setJoinMessage('') }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Search size={15} /> 通过项目ID加入</button>
-              <button onClick={() => { setShowMenu(false); setShowJoinLink(true); setInviteLink('') }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Link size={15} /> 通过邀请链接加入</button>
-              <div style={{ height: 1, background: 'var(--border-primary)', margin: '2px 8px' }} />
-              <button onClick={async () => { setShowMenu(false); const ok = await projectApi.exportCsv(); if (!ok) toast('导出失败', 'error') }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Download size={15} /> 导出项目</button>
-              <button onClick={() => { setShowMenu(false); const input = document.createElement('input'); input.type = 'file'; input.accept = '.csv'; input.onchange = async (e: any) => { const file = e.target.files?.[0]; if (!file) return; const r = await projectApi.importCsv(file); if (r.success) { toast(r.message || '导入成功', 'success'); load() } else toast(r.message || '导入失败', 'error') }; input.click() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Upload size={15} /> 导入项目</button>
-              <div style={{ height: 1, background: 'var(--border-primary)', margin: '2px 8px' }} />
-              <button onClick={async () => { setShowMenu(false); setShowTrash(true); setTrashLoading(true); const r = await projectApi.trash(); setTrashLoading(false); if (r.success) setTrashList(r.data || []); else toast(r.message || '加载失败', 'error') }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Trash2 size={15} /> 回收站</button>
-            </div>
-          </>}
+          <div style={{ position: 'relative' }}>
+            <button onClick={() => setShowMenu(v => !v)}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+              <MoreVertical size={16} />
+            </button>
+            {showMenu && <>
+              <div style={{ position: 'fixed', inset: 0, zIndex: 99 }} onClick={() => setShowMenu(false)} />
+              <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 6, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 100, minWidth: 180, overflow: 'hidden' }}>
+                <button onClick={() => { setShowMenu(false); setShowJoinLink(true); setInviteLink('') }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Link size={15} /> 通过邀请链接加入</button>
+                <div style={{ height: 1, background: 'var(--border-primary)', margin: '2px 8px' }} />
+                <button onClick={async () => { setShowMenu(false); const ok = await projectApi.exportCsv(); if (!ok) toast('导出失败', 'error') }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Download size={15} /> 导出项目</button>
+                <button onClick={() => { setShowMenu(false); const input = document.createElement('input'); input.type = 'file'; input.accept = '.csv'; input.onchange = async (e: any) => { const file = e.target.files?.[0]; if (!file) return; const r = await projectApi.importCsv(file); if (r.success) { toast(r.message || '导入成功', 'success'); load() } else toast(r.message || '导入失败', 'error') }; input.click() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Upload size={15} /> 导入项目</button>
+                <div style={{ height: 1, background: 'var(--border-primary)', margin: '2px 8px' }} />
+                <button onClick={async () => { setShowMenu(false); setShowTrash(true); setTrashLoading(true); const r = await projectApi.trash(); setTrashLoading(false); if (r.success) setTrashList(r.data || []); else toast(r.message || '加载失败', 'error') }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Trash2 size={15} /> 回收站</button>
+              </div>
+            </>}
+          </div>
         </div>
       } />
 

@@ -1,6 +1,6 @@
 {
-  "version": "1.1.89",
-  "versionCode": 104,
+  "version": "1.1.89.1",
+  "versionCode": 105,
   "minVersion": "1.0.0",
-  "changelog": "创建者角色：全权限、不可编辑删除"
+  "changelog": "项目管理页：创建/加入按钮外置"
 }
