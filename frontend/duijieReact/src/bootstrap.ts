@@ -5,7 +5,7 @@ export const BACKEND_URL = isCapacitor
   : ((window as any).__ENV__?.BACKEND_URL || '')
 
 function authHeaders(): Record<string, string> {
-  const token = sessionStorage.getItem('token')
+  const token = localStorage.getItem('token')
   const headers: Record<string, string> = {}
   if (token) headers['Authorization'] = `Bearer ${token}`
   // CSRF token from cookie
@@ -14,9 +14,9 @@ function authHeaders(): Record<string, string> {
   return headers
 }
 
-export function setToken(token: string) { sessionStorage.setItem('token', token) }
-export function clearToken() { sessionStorage.removeItem('token') }
-export function getToken() { return sessionStorage.getItem('token') }
+export function setToken(token: string) { localStorage.setItem('token', token) }
+export function clearToken() { localStorage.removeItem('token') }
+export function getToken() { return localStorage.getItem('token') }
 
 const HTTP_STATUS_MSG: Record<number, string> = {
   429: '请求过于频繁，请稍后再试',

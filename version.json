@@ -1,6 +1,6 @@
 {
-  "version": "1.1.93.6",
-  "versionCode": 124,
+  "version": "1.1.93.7",
+  "versionCode": 125,
   "minVersion": "1.0.0",
-  "changelog": "负责人身份彻底替换为创建者角色"
+  "changelog": "修复手机浏览器每次需重新登录"
 }
