@@ -201,8 +201,6 @@ export default function ProjectList() {
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(200px, 1fr))', gap: isMobile ? 10 : 16 }}>
           {filtered.map((p: any) => {
             const displayName = p.my_nickname || p.name
-            const statusLabel = statusMap[p.status] || p.status || ''
-            const statusColor = p.status === 'completed' ? '#22c55e' : p.status === 'in_progress' ? '#3b82f6' : p.status === 'on_hold' ? '#f59e0b' : '#94a3b8'
             return (
               <div key={p.id}
                 onClick={() => {
@@ -235,10 +233,9 @@ export default function ProjectList() {
                   <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Users size={12} /> {p.member_count ?? 0}</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><ListTodo size={12} /> {p.task_count ?? 0}</span>
                 </div>
-                <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  {statusLabel && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 999, background: statusColor + '18', color: statusColor, fontWeight: 500 }}>{statusLabel}</span>}
+                <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'flex-end' }}>
                   <button onClick={e => { e.stopPropagation(); openNicknameEdit(p) }}
-                    style={{ padding: 4, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', opacity: 0.5, marginLeft: 'auto' }}
+                    style={{ padding: 4, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', opacity: 0.5 }}
                     title="修改备注名">
                     <Pencil size={13} />
                   </button>

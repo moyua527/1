@@ -1,6 +1,6 @@
 {
-  "version": "1.2.3.1",
-  "versionCode": 146,
+  "version": "1.2.3.2",
+  "versionCode": 147,
   "minVersion": "1.0.0",
-  "changelog": "项目新增首页标签"
+  "changelog": "项目卡片隐藏项目进度状态"
 }
