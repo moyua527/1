@@ -27,14 +27,14 @@ const PROJECT_ROLE_FIELDS = [
 ];
 
 const LEGACY_ROLE_LABELS = {
-  owner: '负责人',
+  owner: '创建者',
   editor: '编辑者',
   viewer: '查看者',
 };
 
 const DEFAULT_PROJECT_ROLE_PRESETS = [
   {
-    role_key: 'owner', name: '负责人', color: '#2563eb', sort_order: 0, is_default: 1,
+    role_key: 'owner', name: '创建者', color: '#dc2626', sort_order: 0, is_default: 1,
     ...Object.fromEntries(PROJECT_ROLE_FIELDS.map(f => [f, 1])),
   },
   {

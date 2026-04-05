@@ -34,6 +34,7 @@ exports.create = async (req, res) => {
     if (!name || !name.trim()) return res.status(400).json({ success: false, message: '请输入角色名称' });
     const perms = {};
     PROJECT_ROLE_FIELDS.forEach(f => { perms[f] = req.body[f] ? 1 : 0; });
+    perms.can_delete_project = 0;
     const [result] = await db.query(
       `INSERT INTO project_roles (project_id, name, color, ${PROJECT_ROLE_FIELDS.join(', ')}, created_by)
        VALUES (?, ?, ?, ${PROJECT_ROLE_FIELDS.map(() => '?').join(', ')}, ?)`,
@@ -51,11 +52,15 @@ exports.update = async (req, res) => {
     const { id, roleId } = req.params;
     const [existing] = await db.query('SELECT * FROM project_roles WHERE id = ? AND project_id = ? AND is_deleted = 0', [roleId, id]);
     if (!existing[0]) return res.status(404).json({ success: false, message: '角色不存在' });
+    if (existing[0].role_key === 'owner') return res.status(400).json({ success: false, message: '创建者角色不可编辑' });
     const { name, color } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ success: false, message: '请输入角色名称' });
     const sets = ['name = ?', 'color = ?'];
     const vals = [name.trim(), color || '#64748b'];
-    PROJECT_ROLE_FIELDS.forEach(f => { sets.push(`${f} = ?`); vals.push(req.body[f] ? 1 : 0); });
+    PROJECT_ROLE_FIELDS.forEach(f => {
+      sets.push(`${f} = ?`);
+      vals.push(f === 'can_delete_project' ? 0 : (req.body[f] ? 1 : 0));
+    });
     vals.push(roleId, id);
     await db.query(`UPDATE project_roles SET ${sets.join(', ')} WHERE id = ? AND project_id = ?`, vals);
     broadcast('project', 'role_updated', { id, userId: req.userId });
@@ -70,6 +75,7 @@ exports.remove = async (req, res) => {
     const { id, roleId } = req.params;
     const [existing] = await db.query('SELECT * FROM project_roles WHERE id = ? AND project_id = ? AND is_deleted = 0', [roleId, id]);
     if (!existing[0]) return res.status(404).json({ success: false, message: '角色不存在' });
+    if (existing[0].role_key === 'owner') return res.status(400).json({ success: false, message: '创建者角色不可删除' });
     if (existing[0].is_default) return res.status(400).json({ success: false, message: '默认角色不可删除' });
     const [used] = await db.query('SELECT COUNT(*) as cnt FROM duijie_project_members WHERE project_role_id = ? AND project_id = ?', [roleId, id]);
     if (used[0].cnt > 0) return res.status(400).json({ success: false, message: `该角色已分配给 ${used[0].cnt} 个成员，请先取消分配` });

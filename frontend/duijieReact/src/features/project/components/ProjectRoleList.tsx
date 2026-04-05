@@ -12,7 +12,6 @@ const PERM_GROUPS = [
     { key: 'can_edit_project_name', label: '修改名称' },
     { key: 'can_edit_project_desc', label: '修改描述' },
     { key: 'can_edit_project_status', label: '修改状态' },
-    { key: 'can_delete_project', label: '删除项目' },
   ]},
   { title: '成员管理', items: [
     { key: 'can_add_member', label: '添加成员' },
@@ -151,25 +150,30 @@ export default function ProjectRoleList({ canEdit, projectId }: Props) {
         <>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
             {roles.map((r: any) => {
+              const isCreator = r.role_key === 'owner'
               const permCount = ALL_PERM_KEYS.filter(k => !!r[k]).length
               return (
                 <div key={r.id} style={{ position: 'relative' }}>
-                  <div onClick={() => editMode ? openEdit(r) : setViewRole(r)}
+                  <div onClick={() => {
+                    if (isCreator) { setViewRole(r); return }
+                    editMode ? openEdit(r) : setViewRole(r)
+                  }}
                     style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 16px', borderRadius: 10,
-                      border: editMode ? '2px dashed var(--border-primary)' : '2px solid var(--border-primary)',
-                      background: 'var(--bg-primary)', cursor: 'pointer', transition: 'all 0.15s', minWidth: 90 }}>
+                      border: isCreator ? '2px solid #dc2626' : editMode ? '2px dashed var(--border-primary)' : '2px solid var(--border-primary)',
+                      background: isCreator ? '#fef2f2' : 'var(--bg-primary)', cursor: 'pointer', transition: 'all 0.15s', minWidth: 90 }}>
                     <div style={{ width: 36, height: 36, borderRadius: '50%', background: r.color || '#64748b',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 14, fontWeight: 700 }}>
-                      {r.name.charAt(0)}
+                      {isCreator ? '★' : r.name.charAt(0)}
                     </div>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-heading)', textAlign: 'center', lineHeight: 1.2 }}>{r.name}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: isCreator ? '#dc2626' : 'var(--text-heading)', textAlign: 'center', lineHeight: 1.2 }}>{r.name}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-tertiary)' }}>
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}><Users size={10} />{r.member_count || 0}</span>
-                      <span>{permCount}/{ALL_PERM_KEYS.length}</span>
+                      {isCreator ? <span>全部权限</span> : <span>{permCount}/{ALL_PERM_KEYS.length}</span>}
                     </div>
-                    {r.is_default ? <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 3, background: 'var(--bg-tertiary)', color: 'var(--text-tertiary)' }}>默认</span> : null}
+                    {isCreator ? <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 3, background: '#fecaca', color: '#dc2626', fontWeight: 600 }}>不可编辑</span>
+                      : r.is_default ? <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 3, background: 'var(--bg-tertiary)', color: 'var(--text-tertiary)' }}>默认</span> : null}
                   </div>
-                  {editMode && !r.is_default && (
+                  {editMode && !r.is_default && !isCreator && (
                     <button onClick={(e) => { e.stopPropagation(); handleDelete(r.id) }}
                       style={{ position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%', background: 'var(--color-danger)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', padding: 0, boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>
                       <Trash2 size={10} />

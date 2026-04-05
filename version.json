@@ -1,6 +1,6 @@
 {
-  "version": "1.1.88",
-  "versionCode": 103,
+  "version": "1.1.89",
+  "versionCode": 104,
   "minVersion": "1.0.0",
-  "changelog": "图片编辑器：上传前可标注画线"
+  "changelog": "创建者角色：全权限、不可编辑删除"
 }
