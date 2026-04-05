@@ -97,7 +97,7 @@ export default function MembersSection({ projectId, myMembers, canEditMyTeam, on
           const isOwner = m.member_role === 'owner'
           return (
             <div key={m.id}
-              title={`${name}${isOwner ? ' (负责人)' : m.project_role_name ? ` (${m.project_role_name})` : ''}`}
+              title={`${name}${isOwner ? ' (创建者)' : m.project_role_name ? ` (${m.project_role_name})` : ''}`}
               onClick={() => onSelectMember(m)}
               style={{ position: 'relative', cursor: 'pointer', transition: 'transform 0.15s' }}
               onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)' }}

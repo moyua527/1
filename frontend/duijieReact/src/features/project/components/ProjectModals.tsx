@@ -129,7 +129,7 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
                     <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{dn(m.id, m.nickname || m.username)}</div>
                   </div>
                   {m.member_role === 'owner' ? (
-                    <span style={{ fontSize: 11, color: 'var(--brand)', fontWeight: 600 }}>负责人</span>
+                    <span style={{ fontSize: 11, color: 'var(--brand)', fontWeight: 600 }}>创建者</span>
                   ) : (
                     <>
                       <select value={getMemberRoleValue(m)}
@@ -377,7 +377,7 @@ export function MemberInfoModal({ member, onClose }: MemberInfoModalProps) {
               <Shield size={16} color="var(--text-secondary)" />
               <span style={{ fontSize: 13, color: 'var(--text-secondary)', minWidth: 70 }}>角色</span>
               {member.member_role === 'owner' ? (
-                <Badge color="blue">负责人</Badge>
+                <Badge color="blue">创建者</Badge>
               ) : member.project_role_name ? (
                 <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 4, background: member.project_role_color || 'var(--brand)', color: 'var(--bg-primary)', fontWeight: 500 }}>{member.project_role_name}</span>
               ) : (

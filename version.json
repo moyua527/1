@@ -1,6 +1,6 @@
 {
-  "version": "1.1.93",
-  "versionCode": 118,
+  "version": "1.1.93.1",
+  "versionCode": 119,
   "minVersion": "1.0.0",
-  "changelog": "项目消息支持发送图片"
+  "changelog": "项目负责人角色统一改为创建者"
 }
