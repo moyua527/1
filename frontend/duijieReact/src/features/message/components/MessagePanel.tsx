@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Send, Loader2, ImagePlus, X } from 'lucide-react'
-import { io, Socket } from 'socket.io-client'
 import { messageApi } from '../services/api'
 import Avatar from '../../ui/Avatar'
 import { isCapacitor, SERVER_URL } from '../../../utils/capacitor'
 import useNicknameStore from '../../../stores/useNicknameStore'
 import ImageViewer from '../../ui/ImageViewer'
+import { onSocket, joinProject, leaveProject, isConnected } from '../../ui/smartSocket'
 
 const bubble: React.CSSProperties = { padding: '8px 12px', background: 'var(--bg-selected)', borderRadius: '12px 12px 12px 4px', maxWidth: '80%', fontSize: 14, color: 'var(--text-body)', lineHeight: 1.5 }
 const IMG_EXTS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'])
@@ -24,7 +24,7 @@ export default function MessagePanel({ projectId }: Props) {
   const dn = useNicknameStore(s => s.getDisplayName)
   const [messages, setMessages] = useState<any[]>([])
   const [text, setText] = useState('')
-  const [connected, setConnected] = useState(false)
+  const [connected, setConnected] = useState(isConnected())
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [pendingImage, setPendingImage] = useState<File | null>(null)
@@ -32,7 +32,6 @@ export default function MessagePanel({ projectId }: Props) {
   const [sending, setSending] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const socketRef = useRef<Socket | null>(null)
   const isInitialLoad = useRef(true)
   const imgInputRef = useRef<HTMLInputElement>(null)
 
@@ -74,12 +73,17 @@ export default function MessagePanel({ projectId }: Props) {
 
   useEffect(() => {
     loadLatest()
-    const socket = io(isCapacitor ? SERVER_URL : window.location.origin, { path: '/socket.io', withCredentials: true })
-    socketRef.current = socket
-    socket.on('connect', () => { setConnected(true); socket.emit('join_project', projectId) })
-    socket.on('disconnect', () => setConnected(false))
-    socket.on('new_message', () => loadLatest())
-    return () => { socket.emit('leave_project', projectId); socket.disconnect() }
+    joinProject(projectId)
+    const offMsg = onSocket('new_message', (payload: any) => {
+      if (String(payload?.project_id) === String(projectId)) {
+        loadLatest()
+        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 150)
+      }
+    })
+    const offReconnect = onSocket('reconnect', () => { setConnected(true); loadLatest() })
+    const connCheck = setInterval(() => setConnected(isConnected()), 5000)
+    setConnected(isConnected())
+    return () => { leaveProject(projectId); offMsg(); offReconnect(); clearInterval(connCheck) }
   }, [projectId, loadLatest])
 
   // 初始加载后自动滚动到底部

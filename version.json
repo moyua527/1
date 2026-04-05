@@ -1,6 +1,6 @@
 {
-  "version": "1.1.94.2",
-  "versionCode": 128,
+  "version": "1.1.95",
+  "versionCode": 129,
   "minVersion": "1.0.0",
-  "changelog": "最近动态根据当前用户的备注显示成员名称"
+  "changelog": "修复项目消息实时同步 + 消息提示音"
 }

@@ -10,6 +10,7 @@ let heartbeatTimer: any = null
 let rttSamples: number[] = []
 let currentInterval = 30000
 const listeners: Map<string, Set<Listener>> = new Map()
+const joinedProjects = new Set<string>()
 
 function getSocket(): Socket {
   if (socket) return socket
@@ -30,6 +31,7 @@ function getSocket(): Socket {
   socket.on('connect', () => {
     const token = getToken()
     if (token) socket!.emit('auth', token)
+    joinedProjects.forEach(pid => socket!.emit('join_project', pid))
     startSmartHeartbeat()
     emit('reconnect')
   })
@@ -49,6 +51,7 @@ function getSocket(): Socket {
   socket.on('new_dm', (payload: any) => { playNotificationSound(); emit('new_dm', payload) })
   socket.on('new_notification', (payload: any) => { playNotificationSound(); emit('new_notification', payload) })
   socket.on('task_created', (payload: any) => { playNotificationSound(); emit('task_created', payload); emit('data_changed', { entity: 'task', action: 'created', ...payload }) })
+  socket.on('new_message', (payload: any) => { playNotificationSound(); emit('new_message', payload) })
   socket.on('data_changed', (payload: any) => emit('data_changed', payload))
 
   socket.on('disconnect', () => {
@@ -79,6 +82,23 @@ export function onSocket(event: string, fn: Listener) {
 
 export function offSocket(event: string, fn: Listener) {
   listeners.get(event)?.delete(fn)
+}
+
+export function joinProject(projectId: string) {
+  const s = getSocket()
+  if (!joinedProjects.has(projectId)) {
+    joinedProjects.add(projectId)
+    if (s.connected) s.emit('join_project', projectId)
+  }
+}
+
+export function leaveProject(projectId: string) {
+  joinedProjects.delete(projectId)
+  if (socket?.connected) socket.emit('leave_project', projectId)
+}
+
+export function isConnected() {
+  return socket?.connected ?? false
 }
 
 export function getHeartbeatInfo() {
