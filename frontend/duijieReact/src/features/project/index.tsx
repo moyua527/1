@@ -13,6 +13,7 @@ import PageHeader from '../ui/PageHeader'
 import EmptyState from '../ui/EmptyState'
 import useLiveData from '../../hooks/useLiveData'
 import { onSocket } from '../ui/smartSocket'
+import useProjectTabStore from '../../stores/useProjectTabStore'
 
 const statusMap: Record<string, string> = {
   planning: '规划中', in_progress: '进行中', review: '审核中', completed: '已完成', on_hold: '已暂停',
@@ -46,6 +47,7 @@ export default function ProjectList() {
   const nav = useNavigate()
   const { user, isMobile } = useOutletContext<{ user: any; isMobile?: boolean }>()
   const canCreate = can(user?.role || '', 'project:create')
+  const openTab = useProjectTabStore(s => s.openTab)
 
   const [unreadProjects, setUnreadProjects] = useState<Set<number>>(() => {
     try { const s = localStorage.getItem('unread_projects'); return new Set(s ? JSON.parse(s) : []) } catch { return new Set() }
@@ -210,6 +212,7 @@ export default function ProjectList() {
                     localStorage.setItem('unread_projects', JSON.stringify([...next]))
                     return next
                   })
+                  openTab(p.id, displayName)
                   nav(`/projects/${p.id}`)
                 }}
                 onContextMenu={e => { e.preventDefault(); openNicknameEdit(p) }}

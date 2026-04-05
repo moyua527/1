@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
-import { ArrowLeft, Trash2, AppWindow, ExternalLink, MoreVertical, Pencil } from 'lucide-react'
+import { ArrowLeft, Trash2, AppWindow, ExternalLink, MoreVertical, Pencil, X } from 'lucide-react'
+import useProjectTabStore from '../../../stores/useProjectTabStore'
 import { can } from '../../../stores/permissions'
 import useProjectPerms from '../../../hooks/useProjectPerms'
 import Modal from '../../ui/Modal'
@@ -320,6 +321,15 @@ export default function ProjectDetail() {
     }
   }, [project, user])
 
+  const { tabs: projectTabs, openTab, closeTab, updateTabName } = useProjectTabStore()
+
+  useEffect(() => {
+    if (project && id) {
+      openTab(Number(id), project.name)
+      updateTabName(Number(id), project.name)
+    }
+  }, [project?.name, id])
+
   if (projectLoading) return <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}>加载中...</div>
   if (projectError) return (
     <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
@@ -361,6 +371,28 @@ export default function ProjectDetail() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px - 48px)', overflow: 'hidden' }}>
+      {projectTabs.length > 1 && (
+        <div style={{ display: 'flex', gap: 4, marginBottom: 10, flexShrink: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', paddingBottom: 2 } as any}>
+          {projectTabs.map(pt => {
+            const isActive = String(pt.id) === String(id)
+            return (
+              <div key={pt.id}
+                onClick={() => { if (!isActive) nav(`/projects/${pt.id}`) }}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 13, fontWeight: isActive ? 600 : 400, flexShrink: 0, transition: 'background 0.15s',
+                  background: isActive ? 'var(--brand)' : 'var(--bg-tertiary)', color: isActive ? '#fff' : 'var(--text-secondary)', border: isActive ? 'none' : '1px solid var(--border-primary)' }}>
+                <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{pt.name}</span>
+                <button
+                  onClick={e => { e.stopPropagation(); const nextId = closeTab(pt.id); if (isActive) { if (nextId) nav(`/projects/${nextId}`); else nav('/projects') } }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', color: isActive ? 'rgba(255,255,255,0.7)' : 'var(--text-tertiary)', borderRadius: 4 }}
+                  onMouseEnter={e => { e.currentTarget.style.color = isActive ? '#fff' : 'var(--text-heading)'; e.currentTarget.style.background = isActive ? 'rgba(255,255,255,0.15)' : 'var(--bg-secondary)' }}
+                  onMouseLeave={e => { e.currentTarget.style.color = isActive ? 'rgba(255,255,255,0.7)' : 'var(--text-tertiary)'; e.currentTarget.style.background = 'none' }}>
+                  <X size={13} />
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      )}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
         <button onClick={() => nav('/projects')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', padding: 4 }}><ArrowLeft size={20} /></button>
         <div style={{ flex: 1 }}>
