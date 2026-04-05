@@ -108,7 +108,7 @@ export default function ProjectSettingsTab({ project, projectId, isOwner, canMan
           <div style={section}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>项目成员 ({members.length})</h3>
-              {isOwner && <Button onClick={onOpenAddMember}><UserPlus2 size={14} /> 添加成员</Button>}
+              {isOwner && <Button onClick={onOpenAddMember}><UserPlus2 size={14} /> 管理成员</Button>}
             </div>
             {members.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 30, color: 'var(--text-tertiary)', fontSize: 14 }}>暂无成员</div>
