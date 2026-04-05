@@ -4,6 +4,7 @@ import Modal from '../../ui/Modal'
 import Badge from '../../ui/Badge'
 import { Paperclip, Download, Calendar, Flag, AlignLeft } from 'lucide-react'
 import { formatDateTime } from '../../../utils/datetime'
+import ImageViewer from '../../ui/ImageViewer'
 
 const fmtSize = (b: number) => b < 1024 ? b + 'B' : b < 1048576 ? (b / 1024).toFixed(1) + 'KB' : (b / 1048576).toFixed(1) + 'MB'
 
@@ -134,13 +135,7 @@ export default function TaskDetailModal({ task, open, onClose }: Props) {
       </div>
     </Modal>
 
-      {/* 图片预览 */}
-      {previewImg && (
-        <div onClick={() => setPreviewImg(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, cursor: 'zoom-out', padding: 24 }}>
-          <img src={previewImg} alt="预览" style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: 8, boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }} onClick={e => e.stopPropagation()} />
-          <button onClick={() => setPreviewImg(null)} style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%', width: 36, height: 36, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 20 }}>✕</button>
-        </div>
-      )}
+      {previewImg && <ImageViewer src={previewImg} onClose={() => setPreviewImg(null)} />}
     </>
   )
 }

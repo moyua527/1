@@ -10,6 +10,7 @@ import { taskApi } from '../../task/services/api'
 import { toast } from '../../ui/Toast'
 import { formatDateTime } from '../../../utils/datetime'
 import useUserStore from '../../../stores/useUserStore'
+import ImageViewer from '../../ui/ImageViewer'
 
 const taskStatusMap: Record<string, { label: string; color: string }> = {
   todo: { label: '待办', color: 'gray' },
@@ -645,13 +646,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
         </div>
       </Modal>
 
-      {/* 图片预览 */}
-      {previewImg && (
-        <div onClick={() => setPreviewImg(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, cursor: 'zoom-out', padding: 24 }}>
-          <img src={previewImg} alt="预览" style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: 8, boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }} onClick={e => e.stopPropagation()} />
-          <button onClick={() => setPreviewImg(null)} style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%', width: 36, height: 36, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 20 }}>✕</button>
-        </div>
-      )}
+      {previewImg && <ImageViewer src={previewImg} onClose={() => setPreviewImg(null)} />}
     </div>
   )
 }
