@@ -22,6 +22,8 @@ export const resourceGroupApi = {
     fetchApi('/api/resource-groups', { method: 'POST', body: JSON.stringify(data) }),
   list: (project_id: string) => fetchApi(`/api/resource-groups?project_id=${project_id}`),
   detail: (id: string) => fetchApi(`/api/resource-groups/${id}`),
+  update: (id: string, data: { visibility: string; visible_users?: number[] }) =>
+    fetchApi(`/api/resource-groups/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   remove: (id: string) => fetchApi(`/api/resource-groups/${id}`, { method: 'DELETE' }),
   addItem: (data: { group_id: number; type: string; content?: string; url?: string; title?: string }) =>
     fetchApi('/api/resource-groups/items', { method: 'POST', body: JSON.stringify(data) }),

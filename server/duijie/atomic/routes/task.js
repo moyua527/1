@@ -56,6 +56,7 @@ router.get('/files/:id/preview', auth, require('../controllers/file/previewContr
 router.post('/resource-groups', auth, require('../controllers/resource/createGroupController'));
 router.get('/resource-groups', auth, require('../controllers/resource/listGroupsController'));
 router.get('/resource-groups/:id', auth, require('../controllers/resource/groupDetailController'));
+router.put('/resource-groups/:id', auth, require('../controllers/resource/updateGroupController'));
 router.delete('/resource-groups/:id', auth, require('../controllers/resource/deleteGroupController'));
 router.post('/resource-groups/items', auth, upload.single('file'), require('../controllers/resource/addItemController'));
 

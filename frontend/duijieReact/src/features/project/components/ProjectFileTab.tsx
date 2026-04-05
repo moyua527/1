@@ -24,6 +24,9 @@ const iconByType = (mime: string) => {
   return <File size={18} color="var(--brand)" />
 }
 
+const ensureUrlProtocol = (url: string) =>
+  /^https?:\/\//i.test(url) ? url : `https://${url}`
+
 const canPreview = (mime: string) =>
   mime && mime !== 'text/x-url' && mime !== 'text/x-note' && (mime.startsWith('image/') || mime === 'application/pdf' || mime.startsWith('video/') || mime.startsWith('audio/') || mime.startsWith('text/') || mime === 'application/json')
 
@@ -83,6 +86,22 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
   const [itemTitle, setItemTitle] = useState('')
   const [itemContent, setItemContent] = useState('')
   const groupFileRef = useRef<HTMLInputElement>(null)
+  const [editingVisibility, setEditingVisibility] = useState(false)
+  const [editVisibility, setEditVisibility] = useState<'all' | 'selected'>('all')
+  const [editVisibleUsers, setEditVisibleUsers] = useState<number[]>([])
+
+  const isGroupCreator = (g: any) => g && currentUserId && g.created_by === currentUserId
+
+  const handleUpdateVisibility = async () => {
+    if (!activeGroup) return
+    const r = await resourceGroupApi.update(String(activeGroup.id), { visibility: editVisibility, visible_users: editVisibility === 'selected' ? editVisibleUsers : [] })
+    if (r.success) {
+      toast('可见性已更新', 'success')
+      setEditingVisibility(false)
+      setActiveGroup({ ...activeGroup, visibility: editVisibility })
+      loadGroups()
+    } else toast(r.message || '更新失败', 'error')
+  }
 
   const loadGroups = useCallback(() => {
     setGroupsLoading(true)
@@ -132,8 +151,9 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
     if (!groupDetail) return
     if (itemType === 'url') {
       if (!itemUrl.trim()) { toast('请输入网址', 'error'); return }
+      const normalizedUrl = ensureUrlProtocol(itemUrl.trim())
       setAddingItem(true)
-      await resourceGroupApi.addItem({ group_id: groupDetail.id, type: 'url', url: itemUrl.trim(), title: itemTitle.trim() || undefined, content: itemContent.trim() || undefined })
+      await resourceGroupApi.addItem({ group_id: groupDetail.id, type: 'url', url: normalizedUrl, title: itemTitle.trim() || undefined, content: itemContent.trim() || undefined })
     } else if (itemType === 'text') {
       if (!itemContent.trim()) { toast('请输入文字内容', 'error'); return }
       setAddingItem(true)
@@ -219,9 +239,9 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
   const handleAddUrl = async () => {
     const url = urlInput.trim()
     if (!url) { toast('请输入网址', 'error'); return }
-    if (!/^https?:\/\/.+/i.test(url)) { toast('请输入有效的网址（以 http:// 或 https:// 开头）', 'error'); return }
+    const normalizedUrl = ensureUrlProtocol(url)
     setAddingUrl(true)
-    const r = await fileApi.addUrl(projectId, url, urlTitle.trim() || undefined, urlDesc.trim() || undefined)
+    const r = await fileApi.addUrl(projectId, normalizedUrl, urlTitle.trim() || undefined, urlDesc.trim() || undefined)
     setAddingUrl(false)
     if (r.success) {
       toast('网址已添加', 'success')
@@ -419,7 +439,7 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
                 onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}
                 onClick={() => {
                   if (isNote) setViewNote(f)
-                  else if (isUrl) window.open(f.path, '_blank')
+                  else if (isUrl) window.open(ensureUrlProtocol(f.path), '_blank')
                   else if (canPreview(f.mime_type)) setPreview(f)
                 }}>
                 {/* 缩略图 / 图标区域 */}
@@ -454,7 +474,7 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
                 {/* 操作条 */}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 2, padding: '0 8px 8px', flexWrap: 'wrap' }}>
                   {isUrl && (
-                    <button onClick={e => { e.stopPropagation(); window.open(f.path, '_blank') }}
+                    <button onClick={e => { e.stopPropagation(); window.open(ensureUrlProtocol(f.path), '_blank') }}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--brand)', display: 'flex', borderRadius: 4 }} title="打开链接">
                       <ExternalLink size={14} />
                     </button>
@@ -588,12 +608,57 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }} />
           <div style={{ position: 'relative', background: 'var(--bg-primary)', borderRadius: 16, width: '90%', maxWidth: 600, maxHeight: '80vh', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border-primary)' }}>
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>{activeGroup.name}</h3>
-                <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{activeGroup.creator_name || activeGroup.creator_username} · {activeGroup.visibility === 'selected' ? '指定成员可见' : '全部可见'}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
+                  <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>创建人：{activeGroup.creator_name || activeGroup.creator_username}</span>
+                  <span style={{ fontSize: 11, color: 'var(--text-quaternary)' }}>·</span>
+                  <span style={{ fontSize: 11, color: activeGroup.visibility === 'selected' ? 'var(--color-warning, #f59e0b)' : 'var(--color-success, #22c55e)', display: 'flex', alignItems: 'center', gap: 3 }}>
+                    {activeGroup.visibility === 'selected' ? <><Lock size={10} /> 指定成员可见</> : <><Globe size={10} /> 全部可见</>}
+                  </span>
+                  {isGroupCreator(activeGroup) && (
+                    <button onClick={() => {
+                      setEditVisibility(activeGroup.visibility === 'selected' ? 'selected' : 'all')
+                      setEditVisibleUsers(groupDetail?.visible_users?.map((u: any) => u.user_id) || [])
+                      setEditingVisibility(!editingVisibility)
+                    }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--brand)', display: 'flex', alignItems: 'center' }} title="修改可见性">
+                      <Pencil size={11} />
+                    </button>
+                  )}
+                </div>
               </div>
-              <button onClick={() => { setActiveGroup(null); setGroupDetail(null); setItemType('') }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)' }}><X size={18} /></button>
+              <button onClick={() => { setActiveGroup(null); setGroupDetail(null); setItemType(''); setEditingVisibility(false) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)' }}><X size={18} /></button>
             </div>
+            {editingVisibility && isGroupCreator(activeGroup) && (
+              <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--border-primary)', background: 'var(--bg-secondary)' }}>
+                <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8, color: 'var(--text-heading)' }}>修改可见性</div>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                  <button onClick={() => setEditVisibility('all')} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: editVisibility === 'all' ? '2px solid var(--brand)' : '1px solid var(--border-primary)', background: editVisibility === 'all' ? 'rgba(59,130,246,0.08)' : 'var(--bg-primary)', cursor: 'pointer', fontSize: 13, color: editVisibility === 'all' ? 'var(--brand)' : 'var(--text-secondary)', fontWeight: editVisibility === 'all' ? 600 : 400, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                    <Globe size={14} /> 全部可见
+                  </button>
+                  <button onClick={() => setEditVisibility('selected')} style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: editVisibility === 'selected' ? '2px solid var(--brand)' : '1px solid var(--border-primary)', background: editVisibility === 'selected' ? 'rgba(59,130,246,0.08)' : 'var(--bg-primary)', cursor: 'pointer', fontSize: 13, color: editVisibility === 'selected' ? 'var(--brand)' : 'var(--text-secondary)', fontWeight: editVisibility === 'selected' ? 600 : 400, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                    <Lock size={14} /> 指定成员
+                  </button>
+                </div>
+                {editVisibility === 'selected' && (
+                  <div style={{ maxHeight: 120, overflowY: 'auto', display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10, padding: 8, borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)' }}>
+                    {members.filter(m => m.user_id !== currentUserId).map(m => {
+                      const sel = editVisibleUsers.includes(m.user_id)
+                      return (
+                        <button key={m.user_id} onClick={() => setEditVisibleUsers(sel ? editVisibleUsers.filter(id => id !== m.user_id) : [...editVisibleUsers, m.user_id])}
+                          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 16, border: sel ? '1px solid var(--brand)' : '1px solid var(--border-primary)', background: sel ? 'rgba(59,130,246,0.1)' : 'var(--bg-secondary)', cursor: 'pointer', fontSize: 12, color: sel ? 'var(--brand)' : 'var(--text-secondary)', fontWeight: sel ? 500 : 400, transition: 'all .15s' }}>
+                          {sel ? <CheckSquare size={12} /> : <Square size={12} />} {m.nickname || m.username}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+                  <button onClick={() => setEditingVisibility(false)} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', cursor: 'pointer', fontSize: 12, color: 'var(--text-secondary)' }}>取消</button>
+                  <Button onClick={handleUpdateVisibility}>保存</Button>
+                </div>
+              </div>
+            )}
             <div style={{ flex: 1, overflow: 'auto', padding: 20 }}>
               {groupDetailLoading ? (
                 <div style={{ textAlign: 'center', padding: 30 }}><Loader2 size={24} style={{ animation: 'spin 1s linear infinite', color: 'var(--text-tertiary)' }} /></div>
@@ -611,7 +676,7 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
                         const isNote = item.mime_type === 'text/x-note'
                         return (
                           <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', cursor: isUrl ? 'pointer' : 'default' }}
-                            onClick={() => { if (isUrl) window.open(item.path, '_blank') }}>
+                            onClick={() => { if (isUrl) window.open(ensureUrlProtocol(item.path), '_blank') }}>
                             {iconByType(item.mime_type)}
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: 13, fontWeight: 500, color: isUrl ? 'var(--brand)' : 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.original_name}</div>

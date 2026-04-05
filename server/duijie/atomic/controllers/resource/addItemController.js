@@ -10,6 +10,7 @@ module.exports = async (req, res) => {
 
     const [[group]] = await db.query('SELECT * FROM duijie_resource_groups WHERE id = ? AND is_deleted = 0', [group_id]);
     if (!group) return res.status(404).json({ success: false, message: '资料组不存在' });
+    if (group.created_by !== req.userId) return res.status(403).json({ success: false, message: '只有创建人可以添加内容' });
 
     if (type === 'url') {
       if (!url?.trim()) return res.status(400).json({ success: false, message: '请输入网址' });

@@ -6,6 +6,7 @@ module.exports = async (req, res) => {
     const { id } = req.params;
     const [[group]] = await db.query('SELECT * FROM duijie_resource_groups WHERE id = ? AND is_deleted = 0', [id]);
     if (!group) return res.status(404).json({ success: false, message: '资料不存在' });
+    if (group.created_by !== req.userId) return res.status(403).json({ success: false, message: '只有创建人可以删除' });
 
     await db.query('UPDATE duijie_resource_groups SET is_deleted = 1 WHERE id = ?', [id]);
     await db.query('UPDATE duijie_files SET is_deleted = 1 WHERE resource_group_id = ?', [id]);
