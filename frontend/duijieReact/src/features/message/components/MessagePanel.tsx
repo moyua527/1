@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Send, Loader2, ImagePlus, X } from 'lucide-react'
+import { Send, Loader2, ImagePlus, X, Pencil } from 'lucide-react'
 import { messageApi } from '../services/api'
 import Avatar from '../../ui/Avatar'
 import { isCapacitor, SERVER_URL } from '../../../utils/capacitor'
 import useNicknameStore from '../../../stores/useNicknameStore'
 import ImageViewer from '../../ui/ImageViewer'
+import ImageEditor from '../../ui/ImageEditor'
 import { onSocket, joinProject, leaveProject, isConnected } from '../../ui/smartSocket'
 
 const bubble: React.CSSProperties = { padding: '8px 12px', background: 'var(--bg-selected)', borderRadius: '12px 12px 12px 4px', maxWidth: '80%', fontSize: 14, color: 'var(--text-body)', lineHeight: 1.5 }
@@ -28,6 +29,8 @@ export default function MessagePanel({ projectId }: Props) {
   const [loadingMore, setLoadingMore] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [pendingImage, setPendingImage] = useState<File | null>(null)
+  const [imageFromUpload, setImageFromUpload] = useState(false)
+  const [editingImage, setEditingImage] = useState<File | null>(null)
   const [previewSrc, setPreviewSrc] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -125,7 +128,10 @@ export default function MessagePanel({ projectId }: Props) {
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file && file.type.startsWith('image/')) setPendingImage(file)
+    if (file && file.type.startsWith('image/')) {
+      setPendingImage(file)
+      setImageFromUpload(true)
+    }
     if (imgInputRef.current) imgInputRef.current.value = ''
   }
 
@@ -136,7 +142,10 @@ export default function MessagePanel({ projectId }: Props) {
       if (items[i].type.startsWith('image/')) {
         e.preventDefault()
         const file = items[i].getAsFile()
-        if (file) setPendingImage(file)
+        if (file) {
+          setPendingImage(file)
+          setImageFromUpload(false)
+        }
         return
       }
     }
@@ -184,12 +193,18 @@ export default function MessagePanel({ projectId }: Props) {
         <div style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ position: 'relative', display: 'inline-block' }}>
             <img src={URL.createObjectURL(pendingImage)} alt="" style={{ maxWidth: 100, maxHeight: 80, borderRadius: 6 }} />
-            <button onClick={() => setPendingImage(null)}
+            <button onClick={() => { setPendingImage(null); setImageFromUpload(false) }}
               style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%', background: 'var(--color-danger)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
               <X size={10} />
             </button>
           </div>
           <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{pendingImage.name}</span>
+          {imageFromUpload && (
+            <button onClick={() => setEditingImage(pendingImage)}
+              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--brand)', fontSize: 12, cursor: 'pointer', fontWeight: 500 }}>
+              <Pencil size={12} /> 编辑
+            </button>
+          )}
         </div>
       )}
 
@@ -208,6 +223,10 @@ export default function MessagePanel({ projectId }: Props) {
       </div>
 
       {previewSrc && <ImageViewer src={previewSrc} onClose={() => setPreviewSrc(null)} />}
+      {editingImage && <ImageEditor imageFile={editingImage} onConfirm={(editedFile) => {
+        setPendingImage(editedFile)
+        setEditingImage(null)
+      }} onCancel={() => setEditingImage(null)} />}
     </div>
   )
 }
