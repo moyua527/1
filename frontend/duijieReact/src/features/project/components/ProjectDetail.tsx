@@ -256,7 +256,11 @@ export default function ProjectDetail() {
     }
   }, [project, user])
 
-  const { tabs: projectTabs, openTab, closeTab, updateTabName } = useProjectTabStore()
+  const { tabs: projectTabs, openTab, closeTab, updateTabName, reorderTabs } = useProjectTabStore()
+
+  const dragTabRef = useRef<number | null>(null)
+  const [draggingId, setDraggingId] = useState<number | null>(null)
+  const [dragOverId, setDragOverId] = useState<number | null>(null)
 
   useEffect(() => {
     if (project && id) {
@@ -310,11 +314,19 @@ export default function ProjectDetail() {
           <div style={{ flex: 1, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', gap: 4, paddingBottom: 2 } as any}>
             {projectTabs.map(pt => {
               const isActive = String(pt.id) === String(id)
+              const isDragOver = dragOverId === pt.id && dragTabRef.current !== pt.id
               return (
                 <div key={pt.id}
+                  draggable
+                  onDragStart={e => { dragTabRef.current = pt.id; setDraggingId(pt.id); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(pt.id)) }}
+                  onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOverId(pt.id) }}
+                  onDragLeave={() => { if (dragOverId === pt.id) setDragOverId(null) }}
+                  onDrop={e => { e.preventDefault(); if (dragTabRef.current != null && dragTabRef.current !== pt.id) reorderTabs(dragTabRef.current, pt.id); dragTabRef.current = null; setDraggingId(null); setDragOverId(null) }}
+                  onDragEnd={() => { dragTabRef.current = null; setDraggingId(null); setDragOverId(null) }}
                   onClick={() => { if (!isActive) nav(`/projects/${pt.id}`) }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 13, fontWeight: isActive ? 600 : 400, flexShrink: 0, transition: 'background 0.15s',
-                    background: isActive ? 'var(--brand)' : 'var(--bg-tertiary)', color: isActive ? '#fff' : 'var(--text-secondary)', border: isActive ? 'none' : '1px solid var(--border-primary)' }}>
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, cursor: 'grab', whiteSpace: 'nowrap', fontSize: 13, fontWeight: isActive ? 600 : 400, flexShrink: 0, transition: 'background 0.15s, box-shadow 0.15s',
+                    background: isActive ? 'var(--brand)' : 'var(--bg-tertiary)', color: isActive ? '#fff' : 'var(--text-secondary)', border: isActive ? 'none' : '1px solid var(--border-primary)',
+                    boxShadow: isDragOver ? '0 0 0 2px var(--brand)' : 'none', opacity: draggingId === pt.id ? 0.5 : 1 }}>
                   <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{pt.name}</span>
                   <button
                     onClick={async e => { e.stopPropagation(); if (!(await confirm({ message: `关闭「${pt.name}」标签页？` }))) return; const nextId = closeTab(pt.id); if (isActive) { if (nextId) nav(`/projects/${nextId}`); else nav('/projects') } }}

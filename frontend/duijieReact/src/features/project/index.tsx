@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import { Plus, FolderKanban, Loader2, Download, Search, Trash2, RotateCcw, Upload, Link, MoreVertical, X } from 'lucide-react'
 import { projectApi } from './services/api'
@@ -48,6 +48,11 @@ export default function ProjectList() {
   const openTab = useProjectTabStore(s => s.openTab)
   const projectTabs = useProjectTabStore(s => s.tabs)
   const closeTab = useProjectTabStore(s => s.closeTab)
+  const reorderTabs = useProjectTabStore(s => s.reorderTabs)
+
+  const dragTabRef = useRef<number | null>(null)
+  const [draggingId, setDraggingId] = useState<number | null>(null)
+  const [dragOverId, setDragOverId] = useState<number | null>(null)
 
   const { data: unreadSummary = {} } = useProjectUnreadSummary()
   const [dismissedSet, setDismissedSet] = useState<Set<number>>(new Set())
@@ -136,21 +141,31 @@ export default function ProjectList() {
             首页
           </div>
           <div style={{ flex: 1, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', gap: 4, paddingBottom: 2 } as any}>
-            {projectTabs.map(pt => (
-              <div key={pt.id}
-                onClick={() => nav(`/projects/${pt.id}`)}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 400, flexShrink: 0, transition: 'background 0.15s',
-                  background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)' }}>
-                <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{pt.name}</span>
-                <button
-                  onClick={async e => { e.stopPropagation(); if (!(await confirm({ message: `关闭「${pt.name}」标签页？` }))) return; closeTab(pt.id) }}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, marginLeft: 4, display: 'flex', color: 'var(--text-tertiary)', borderRadius: 4 }}
-                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-heading)'; e.currentTarget.style.background = 'var(--bg-secondary)' }}
-                  onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-tertiary)'; e.currentTarget.style.background = 'none' }}>
-                  <X size={13} />
-                </button>
-              </div>
-            ))}
+            {projectTabs.map(pt => {
+              const isDragOver = dragOverId === pt.id && draggingId !== pt.id
+              return (
+                <div key={pt.id}
+                  draggable
+                  onDragStart={e => { dragTabRef.current = pt.id; setDraggingId(pt.id); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(pt.id)) }}
+                  onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOverId(pt.id) }}
+                  onDragLeave={() => { if (dragOverId === pt.id) setDragOverId(null) }}
+                  onDrop={e => { e.preventDefault(); if (dragTabRef.current != null && dragTabRef.current !== pt.id) reorderTabs(dragTabRef.current, pt.id); dragTabRef.current = null; setDraggingId(null); setDragOverId(null) }}
+                  onDragEnd={() => { dragTabRef.current = null; setDraggingId(null); setDragOverId(null) }}
+                  onClick={() => nav(`/projects/${pt.id}`)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, cursor: 'grab', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 400, flexShrink: 0, transition: 'background 0.15s, box-shadow 0.15s',
+                    background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)',
+                    boxShadow: isDragOver ? '0 0 0 2px var(--brand)' : 'none', opacity: draggingId === pt.id ? 0.5 : 1 }}>
+                  <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{pt.name}</span>
+                  <button
+                    onClick={async e => { e.stopPropagation(); if (!(await confirm({ message: `关闭「${pt.name}」标签页？` }))) return; closeTab(pt.id) }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, marginLeft: 4, display: 'flex', color: 'var(--text-tertiary)', borderRadius: 4 }}
+                    onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-heading)'; e.currentTarget.style.background = 'var(--bg-secondary)' }}
+                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-tertiary)'; e.currentTarget.style.background = 'none' }}>
+                    <X size={13} />
+                  </button>
+                </div>
+              )
+            })}
           </div>
         </div>
       )}

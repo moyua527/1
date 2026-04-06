@@ -12,6 +12,7 @@ interface ProjectTabStore {
   closeOthers: (id: number) => void
   closeAll: () => void
   updateTabName: (id: number, name: string) => void
+  reorderTabs: (fromId: number, toId: number) => void
 }
 
 function loadTabs(): ProjectTab[] {
@@ -65,6 +66,18 @@ const useProjectTabStore = create<ProjectTabStore>((set, get) => ({
   updateTabName: (id, name) => {
     const { tabs } = get()
     const next = tabs.map(t => t.id === id ? { ...t, name } : t)
+    saveTabs(next)
+    set({ tabs: next })
+  },
+
+  reorderTabs: (fromId, toId) => {
+    const { tabs } = get()
+    const fromIdx = tabs.findIndex(t => t.id === fromId)
+    const toIdx = tabs.findIndex(t => t.id === toId)
+    if (fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return
+    const next = [...tabs]
+    const [moved] = next.splice(fromIdx, 1)
+    next.splice(toIdx, 0, moved)
     saveTabs(next)
     set({ tabs: next })
   },
