@@ -191,7 +191,7 @@ export default function MilestoneTab({ milestones, projectId, canEdit, onRefresh
                   <div style={{ display: 'flex', gap: 2 }}>
                     {canEdit && (
                       <>
-                        <button onClick={(e) => { e.stopPropagation(); setEditing(m); setForm({ title: m.title || '', description: m.description || '', due_date: m.due_date ? m.due_date.slice(0, 10) : '' }); setShowForm(true) }}
+                        <button onClick={(e) => { e.stopPropagation(); setEditing(m); setForm({ title: m.title || '', description: m.description || '', due_date: m.due_date ? String(m.due_date).slice(0, 10) : '' }); setShowForm(true) }}
                           style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)', borderRadius: 4 }}
                           onMouseEnter={e => e.currentTarget.style.color = 'var(--text-heading)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}><Pencil size={14} /></button>
                         <button onClick={async (e) => { e.stopPropagation(); const r = await milestoneApi.remove(String(m.id)); if (r.success) { toast('已删除', 'success'); onRefresh() } else toast(r.message || '删除失败', 'error') }}
@@ -214,7 +214,7 @@ export default function MilestoneTab({ milestones, projectId, canEdit, onRefresh
                 {m.due_date && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: overdue ? '#dc2626' : 'var(--text-tertiary)', marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border-primary)' }}>
                     <Clock size={12} />
-                    目标: {m.due_date.slice(0, 10)}
+                    目标: {String(m.due_date).slice(0, 10)}
                   </div>
                 )}
               </div>

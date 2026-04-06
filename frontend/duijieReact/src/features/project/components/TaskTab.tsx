@@ -79,7 +79,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks, remarkMa
       if (!silent) toast('草稿已保存', 'success')
     } else { if (!silent) toast(r.message || '保存失败', 'error') }
     setTimeout(() => { draftSavedRef.current = false }, 300)
-  }, [taskForm, taskFiles, projectId, loadDrafts])
+  }, [taskForm, taskFiles, draftFiles, loadedDraftId, projectId, loadDrafts])
   const deleteDraft = useCallback(async (id: number) => {
     const r = await taskApi.deleteDraft(id)
     if (r.success) loadDrafts()
