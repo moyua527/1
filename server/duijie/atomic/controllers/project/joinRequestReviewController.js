@@ -40,7 +40,9 @@ module.exports = async (req, res) => {
       request.user_id,
       notifyType,
       '项目加入申请' + resultText,
-      `你的加入项目「${request.project_name}」的申请${resultText}`
+      `你的加入项目「${request.project_name}」的申请${resultText}`,
+      `/projects/${request.project_id}`,
+      Number(request.project_id)
     );
 
     broadcast('project', 'join_' + action, { project_id: request.project_id, userId: request.user_id });

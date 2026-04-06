@@ -27,7 +27,7 @@ module.exports = async (req, res) => {
     }
     for (const uid of toAdd) {
       await db.query('INSERT IGNORE INTO duijie_milestone_participants (milestone_id, user_id) VALUES (?, ?)', [id, uid]);
-      await notify(uid, 'task_assigned', '代办参与邀请', `您被邀请参与代办「${ms.title}」`, `/projects/${ms.project_id}?tab=milestones`);
+      await notify(uid, 'task_assigned', '代办参与邀请', `您被邀请参与代办「${ms.title}」`, `/projects/${ms.project_id}?tab=milestones`, Number(ms.project_id));
     }
 
     const [participants] = await db.query(

@@ -53,7 +53,9 @@ module.exports = async (req, res) => {
       owners.map(o => o.user_id),
       'join_request',
       `${inviterName} 邀请 ${inviteeName} 加入项目`,
-      `项目: ${project.name}`
+      `项目: ${project.name}`,
+      `/projects/${projectId}`,
+      Number(projectId)
     );
 
     broadcast('project', 'join_request', { project_id: projectId, userId: user_id, invitedBy: inviterId });

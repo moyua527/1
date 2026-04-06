@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
       [id, user_id, memberRole, enterprise_role_id || null, finalRoleId]
     );
     if (user_id !== req.userId) {
-      await notify(user_id, 'project_member', '项目邀请', `你被添加为项目「${project.name}」的成员`, `/projects/${id}`);
+      await notify(user_id, 'project_member', '项目邀请', `你被添加为项目「${project.name}」的成员`, `/projects/${id}`, Number(id));
     }
     broadcast('project', 'member_added', { id, userId: req.userId });
     res.json({ success: true });

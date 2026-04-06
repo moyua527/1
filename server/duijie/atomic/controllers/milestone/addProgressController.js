@@ -43,7 +43,8 @@ module.exports = async (req, res) => {
           'task_comment',
           `${authorName} 在代办「${ms.title}」中@了你`,
           content.trim().slice(0, 100),
-          `/projects/${ms.project_id}?tab=milestone`
+          `/projects/${ms.project_id}?tab=milestone`,
+          Number(ms.project_id)
         );
       }
     }

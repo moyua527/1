@@ -53,7 +53,9 @@ module.exports = async (req, res) => {
       owners.map(o => o.user_id),
       'join_via_code',
       '新成员通过邀请链接加入',
-      `${userName} 通过邀请链接加入了项目「${projectName}」`
+      `${userName} 通过邀请链接加入了项目「${projectName}」`,
+      `/projects/${invite.project_id}`,
+      Number(invite.project_id)
     );
 
     broadcast('project', 'member_joined', { project_id: invite.project_id, userId: req.userId });

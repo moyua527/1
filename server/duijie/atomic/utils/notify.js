@@ -15,23 +15,25 @@ const TYPE_TO_CATEGORY = {
 /**
  * 发送通知给指定用户
  * @param {number} userId - 接收通知的用户ID
- * @param {string} type - 通知类型: task_assigned, task_status, ticket_reply, project_member, follow_reminder
+ * @param {string} type - 通知类型
  * @param {string} title - 通知标题
  * @param {string} content - 通知内容
  * @param {string} [link] - 可选的跳转链接
+ * @param {number} [projectId] - 可选的关联项目ID
  */
-async function notify(userId, type, title, content, link) {
+async function notify(userId, type, title, content, link, projectId) {
   if (!userId) return;
   const category = TYPE_TO_CATEGORY[type] || 'system';
+  const pid = projectId || null;
   try {
     const [result] = await db.query(
-      'INSERT INTO duijie_notifications (user_id, type, title, content, link, category) VALUES (?, ?, ?, ?, ?, ?)',
-      [userId, type, title, content || '', link || null, category]
+      'INSERT INTO duijie_notifications (user_id, type, title, content, link, category, project_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [userId, type, title, content || '', link || null, category, pid]
     );
     const io = getIO();
     if (io) {
       io.to(`user:${userId}`).emit('new_notification', {
-        id: result.insertId, user_id: userId, type, category, title, content: content || '', link: link || null, is_read: 0, created_at: new Date().toISOString()
+        id: result.insertId, user_id: userId, type, category, title, content: content || '', link: link || null, is_read: 0, created_at: new Date().toISOString(), project_id: pid
       });
     }
     await sendMobilePush(userId, { title, body: content || '', link: link || null, type, category });
@@ -43,9 +45,9 @@ async function notify(userId, type, title, content, link) {
 /**
  * 批量发送通知给多个用户
  */
-async function notifyMany(userIds, type, title, content, link) {
+async function notifyMany(userIds, type, title, content, link, projectId) {
   for (const uid of userIds) {
-    await notify(uid, type, title, content, link);
+    await notify(uid, type, title, content, link, projectId);
   }
 }
 

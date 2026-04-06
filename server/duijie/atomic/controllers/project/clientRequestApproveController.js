@@ -78,14 +78,14 @@ module.exports = async (req, res) => {
       // 通知被添加的成员
       const [[proj]] = await db.query('SELECT name FROM duijie_projects WHERE id = ?', [request.project_id]);
       if (validUserIds.length > 0) {
-        await notifyMany(validUserIds, 'project_member_added', '加入项目', `您已被添加为项目「${proj?.name || ''}」的对接人员`, `/projects/${request.project_id}`);
+        await notifyMany(validUserIds, 'project_member_added', '加入项目', `您已被添加为项目「${proj?.name || ''}」的对接人员`, `/projects/${request.project_id}`, Number(request.project_id));
       }
     }
 
     // 通知发起人请求已通过
     const [[toEnt]] = await db.query('SELECT name FROM duijie_clients WHERE id = ?', [request.to_enterprise_id]);
     const [[proj2]] = await db.query('SELECT name FROM duijie_projects WHERE id = ?', [request.project_id]);
-    await notify(request.requested_by, 'client_request_approved', '项目关联请求已通过', `企业「${toEnt?.name || ''}」已同意关联到项目「${proj2?.name || ''}」`, '/projects');
+    await notify(request.requested_by, 'client_request_approved', '项目关联请求已通过', `企业「${toEnt?.name || ''}」已同意关联到项目「${proj2?.name || ''}」`, '/projects', Number(request.project_id));
 
     broadcast('project', 'client_request_approved', { id: request.project_id, userId });
     logger.info(`client-request-approve: request=${requestId} project=${request.project_id} members=${memberIds.join(',')} by=${userId}`);

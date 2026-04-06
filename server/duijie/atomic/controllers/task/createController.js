@@ -39,7 +39,7 @@ module.exports = async (req, res) => {
     }
 
     if (req.body.assignee_id && req.body.assignee_id !== req.userId) {
-      await notify(req.body.assignee_id, 'task_assigned', '新任务指派', `你被指派了任务「${req.body.title}」`, `/tasks`);
+      await notify(req.body.assignee_id, 'task_assigned', '新任务指派', `你被指派了任务「${req.body.title}」`, `/tasks`, req.body.project_id != null ? Number(req.body.project_id) : null);
     }
 
     if (req.body.project_id) {
@@ -51,7 +51,7 @@ module.exports = async (req, res) => {
         .map(m => m.user_id)
         .filter(uid => uid !== Number(req.body.assignee_id));
       if (otherIds.length > 0) {
-        await notifyMany(otherIds, 'task_assigned', '新需求', `项目有新需求「${req.body.title}」`, `/tasks`);
+        await notifyMany(otherIds, 'task_assigned', '新需求', `项目有新需求「${req.body.title}」`, `/tasks`, Number(req.body.project_id));
       }
     }
 

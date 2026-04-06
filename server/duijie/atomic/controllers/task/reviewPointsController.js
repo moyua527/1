@@ -68,7 +68,7 @@ exports.add = async (req, res) => {
     const targetUserId = round_type === 'initial' ? task.created_by : task.assignee_id;
     if (targetUserId && targetUserId !== req.userId) {
       const label = round_type === 'initial' ? '提出了疑问' : '验收驳回';
-      await notify(targetUserId, 'task_status', '任务审核', `任务「${task.title}」${label}，共 ${values.length} 个要点需要处理`, '/tasks');
+      await notify(targetUserId, 'task_status', '任务审核', `任务「${task.title}」${label}，共 ${values.length} 个要点需要处理`, '/tasks', task.project_id != null ? Number(task.project_id) : null);
     }
 
     broadcast('task', 'updated', { id: taskId, project_id: task.project_id, userId: req.userId });
@@ -161,7 +161,7 @@ exports.respond = async (req, res) => {
       // 通知提出人
       if (point.author_id !== req.userId) {
         const label = point.round_type === 'initial' ? '已补充所有疑问' : '已修复所有问题';
-        await notify(point.author_id, 'task_status', '任务审核', `任务「${point.task_title}」${label}，请查看`, '/tasks');
+        await notify(point.author_id, 'task_status', '任务审核', `任务「${point.task_title}」${label}，请查看`, '/tasks', point.project_id != null ? Number(point.project_id) : null);
       }
       broadcast('task', 'updated', { id: point.task_id, project_id: point.project_id, userId: req.userId });
     }

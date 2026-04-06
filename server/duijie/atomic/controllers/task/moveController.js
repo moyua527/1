@@ -1,4 +1,4 @@
-﻿const moveTask = require('../../services/task/moveTask');
+const moveTask = require('../../services/task/moveTask');
 const { broadcast } = require('../../utils/broadcast');
 const { notify } = require('../../utils/notify');
 const db = require('../../../config/db');
@@ -77,7 +77,7 @@ module.exports = async (req, res) => {
       if (newStatus === 'pending_review' && taskRow.created_by !== req.userId) targetId = taskRow.created_by;
       if (newStatus === 'accepted' && taskRow.assignee_id !== req.userId) targetId = taskRow.assignee_id;
       if (targetId) {
-        await notify(targetId, 'task_status', '任务状态变更', `任务「${taskRow.title}」状态变为「${label}」`, '/tasks');
+        await notify(targetId, 'task_status', '任务状态变更', `任务「${taskRow.title}」状态变为「${label}」`, '/tasks', taskRow.project_id != null ? Number(taskRow.project_id) : null);
       }
     }
 

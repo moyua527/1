@@ -42,7 +42,9 @@ module.exports = async (req, res) => {
       owners.map(o => o.user_id),
       'join_request',
       '项目加入申请',
-      `${applicantName} 申请加入项目「${proj[0].name}」`
+      `${applicantName} 申请加入项目「${proj[0].name}」`,
+      `/projects/${project_id}`,
+      Number(project_id)
     );
 
     broadcast('project', 'join_request', { project_id, userId: req.userId });

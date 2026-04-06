@@ -68,7 +68,7 @@ module.exports = async (req, res) => {
     const fromName = fromEnt?.name || '未知企业';
     const projName = proj?.name || '未知项目';
     const managerIds = await getEnterpriseManagerUserIds(to_enterprise_id);
-    await notifyMany(managerIds, 'client_request', '收到项目关联请求', `企业「${fromName}」请求将贵企业关联到项目「${projName}」`, '/enterprise?tab=client-requests');
+    await notifyMany(managerIds, 'client_request', '收到项目关联请求', `企业「${fromName}」请求将贵企业关联到项目「${projName}」`, '/enterprise?tab=client-requests', Number(projectId));
 
     logger.info(`project-client-request: user=${userId} project=${projectId} to=${to_enterprise_id}`);
     res.json({ success: true, message: '关联请求已发送，等待对方审批' });

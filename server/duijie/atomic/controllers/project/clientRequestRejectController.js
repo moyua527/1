@@ -35,7 +35,7 @@ module.exports = async (req, res) => {
     // 通知发起人请求已被拒绝
     const [[toEnt]] = await db.query('SELECT name FROM duijie_clients WHERE id = ?', [request.to_enterprise_id]);
     const [[proj]] = await db.query('SELECT name FROM duijie_projects WHERE id = ?', [request.project_id]);
-    await notify(request.requested_by, 'client_request_rejected', '项目关联请求被拒绝', `企业「${toEnt?.name || ''}」拒绝了项目「${proj?.name || ''}」的关联请求`, '/projects');
+    await notify(request.requested_by, 'client_request_rejected', '项目关联请求被拒绝', `企业「${toEnt?.name || ''}」拒绝了项目「${proj?.name || ''}」的关联请求`, '/projects', Number(request.project_id));
 
     broadcast('project', 'client_request_rejected', { id: request.project_id, userId });
     logger.info(`client-request-reject: request=${requestId} project=${request.project_id} by=${userId}`);
