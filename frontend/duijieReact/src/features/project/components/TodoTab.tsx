@@ -1,8 +1,10 @@
 import { useState, useCallback, useEffect } from 'react'
-import { Plus, Check, Circle, Trash2, Pencil } from 'lucide-react'
+import { Plus, Check, Trash2, Pencil } from 'lucide-react'
 import { fetchApi } from '../../../bootstrap'
 import { toast } from '../../ui/Toast'
 import { confirm } from '../../ui/ConfirmDialog'
+import Button from '../../ui/Button'
+import Modal from '../../ui/Modal'
 
 interface TodoItem {
   id: number
@@ -20,10 +22,17 @@ interface Props {
   isMobile?: boolean
 }
 
+const statusFilters = [
+  { key: 'all', label: '全部' },
+  { key: 'pending', label: '进行中' },
+  { key: 'completed', label: '已完成' },
+] as const
+
 export default function TodoTab({ projectId, canEdit, isMobile }: Props) {
   const [items, setItems] = useState<TodoItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [adding, setAdding] = useState(false)
+  const [filter, setFilter] = useState<string>('all')
+  const [showCreate, setShowCreate] = useState(false)
   const [newTitle, setNewTitle] = useState('')
   const [newDesc, setNewDesc] = useState('')
   const [saving, setSaving] = useState(false)
@@ -51,7 +60,7 @@ export default function TodoTab({ projectId, canEdit, isMobile }: Props) {
     if (r.success) {
       setNewTitle('')
       setNewDesc('')
-      setAdding(false)
+      setShowCreate(false)
       load()
     } else toast(r.message || '添加失败', 'error')
   }
@@ -69,9 +78,9 @@ export default function TodoTab({ projectId, canEdit, isMobile }: Props) {
     else toast(r.message || '删除失败', 'error')
   }
 
-  const handleEditSave = async (id: number) => {
-    if (!editTitle.trim()) return
-    const r = await fetchApi(`/api/milestones/${id}`, {
+  const handleEditSave = async () => {
+    if (!editingId || !editTitle.trim()) return
+    const r = await fetchApi(`/api/milestones/${editingId}`, {
       method: 'PUT',
       body: JSON.stringify({ title: editTitle.trim(), description: editDesc.trim() || null }),
     })
@@ -79,193 +88,183 @@ export default function TodoTab({ projectId, canEdit, isMobile }: Props) {
     else toast(r.message || '更新失败', 'error')
   }
 
+  const filtered = items.filter(i => {
+    if (filter === 'pending') return !i.is_completed
+    if (filter === 'completed') return i.is_completed
+    return true
+  })
+
   const completedCount = items.filter(i => i.is_completed).length
-  const progressPct = items.length > 0 ? Math.round((completedCount / items.length) * 100) : 0
+  const pendingCount = items.length - completedCount
+
+  const formatDt = (d: string) => {
+    try { return new Date(d).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }) } catch { return d }
+  }
 
   if (loading) return <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}>加载中...</div>
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto' }}>
-      {/* 进度概览 */}
-      {items.length > 0 && (
-        <div style={{ background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)' }}>项目进度</span>
-            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{completedCount}/{items.length} 已完成</span>
-          </div>
-          <div style={{ height: 8, borderRadius: 4, background: 'var(--bg-tertiary)', overflow: 'hidden' }}>
-            <div style={{
-              height: '100%', borderRadius: 4, transition: 'width 0.4s ease',
-              width: `${progressPct}%`,
-              background: progressPct === 100 ? '#10b981' : 'var(--brand)',
-            }} />
-          </div>
-          {/* 步骤节点指示 */}
-          <div style={{ display: 'flex', alignItems: 'center', marginTop: 12, gap: 0 }}>
-            {items.map((item, idx) => (
-              <div key={item.id} style={{ display: 'flex', alignItems: 'center', flex: idx < items.length - 1 ? 1 : 0 }}>
-                <div style={{
-                  width: 24, height: 24, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700,
-                  background: item.is_completed ? '#10b981' : 'var(--bg-tertiary)',
-                  color: item.is_completed ? '#fff' : 'var(--text-tertiary)',
-                  border: item.is_completed ? 'none' : '2px solid var(--border-primary)',
-                }} title={item.title}>
-                  {item.is_completed ? <Check size={12} /> : idx + 1}
-                </div>
-                {idx < items.length - 1 && (
-                  <div style={{
-                    flex: 1, height: 2, minWidth: 12,
-                    background: item.is_completed ? '#10b981' : 'var(--border-primary)',
-                    transition: 'background 0.3s',
-                  }} />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 时间线列表 */}
-      <div style={{ background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-heading)' }}>项目流程</span>
-          {canEdit && !adding && (
-            <button onClick={() => setAdding(true)} style={{
-              display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: 'none',
-              background: 'var(--brand)', color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer',
-            }}>
-              <Plus size={14} /> 添加步骤
-            </button>
-          )}
-        </div>
-
-        {items.length === 0 && !adding && (
-          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)' }}>
-            <div style={{ fontSize: 32, marginBottom: 8 }}>📋</div>
-            <div style={{ fontSize: 14, marginBottom: 12 }}>暂无流程步骤</div>
-            {canEdit && (
-              <button onClick={() => setAdding(true)} style={{
-                padding: '8px 20px', borderRadius: 8, border: 'none', background: 'var(--brand)', color: '#fff',
-                fontSize: 13, fontWeight: 500, cursor: 'pointer',
-              }}>
-                添加第一个步骤
-              </button>
-            )}
-          </div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      {/* 顶部操作栏 */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexShrink: 0 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>代办列表</h2>
+        {canEdit && (
+          <button onClick={() => setShowCreate(true)} style={{
+            display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 8, border: 'none',
+            background: 'var(--brand)', color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+          }}>
+            <Plus size={14} /> 添加
+          </button>
         )}
+      </div>
 
-        {/* 时间线 */}
-        <div style={{ position: 'relative' }}>
-          {items.map((item, idx) => {
-            const isEditing = editingId === item.id
-            const isLast = idx === items.length - 1
-            return (
-              <div key={item.id} style={{ display: 'flex', gap: 12, position: 'relative', paddingBottom: isLast ? 0 : 20 }}>
-                {/* 竖线 + 圆点 */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: 28 }}>
-                  <button
-                    onClick={() => canEdit && handleToggle(item)}
-                    disabled={!canEdit}
-                    style={{
-                      width: 28, height: 28, borderRadius: '50%', border: 'none', cursor: canEdit ? 'pointer' : 'default',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.2s',
-                      background: item.is_completed ? '#10b981' : 'var(--bg-secondary)',
-                      color: item.is_completed ? '#fff' : 'var(--text-tertiary)',
-                    }}>
-                    {item.is_completed ? <Check size={14} /> : <Circle size={14} />}
+      {/* 状态筛选栏 */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexShrink: 0, flexWrap: 'wrap' }}>
+        {statusFilters.map(sf => {
+          const count = sf.key === 'all' ? items.length : sf.key === 'pending' ? pendingCount : completedCount
+          const active = filter === sf.key
+          return (
+            <button key={sf.key} onClick={() => setFilter(sf.key)} style={{
+              padding: '6px 14px', borderRadius: 20, border: 'none', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+              background: active ? 'var(--brand)' : 'var(--bg-tertiary)',
+              color: active ? '#fff' : 'var(--text-secondary)',
+            }}>
+              {sf.label} ({count})
+            </button>
+          )
+        })}
+      </div>
+
+      {/* 流程说明 */}
+      <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 12, flexShrink: 0 }}>
+        流程: 创建步骤 → 逐步完成 → 项目上线
+      </div>
+
+      {/* 列表 */}
+      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {filtered.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)', fontSize: 14 }}>
+            {items.length === 0 ? '暂无代办步骤' : '当前筛选无结果'}
+          </div>
+        ) : filtered.map((item, idx) => {
+          const isEditing = editingId === item.id
+          const statusStyle = item.is_completed
+            ? { bg: '#d1fae5', color: '#065f46', label: '已完成' }
+            : { bg: '#dbeafe', color: '#1e40af', label: '进行中' }
+
+          return (
+            <div key={item.id} style={{ background: 'var(--bg-secondary)', borderRadius: 8, overflow: 'visible' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px' }}>
+                {/* 完成按钮 */}
+                {canEdit && (
+                  <button onClick={() => handleToggle(item)} style={{
+                    width: 22, height: 22, borderRadius: '50%', border: item.is_completed ? 'none' : '2px solid var(--border-primary)',
+                    background: item.is_completed ? '#10b981' : 'transparent', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.2s',
+                    color: item.is_completed ? '#fff' : 'var(--text-tertiary)',
+                  }}>
+                    {item.is_completed && <Check size={12} />}
                   </button>
-                  {!isLast && (
-                    <div style={{
-                      width: 2, flex: 1, minHeight: 20,
-                      background: item.is_completed ? '#10b981' : 'var(--border-primary)',
-                    }} />
-                  )}
-                </div>
+                )}
                 {/* 内容 */}
-                <div style={{ flex: 1, minWidth: 0, paddingTop: 2 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   {isEditing ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       <input value={editTitle} onChange={e => setEditTitle(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && handleEditSave(item.id)}
+                        onKeyDown={e => { if (e.key === 'Enter') handleEditSave(); if (e.key === 'Escape') setEditingId(null) }}
                         autoFocus
-                        style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-secondary)', color: 'var(--text-heading)' }} />
+                        style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--brand)', fontSize: 14, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-heading)' }} />
                       <textarea value={editDesc} onChange={e => setEditDesc(e.target.value)} rows={2} placeholder="描述（可选）"
-                        style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-secondary)', color: 'var(--text-heading)', resize: 'vertical' }} />
+                        style={{ padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-heading)', resize: 'vertical' }} />
                       <div style={{ display: 'flex', gap: 6 }}>
-                        <button onClick={() => handleEditSave(item.id)} style={{ padding: '4px 12px', borderRadius: 6, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 12, cursor: 'pointer' }}>保存</button>
+                        <button onClick={handleEditSave} style={{ padding: '4px 12px', borderRadius: 6, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 12, cursor: 'pointer' }}>保存</button>
                         <button onClick={() => setEditingId(null)} style={{ padding: '4px 12px', borderRadius: 6, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', fontSize: 12, cursor: 'pointer' }}>取消</button>
                       </div>
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{
-                          fontSize: 14, fontWeight: 600, lineHeight: 1.4,
+                    <>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{
+                          fontSize: 14, fontWeight: 500,
                           color: item.is_completed ? 'var(--text-tertiary)' : 'var(--text-heading)',
                           textDecoration: item.is_completed ? 'line-through' : 'none',
-                        }}>
-                          {item.title}
-                        </div>
-                        {item.description && (
-                          <div style={{
-                            fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4, lineHeight: 1.5,
-                            textDecoration: item.is_completed ? 'line-through' : 'none',
-                          }}>
-                            {item.description}
-                          </div>
-                        )}
-                        <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 4 }}>
-                          {item.is_completed && item.updated_at
-                            ? `完成于 ${new Date(item.updated_at).toLocaleString('zh-CN')}`
-                            : `创建于 ${new Date(item.created_at).toLocaleString('zh-CN')}`}
-                        </div>
+                        }}>{item.title}</span>
                       </div>
-                      {canEdit && (
-                        <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
-                          <button onClick={() => { setEditingId(item.id); setEditTitle(item.title); setEditDesc(item.description || '') }}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)', borderRadius: 4 }}
-                            onMouseEnter={e => e.currentTarget.style.color = 'var(--brand)'}
-                            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}>
-                            <Pencil size={13} />
-                          </button>
-                          <button onClick={() => handleDelete(item)}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)', borderRadius: 4 }}
-                            onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
-                            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}>
-                            <Trash2 size={13} />
-                          </button>
-                        </div>
+                      {item.description && (
+                        <div style={{
+                          fontSize: 13, color: 'var(--text-secondary)', marginTop: 2,
+                          textDecoration: item.is_completed ? 'line-through' : 'none',
+                        }}>{item.description}</div>
                       )}
-                    </div>
+                      <div style={{ display: 'flex', gap: 12, marginTop: 2, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
+                          创建: {formatDt(item.created_at)}
+                        </span>
+                        {item.is_completed && item.updated_at && (
+                          <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
+                            完成: {formatDt(item.updated_at)}
+                          </span>
+                        )}
+                      </div>
+                    </>
                   )}
                 </div>
+                {/* 状态 + 操作 */}
+                {!isEditing && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                    <span style={{
+                      padding: '5px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap',
+                      background: statusStyle.bg, color: statusStyle.color,
+                      border: '1px solid var(--border-primary)',
+                    }}>
+                      {statusStyle.label}
+                    </span>
+                    {canEdit && (
+                      <>
+                        <button onClick={() => { setEditingId(item.id); setEditTitle(item.title); setEditDesc(item.description || '') }}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)', borderRadius: 4 }}
+                          onMouseEnter={e => e.currentTarget.style.color = 'var(--brand)'}
+                          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}>
+                          <Pencil size={13} />
+                        </button>
+                        <button onClick={() => handleDelete(item)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)', borderRadius: 4 }}
+                          onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}>
+                          <Trash2 size={13} />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
-            )
-          })}
-        </div>
-
-        {/* 添加表单 */}
-        {adding && (
-          <div style={{ marginTop: items.length > 0 ? 16 : 0, padding: 16, borderRadius: 10, border: '2px dashed var(--border-primary)', background: 'var(--bg-secondary)' }}>
-            <input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="步骤名称"
-              onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleAdd()}
-              autoFocus
-              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', boxSizing: 'border-box', background: 'var(--bg-primary)', color: 'var(--text-heading)', marginBottom: 8 }} />
-            <textarea value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="步骤描述（可选）" rows={2}
-              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', boxSizing: 'border-box', background: 'var(--bg-primary)', color: 'var(--text-heading)', resize: 'vertical', marginBottom: 8 }} />
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-              <button onClick={() => { setAdding(false); setNewTitle(''); setNewDesc('') }}
-                style={{ padding: '6px 16px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-secondary)', fontSize: 13, cursor: 'pointer' }}>
-                取消
-              </button>
-              <button onClick={handleAdd} disabled={saving || !newTitle.trim()}
-                style={{ padding: '6px 16px', borderRadius: 8, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', opacity: saving || !newTitle.trim() ? 0.5 : 1 }}>
-                {saving ? '添加中...' : '添加'}
-              </button>
             </div>
-          </div>
-        )}
+          )
+        })}
       </div>
+
+      {/* 创建弹窗 */}
+      <Modal open={showCreate} onClose={() => { setShowCreate(false); setNewTitle(''); setNewDesc('') }} title="添加代办步骤" width={480}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>步骤名称 *</label>
+            <input value={newTitle} onChange={e => setNewTitle(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleAdd()}
+              placeholder="如：需求确认、UI设计、前端开发..."
+              autoFocus
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', boxSizing: 'border-box', background: 'var(--bg-secondary)', color: 'var(--text-heading)' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>描述</label>
+            <textarea value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="步骤描述（可选）" rows={3}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', boxSizing: 'border-box', background: 'var(--bg-secondary)', color: 'var(--text-heading)', resize: 'vertical' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <Button variant="secondary" onClick={() => { setShowCreate(false); setNewTitle(''); setNewDesc('') }}>取消</Button>
+            <Button onClick={handleAdd} disabled={saving || !newTitle.trim()}>{saving ? '添加中...' : '添加'}</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }
