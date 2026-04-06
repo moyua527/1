@@ -29,7 +29,6 @@ const PERM_GROUPS = [
     { key: 'can_delete_role', label: '删除角色' },
   ]},
   { title: '需求管理', items: [
-    { key: 'can_create_task', label: '创建需求' },
     { key: 'can_edit_task_title', label: '编辑标题' },
     { key: 'can_edit_task_desc', label: '编辑描述' },
     { key: 'can_edit_task_priority', label: '编辑优先级' },
@@ -38,8 +37,9 @@ const PERM_GROUPS = [
     { key: 'can_delete_task', label: '删除需求' },
   ]},
   { title: '需求状态流转', items: [
-    { key: 'can_move_task_accept', label: '接受需求' },
-    { key: 'can_move_task_dispute', label: '提疑问' },
+    { key: 'can_create_task', label: '提出需求' },
+    { key: 'can_move_task_accept', label: '接受执行' },
+    { key: 'can_move_task_dispute', label: '提出疑问' },
     { key: 'can_move_task_supplement', label: '补充回复' },
     { key: 'can_move_task_submit_review', label: '提交验收' },
     { key: 'can_move_task_reject', label: '驳回验收' },
