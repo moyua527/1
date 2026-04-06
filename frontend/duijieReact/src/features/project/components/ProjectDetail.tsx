@@ -251,18 +251,7 @@ export default function ProjectDetail() {
   const st = statusMap[project.status] || statusMap.planning
   const isOwner = (project.members || []).some((m: any) => m.user_id === user?.id && (m.project_role_key === 'owner' || m.member_role === 'owner'))
   const rawMembers = project.members || []
-  const myMemberRow = rawMembers.find((m: any) => (m.user_id || m.id) === user?.id)
-  const myRemarks: Record<string, string> = (() => {
-    try {
-      const r = myMemberRow?.remarks
-      if (!r) return {}
-      return typeof r === 'string' ? JSON.parse(r) : r
-    } catch { return {} }
-  })()
-  const allMembers = rawMembers.map((m: any) => ({
-    ...m,
-    _remark: myRemarks[String(m.user_id || m.id)] || '',
-  }))
+  const allMembers = rawMembers
 
   const handleDelete = async () => {
     if (!(await confirm({ message: '确定将此项目移到回收站？可在项目列表的回收站中恢复。', danger: true }))) return
@@ -383,15 +372,15 @@ export default function ProjectDetail() {
           onRefreshAvailable={refreshClientAvailableUsers}
         />
 
-      {tab === 'tasks' && <TaskTab tasks={tasks} canEdit={canCreateTask} projectId={id!} loadTasks={loadTasks} remarkMap={myRemarks} />}
+      {tab === 'tasks' && <TaskTab tasks={tasks} canEdit={canCreateTask} projectId={id!} loadTasks={loadTasks} />}
 
       {tab === 'files' && <ProjectFileTab projectId={id!} canEdit={canEdit} members={allMembers} currentUserId={user?.id} />}
 
-      {tab === 'milestones' && <MilestoneTab milestones={milestones} projectId={id!} canEdit={canManageMilestone} onRefresh={loadTasks} isMobile={isMobile} members={allMembers} currentUserId={user?.id} remarkMap={myRemarks} />}
+      {tab === 'milestones' && <MilestoneTab milestones={milestones} projectId={id!} canEdit={canManageMilestone} onRefresh={loadTasks} isMobile={isMobile} members={allMembers} currentUserId={user?.id} />}
 
       {tab === 'messages' && <div style={{ background: 'var(--bg-primary)', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16, overflow: 'hidden' }}><MessagePanel projectId={id!} /></div>}
 
-      {tab === 'settings' && <ProjectSettingsTab project={project} projectId={id!} isOwner={isOwner} canManageRole={canManageRole} canApproveJoin={canApproveJoin} canEdit={canEdit} canDelete={canDelete} pendingJoinCount={pendingJoinCount} onRefreshProject={loadProject} onRefreshJoinCount={loadPendingJoinCount} onOpenAddMember={() => { setShowAddMember(true); refreshAvailableUsers() }} onMemberClick={setSelectedMember} onEditProject={() => setShowEditProject(true)} onDeleteProject={handleDelete} tasks={tasks} milestones={milestones} remarkMap={myRemarks} />}
+      {tab === 'settings' && <ProjectSettingsTab project={project} projectId={id!} isOwner={isOwner} canManageRole={canManageRole} canApproveJoin={canApproveJoin} canEdit={canEdit} canDelete={canDelete} pendingJoinCount={pendingJoinCount} onRefreshProject={loadProject} onRefreshJoinCount={loadPendingJoinCount} onOpenAddMember={() => { setShowAddMember(true); refreshAvailableUsers() }} onMemberClick={setSelectedMember} onEditProject={() => setShowEditProject(true)} onDeleteProject={handleDelete} tasks={tasks} milestones={milestones} />}
 
 
       <SetClientModal open={showSetClient} hasExternalEnterprise={false}
@@ -407,7 +396,7 @@ export default function ProjectDetail() {
           toast(r.message || '操作失败', 'error'); return false
         }} />
 
-      <MemberInfoModal member={selectedMember} onClose={() => setSelectedMember(null)} projectId={id!} remarkMap={myRemarks} onRemarkChange={loadProject} />
+      <MemberInfoModal member={selectedMember} onClose={() => setSelectedMember(null)} />
       <ClientInfoModal open={clientModal} onClose={() => setClientModal(false)} clientData={clientData} />
       <ProjectGuide open={showProjectGuide} onClose={() => setShowProjectGuide(false)} />
       </div>

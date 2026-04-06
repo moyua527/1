@@ -14,11 +14,11 @@ interface Props {
   onRefresh: () => void
 }
 
-export default function MilestoneDetailModal({ milestoneId, currentUserId, members, remarkMap = {}, onClose, onRefresh }: Props) {
+export default function MilestoneDetailModal({ milestoneId, currentUserId, members, onClose, onRefresh }: Props) {
   const globalDn = useNicknameStore(s => s.getDisplayName)
   const dn = (uid: number | undefined, fallback: string) => {
     if (!uid) return fallback
-    return remarkMap[String(uid)] || globalDn(uid, fallback)
+    return globalDn(uid, fallback)
   }
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)

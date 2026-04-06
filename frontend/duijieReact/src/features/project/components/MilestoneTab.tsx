@@ -24,7 +24,7 @@ interface MilestoneTabProps {
   remarkMap?: Record<string, string>
 }
 
-export default function MilestoneTab({ milestones, projectId, canEdit, onRefresh, isMobile, members = [], currentUserId = 0, remarkMap = {} }: MilestoneTabProps) {
+export default function MilestoneTab({ milestones, projectId, canEdit, onRefresh, isMobile, members = [], currentUserId = 0 }: MilestoneTabProps) {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<any>(null)
   const [form, setForm] = useState({ title: '', description: '', due_date: '' })
@@ -228,7 +228,6 @@ export default function MilestoneTab({ milestones, projectId, canEdit, onRefresh
           milestoneId={detailId}
           currentUserId={currentUserId}
           members={members}
-          remarkMap={remarkMap}
           onClose={() => setDetailId(null)}
           onRefresh={onRefresh}
         />

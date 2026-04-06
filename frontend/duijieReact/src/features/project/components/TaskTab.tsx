@@ -36,13 +36,13 @@ interface TaskTabProps {
   remarkMap?: Record<string, string>
 }
 
-export default function TaskTab({ tasks, canEdit, projectId, loadTasks, remarkMap = {} }: TaskTabProps) {
+export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTabProps) {
   const user = useUserStore(s => s.user)
   const currentUserId = user?.id
   const globalDn = useNicknameStore(s => s.getDisplayName)
   const dn = (uid: number | undefined, fallback: string) => {
     if (!uid) return fallback
-    return remarkMap[String(uid)] || globalDn(uid, fallback)
+    return globalDn(uid, fallback)
   }
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [showCreateTask, setShowCreateTask] = useState(false)

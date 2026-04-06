@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Users, Shield, AppWindow, UserPlus, ChevronRight, UserPlus2, Pencil, Trash2 } from 'lucide-react'
+import useNicknameStore from '../../../stores/useNicknameStore'
 import ProjectRoleList from './ProjectRoleList'
 import AppTab from './AppTab'
 import JoinRequestsTab from './JoinRequestsTab'
@@ -48,9 +49,10 @@ const settingsItems: { key: SubTab; label: string; icon: any; desc: string; cond
   { key: 'join_requests', label: '加入申请', icon: UserPlus, desc: '审批成员加入请求', condition: 'canApproveJoin' },
 ]
 
-export default function ProjectSettingsTab({ project, projectId, isOwner, canManageRole, canApproveJoin, canEdit, canDelete, pendingJoinCount, onRefreshProject, onRefreshJoinCount, onOpenAddMember, onMemberClick, onEditProject, onDeleteProject, tasks = [], milestones = [], remarkMap = {} }: Props) {
+export default function ProjectSettingsTab({ project, projectId, isOwner, canManageRole, canApproveJoin, canEdit, canDelete, pendingJoinCount, onRefreshProject, onRefreshJoinCount, onOpenAddMember, onMemberClick, onEditProject, onDeleteProject, tasks = [], milestones = [] }: Props) {
   const [sub, setSub] = useState<SubTab | null>(null)
   const user = useUserStore(s => s.user)
+  const globalDn = useNicknameStore(s => s.getDisplayName)
   const members = project.members || []
   const myMember = members.find((m: any) => (m.user_id || m.id) === user?.id)
   const currentNickname = myMember?.project_nickname || ''
@@ -118,7 +120,7 @@ export default function ProjectSettingsTab({ project, projectId, isOwner, canMan
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {members.map((m: any) => {
                   const uid = String(m.user_id || m.id)
-                  const name = remarkMap[uid] || m.project_nickname || m.nickname || m.username || '?'
+                  const name = globalDn(Number(uid), m.project_nickname || m.nickname || m.username || '?')
                   const rKey = m.project_role_key || m.member_role || ''
                   const rName = m.role_name || roleLabel[rKey] || rKey
                   return (

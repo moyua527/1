@@ -335,19 +335,15 @@ interface MemberInfoModalProps {
   onRemarkChange?: () => void
 }
 
-export function MemberInfoModal({ member, onClose, projectId, remarkMap = {}, onRemarkChange }: MemberInfoModalProps) {
+export function MemberInfoModal({ member, onClose }: MemberInfoModalProps) {
   const currentUser = useUserStore(s => s.user)
   const { getDisplayName, setNickname, removeNickname, map } = useNicknameStore()
   const [editingNick, setEditingNick] = useState(false)
   const [nickInput, setNickInput] = useState('')
   const [nickSaving, setNickSaving] = useState(false)
-  const [editingProjectRemark, setEditingProjectRemark] = useState(false)
-  const [projectRemarkInput, setProjectRemarkInput] = useState('')
-  const [projectRemarkSaving, setProjectRemarkSaving] = useState(false)
   const isSelf = member && currentUser && member.id === currentUser.id
   const currentNick = member ? map[member.id] || '' : ''
-  const currentProjectRemark = member ? remarkMap[String(member.user_id || member.id)] || '' : ''
-  const displayName = member ? (currentProjectRemark || getDisplayName(member.id, member.nickname || member.username)) : ''
+  const displayName = member ? getDisplayName(member.id, member.nickname || member.username) : ''
 
   const handleSaveNick = async () => {
     if (!member) return
@@ -364,31 +360,15 @@ export function MemberInfoModal({ member, onClose, projectId, remarkMap = {}, on
     setEditingNick(false)
   }
 
-  const handleSaveProjectRemark = async () => {
-    if (!member || !projectId) return
-    setProjectRemarkSaving(true)
-    try {
-      const r = await projectApi.setMemberRemark(projectId, member.user_id || member.id, projectRemarkInput.trim())
-      if (r.success) {
-        toast(projectRemarkInput.trim() ? '项目备注已设置' : '项目备注已清除', 'success')
-        onRemarkChange?.()
-      } else {
-        toast(r.message || '设置失败', 'error')
-      }
-    } catch { toast('设置失败', 'error') }
-    setProjectRemarkSaving(false)
-    setEditingProjectRemark(false)
-  }
-
   return (
-    <Modal open={!!member} onClose={() => { onClose(); setEditingNick(false); setEditingProjectRemark(false) }} title="成员信息">
+    <Modal open={!!member} onClose={() => { onClose(); setEditingNick(false) }} title="成员信息">
       {member && (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: '8px 0' }}>
           <Avatar name={displayName} size={64} />
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-heading)' }}>{displayName}</div>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4 }}>@{member.username}</div>
-            {(currentProjectRemark || currentNick) && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>原名：{member.nickname || member.username}</div>}
+            {currentNick && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>原名：{member.nickname || member.username}</div>}
           </div>
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12, background: 'var(--bg-secondary)', borderRadius: 10, padding: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -410,29 +390,6 @@ export function MemberInfoModal({ member, onClose, projectId, remarkMap = {}, on
                 <Mail size={16} color="var(--text-secondary)" />
                 <span style={{ fontSize: 13, color: 'var(--text-secondary)', minWidth: 70 }}>昵称</span>
                 <span style={{ fontSize: 14, color: 'var(--text-heading)', fontWeight: 500 }}>{member.nickname}</span>
-              </div>
-            )}
-            {!isSelf && projectId && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Edit3 size={16} color="var(--text-secondary)" />
-                <span style={{ fontSize: 13, color: 'var(--text-secondary)', minWidth: 70 }}>项目备注</span>
-                {editingProjectRemark ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
-                    <input value={projectRemarkInput} onChange={e => setProjectRemarkInput(e.target.value)} placeholder="仅本项目内显示（留空则清除）"
-                      autoFocus onKeyDown={e => { if (e.key === 'Enter') handleSaveProjectRemark(); if (e.key === 'Escape') setEditingProjectRemark(false) }}
-                      style={{ flex: 1, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-body)' }} />
-                    <Button onClick={handleSaveProjectRemark} disabled={projectRemarkSaving} style={{ padding: '4px 10px', fontSize: 12 }}>{projectRemarkSaving ? '...' : '保存'}</Button>
-                    <button onClick={() => setEditingProjectRemark(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', display: 'flex', padding: 2 }}><XIcon size={14} /></button>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
-                    <span style={{ fontSize: 14, color: currentProjectRemark ? 'var(--text-heading)' : 'var(--text-tertiary)', fontWeight: currentProjectRemark ? 500 : 400 }}>{currentProjectRemark || '未设置'}</span>
-                    <button onClick={() => { setProjectRemarkInput(currentProjectRemark); setEditingProjectRemark(true) }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--brand)', fontSize: 12, fontWeight: 500, padding: '2px 6px' }}>
-                      {currentProjectRemark ? '修改' : '设置'}
-                    </button>
-                  </div>
-                )}
               </div>
             )}
             {!isSelf && (
