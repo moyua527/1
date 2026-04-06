@@ -225,7 +225,19 @@ export default function ProjectDetail() {
 
   const st = statusMap[project.status] || statusMap.planning
   const isOwner = (project.members || []).some((m: any) => m.user_id === user?.id && (m.project_role_key === 'owner' || m.member_role === 'owner'))
-  const allMembers = project.members || []
+  const rawMembers = project.members || []
+  const myMemberRow = rawMembers.find((m: any) => (m.user_id || m.id) === user?.id)
+  const myRemarks: Record<string, string> = (() => {
+    try {
+      const r = myMemberRow?.remarks
+      if (!r) return {}
+      return typeof r === 'string' ? JSON.parse(r) : r
+    } catch { return {} }
+  })()
+  const allMembers = rawMembers.map((m: any) => ({
+    ...m,
+    _remark: myRemarks[String(m.user_id || m.id)] || '',
+  }))
 
   const handleDelete = async () => {
     if (!(await confirm({ message: '确定将此项目移到回收站？可在项目列表的回收站中恢复。', danger: true }))) return
@@ -391,7 +403,7 @@ export default function ProjectDetail() {
           onRefreshAvailable={refreshClientAvailableUsers}
         />
 
-      {tab === 'tasks' && <TaskTab tasks={tasks} canEdit={canCreateTask} projectId={id!} loadTasks={loadTasks} />}
+      {tab === 'tasks' && <TaskTab tasks={tasks} canEdit={canCreateTask} projectId={id!} loadTasks={loadTasks} remarkMap={myRemarks} />}
 
       {tab === 'files' && <ProjectFileTab projectId={id!} canEdit={canEdit} members={allMembers} currentUserId={user?.id} />}
 

@@ -205,8 +205,8 @@ export default function MilestoneTab({ milestones, projectId, canEdit, onRefresh
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: m.description ? 8 : 0 }}>
                   {isActive && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: 'var(--brand)', color: '#fff', fontWeight: 600 }}>进行中</span>}
-                  {m.is_completed && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: '#dcfce7', color: '#16a34a', fontWeight: 600 }}>已完成</span>}
-                  {overdue && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: '#fef2f2', color: '#dc2626', fontWeight: 600 }}>已逾期</span>}
+                  {!!m.is_completed && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: '#dcfce7', color: '#16a34a', fontWeight: 600 }}>已完成</span>}
+                  {!!overdue && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: '#fef2f2', color: '#dc2626', fontWeight: 600 }}>已逾期</span>}
                   {!isActive && !m.is_completed && !overdue && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: 'var(--bg-tertiary)', color: 'var(--text-tertiary)', fontWeight: 500 }}>待开始</span>}
                 </div>
                 {m.description && <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any }}>{m.description}</div>}

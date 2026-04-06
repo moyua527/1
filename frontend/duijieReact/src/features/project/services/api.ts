@@ -75,4 +75,5 @@ export const projectApi = {
   removeEntRole: (roleId: number) => fetchApi(`/api/my-enterprise/project-roles/${roleId}`, { method: 'DELETE' }),
   getActivity: (id: string, limit = 20) => fetchApi(`/api/projects/${id}/activity?limit=${limit}`),
   setNickname: (id: string, nickname: string) => fetchApi(`/api/projects/${id}/nickname`, { method: 'PATCH', body: JSON.stringify({ nickname }) }),
+  setMemberRemark: (id: string, target_user_id: number, remark: string) => fetchApi(`/api/projects/${id}/member-remark`, { method: 'PATCH', body: JSON.stringify({ target_user_id, remark }) }),
 }

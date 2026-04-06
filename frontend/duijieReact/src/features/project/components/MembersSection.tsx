@@ -93,7 +93,7 @@ export default function MembersSection({ projectId, myMembers, canEditMyTeam, on
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         {visible.map((m: any) => {
-          const name = dn(m.id, m.nickname || m.username || '?')
+          const name = m._remark || dn(m.id, m.nickname || m.username || '?')
           const isOwner = m.project_role_key === 'owner'
           return (
             <div key={m.id}
