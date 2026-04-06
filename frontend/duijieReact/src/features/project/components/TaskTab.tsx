@@ -696,7 +696,8 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks, remarkMa
                     return (
                       <div key={`df-${i}`} style={{ position: 'relative', display: 'inline-flex' }}>
                         {isImg ? (
-                          <div style={{ width: 56, height: 56, borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border-primary)' }}>
+                          <div style={{ width: 56, height: 56, borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border-primary)', cursor: 'pointer' }}
+                            onClick={() => { const allImgs = draftFiles.filter(x => x.mime_type.startsWith('image/')).map(x => `/uploads/${x.filename}`); setPreviewImg(url); setPreviewImages(allImgs); setPreviewStartIdx(Math.max(0, allImgs.indexOf(url))) }}>
                             <img src={url} alt={df.original_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           </div>
                         ) : (
@@ -712,11 +713,13 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks, remarkMa
                   })}
                   {taskFiles.map((f, i) => {
                     const isImg = f.type.startsWith('image/')
+                    const objUrl = isImg ? URL.createObjectURL(f) : ''
                     return (
                       <div key={`f-${i}`} style={{ position: 'relative', display: 'inline-flex' }}>
                         {isImg ? (
-                          <div style={{ width: 56, height: 56, borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border-primary)', position: 'relative' }}>
-                            <img src={URL.createObjectURL(f)} alt={f.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <div style={{ width: 56, height: 56, borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border-primary)', position: 'relative', cursor: 'pointer' }}
+                            onClick={() => { const allImgs = taskFiles.filter(x => x.type.startsWith('image/')).map(x => URL.createObjectURL(x)); setPreviewImg(objUrl); setPreviewImages(allImgs); setPreviewStartIdx(Math.max(0, allImgs.indexOf(objUrl))) }}>
+                            <img src={objUrl} alt={f.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             <button onClick={(e) => { e.stopPropagation(); setEditingExistingIdx(i); setEditingImage(f) }}
                               style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 10, padding: '2px 0', textAlign: 'center' }}>编辑</button>
                           </div>
