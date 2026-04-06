@@ -738,11 +738,11 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
                                 <Pencil size={13} />
                               </button>
                             )}
-                            {isGroupCreator(activeGroup) && (
+                            {(canEdit || isGroupCreator(activeGroup)) && (
                               <button onClick={e => { e.stopPropagation(); handleDeleteItem(item) }}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)', borderRadius: 4 }}
-                                onMouseEnter={e => e.currentTarget.style.color = 'var(--color-danger)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}>
-                                <Trash2 size={13} />
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, color: 'var(--color-danger, #ef4444)', borderRadius: 6, flexShrink: 0, opacity: 0.6 }}
+                                onMouseEnter={e => { e.currentTarget.style.opacity = '1' }} onMouseLeave={e => { e.currentTarget.style.opacity = '0.6' }}>
+                                <Trash2 size={16} />
                               </button>
                             )}
                           </div>
