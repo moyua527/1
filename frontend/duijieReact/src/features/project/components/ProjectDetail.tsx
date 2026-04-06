@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react
 import { ArrowLeft, X } from 'lucide-react'
 import useProjectTabStore from '../../../stores/useProjectTabStore'
 import { can } from '../../../stores/permissions'
-import { useInvalidate } from '../../../hooks/useApi'
+import { useInvalidate, useProjectUnreadSummary } from '../../../hooks/useApi'
 import useProjectPerms from '../../../hooks/useProjectPerms'
 import { fetchApi } from '../../../bootstrap'
 import { projectApi } from '../services/api'
@@ -42,6 +42,7 @@ export default function ProjectDetail() {
   const { id } = useParams()
   const nav = useNavigate()
   const invalidate = useInvalidate()
+  const { data: unreadSummary = {} } = useProjectUnreadSummary()
   const { user, isMobile } = useOutletContext<{ user: any; isMobile?: boolean }>()
   const role = user?.role || ''
   const platformCanEdit = can(role, 'project:edit')
@@ -59,9 +60,9 @@ export default function ProjectDetail() {
   const [projectLoading, setProjectLoading] = useState(!cached)
   const [projectError, setProjectError] = useState('')
   const [tasks, setTasks] = useState<any[]>(cached?.tasks ?? [])
-  const [hasNewSubmitted, setHasNewSubmitted] = useState(false)
-  const [hasNewMessages, setHasNewMessages] = useState(false)
-  const [hasNewFiles, setHasNewFiles] = useState(false)
+  const [, setHasNewSubmitted] = useState(false)
+  const [, setHasNewMessages] = useState(false)
+  const [, setHasNewFiles] = useState(false)
   const [selectedMember, setSelectedMember] = useState<any>(null)
   const [searchParams, setSearchParams] = useSearchParams()
   const validTabs = ['tasks', 'todo', 'files', 'messages', 'settings'] as const
@@ -305,28 +306,31 @@ export default function ProjectDetail() {
         <div style={{ width: 1, height: 20, background: 'var(--border-primary)', flexShrink: 0, margin: '0 2px' }} />
 
         <div data-tour="project-tabs" style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-          {([['tasks','需求'],['todo','代办'],['files','资料库'],['messages','消息'],['settings','设置']] as [string, string][]).map(([k,v]) => (
-            <button key={k} data-tour={`tab-${k}`} onClick={() => setTab(k as any)} style={{
-              padding: '6px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, position: 'relative', whiteSpace: 'nowrap', flexShrink: 0,
-              background: tab === k ? 'var(--brand)' : 'var(--bg-tertiary)', color: tab === k ? 'var(--bg-primary)' : 'var(--text-secondary)',
-            }}>
-              {v}
-              {k === 'tasks' && hasNewSubmitted && tab !== 'tasks' && (
-                <span style={{ position: 'absolute', top: -2, right: -2, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
-              )}
-              {k === 'messages' && hasNewMessages && tab !== 'messages' && (
-                <span style={{ position: 'absolute', top: -2, right: -2, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
-              )}
-              {k === 'files' && hasNewFiles && tab !== 'files' && (
-                <span style={{ position: 'absolute', top: -2, right: -2, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
-              )}
-              {k === 'settings' && pendingJoinCount > 0 && (
-                <span style={{ position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16, borderRadius: 8, background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', lineHeight: 1 }}>
-                  {pendingJoinCount}
-                </span>
-              )}
-            </button>
-          ))}
+          {([['tasks','需求'],['todo','代办'],['files','资料库'],['messages','消息'],['settings','设置']] as [string, string][]).map(([k,v]) => {
+            const pInfo = id ? unreadSummary[id] : undefined
+            const tabCount = pInfo ? (pInfo as any)[k] || 0 : 0
+            const badgeCount = k === 'settings' ? pendingJoinCount : tabCount
+            return (
+              <button key={k} data-tour={`tab-${k}`} onClick={() => setTab(k as any)} style={{
+                padding: '6px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, position: 'relative', whiteSpace: 'nowrap', flexShrink: 0,
+                background: tab === k ? 'var(--brand)' : 'var(--bg-tertiary)', color: tab === k ? 'var(--bg-primary)' : 'var(--text-secondary)',
+              }}>
+                {v}
+                {badgeCount > 0 && tab !== k && (
+                  <span style={{
+                    position: 'absolute', top: -4, right: -4,
+                    minWidth: 16, height: 16, borderRadius: 8,
+                    background: '#ef4444', color: '#fff',
+                    fontSize: 10, fontWeight: 600,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: '0 4px', lineHeight: 1,
+                  }}>
+                    {badgeCount > 99 ? '99+' : badgeCount}
+                  </span>
+                )}
+              </button>
+            )
+          })}
         </div>
       </div>
       <EditProjectModal open={showEditProject} project={project} onClose={() => setShowEditProject(false)}

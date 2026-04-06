@@ -3,7 +3,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom'
 import { Plus, FolderKanban, Loader2, Download, Search, Trash2, RotateCcw, Upload, Link, MoreVertical, X } from 'lucide-react'
 import { projectApi } from './services/api'
 import { can } from '../../stores/permissions'
-import { useProjects, useInvalidate } from '../../hooks/useApi'
+import { useProjects, useInvalidate, useProjectUnreadSummary } from '../../hooks/useApi'
 import Button from '../ui/Button'
 
 import Modal from '../ui/Modal'
@@ -49,53 +49,35 @@ export default function ProjectList() {
   const projectTabs = useProjectTabStore(s => s.tabs)
   const closeTab = useProjectTabStore(s => s.closeTab)
 
-  type UnreadInfo = { tasks?: boolean; members?: boolean; messages?: boolean }
-  const [unreadMap, setUnreadMap] = useState<Record<number, UnreadInfo>>(() => {
-    try { const s = localStorage.getItem('unread_project_map'); return s ? JSON.parse(s) : {} } catch { return {} }
-  })
-  const unreadProjects = new Set(Object.keys(unreadMap).map(Number).filter(k => {
-    const v = unreadMap[k]; return v && (v.tasks || v.members || v.messages)
-  }))
-
-  const markUnread = useCallback((pid: number, category: keyof UnreadInfo) => {
-    setUnreadMap(prev => {
-      const next = { ...prev, [pid]: { ...prev[pid], [category]: true } }
-      localStorage.setItem('unread_project_map', JSON.stringify(next))
-      return next
-    })
-  }, [])
+  const { data: unreadSummary = {} } = useProjectUnreadSummary()
+  const [dismissedSet, setDismissedSet] = useState<Set<number>>(new Set())
 
   const clearUnread = useCallback((pid: number) => {
-    setUnreadMap(prev => {
-      const next = { ...prev }; delete next[pid]
-      localStorage.setItem('unread_project_map', JSON.stringify(next))
-      return next
-    })
+    setDismissedSet(prev => new Set(prev).add(pid))
   }, [])
 
-  const load = useCallback(() => invalidate('projects'), [invalidate])
+  const load = useCallback(() => { invalidate('projects'); invalidate('project-unread-summary') }, [invalidate])
   useLiveData(['project'], load)
 
   useEffect(() => {
+    const refresh = () => invalidate('project-unread-summary')
     const offNotif = onSocket('new_notification', (payload: any) => {
       const link = payload?.link || ''
       const m = link.match(/\/projects\/(\d+)/)
-      if (m) markUnread(Number(m[1]), 'tasks')
+      if (m) { setDismissedSet(prev => { const n = new Set(prev); n.delete(Number(m[1])); return n }); refresh() }
     })
     const offMsg = onSocket('new_message', (payload: any) => {
-      if (payload?.project_id) markUnread(Number(payload.project_id), 'messages')
+      if (payload?.project_id) { setDismissedSet(prev => { const n = new Set(prev); n.delete(Number(payload.project_id)); return n }); refresh() }
     })
     const offData = onSocket('data_changed', (payload: any) => {
       const pid = payload?.project_id ? Number(payload.project_id) : 0
-      if (!pid) return
-      if (payload.entity === 'task') markUnread(pid, 'tasks')
-      else if (payload.entity === 'project' && (payload.action === 'member_added' || payload.action === 'member_joined' || payload.action === 'member_role_updated' || payload.action === 'join_approved')) markUnread(pid, 'members')
+      if (pid) { setDismissedSet(prev => { const n = new Set(prev); n.delete(pid); return n }); refresh() }
     })
     const offTask = onSocket('task_created', (payload: any) => {
-      if (payload?.project_id) markUnread(Number(payload.project_id), 'tasks')
+      if (payload?.project_id) { setDismissedSet(prev => { const n = new Set(prev); n.delete(Number(payload.project_id)); return n }); refresh() }
     })
     return () => { offNotif(); offMsg(); offData(); offTask() }
-  }, [markUnread])
+  }, [invalidate])
 
   const filtered = projects.filter((p: any) => {
     if (search) {
@@ -249,22 +231,23 @@ export default function ProjectList() {
                       <Icon size={isMobile ? 30 : 36} color="#fff" />
                     </div>
                   )}
-                  {unreadProjects.has(p.id) && (
-                    <span style={{
-                      position: 'absolute', top: -4, right: -4,
-                      minWidth: 18, height: 18, borderRadius: 9,
-                      background: '#ef4444', color: '#fff',
-                      fontSize: 10, fontWeight: 700,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      padding: '0 4px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                    }}>
-                      {(() => {
-                        const info = unreadMap[p.id] || {}
-                        const c = (info.tasks ? 1 : 0) + (info.members ? 1 : 0) + (info.messages ? 1 : 0)
-                        return c || ''
-                      })()}
-                    </span>
-                  )}
+                  {(() => {
+                    const info = unreadSummary[String(p.id)]
+                    const cnt = info?.total || 0
+                    if (cnt <= 0 || dismissedSet.has(p.id)) return null
+                    return (
+                      <span style={{
+                        position: 'absolute', top: -4, right: -4,
+                        minWidth: 18, height: 18, borderRadius: 9,
+                        background: '#ef4444', color: '#fff',
+                        fontSize: 10, fontWeight: 700,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        padding: '0 4px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                      }}>
+                        {cnt > 99 ? '99+' : cnt}
+                      </span>
+                    )
+                  })()}
                 </div>
                 <span style={{
                   fontSize: 12, fontWeight: 500, color: 'var(--text-heading)',

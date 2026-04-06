@@ -38,6 +38,20 @@ export function useProjects() {
   })
 }
 
+export type ProjectUnreadInfo = { total: number; tasks: number; todo: number; messages: number; files: number }
+
+export function useProjectUnreadSummary() {
+  return useQuery<Record<string, ProjectUnreadInfo>>({
+    queryKey: ['project-unread-summary'],
+    queryFn: async () => {
+      const r: ApiResponse = await fetchApi('/api/notifications/unread-summary')
+      if (!r.success) throw new Error(r.message)
+      return r.data || {}
+    },
+    refetchInterval: 30000,
+  })
+}
+
 export function useProject(id: string | undefined) {
   return useQuery<Project>({
     queryKey: ['project', id],

@@ -11,6 +11,7 @@ interface TodoItem {
   title: string
   description?: string
   is_completed: boolean
+  progress: number
   sort_order: number
   created_at: string
   updated_at?: string
@@ -173,8 +174,18 @@ export default function TodoTab({ projectId, canEdit, isMobile, currentUserId, m
                     {item.description}
                   </div>
                 )}
-                <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 'auto' }}>
-                  {formatDt(item.created_at)}
+                <div style={{ marginTop: 'auto' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                    <div style={{ flex: 1, height: 4, borderRadius: 2, background: 'var(--bg-tertiary)', overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%', borderRadius: 2,
+                        width: `${Math.min(item.progress ?? 0, 100)}%`,
+                        background: (item.progress ?? 0) >= 100 ? '#059669' : (item.progress ?? 0) >= 60 ? '#3b82f6' : (item.progress ?? 0) >= 30 ? '#f59e0b' : '#ef4444',
+                      }} />
+                    </div>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-tertiary)', flexShrink: 0 }}>{item.progress ?? 0}%</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{formatDt(item.created_at)}</div>
                 </div>
               </div>
             ))}

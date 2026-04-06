@@ -36,6 +36,8 @@ export default function TodoDetailModal({ open, milestoneId, projectId, canEdit,
   const [editingMs, setEditingMs] = useState(false)
   const [editMsTitle, setEditMsTitle] = useState('')
   const [editMsDesc, setEditMsDesc] = useState('')
+  const [editingProgress, setEditingProgress] = useState(false)
+  const [progressVal, setProgressVal] = useState(0)
   const msgEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const dn = useNicknameStore(s => s.getDisplayName)
@@ -178,6 +180,16 @@ export default function TodoDetailModal({ open, milestoneId, projectId, canEdit,
     else toast(r.message || '更新失败', 'error')
   }
 
+  const handleUpdateProgress = async (val: number) => {
+    if (!milestoneId) return
+    const r = await fetchApi(`/api/milestones/${milestoneId}/progress`, {
+      method: 'PATCH',
+      body: JSON.stringify({ progress: val }),
+    })
+    if (r.success) { setEditingProgress(false); load(); onRefresh() }
+    else toast(r.message || '更新失败', 'error')
+  }
+
   const participantIds = new Set(participants.map(p => p.user_id))
   const availableMembers = members.filter(m => !participantIds.has(m.user_id || m.id) && (m.user_id || m.id) !== detail?.created_by)
   const mentionableUsers = participants.filter(p => p.user_id !== currentUserId)
@@ -229,6 +241,41 @@ export default function TodoDetailModal({ open, milestoneId, projectId, canEdit,
             {detail.description && (
               <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{detail.description}</div>
             )}
+            {/* 进度条 */}
+            <div style={{ marginTop: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>进度</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: (detail.progress ?? 0) >= 100 ? '#059669' : 'var(--brand)' }}>{detail.progress ?? 0}%</span>
+                {canEdit && !detail.is_completed && !editingProgress && (
+                  <button onClick={() => { setProgressVal(detail.progress ?? 0); setEditingProgress(true) }}
+                    style={{ marginLeft: 'auto', background: 'none', border: '1px solid var(--border-primary)', borderRadius: 4, padding: '1px 8px', cursor: 'pointer', fontSize: 11, color: 'var(--text-secondary)' }}>
+                    调整
+                  </button>
+                )}
+              </div>
+              <div style={{ height: 8, borderRadius: 4, background: 'var(--bg-tertiary)', overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%', borderRadius: 4, transition: 'width 0.3s ease',
+                  width: `${Math.min(detail.progress ?? 0, 100)}%`,
+                  background: (detail.progress ?? 0) >= 100 ? '#059669' : (detail.progress ?? 0) >= 60 ? '#3b82f6' : (detail.progress ?? 0) >= 30 ? '#f59e0b' : '#ef4444',
+                }} />
+              </div>
+              {editingProgress && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
+                  <input type="range" min={0} max={99} value={progressVal} onChange={e => setProgressVal(+e.target.value)}
+                    style={{ flex: 1, accentColor: 'var(--brand)' }} />
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-heading)', minWidth: 32 }}>{progressVal}%</span>
+                  <button onClick={() => handleUpdateProgress(progressVal)}
+                    style={{ padding: '3px 10px', borderRadius: 4, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 11, cursor: 'pointer' }}>
+                    确定
+                  </button>
+                  <button onClick={() => setEditingProgress(false)}
+                    style={{ padding: '3px 10px', borderRadius: 4, border: '1px solid var(--border-primary)', background: 'none', fontSize: 11, cursor: 'pointer', color: 'var(--text-secondary)' }}>
+                    取消
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
         {detail && editingMs && (

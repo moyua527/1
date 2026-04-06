@@ -42,6 +42,7 @@ router.get('/milestones', auth, require('../controllers/milestone/listController
 router.put('/milestones/:id', auth, require('../controllers/milestone/updateController'));
 router.delete('/milestones/:id', auth, require('../controllers/milestone/deleteController'));
 router.patch('/milestones/:id/toggle', auth, require('../controllers/milestone/toggleController'));
+router.patch('/milestones/:id/progress', auth, require('../controllers/milestone/updateProgressController'));
 router.get('/milestones/:id/detail', auth, require('../controllers/milestone/detailController'));
 
 // Milestone participants

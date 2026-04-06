@@ -27,6 +27,7 @@ router.post('/tickets/:id/reply', auth, upload.array('files', 10), require('../c
 router.post('/tickets/:id/rate', auth, require('../controllers/ticket/rateController'));
 
 // Notifications
+router.get('/notifications/unread-summary', auth, require('../controllers/notification/unreadSummaryController'));
 router.get('/notifications', auth, require('../controllers/notification/listController'));
 router.patch('/notifications/:id/read', auth, require('../controllers/notification/markReadController'));
 router.delete('/notifications/cleanup', auth, require('../controllers/notification/cleanupController'));
