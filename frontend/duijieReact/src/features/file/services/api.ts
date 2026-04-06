@@ -34,4 +34,8 @@ export const resourceGroupApi = {
     fd.append('type', 'file')
     return uploadFile('/api/resource-groups/items', fd)
   },
+  updateItem: (itemId: number, data: { title?: string; url?: string; content?: string; description?: string }) =>
+    fetchApi(`/api/resource-groups/items/${itemId}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteItem: (itemId: number) =>
+    fetchApi(`/api/resource-groups/items/${itemId}`, { method: 'DELETE' }),
 }

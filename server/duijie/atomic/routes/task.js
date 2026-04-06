@@ -66,5 +66,7 @@ router.get('/resource-groups/:id', auth, require('../controllers/resource/groupD
 router.put('/resource-groups/:id', auth, require('../controllers/resource/updateGroupController'));
 router.delete('/resource-groups/:id', auth, require('../controllers/resource/deleteGroupController'));
 router.post('/resource-groups/items', auth, upload.single('file'), require('../controllers/resource/addItemController'));
+router.put('/resource-groups/items/:itemId', auth, require('../controllers/resource/updateItemController'));
+router.delete('/resource-groups/items/:itemId', auth, require('../controllers/resource/deleteItemController'));
 
 module.exports = router;

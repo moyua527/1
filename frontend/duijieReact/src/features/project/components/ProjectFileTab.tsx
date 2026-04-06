@@ -86,6 +86,7 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
   const [itemTitle, setItemTitle] = useState('')
   const [itemContent, setItemContent] = useState('')
   const groupFileRef = useRef<HTMLInputElement>(null)
+  const [editingItem, setEditingItem] = useState<{ id: number; title: string; url: string; content: string; description: string; mime_type: string } | null>(null)
   const [editingVisibility, setEditingVisibility] = useState(false)
   const [editVisibility, setEditVisibility] = useState<'all' | 'selected'>('all')
   const [editVisibleUsers, setEditVisibleUsers] = useState<number[]>([])
@@ -178,6 +179,29 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
     e.target.value = ''
     openGroupDetail(activeGroup)
   }
+  const handleDeleteItem = async (item: any) => {
+    if (!(await confirm({ message: `确定删除「${item.original_name}」？`, danger: true }))) return
+    const r = await resourceGroupApi.deleteItem(item.id)
+    if (r.success) { toast('已删除', 'success'); openGroupDetail(activeGroup) }
+    else toast(r.message || '删除失败', 'error')
+  }
+
+  const handleUpdateItem = async () => {
+    if (!editingItem) return
+    const data: any = {}
+    if (editingItem.mime_type === 'text/x-url') {
+      data.title = editingItem.title
+      data.url = editingItem.url
+      data.description = editingItem.description
+    } else if (editingItem.mime_type === 'text/x-note') {
+      data.title = editingItem.title
+      data.content = editingItem.content
+    }
+    const r = await resourceGroupApi.updateItem(editingItem.id, data)
+    if (r.success) { toast('已更新', 'success'); setEditingItem(null); openGroupDetail(activeGroup) }
+    else toast(r.message || '更新失败', 'error')
+  }
+
   const [files, setFiles] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
@@ -667,6 +691,30 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
                       {(groupDetail.items || []).map((item: any) => {
                         const isUrl = item.mime_type === 'text/x-url'
                         const isNote = item.mime_type === 'text/x-note'
+                        const isEditing = editingItem?.id === item.id
+                        const canEditItem = (isUrl || isNote) && isGroupCreator(activeGroup)
+                        if (isEditing) {
+                          return (
+                            <div key={item.id} style={{ padding: 12, borderRadius: 10, border: '1px solid var(--brand)', background: 'rgba(59,130,246,0.04)' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                <input value={editingItem!.title} onChange={e => setEditingItem(prev => prev ? { ...prev, title: e.target.value } : prev)} placeholder="标题"
+                                  style={{ width: '100%', padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-secondary)', boxSizing: 'border-box' }} />
+                                {isUrl && <>
+                                  <input value={editingItem!.url} onChange={e => setEditingItem(prev => prev ? { ...prev, url: e.target.value } : prev)} placeholder="网址"
+                                    style={{ width: '100%', padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-secondary)', boxSizing: 'border-box' }} />
+                                  <input value={editingItem!.description} onChange={e => setEditingItem(prev => prev ? { ...prev, description: e.target.value } : prev)} placeholder="备注（选填）"
+                                    style={{ width: '100%', padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-secondary)', boxSizing: 'border-box' }} />
+                                </>}
+                                {isNote && <textarea value={editingItem!.content} onChange={e => setEditingItem(prev => prev ? { ...prev, content: e.target.value } : prev)} placeholder="内容" rows={3}
+                                  style={{ width: '100%', padding: '6px 10px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-secondary)', boxSizing: 'border-box', resize: 'vertical', fontFamily: 'inherit' }} />}
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, marginTop: 8 }}>
+                                <button onClick={() => setEditingItem(null)} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', cursor: 'pointer', fontSize: 12, color: 'var(--text-secondary)' }}>取消</button>
+                                <Button onClick={handleUpdateItem} style={{ padding: '4px 10px', fontSize: 12 }}>保存</Button>
+                              </div>
+                            </div>
+                          )
+                        }
                         return (
                           <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', cursor: isUrl ? 'pointer' : 'default' }}
                             onClick={() => { if (isUrl) window.open(ensureUrlProtocol(item.path), '_blank') }}>
@@ -682,6 +730,20 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
                             {!isUrl && !isNote && (
                               <button onClick={e => { e.stopPropagation(); window.open(`${BACKEND_URL}/api/files/${item.id}/download`, '_blank') }}
                                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--brand)' }}><Download size={14} /></button>
+                            )}
+                            {canEditItem && (
+                              <button onClick={e => { e.stopPropagation(); setEditingItem({ id: item.id, title: item.original_name || '', url: item.path || '', content: item.path || '', description: item.description || '', mime_type: item.mime_type }) }}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)', borderRadius: 4 }}
+                                onMouseEnter={e => e.currentTarget.style.color = 'var(--brand)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}>
+                                <Pencil size={13} />
+                              </button>
+                            )}
+                            {isGroupCreator(activeGroup) && (
+                              <button onClick={e => { e.stopPropagation(); handleDeleteItem(item) }}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)', borderRadius: 4 }}
+                                onMouseEnter={e => e.currentTarget.style.color = 'var(--color-danger)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}>
+                                <Trash2 size={13} />
+                              </button>
                             )}
                           </div>
                         )
