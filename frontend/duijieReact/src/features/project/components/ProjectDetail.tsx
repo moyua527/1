@@ -78,6 +78,12 @@ export default function ProjectDetail() {
     }
     if (t === 'messages') setHasNewMessages(false)
     if (t === 'files') setHasNewFiles(false)
+    if (id && ['tasks', 'todo', 'messages', 'files'].includes(t)) {
+      fetchApi('/api/notifications/read-by-tab', {
+        method: 'PATCH',
+        body: JSON.stringify({ project_id: id, tab: t }),
+      }).then(() => invalidate('project-unread-summary'))
+    }
   }
 
   const [showAddMember, setShowAddMember] = useState(false)
@@ -234,6 +240,12 @@ export default function ProjectDetail() {
     }
     if (tab === 'messages') setHasNewMessages(false)
     if (tab === 'files') setHasNewFiles(false)
+    if (['tasks', 'todo', 'messages', 'files'].includes(tab)) {
+      fetchApi('/api/notifications/read-by-tab', {
+        method: 'PATCH',
+        body: JSON.stringify({ project_id: id, tab }),
+      }).then(() => invalidate('project-unread-summary'))
+    }
     const timer = window.setTimeout(() => {
       loadProject()
       loadTasks()

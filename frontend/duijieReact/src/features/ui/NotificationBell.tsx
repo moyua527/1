@@ -115,8 +115,8 @@ export default function NotificationBell() {
         style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', padding: 6, display: 'flex', alignItems: 'center', color: 'var(--text-secondary)' }}>
         <Bell size={20} />
         {unread > 0 && (
-          <span style={{ position: 'absolute', top: 2, right: 2, width: 16, height: 16, borderRadius: '50%', background: 'var(--color-danger)', color: 'var(--bg-primary)', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}>
-            {unread > 9 ? '9+' : unread}
+          <span style={{ position: 'absolute', top: 0, right: -2, minWidth: 18, height: 18, borderRadius: 9, background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, padding: '0 4px', boxSizing: 'border-box' }}>
+            {unread > 99 ? '99+' : unread}
           </span>
         )}
       </button>

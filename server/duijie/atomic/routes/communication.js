@@ -29,6 +29,7 @@ router.post('/tickets/:id/rate', auth, require('../controllers/ticket/rateContro
 // Notifications
 router.get('/notifications/unread-summary', auth, require('../controllers/notification/unreadSummaryController'));
 router.get('/notifications', auth, require('../controllers/notification/listController'));
+router.patch('/notifications/read-by-tab', auth, require('../controllers/notification/markReadByTabController'));
 router.patch('/notifications/:id/read', auth, require('../controllers/notification/markReadController'));
 router.delete('/notifications/cleanup', auth, require('../controllers/notification/cleanupController'));
 router.delete('/notifications/:id', auth, require('../controllers/notification/deleteController'));
