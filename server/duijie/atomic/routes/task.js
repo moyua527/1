@@ -42,6 +42,21 @@ router.get('/milestones', auth, require('../controllers/milestone/listController
 router.put('/milestones/:id', auth, require('../controllers/milestone/updateController'));
 router.delete('/milestones/:id', auth, require('../controllers/milestone/deleteController'));
 router.patch('/milestones/:id/toggle', auth, require('../controllers/milestone/toggleController'));
+router.get('/milestones/:id/detail', auth, require('../controllers/milestone/detailController'));
+
+// Milestone participants
+router.get('/milestones/:id/participants', auth, require('../controllers/milestone/participantsController').list);
+router.post('/milestones/:id/participants', auth, require('../controllers/milestone/participantsController').add);
+router.delete('/milestones/:id/participants/:userId', auth, require('../controllers/milestone/participantsController').remove);
+
+// Milestone messages (progress tracking)
+router.get('/milestones/:id/messages', auth, require('../controllers/milestone/messagesController').list);
+router.post('/milestones/:id/messages', auth, require('../controllers/milestone/messagesController').create);
+
+// Milestone reminders
+router.get('/milestones/:id/reminders', auth, require('../controllers/milestone/remindersController').list);
+router.post('/milestones/:id/reminders', auth, require('../controllers/milestone/remindersController').create);
+router.delete('/milestone-reminders/:reminderId', auth, require('../controllers/milestone/remindersController').remove);
 
 // Files
 router.post('/files/upload', auth, upload.single('file'), require('../controllers/file/uploadController'));

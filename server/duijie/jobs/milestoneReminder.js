@@ -20,7 +20,7 @@ async function checkReminders() {
         'follow_reminder',
         '代办跟进提醒',
         `代办「${r.milestone_title}」需要跟进${noteStr}`,
-        `/projects/${r.project_id}?tab=milestones`
+        `/projects/${r.project_id}?tab=todo`
       );
       await db.query('UPDATE duijie_milestone_reminders SET is_sent = 1 WHERE id = ?', [r.id]);
     }

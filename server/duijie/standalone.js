@@ -14,6 +14,7 @@ initSocket(server);
 
 server.listen(PORT, () => {
   logger.info(`后端服务启动: http://localhost:${PORT}`);
+  require('./jobs/milestoneReminder').start();
 });
 
 // 优雅关闭：关闭连接池和 Socket.IO
