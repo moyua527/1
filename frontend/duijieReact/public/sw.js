@@ -1,4 +1,4 @@
-const CACHE_NAME = 'duijie-v22';
+const CACHE_NAME = 'duijie-v23';
 const MAX_CACHE_ITEMS = 100;
 
 // 缓存清理：限制缓存条目数
