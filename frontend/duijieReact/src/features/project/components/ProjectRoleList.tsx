@@ -13,31 +13,9 @@ interface PermGroup { title: string; items: PermItem[] }
 const itemKeys = (p: PermItem) => p.keys || [p.key]
 
 const PERM_GROUPS: PermGroup[] = [
-  { title: '项目管理', items: [
-    { key: 'can_edit_project_name', label: '修改名称' },
-    { key: 'can_edit_project_desc', label: '修改描述' },
-    { key: 'can_edit_project_status', label: '修改状态' },
-  ]},
-  { title: '成员管理', items: [
-    { key: 'can_add_member', label: '添加成员' },
-    { key: 'can_remove_member', label: '移除成员' },
-    { key: 'can_assign_member_proj_role', label: '修改成员角色' },
-  ]},
-  { title: '加入审批', items: [
-    { key: 'can_approve_join', label: '批准加入' },
-    { key: 'can_reject_join', label: '拒绝加入' },
-  ]},
-  { title: '角色管理', items: [
-    { key: 'can_create_role', label: '创建角色' },
-    { key: 'can_edit_role_name', label: '编辑角色' },
-    { key: 'can_edit_role_perms', label: '编辑权限' },
-    { key: 'can_delete_role', label: '删除角色' },
-  ]},
-  { title: '需求管理', items: [
+  { title: '📋 需求', items: [
     { key: 'can_create_task', label: '提出需求', keys: ['can_create_task', 'can_edit_task_title', 'can_edit_task_desc', 'can_edit_task_priority', 'can_edit_task_deadline', 'can_assign_task'] },
     { key: 'can_delete_task', label: '删除需求' },
-  ]},
-  { title: '需求状态流转', items: [
     { key: 'can_move_task_accept', label: '接受执行' },
     { key: 'can_move_task_dispute', label: '提出疑问' },
     { key: 'can_move_task_supplement', label: '补充回复' },
@@ -45,26 +23,36 @@ const PERM_GROUPS: PermGroup[] = [
     { key: 'can_move_task_reject', label: '驳回验收' },
     { key: 'can_move_task_approve', label: '验收通过' },
     { key: 'can_move_task_resubmit', label: '重新验收' },
-  ]},
-  { title: '代办管理', items: [
-    { key: 'can_create_milestone', label: '创建代办' },
-    { key: 'can_edit_milestone', label: '编辑代办' },
-    { key: 'can_delete_milestone', label: '删除代办' },
-    { key: 'can_toggle_milestone', label: '完成/取消完成' },
-  ]},
-  { title: '资料库', items: [
-    { key: 'can_upload_file', label: '上传文件/链接/笔记' },
-    { key: 'can_delete_file', label: '删除文件' },
-    { key: 'can_manage_resource_group', label: '管理资源分组' },
-  ]},
-  { title: '附件与审核', items: [
     { key: 'can_upload_task_attachment', label: '上传附件' },
     { key: 'can_delete_task_attachment', label: '删除附件' },
     { key: 'can_add_review_point', label: '添加审核要点' },
     { key: 'can_respond_review_point', label: '回复审核要点' },
     { key: 'can_confirm_review_point', label: '确认审核要点' },
   ]},
-  { title: '数据与应用', items: [
+  { title: '📌 代办', items: [
+    { key: 'can_create_milestone', label: '创建代办' },
+    { key: 'can_edit_milestone', label: '编辑代办' },
+    { key: 'can_delete_milestone', label: '删除代办' },
+    { key: 'can_toggle_milestone', label: '完成/取消完成' },
+  ]},
+  { title: '📁 资料库', items: [
+    { key: 'can_upload_file', label: '上传文件/链接/笔记' },
+    { key: 'can_delete_file', label: '删除文件' },
+    { key: 'can_manage_resource_group', label: '管理资源分组' },
+  ]},
+  { title: '⚙️ 设置', items: [
+    { key: 'can_edit_project_name', label: '修改项目名称' },
+    { key: 'can_edit_project_desc', label: '修改项目描述' },
+    { key: 'can_edit_project_status', label: '修改项目状态' },
+    { key: 'can_add_member', label: '添加成员' },
+    { key: 'can_remove_member', label: '移除成员' },
+    { key: 'can_assign_member_proj_role', label: '修改成员角色' },
+    { key: 'can_approve_join', label: '批准加入申请' },
+    { key: 'can_reject_join', label: '拒绝加入申请' },
+    { key: 'can_create_role', label: '创建角色' },
+    { key: 'can_edit_role_name', label: '编辑角色' },
+    { key: 'can_edit_role_perms', label: '编辑角色权限' },
+    { key: 'can_delete_role', label: '删除角色' },
     { key: 'can_export_data', label: '导出数据' },
     { key: 'can_manage_app_config', label: '管理关联应用' },
   ]},
