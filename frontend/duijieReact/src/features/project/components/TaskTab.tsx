@@ -66,9 +66,9 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks, remarkMa
   const saveDraftAndClose = useCallback(async (silent?: boolean) => {
     if (draftSavedRef.current || !projectId) return
     const t = taskForm.title.trim(); const d = taskForm.description.trim()
-    if (!t && !d && taskFiles.length === 0) { if (!silent) toast('草稿内容为空', 'error'); return }
+    if (!t && !d && taskFiles.length === 0 && draftFiles.length === 0) { if (!silent) toast('草稿内容为空', 'error'); return }
     draftSavedRef.current = true
-    const r = await taskApi.saveDraft(projectId, t, d, taskFiles.length > 0 ? taskFiles : undefined)
+    const r = await taskApi.saveDraft(projectId, t, d, taskFiles.length > 0 ? taskFiles : undefined, loadedDraftId || undefined, draftFiles.length > 0 ? draftFiles : undefined)
     if (r.success) {
       setShowCreateTask(false)
       setTaskForm({ title: '', description: '' })

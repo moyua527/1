@@ -33,11 +33,13 @@ export const taskApi = {
   },
   // 草稿
   listDrafts: (projectId: string) => fetchApi(`/api/drafts?project_id=${projectId}`),
-  saveDraft: (projectId: string, title: string, description: string, files?: File[]) => {
+  saveDraft: (projectId: string, title: string, description: string, files?: File[], draftId?: number, existingFiles?: any[]) => {
     const fd = new FormData()
     fd.append('project_id', projectId)
     fd.append('title', title)
     fd.append('description', description)
+    if (draftId) fd.append('draft_id', String(draftId))
+    if (existingFiles && existingFiles.length > 0) fd.append('existing_files', JSON.stringify(existingFiles))
     if (files) files.forEach(f => fd.append('files', f))
     return uploadFile('/api/drafts', fd)
   },

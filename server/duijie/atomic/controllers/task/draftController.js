@@ -21,19 +21,35 @@ exports.list = async (req, res) => {
 
 exports.save = async (req, res) => {
   try {
-    const { project_id, title = '', description = '' } = req.body;
+    const { project_id, title = '', description = '', draft_id, existing_files } = req.body;
     if (!project_id) return res.status(400).json({ success: false, message: 'project_id required' });
 
-    const filesMeta = (req.files || []).map(f => ({
+    const newFilesMeta = (req.files || []).map(f => ({
       filename: f.filename,
       original_name: Buffer.from(f.originalname, 'latin1').toString('utf8'),
       size: f.size,
       mime_type: f.mimetype,
     }));
 
+    let kept = [];
+    if (existing_files) {
+      try { kept = JSON.parse(existing_files); } catch { kept = []; }
+      if (!Array.isArray(kept)) kept = [];
+    }
+    const allFiles = [...kept, ...newFilesMeta];
+
+    if (draft_id) {
+      const [[existing]] = await db.query('SELECT id FROM duijie_task_drafts WHERE id = ? AND user_id = ?', [draft_id, req.userId]);
+      if (existing) {
+        await db.query('UPDATE duijie_task_drafts SET title = ?, description = ?, files = ? WHERE id = ?',
+          [title, description, JSON.stringify(allFiles), draft_id]);
+        return res.json({ success: true, data: { id: Number(draft_id) } });
+      }
+    }
+
     const [result] = await db.query(
       'INSERT INTO duijie_task_drafts (project_id, user_id, title, description, files) VALUES (?,?,?,?,?)',
-      [project_id, req.userId, title, description, JSON.stringify(filesMeta)]
+      [project_id, req.userId, title, description, JSON.stringify(allFiles)]
     );
     res.json({ success: true, data: { id: result.insertId } });
   } catch (e) {
