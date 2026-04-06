@@ -36,6 +36,13 @@ router.put('/tasks/review-points/:pointId', auth, taskStaff, reviewPoints.update
 router.put('/tasks/review-points/:pointId/respond', auth, taskStaff, reviewPoints.respond);
 router.put('/tasks/review-points/:pointId/confirm', auth, taskStaff, reviewPoints.confirm);
 
+// Milestones (代办/项目流程)
+router.post('/milestones', auth, require('../controllers/milestone/createController'));
+router.get('/milestones', auth, require('../controllers/milestone/listController'));
+router.put('/milestones/:id', auth, require('../controllers/milestone/updateController'));
+router.delete('/milestones/:id', auth, require('../controllers/milestone/deleteController'));
+router.patch('/milestones/:id/toggle', auth, require('../controllers/milestone/toggleController'));
+
 // Files
 router.post('/files/upload', auth, upload.single('file'), require('../controllers/file/uploadController'));
 router.post('/files/url', auth, require('../controllers/file/addUrlController'));

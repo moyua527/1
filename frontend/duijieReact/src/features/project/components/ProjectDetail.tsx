@@ -12,6 +12,7 @@ import Badge from '../../ui/Badge'
 import { confirm } from '../../ui/ConfirmDialog'
 import { toast } from '../../ui/Toast'
 import TaskTab from './TaskTab'
+import TodoTab from './TodoTab'
 import ProjectFileTab from './ProjectFileTab'
 import ProjectSettingsTab from './ProjectSettingsTab'
 import MessagePanel from '../../message/components/MessagePanel'
@@ -61,7 +62,7 @@ export default function ProjectDetail() {
   const [hasNewFiles, setHasNewFiles] = useState(false)
   const [selectedMember, setSelectedMember] = useState<any>(null)
   const [searchParams, setSearchParams] = useSearchParams()
-  const validTabs = ['tasks', 'files', 'messages', 'settings'] as const
+  const validTabs = ['tasks', 'todo', 'files', 'messages', 'settings'] as const
   type Tab = typeof validTabs[number]
   const urlTab = searchParams.get('tab') as Tab
   const tab: Tab = validTabs.includes(urlTab as any) ? urlTab! : 'tasks'
@@ -300,7 +301,7 @@ export default function ProjectDetail() {
         <div style={{ width: 1, height: 20, background: 'var(--border-primary)', flexShrink: 0, margin: '0 2px' }} />
 
         <div data-tour="project-tabs" style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-          {([['tasks','需求'],['files','资料库'],['messages','消息'],['settings','设置']] as [string, string][]).map(([k,v]) => (
+          {([['tasks','需求'],['todo','代办'],['files','资料库'],['messages','消息'],['settings','设置']] as [string, string][]).map(([k,v]) => (
             <button key={k} data-tour={`tab-${k}`} onClick={() => setTab(k as any)} style={{
               padding: '6px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, position: 'relative', whiteSpace: 'nowrap', flexShrink: 0,
               background: tab === k ? 'var(--brand)' : 'var(--bg-tertiary)', color: tab === k ? 'var(--bg-primary)' : 'var(--text-secondary)',
@@ -356,6 +357,8 @@ export default function ProjectDetail() {
         />
 
       {tab === 'tasks' && <TaskTab tasks={tasks} canEdit={canCreateTask} projectId={id!} loadTasks={loadTasks} />}
+
+      {tab === 'todo' && <TodoTab projectId={id!} canEdit={canEdit} isMobile={isMobile} />}
 
       {tab === 'files' && <ProjectFileTab projectId={id!} canEdit={canEdit} members={allMembers} currentUserId={user?.id} />}
 
