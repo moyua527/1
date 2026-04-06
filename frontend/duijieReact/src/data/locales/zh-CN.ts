@@ -59,7 +59,6 @@ const zhCN: Record<string, string> = {
   'project.members': '项目成员',
   'project.overview': '概览',
   'project.tasks': '任务',
-  'project.milestones': '代办',
   'project.files': '文件',
   'project.messages': '消息',
   'project.apps': '应用',

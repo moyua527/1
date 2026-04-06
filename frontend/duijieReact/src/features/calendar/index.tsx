@@ -9,7 +9,7 @@ interface CalEvent {
   id: string
   title: string
   date: string // YYYY-MM-DD
-  type: 'task' | 'followup' | 'milestone'
+  type: 'task' | 'followup'
   color: string
   meta?: string
 }
@@ -95,8 +95,8 @@ export default function CalendarPage() {
 
   const selectedEvents = selectedDate ? (eventsByDate[selectedDate] || []) : []
 
-  const typeLabel: Record<string, string> = { task: '需求', followup: '跟进', milestone: '代办' }
-  const typeColors: Record<string, string> = { task: '#2563eb', followup: '#f59e0b', milestone: '#8b5cf6' }
+  const typeLabel: Record<string, string> = { task: '需求', followup: '跟进' }
+  const typeColors: Record<string, string> = { task: '#2563eb', followup: '#f59e0b' }
 
   return (
     <div>

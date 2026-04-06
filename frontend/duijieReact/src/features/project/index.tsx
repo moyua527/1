@@ -224,9 +224,16 @@ export default function ProjectList() {
                   openTab(p.id, displayName)
                   nav(`/projects/${p.id}`)
                 }}
-                style={{ position: 'relative', display: 'flex', flexDirection: 'column', padding: isMobile ? 14 : 20, background: 'var(--bg-primary)', borderRadius: 14, cursor: 'pointer', border: '1px solid var(--border-primary)', transition: 'box-shadow 0.2s, transform 0.2s', minHeight: isMobile ? 100 : 120 }}
+                style={{
+                  position: 'relative', display: 'flex', flexDirection: 'column', borderRadius: 14, cursor: 'pointer', border: '1px solid var(--border-primary)', transition: 'box-shadow 0.2s, transform 0.2s', minHeight: isMobile ? 100 : 120, overflow: 'hidden',
+                  background: 'var(--bg-primary)',
+                }}
                 onMouseEnter={e => { if (!isMobile) { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)' } }}
                 onMouseLeave={e => { if (!isMobile) { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' } }}>
+                {p.cover_image && (
+                  <div style={{ height: isMobile ? 60 : 80, backgroundImage: `url(${p.cover_image})`, backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0 }} />
+                )}
+                <div style={{ padding: isMobile ? 14 : 20, display: 'flex', flexDirection: 'column', flex: 1 }}>
                 {unreadProjects.has(p.id) && (() => {
                   const info = unreadMap[p.id] || {}
                   const badges: { color: string; label: string }[] = []
@@ -252,6 +259,7 @@ export default function ProjectList() {
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 12, color: 'var(--text-tertiary)' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Users size={12} /> {p.member_count ?? 0}</span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><ListTodo size={12} /> {p.task_count ?? 0}</span>
+                </div>
                 </div>
               </div>
             )

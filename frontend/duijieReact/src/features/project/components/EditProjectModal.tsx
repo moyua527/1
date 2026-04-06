@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { ImagePlus, X } from 'lucide-react'
 import Modal from '../../ui/Modal'
 import Input from '../../ui/Input'
 import Button from '../../ui/Button'
 import { toast } from '../../ui/Toast'
 import { PROJECT_ICONS, PROJECT_COLORS } from '../../../utils/projectIcons'
+import { projectApi } from '../services/api'
 
 const statusMap: Record<string, { label: string; color: string }> = {
   planning: { label: '规划中', color: 'blue' },
@@ -22,6 +24,9 @@ interface Props {
 
 export default function EditProjectModal({ open, project, onClose, onSave }: Props) {
   const [form, setForm] = useState({ name: '', description: '', status: 'planning', task_title_presets: [] as string[], newPreset: '', icon: 'FolderKanban', icon_color: '#3b82f6' })
+  const [coverImage, setCoverImage] = useState<string | null>(null)
+  const [coverUploading, setCoverUploading] = useState(false)
+  const coverInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (open && project) {
@@ -34,8 +39,29 @@ export default function EditProjectModal({ open, project, onClose, onSave }: Pro
         icon: project.icon || 'FolderKanban',
         icon_color: project.icon_color || '#3b82f6',
       })
+      setCoverImage(project.cover_image || null)
     }
   }, [open, project])
+
+  const handleCoverUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) { toast('请选择图片文件', 'error'); return }
+    if (file.size > 5 * 1024 * 1024) { toast('图片不能超过 5MB', 'error'); return }
+    setCoverUploading(true)
+    const r = await projectApi.setCover(String(project.id), file)
+    setCoverUploading(false)
+    if (r.success) {
+      setCoverImage(r.data.cover_image)
+      toast('封面已更新', 'success')
+    } else toast(r.message || '上传失败', 'error')
+  }
+
+  const handleRemoveCover = async () => {
+    setCoverUploading(true)
+    const r = await projectApi.removeCover(String(project.id))
+    setCoverUploading(false)
+    if (r.success) { setCoverImage(null); toast('封面已移除', 'success') }
+    else toast(r.message || '移除失败', 'error')
+  }
 
   const addPreset = () => {
     const v = form.newPreset.trim()
@@ -45,6 +71,35 @@ export default function EditProjectModal({ open, project, onClose, onSave }: Pro
   return (
     <Modal open={open} onClose={onClose} title="编辑项目">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div>
+          <label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>卡片封面</label>
+          <input ref={coverInputRef} type="file" accept="image/*" hidden
+            onChange={e => { const f = e.target.files?.[0]; if (f) handleCoverUpload(f); e.target.value = '' }} />
+          {coverImage ? (
+            <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', marginBottom: 4 }}>
+              <img src={coverImage} alt="cover" style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }} />
+              <div style={{ position: 'absolute', top: 6, right: 6, display: 'flex', gap: 4 }}>
+                <button type="button" onClick={() => coverInputRef.current?.click()} disabled={coverUploading}
+                  style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,0.5)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                  <ImagePlus size={14} />
+                </button>
+                <button type="button" onClick={handleRemoveCover} disabled={coverUploading}
+                  style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,0.5)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                  <X size={14} />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button type="button" onClick={() => coverInputRef.current?.click()} disabled={coverUploading}
+              style={{ width: '100%', height: 80, borderRadius: 10, border: '2px dashed var(--border-primary)', background: 'var(--bg-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: 'var(--text-tertiary)', fontSize: 13, transition: 'all 0.15s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--brand)'; e.currentTarget.style.color = 'var(--brand)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-primary)'; e.currentTarget.style.color = 'var(--text-tertiary)' }}>
+              <ImagePlus size={18} />
+              {coverUploading ? '上传中...' : '点击上传封面图片'}
+            </button>
+          )}
+          <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 4 }}>支持 JPG/PNG/WebP，最大 5MB，建议宽高比 16:9</div>
+        </div>
         <div>
           <label style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'block', marginBottom: 4 }}>项目名称</label>
           <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="项目名称" />

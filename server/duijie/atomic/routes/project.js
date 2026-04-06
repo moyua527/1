@@ -17,6 +17,9 @@ router.get('/projects/export', auth, require('../controllers/project/exportContr
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 router.post('/projects/import', auth, upload.single('file'), require('../controllers/project/importController'));
+const fileUpload = require('./upload');
+router.post('/projects/:id/cover', auth, pag, projectPermGuard('can_edit_project_name'), fileUpload.single('cover'), require('../controllers/project/setCoverController'));
+router.delete('/projects/:id/cover', auth, pag, projectPermGuard('can_edit_project_name'), require('../controllers/project/removeCoverController'));
 // 项目加入码搜索
 router.get('/projects/search-by-code', auth, require('../controllers/project/searchByCodeController'));
 // 项目加入申请

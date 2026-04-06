@@ -33,14 +33,6 @@ const STEPS: DriveStep[] = [
     },
   },
   {
-    element: '[data-tour="tab-milestones"]',
-    popover: {
-      title: '代办',
-      description: '用代办规划项目的关键阶段节点。可以设置名称和目标日期，标记为已完成或进行中。',
-      side: 'bottom', align: 'start',
-    },
-  },
-  {
     element: '[data-tour="tab-messages"]',
     popover: {
       title: '项目消息',

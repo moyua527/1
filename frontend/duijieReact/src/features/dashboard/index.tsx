@@ -16,7 +16,6 @@ interface Stats {
   recentFollowUps?: any[]
   recentContracts?: any[]
   projects?: any[]
-  milestones?: any[]
   files?: any[]
 }
 

@@ -7,13 +7,11 @@ import useProjectPerms from '../../../hooks/useProjectPerms'
 import { fetchApi } from '../../../bootstrap'
 import { projectApi } from '../services/api'
 import { taskApi } from '../../task/services/api'
-import { milestoneApi } from '../../milestone/services/api'
 import Button from '../../ui/Button'
 import Badge from '../../ui/Badge'
 import { confirm } from '../../ui/ConfirmDialog'
 import { toast } from '../../ui/Toast'
 import TaskTab from './TaskTab'
-import MilestoneTab from './MilestoneTab'
 import ProjectFileTab from './ProjectFileTab'
 import ProjectSettingsTab from './ProjectSettingsTab'
 import MessagePanel from '../../message/components/MessagePanel'
@@ -36,7 +34,7 @@ const statusMap: Record<string, { label: string; color: string }> = {
 
 const PROJECT_DETAIL_TIMEOUT_MS = 8000
 
-const _projectCache = new Map<string, { project: any; tasks: any[]; milestones: any[]; ts: number }>()
+const _projectCache = new Map<string, { project: any; tasks: any[]; ts: number }>()
 
 export default function ProjectDetail() {
   const { id } = useParams()
@@ -50,7 +48,6 @@ export default function ProjectDetail() {
   const canEdit = isAdmin || platformCanEdit || !!projectPerms?.can_edit_project_name || !!projectPerms?.can_edit_project_desc || !!projectPerms?.can_edit_project_status
   const canDelete = isAdmin || platformCanDelete || !!projectPerms?.can_delete_project
   const canApproveJoin = isAdmin || !!projectPerms?.can_approve_join
-  const canManageMilestone = isAdmin || !!projectPerms?.can_create_milestone || !!projectPerms?.can_edit_milestone || !!projectPerms?.can_delete_milestone || !!projectPerms?.can_toggle_milestone
   const canCreateTask = isAdmin || !!projectPerms?.can_create_task
   const canManageRole = isAdmin || !!projectPerms?.can_create_role || !!projectPerms?.can_edit_role_name || !!projectPerms?.can_delete_role
   const cached = id ? _projectCache.get(id) : undefined
@@ -59,14 +56,12 @@ export default function ProjectDetail() {
   const [projectLoading, setProjectLoading] = useState(!cached)
   const [projectError, setProjectError] = useState('')
   const [tasks, setTasks] = useState<any[]>(cached?.tasks ?? [])
-  const [milestones, setMilestones] = useState<any[]>(cached?.milestones ?? [])
   const [hasNewSubmitted, setHasNewSubmitted] = useState(false)
   const [hasNewMessages, setHasNewMessages] = useState(false)
   const [hasNewFiles, setHasNewFiles] = useState(false)
-  const [hasNewMilestones, setHasNewMilestones] = useState(false)
   const [selectedMember, setSelectedMember] = useState<any>(null)
   const [searchParams, setSearchParams] = useSearchParams()
-  const validTabs = ['tasks', 'files', 'milestones', 'messages', 'settings'] as const
+  const validTabs = ['tasks', 'files', 'messages', 'settings'] as const
   type Tab = typeof validTabs[number]
   const urlTab = searchParams.get('tab') as Tab
   const tab: Tab = validTabs.includes(urlTab as any) ? urlTab! : 'tasks'
@@ -78,7 +73,6 @@ export default function ProjectDetail() {
     }
     if (t === 'messages') setHasNewMessages(false)
     if (t === 'files') setHasNewFiles(false)
-    if (t === 'milestones') setHasNewMilestones(false)
   }
 
   const [showAddMember, setShowAddMember] = useState(false)
@@ -116,7 +110,7 @@ export default function ProjectDetail() {
           setProject(r.data)
           setProjectError('')
           setProjectLoading(false)
-          const prev = _projectCache.get(id!) || { project: null, tasks: [], milestones: [], ts: 0 }
+          const prev = _projectCache.get(id!) || { project: null, tasks: [], ts: 0 }
           _projectCache.set(id!, { ...prev, project: r.data, ts: Date.now() })
           return
         }
@@ -163,7 +157,7 @@ export default function ProjectDetail() {
       if (!r.success) return
       const data = r.data || []
       setTasks(data)
-      const prev = _projectCache.get(id!) || { project: null, tasks: [], milestones: [], ts: 0 }
+      const prev = _projectCache.get(id!) || { project: null, tasks: [], ts: 0 }
       _projectCache.set(id!, { ...prev, tasks: data })
       const lastView = localStorage.getItem(taskViewKey)
       const submitted = data.filter((t: any) => t.status === 'submitted')
@@ -174,12 +168,6 @@ export default function ProjectDetail() {
         setHasNewSubmitted(submitted.some((t: any) => new Date(t.created_at).getTime() > lastTs))
       }
     })
-    milestoneApi.list(id).then(r => {
-      if (!r.success) return
-      setMilestones(r.data || [])
-      const prev = _projectCache.get(id!) || { project: null, tasks: [], milestones: [], ts: 0 }
-      _projectCache.set(id!, { ...prev, milestones: r.data || [] })
-    })
   }, [id, taskViewKey])
 
   useEffect(() => {
@@ -188,7 +176,6 @@ export default function ProjectDetail() {
       if (payload?.project_id && String(payload.project_id) !== String(id)) return
       if (payload?.entity === 'task') loadTasks()
       if (payload?.entity === 'file') setHasNewFiles(true)
-      if (payload?.entity === 'milestone') { setHasNewMilestones(true); loadTasks() }
     })
     return off
   }, [id, loadTasks])
@@ -211,7 +198,6 @@ export default function ProjectDetail() {
     }
     if (tab === 'messages') setHasNewMessages(false)
     if (tab === 'files') setHasNewFiles(false)
-    if (tab === 'milestones') setHasNewMilestones(false)
     const timer = window.setTimeout(() => {
       loadProject()
       loadTasks()
@@ -314,7 +300,7 @@ export default function ProjectDetail() {
         <div style={{ width: 1, height: 20, background: 'var(--border-primary)', flexShrink: 0, margin: '0 2px' }} />
 
         <div data-tour="project-tabs" style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-          {([['tasks','需求'],['files','资料库'],['milestones','待办'],['messages','消息'],['settings','设置']] as [string, string][]).map(([k,v]) => (
+          {([['tasks','需求'],['files','资料库'],['messages','消息'],['settings','设置']] as [string, string][]).map(([k,v]) => (
             <button key={k} data-tour={`tab-${k}`} onClick={() => setTab(k as any)} style={{
               padding: '6px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, position: 'relative', whiteSpace: 'nowrap', flexShrink: 0,
               background: tab === k ? 'var(--brand)' : 'var(--bg-tertiary)', color: tab === k ? 'var(--bg-primary)' : 'var(--text-secondary)',
@@ -327,9 +313,6 @@ export default function ProjectDetail() {
                 <span style={{ position: 'absolute', top: -2, right: -2, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
               )}
               {k === 'files' && hasNewFiles && tab !== 'files' && (
-                <span style={{ position: 'absolute', top: -2, right: -2, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
-              )}
-              {k === 'milestones' && hasNewMilestones && tab !== 'milestones' && (
                 <span style={{ position: 'absolute', top: -2, right: -2, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
               )}
               {k === 'settings' && pendingJoinCount > 0 && (
@@ -376,11 +359,9 @@ export default function ProjectDetail() {
 
       {tab === 'files' && <ProjectFileTab projectId={id!} canEdit={canEdit} members={allMembers} currentUserId={user?.id} />}
 
-      {tab === 'milestones' && <MilestoneTab milestones={milestones} projectId={id!} canEdit={canManageMilestone} onRefresh={loadTasks} isMobile={isMobile} members={allMembers} currentUserId={user?.id} />}
-
       {tab === 'messages' && <div style={{ background: 'var(--bg-primary)', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16, overflow: 'hidden' }}><MessagePanel projectId={id!} /></div>}
 
-      {tab === 'settings' && <ProjectSettingsTab project={project} projectId={id!} isOwner={isOwner} canManageRole={canManageRole} canApproveJoin={canApproveJoin} canEdit={canEdit} canDelete={canDelete} pendingJoinCount={pendingJoinCount} onRefreshProject={loadProject} onRefreshJoinCount={loadPendingJoinCount} onOpenAddMember={() => { setShowAddMember(true); refreshAvailableUsers() }} onMemberClick={setSelectedMember} onEditProject={() => setShowEditProject(true)} onDeleteProject={handleDelete} tasks={tasks} milestones={milestones} />}
+      {tab === 'settings' && <ProjectSettingsTab project={project} projectId={id!} isOwner={isOwner} canManageRole={canManageRole} canApproveJoin={canApproveJoin} canEdit={canEdit} canDelete={canDelete} pendingJoinCount={pendingJoinCount} onRefreshProject={loadProject} onRefreshJoinCount={loadPendingJoinCount} onOpenAddMember={() => { setShowAddMember(true); refreshAvailableUsers() }} onMemberClick={setSelectedMember} onEditProject={() => setShowEditProject(true)} onDeleteProject={handleDelete} tasks={tasks} />}
 
 
       <SetClientModal open={showSetClient} hasExternalEnterprise={false}

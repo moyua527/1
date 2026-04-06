@@ -1,4 +1,4 @@
-import { FolderKanban, TrendingUp, CheckCircle, Star, MessageSquare, FileSignature, FileText, Download } from 'lucide-react'
+import { FolderKanban, TrendingUp, CheckCircle, MessageSquare, FileSignature, FileText, Download } from 'lucide-react'
 
 interface Stats {
   totalProjects: number; activeProjects: number; completedProjects: number
@@ -9,7 +9,6 @@ interface Stats {
   recentFollowUps?: any[]
   recentContracts?: any[]
   projects?: any[]
-  milestones?: any[]
   files?: any[]
 }
 
@@ -35,10 +34,8 @@ const contractStatusMap: Record<string, { label: string; color: string }> = {
 
 export default function ClientDashboard({ stats, nav }: { stats: Stats; nav: (p: string) => void }) {
   const projects = stats.projects || []
-  const milestones = stats.milestones || []
   const files = stats.files || []
   const contracts = (stats as any).contracts || []
-  const pendingMs = milestones.filter((m: any) => !m.is_completed)
 
   return (
     <div>
@@ -53,7 +50,6 @@ export default function ClientDashboard({ stats, nav }: { stats: Stats; nav: (p:
           { label: '我的项目', value: stats.totalProjects, icon: FolderKanban, bg: 'var(--brand-light-2)', color: 'var(--brand)', path: '/projects' },
           { label: '进行中', value: stats.activeProjects, icon: TrendingUp, bg: '#fef3c7', color: 'var(--color-warning)', path: '/projects' },
           { label: '已完成', value: stats.completedProjects, icon: CheckCircle, bg: '#dcfce7', color: 'var(--color-success)', path: '/projects' },
-          { label: '待确认代办', value: (stats as any).pendingMilestones || 0, icon: Star, bg: '#fef3c7', color: 'var(--color-warning)', path: '/projects' },
           { label: '未读消息', value: (stats as any).unreadMessages || 0, icon: MessageSquare, bg: '#fee2e2', color: 'var(--color-danger)', path: '/messaging' },
         ].map(item => (
           <div key={item.label} style={card} onClick={() => nav(item.path)}
@@ -94,28 +90,6 @@ export default function ClientDashboard({ stats, nav }: { stats: Stats; nav: (p:
                 </div>
               )
             })
-          }
-        </div>
-
-        {/* Pending Milestones */}
-        <div style={{ background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <Star size={18} color="var(--color-warning)" />
-            <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-heading)' }}>待确认代办</span>
-            {pendingMs.length > 0 && <span style={{ fontSize: 11, padding: '1px 8px', borderRadius: 10, background: 'var(--color-danger)', color: 'var(--bg-primary)', fontWeight: 600 }}>{pendingMs.length}</span>}
-          </div>
-          {pendingMs.length === 0 ? <div style={{ color: 'var(--text-tertiary)', fontSize: 13, padding: 20, textAlign: 'center' }}>全部代办已确认</div> :
-            pendingMs.map((m: any) => (
-              <div key={m.id} onClick={() => nav(`/projects/${m.project_id}?tab=milestones`)} style={{ padding: '10px 0', borderTop: '1px solid var(--border-secondary)', cursor: 'pointer' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--color-warning)' }} />
-                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-heading)' }}>{m.title}</span>
-                </div>
-                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2, marginLeft: 16 }}>
-                  {m.project_name}{m.due_date ? ` · 截止 ${new Date(m.due_date).toLocaleDateString('zh-CN')}` : ''}
-                </div>
-              </div>
-            ))
           }
         </div>
 

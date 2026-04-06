@@ -59,7 +59,6 @@ const enUS: Record<string, string> = {
   'project.members': 'Members',
   'project.overview': 'Overview',
   'project.tasks': 'Tasks',
-  'project.milestones': 'Todo',
   'project.files': 'Files',
   'project.messages': 'Messages',
   'project.apps': 'Apps',

@@ -53,12 +53,6 @@ const PERM_GROUPS = [
     { key: 'can_respond_review_point', label: '回复审核要点' },
     { key: 'can_confirm_review_point', label: '确认审核要点' },
   ]},
-  { title: '代办', items: [
-    { key: 'can_create_milestone', label: '创建' },
-    { key: 'can_edit_milestone', label: '编辑' },
-    { key: 'can_delete_milestone', label: '删除' },
-    { key: 'can_toggle_milestone', label: '完成/取消' },
-  ]},
   { title: '数据与应用', items: [
     { key: 'can_export_data', label: '导出数据' },
     { key: 'can_manage_app_config', label: '管理关联应用' },

@@ -5,5 +5,4 @@ module.exports = {
   TASK_MOVED: 'task:moved',
   MESSAGE_SENT: 'message:sent',
   FILE_UPLOADED: 'file:uploaded',
-  MILESTONE_TOGGLED: 'milestone:toggled',
 };

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Users, ListTodo, CheckCircle2, Clock } from 'lucide-react'
+import { Users, ListTodo, Clock } from 'lucide-react'
 import { fetchApi } from '../../../bootstrap'
 import Avatar from '../../ui/Avatar'
 
@@ -9,12 +9,11 @@ interface Props {
   project: any
   projectId: string
   tasks: any[]
-  milestones: any[]
   onTabSwitch: (tab: string) => void
   isMobile?: boolean
 }
 
-export default function ProjectHomeTab({ project, projectId, tasks, milestones, onTabSwitch, isMobile }: Props) {
+export default function ProjectHomeTab({ project, projectId, tasks, onTabSwitch, isMobile }: Props) {
   const [activities, setActivities] = useState<any[]>([])
 
   const loadActivity = useCallback(() => {
@@ -28,25 +27,19 @@ export default function ProjectHomeTab({ project, projectId, tasks, milestones, 
   const members = project.members || []
   const totalTasks = tasks.length
   const completedTasks = tasks.filter(t => t.status === 'approved').length
-  const completedMs = milestones.filter(m => m.is_completed).length
 
   const stats = [
     { icon: Users, label: '成员', value: members.length, color: '#8b5cf6', bg: '#f5f3ff' },
     { icon: ListTodo, label: '需求', value: `${completedTasks}/${totalTasks}`, color: '#3b82f6', bg: '#eff6ff' },
-    { icon: CheckCircle2, label: '代办', value: `${completedMs}/${milestones.length}`, color: '#22c55e', bg: '#f0fdf4' },
   ]
 
   const activityIcon: Record<string, string> = {
     task_created: '📋',
-    milestone_created: '🏁',
-    milestone_completed: '✅',
     member_joined: '👤',
   }
 
   const activityLabel: Record<string, string> = {
     task_created: '创建了需求',
-    milestone_created: '创建了代办阶段',
-    milestone_completed: '完成了代办阶段',
     member_joined: '加入了项目',
   }
 
@@ -55,7 +48,7 @@ export default function ProjectHomeTab({ project, projectId, tasks, milestones, 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(3, 1fr)', gap: isMobile ? 8 : 12, marginBottom: 16 }}>
         {stats.map(s => (
           <div key={s.label} style={{ ...section, marginBottom: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: isMobile ? '14px 8px' : '16px 12px', gap: 6, cursor: 'pointer' }}
-            onClick={() => onTabSwitch(s.label === '成员' ? 'settings' : s.label === '需求' ? 'tasks' : 'milestones')}>
+            onClick={() => onTabSwitch(s.label === '成员' ? 'settings' : 'tasks')}>
             <s.icon size={isMobile ? 20 : 24} style={{ color: s.color }} />
             <span style={{ fontSize: isMobile ? 20 : 26, fontWeight: 700, color: 'var(--text-heading)', lineHeight: 1 }}>{s.value}</span>
             <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{s.label}</span>

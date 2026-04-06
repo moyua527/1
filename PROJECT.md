@@ -1,6 +1,6 @@
 # DuiJie（对接）— 客户项目对接平台
 
-> 版本：v1.3.4.2 | 最后更新：2026-04-06
+> 版本：v1.3.5 | 最后更新：2026-04-06
 >
 > 线上地址：http://160.202.253.143:8080
 
@@ -77,7 +77,6 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | 任务附件 | 2 | can_upload/delete_task_attachment |
 | 审核要点 | 3 | can_add/respond/confirm_review_point |
 | 任务预设标题 | 4 | can_view_title_options, can_record/delete_title_history, can_edit_title_presets |
-| 里程碑 | 4 | can_create/edit/delete/toggle_milestone |
 | 报表 | 2 | can_view_report, can_export_data |
 | 应用/集成 | 2 | can_manage_app_config, can_manage_app_integration |
 
@@ -158,7 +157,6 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
   - **设置页**内含：项目备注、项目成员、角色管理、关联应用、加入申请、编辑项目、删除项目
   - **角色管理**（条件Tab，项目创建者或有角色管理权限时显示）：项目级自定义角色 CRUD，60 项细粒度权限，由项目创建者直接在项目内管理，独立于企业
   - **任务**：任务列表 + 内联添加 + 状态切换下拉（无编辑权限时只读）+ **任务标题双模式选择器（固定功能名 / 自由输入历史）** + **历史标题自动记忆与删除** + 项目内任务变更实时刷新 + 创建时间精确到秒 + 图片附件缩略图预览/文件直链下载 + 任务描述区支持 Ctrl+V 粘贴图片/文件且不会重复添加
-  - **代办（里程碑）**：创建 / 编辑 / 删除 + 截止日期 + 完成切换（无编辑权限时只读）；点击进入详情，支持：**进度跟踪时间线**（发起人/参与人可添加跟踪记录）、**参与人管理**（发起人指定项目成员为参与人）、**定时提醒通知**（设定未来时间点，到期自动推送通知提醒跟进）
   - **文件**：上传 + 列表 + 下载 + 删除
   - **消息**：实时聊天（Socket.IO）+ 发送者昵称显示
   - **应用**（条件Tab）：当项目关联了应用链接时显示，iframe 内嵌外部应用 + 支持新窗口打开
@@ -652,23 +650,7 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | PUT | `/api/tasks/:id` | 更新任务 | staff |
 | PATCH | `/api/tasks/:id/move` | 移动状态 | staff |
 
-### 4.11 代办/里程碑（Milestone）
-
-| 方法 | 路径 | 说明 | 权限 |
-|------|------|------|------|
-| POST | `/api/milestones` | 创建代办 | 认证 |
-| GET | `/api/milestones` | 代办列表 | 认证 |
-| PUT | `/api/milestones/:id` | 更新代办 | 认证 |
-| DELETE | `/api/milestones/:id` | 删除代办 | 认证 |
-| PATCH | `/api/milestones/:id/toggle` | 切换完成 | 认证 |
-| GET | `/api/milestones/:id/detail` | 代办详情（含进度/参与人/提醒） | 认证 |
-| POST | `/api/milestones/:id/progress` | 添加跟踪进度 | 发起人/参与人 |
-| DELETE | `/api/milestones/progress/:progressId` | 删除跟踪记录 | 记录创建者 |
-| POST | `/api/milestones/:id/participants` | 设置参与人 | 发起人 |
-| POST | `/api/milestones/:id/reminders` | 添加提醒 | 发起人/参与人 |
-| DELETE | `/api/milestones/reminders/:reminderId` | 删除提醒 | 提醒创建者 |
-
-### 4.12 文件（File）
+### 4.11 文件（File）
 
 | 方法 | 路径 | 说明 | 权限 |
 |------|------|------|------|
@@ -797,10 +779,6 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | `duijie_ticket_replies` | 工单回复表（ticket_id, content, created_by） |
 | `duijie_projects` | 项目表（internal_client_id, client_id, status, progress, app_name, app_url） |
 | `duijie_tasks` | 任务表 |
-| `duijie_milestones` | 代办/里程碑表 |
-| `duijie_milestone_progress` | 代办进度跟踪表（milestone_id, content, created_by） |
-| `duijie_milestone_participants` | 代办参与人表（milestone_id, user_id） |
-| `duijie_milestone_reminders` | 代办提醒表（milestone_id, user_id, remind_at, note, is_sent） |
 | `duijie_files` | 文件表 |
 | `duijie_messages` | 项目消息表 |
 | `duijie_project_members` | 项目成员关联表 |
@@ -811,6 +789,7 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | `duijie_client_tags` | 客户标签关联表 |
 | `duijie_client_logs` | 客户变更日志表 |
 | `duijie_notifications` | 通知表（user_id, type, category, title, content, link, is_read, project_id） |
+| `duijie_projects.cover_image` | 项目封面图 URL（VARCHAR(500)） |
 | `duijie_audit_logs` | 审计日志表（user_id, username, action, entity_type, entity_id, detail, ip） |
 | `duijie_client_members` | 企业成员表（client_id, user_id, name, role[creator/admin/member], position, department_id, phone, email） |
 | `duijie_departments` | 部门表（client_id, name, parent_id, sort_order） |
@@ -881,8 +860,6 @@ DuiJie/
 │           │   └── index.tsx
 │           ├── file/                  # 文件管理（独立页）
 │           │   └── index.tsx
-│           ├── milestone/             # 里程碑
-│           │   └── services/api.ts
 │           ├── message/               # 消息沟通
 │           │   └── components/MessagePanel.tsx
 │           ├── audit/                 # 审计日志（admin）
@@ -929,7 +906,6 @@ DuiJie/
 │   │       ├── file/                  # 文件（5）：upload, list, listAll, delete, download
 │   │       ├── followUp/              # 跟进（4）：create, list, update, delete
 │   │       ├── message/               # 项目消息（2）
-│   │       ├── milestone/             # 代办（11）：create, list, update, delete, toggle, detail, addProgress, deleteProgress, setParticipants, addReminder, deleteReminder
 │   │       ├── notification/          # 通知（2）：list, markRead
 │   │       ├── opportunity/           # 商机（4）：create, list, update, delete
 │   │       ├── ticket/                # 工单（6）：create, list, detail, update, reply, rate

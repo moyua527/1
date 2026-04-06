@@ -15,7 +15,6 @@ const ER_TO_PR_MAP = {
                             'can_edit_task_title', 'can_edit_task_desc', 'can_edit_task_priority', 'can_edit_task_deadline',
                             'can_assign_task', 'can_upload_task_attachment', 'can_delete_task_attachment',
                             'can_add_review_point', 'can_respond_review_point', 'can_confirm_review_point'],
-  can_manage_milestone:    ['can_create_milestone', 'can_edit_milestone', 'can_delete_milestone', 'can_toggle_milestone'],
   can_view_report:         ['can_export_data'],
   can_manage_app:          ['can_manage_app_config'],
 };
@@ -100,7 +99,6 @@ async function getProjectPerms(userId, projectId) {
       'can_move_task_submit_review', 'can_move_task_reject', 'can_move_task_approve', 'can_move_task_resubmit',
       'can_upload_task_attachment', 'can_delete_task_attachment',
       'can_add_review_point', 'can_respond_review_point', 'can_confirm_review_point',
-      'can_create_milestone', 'can_edit_milestone', 'can_toggle_milestone',
     ];
     editorOn.forEach(f => { ownerPerms[f] = true; });
   }

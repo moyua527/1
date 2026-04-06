@@ -174,17 +174,6 @@ exports.updateOpportunity = [
   body('amount').optional().isDecimal({ decimal_digits: '0,2' }).withMessage('金额格式不正确'),
 ];
 
-// === Milestones ===
-exports.createMilestone = [
-  body('title').trim().notEmpty().withMessage('请输入代办标题').isLength({ max: 200 }).withMessage('标题不超过200字'),
-  body('project_id').isInt({ min: 1 }).withMessage('无效的项目ID'),
-];
-
-exports.updateMilestone = [
-  param('id').isInt({ min: 1 }).withMessage('无效的代办ID'),
-  body('title').optional().trim().isLength({ max: 200 }).withMessage('标题不超过200字'),
-];
-
 // === Direct Messages ===
 exports.sendDm = [
   body('to_user_id').isInt({ min: 1 }).withMessage('无效的接收者ID'),

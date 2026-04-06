@@ -1,4 +1,4 @@
-import { fetchApi } from '../../../bootstrap'
+import { fetchApi, uploadFile } from '../../../bootstrap'
 
 export const projectApi = {
   list: (query?: Record<string, string>) => {
@@ -76,4 +76,7 @@ export const projectApi = {
   getActivity: (id: string, limit = 20) => fetchApi(`/api/projects/${id}/activity?limit=${limit}`),
   setNickname: (id: string, nickname: string) => fetchApi(`/api/projects/${id}/nickname`, { method: 'PATCH', body: JSON.stringify({ nickname }) }),
   setMemberRemark: (id: string, target_user_id: number, remark: string) => fetchApi(`/api/projects/${id}/member-remark`, { method: 'PATCH', body: JSON.stringify({ target_user_id, remark }) }),
+  setCover: (id: string, file: File) => { const fd = new FormData(); fd.append('cover', file); return uploadFile(`/api/projects/${id}/cover`, fd) },
+  setCoverUrl: (id: string, url: string) => fetchApi(`/api/projects/${id}/cover`, { method: 'POST', body: JSON.stringify({ cover_image_url: url }) }),
+  removeCover: (id: string) => fetchApi(`/api/projects/${id}/cover`, { method: 'DELETE' }),
 }

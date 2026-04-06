@@ -31,7 +31,6 @@ interface Props {
   onEditProject?: () => void
   onDeleteProject?: () => void
   tasks?: any[]
-  milestones?: any[]
   remarkMap?: Record<string, string>
 }
 
@@ -49,7 +48,7 @@ const settingsItems: { key: SubTab; label: string; icon: any; desc: string; cond
   { key: 'join_requests', label: '加入申请', icon: UserPlus, desc: '审批成员加入请求', condition: 'canApproveJoin' },
 ]
 
-export default function ProjectSettingsTab({ project, projectId, isOwner, canManageRole, canApproveJoin, canEdit, canDelete, pendingJoinCount, onRefreshProject, onRefreshJoinCount, onOpenAddMember, onMemberClick, onEditProject, onDeleteProject, tasks = [], milestones = [] }: Props) {
+export default function ProjectSettingsTab({ project, projectId, isOwner, canManageRole, canApproveJoin, canEdit, canDelete, pendingJoinCount, onRefreshProject, onRefreshJoinCount, onOpenAddMember, onMemberClick, onEditProject, onDeleteProject, tasks = [] }: Props) {
   const [sub, setSub] = useState<SubTab | null>(null)
   const user = useUserStore(s => s.user)
   const globalDn = useNicknameStore(s => s.getDisplayName)
