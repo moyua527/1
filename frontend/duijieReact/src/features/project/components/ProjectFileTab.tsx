@@ -490,13 +490,8 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
                     {f.original_name}
                   </div>
                   <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {isUrl ? f.path : isNote ? `${f.path?.substring(0, 40)}...` : `${formatSize(f.size || 0)} · ${new Date(f.created_at).toLocaleDateString('zh-CN')}`}
+                    {isUrl ? (f.description || '') : isNote ? `${f.path?.substring(0, 40)}...` : `${formatSize(f.size || 0)} · ${new Date(f.created_at).toLocaleDateString('zh-CN')}`}
                   </div>
-                  {isUrl && f.description && (
-                    <div style={{ fontSize: 11, color: 'var(--brand)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontStyle: 'italic' }}>
-                      {f.description}
-                    </div>
-                  )}
                 </div>
                 {/* 操作条 */}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 2, padding: '0 8px 8px', flexWrap: 'wrap' }}>
@@ -767,9 +762,8 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ fontSize: 13, fontWeight: 500, color: isUrl ? 'var(--brand)' : 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.original_name}</div>
                               <div style={{ fontSize: 11, color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {isUrl ? item.path : isNote ? item.path?.substring(0, 60) : formatSize(item.size || 0)}
+                                {isUrl ? (item.description || '') : isNote ? item.path?.substring(0, 60) : formatSize(item.size || 0)}
                               </div>
-                              {isUrl && item.description && <div style={{ fontSize: 11, color: 'var(--brand)', fontStyle: 'italic' }}>{item.description}</div>}
                             </div>
                             {isUrl && <ExternalLink size={14} color="var(--brand)" />}
                             {!isUrl && !isNote && (
