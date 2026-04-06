@@ -456,7 +456,7 @@ export default function TodoDetailModal({ open, milestoneId, projectId, canEdit,
             {/* 新建提醒弹窗 */}
             {showAddReminder && (
               <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}
-                onClick={e => { if (e.target === e.currentTarget) setShowAddReminder(false) }}>
+                onMouseDown={e => { if (e.target === e.currentTarget) setShowAddReminder(false) }}>
                 <div style={{ background: 'var(--bg-primary)', borderRadius: 12, padding: 20, width: 380, maxWidth: '90vw', boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}>
                   <h4 style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>新建提醒</h4>
                   <div style={{ marginBottom: 12 }}>

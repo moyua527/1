@@ -545,7 +545,7 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
       {/* 笔记查看弹窗 */}
       {viewNote && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          onClick={e => { if (e.target === e.currentTarget) setViewNote(null) }}>
+          onMouseDown={e => { if (e.target === e.currentTarget) setViewNote(null) }}>
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }} />
           <div style={{ position: 'relative', background: 'var(--bg-primary)', borderRadius: 12, width: 500, minHeight: 500, maxWidth: 'calc(100vw - 24px)', maxHeight: '85vh', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', margin: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border-primary)' }}>
@@ -573,7 +573,7 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
       {/* 创建资料组弹窗 */}
       {showCreateGroup && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          onClick={e => { if (e.target === e.currentTarget) setShowCreateGroup(false) }}>
+          onMouseDown={e => { if (e.target === e.currentTarget) setShowCreateGroup(false) }}>
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }} />
           <div style={{ position: 'relative', background: 'var(--bg-primary)', borderRadius: 12, width: 500, minHeight: 500, maxWidth: 'calc(100vw - 24px)', maxHeight: '85vh', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', overflow: 'hidden', margin: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border-primary)' }}>
@@ -631,7 +631,7 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
       {/* 资料组详情弹窗 */}
       {activeGroup && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          onClick={e => { if (e.target === e.currentTarget) { setActiveGroup(null); setGroupDetail(null); setItemType('') } }}>
+          onMouseDown={e => { if (e.target === e.currentTarget) { setActiveGroup(null); setGroupDetail(null); setItemType('') } }}>
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }} />
           <div style={{ position: 'relative', background: 'var(--bg-primary)', borderRadius: 12, width: 500, minHeight: 500, maxWidth: 'calc(100vw - 24px)', maxHeight: '85vh', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', overflow: 'hidden', margin: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border-primary)' }}>
@@ -837,7 +837,7 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
       {/* 添加资料弹窗 (文件模式) */}
       {showAddModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          onClick={e => { if (e.target === e.currentTarget) setShowAddModal(false) }}>
+          onMouseDown={e => { if (e.target === e.currentTarget) setShowAddModal(false) }}>
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }} />
           <div style={{ position: 'relative', background: 'var(--bg-primary)', borderRadius: 12, width: 500, minHeight: 500, maxWidth: 'calc(100vw - 24px)', maxHeight: '85vh', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', margin: 12 }}>
             {/* 头部 */}
