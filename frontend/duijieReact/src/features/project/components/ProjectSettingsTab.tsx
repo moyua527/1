@@ -169,7 +169,11 @@ export default function ProjectSettingsTab({ project, projectId, isOwner, canMan
                   <span style={{ fontSize: 11, padding: '1px 6px', borderRadius: 8, background: '#ef4444', color: '#fff', fontWeight: 600 }}>{pendingJoinCount}</span>
                 )}
               </div>
-              <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{item.desc}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
+                {item.key === 'join_requests' && pendingJoinCount > 0
+                  ? `${pendingJoinCount} 位成员等待审批`
+                  : item.desc}
+              </div>
             </div>
             {item.key === 'nickname' && currentNickname ? (
               <span style={{ fontSize: 12, color: 'var(--text-secondary)', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 0 }}>{currentNickname}</span>
