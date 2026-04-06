@@ -98,8 +98,10 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
     if (r.success) {
       toast('可见性已更新', 'success')
       setEditingVisibility(false)
-      setActiveGroup({ ...activeGroup, visibility: editVisibility })
+      const updated = { ...activeGroup, visibility: editVisibility }
+      setActiveGroup(updated)
       loadGroups()
+      openGroupDetail(updated)
     } else toast(r.message || '更新失败', 'error')
   }
 

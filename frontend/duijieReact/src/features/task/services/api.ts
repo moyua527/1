@@ -18,10 +18,17 @@ export const taskApi = {
   restore: (id: string) => fetchApi(`/api/tasks/${id}/restore`, { method: 'PATCH' }),
   // 审核要点
   getReviewPoints: (taskId: string) => fetchApi(`/api/tasks/${taskId}/review-points`),
-  addReviewPoints: (taskId: string, points: string[], round_type: 'initial' | 'acceptance') =>
+  addReviewPoints: (taskId: string, points: Array<{ content: string; images?: string[] }>, round_type: 'initial' | 'acceptance') =>
     fetchApi(`/api/tasks/${taskId}/review-points`, { method: 'POST', body: JSON.stringify({ points, round_type }) }),
+  updateReviewPoint: (pointId: number, data: { content?: string; images?: string[] }) =>
+    fetchApi(`/api/tasks/review-points/${pointId}`, { method: 'PUT', body: JSON.stringify(data) }),
   respondReviewPoint: (pointId: number, response: string) =>
     fetchApi(`/api/tasks/review-points/${pointId}/respond`, { method: 'PUT', body: JSON.stringify({ response }) }),
   confirmReviewPoint: (pointId: number) =>
     fetchApi(`/api/tasks/review-points/${pointId}/confirm`, { method: 'PUT' }),
+  uploadPointImage: (file: File) => {
+    const fd = new FormData()
+    fd.append('file', file)
+    return uploadFile('/api/files/upload', fd)
+  },
 }

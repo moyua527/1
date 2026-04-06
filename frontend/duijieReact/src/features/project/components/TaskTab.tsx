@@ -89,8 +89,9 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
   const [trashLoading, setTrashLoading] = useState(false)
   const [expandedTask, setExpandedTask] = useState<number | null>(null)
   const [showPointsModal, setShowPointsModal] = useState<{ taskId: number; roundType: 'initial' | 'acceptance'; taskTitle: string } | null>(null)
-  const [pointInputs, setPointInputs] = useState<string[]>([''])
+  const [pointInputs, setPointInputs] = useState<{ content: string; images: File[] }[]>([{ content: '', images: [] }])
   const [responseInputs, setResponseInputs] = useState<Record<number, string>>({})
+  const [editingPoint, setEditingPoint] = useState<{ id: number; content: string } | null>(null)
   const [editingImage, setEditingImage] = useState<File | null>(null)
   const [pendingImages, setPendingImages] = useState<File[]>([])
   const [editingExistingIdx, setEditingExistingIdx] = useState<number | null>(null)
@@ -191,16 +192,29 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
 
   const handleSubmitPoints = async () => {
     if (!showPointsModal) return
-    const validPoints = pointInputs.filter(p => p.trim())
+    const validPoints = pointInputs.filter(p => p.content.trim())
     if (validPoints.length === 0) { toast('请至少填写一个要点', 'error'); return }
     setSubmitting(true)
-    const r = await taskApi.addReviewPoints(String(showPointsModal.taskId), validPoints, showPointsModal.roundType)
-    if (r.success) {
-      toast(showPointsModal.roundType === 'initial' ? '已提出疑问' : '已驳回并列出问题', 'success')
-      setShowPointsModal(null)
-      setPointInputs([''])
-      loadTasks()
-    } else toast(r.message || '操作失败', 'error')
+    try {
+      const pointsPayload: { content: string; images?: string[] }[] = []
+      for (const pt of validPoints) {
+        const urls: string[] = []
+        if (pt.images.length > 0) {
+          for (const file of pt.images) {
+            const r = await taskApi.uploadPointImage(file)
+            if (r.success && r.data?.url) urls.push(r.data.url)
+          }
+        }
+        pointsPayload.push({ content: pt.content.trim(), images: urls.length > 0 ? urls : undefined })
+      }
+      const r = await taskApi.addReviewPoints(String(showPointsModal.taskId), pointsPayload, showPointsModal.roundType)
+      if (r.success) {
+        toast(showPointsModal.roundType === 'initial' ? '已提出疑问' : '已驳回并列出问题', 'success')
+        setShowPointsModal(null)
+        setPointInputs([{ content: '', images: [] }])
+        loadTasks()
+      } else toast(r.message || '操作失败', 'error')
+    } catch { toast('提交失败', 'error') }
     setSubmitting(false)
   }
 
@@ -218,6 +232,13 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
     const r = await taskApi.confirmReviewPoint(pointId)
     if (r.success) loadTasks()
     else toast(r.message || '确认失败', 'error')
+  }
+
+  const handleSavePointEdit = async () => {
+    if (!editingPoint || !editingPoint.content.trim()) { toast('内容不能为空', 'error'); return }
+    const r = await taskApi.updateReviewPoint(editingPoint.id, { content: editingPoint.content.trim() })
+    if (r.success) { setEditingPoint(null); loadTasks(); toast('已更新', 'success') }
+    else toast(r.message || '更新失败', 'error')
   }
 
   const loadTrash = async () => {
@@ -257,7 +278,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
     if (status === 'submitted' || status === 'todo') {
       if (isAssignee || noAssignee || isCreator) {
         options.push({ label: '▶ 接受执行', action: () => handleMove(t.id, 'in_progress'), color: '#fff', bg: 'var(--brand)' })
-        options.push({ label: '💬 提出疑问', action: () => { setShowPointsModal({ taskId: t.id, roundType: 'initial', taskTitle: t.title }); setPointInputs(['']); setActionMenuTask(null) }, color: '#92400e', bg: '#fef3c7' })
+        options.push({ label: '💬 提出疑问', action: () => { setShowPointsModal({ taskId: t.id, roundType: 'initial', taskTitle: t.title }); setPointInputs([{ content: '', images: [] }]); setActionMenuTask(null) }, color: '#92400e', bg: '#fef3c7' })
       }
     }
     if (status === 'in_progress') {
@@ -268,7 +289,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
     if (status === 'pending_review') {
       if (isCreator || noAssignee || (!isAssignee && canEdit)) {
         options.push({ label: '✅ 验收通过', action: () => handleMove(t.id, 'accepted'), color: '#065f46', bg: '#d1fae5' })
-        options.push({ label: '❌ 驳回', action: () => { setShowPointsModal({ taskId: t.id, roundType: 'acceptance', taskTitle: t.title }); setPointInputs(['']); setActionMenuTask(null) }, color: '#991b1b', bg: '#fee2e2' })
+        options.push({ label: '❌ 驳回', action: () => { setShowPointsModal({ taskId: t.id, roundType: 'acceptance', taskTitle: t.title }); setPointInputs([{ content: '', images: [] }]); setActionMenuTask(null) }, color: '#991b1b', bg: '#fee2e2' })
       }
     }
     if (status === 'review_failed') {
@@ -312,12 +333,39 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                 (p.round_type === 'acceptance' && (isCreator || (!isAssignee && canEdit)))
               )
 
+              const canEditPt = p.author_id === currentUserId
+              const isEditingThis = editingPoint?.id === p.id
+
               return (
                 <div key={p.id} style={{ padding: '8px 10px', background: 'var(--bg-primary)', borderRadius: 8, border: '1px solid var(--border-primary)' }}>
                   <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, color: 'var(--text-heading)', fontWeight: 500 }}>{p.content}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>{p.author_name} · {formatDateTime(p.created_at)}</div>
+                      {isEditingThis ? (
+                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                          <input value={editingPoint?.content ?? ''} onChange={e => setEditingPoint({ id: p.id, content: e.target.value })}
+                            onKeyDown={e => { if (e.key === 'Enter') handleSavePointEdit(); if (e.key === 'Escape') setEditingPoint(null) }}
+                            style={{ flex: 1, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--brand)', fontSize: 13, outline: 'none', background: 'var(--bg-secondary)', color: 'var(--text-heading)' }}
+                            autoFocus />
+                          <button onClick={handleSavePointEdit} style={{ background: 'var(--brand)', border: 'none', color: '#fff', borderRadius: 4, padding: '3px 8px', fontSize: 11, cursor: 'pointer' }}>保存</button>
+                          <button onClick={() => setEditingPoint(null)} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', padding: 2 }}><X size={14} /></button>
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: 13, color: 'var(--text-heading)', fontWeight: 500 }}>{p.content}</div>
+                      )}
+                      {(() => { const imgs = typeof p.images === 'string' ? JSON.parse(p.images || '[]') : (p.images || []); return imgs.length > 0 ? (
+                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
+                          {imgs.map((url: string, idx: number) => (
+                            <img key={idx} src={url.startsWith('http') ? url : `/api${url}`} alt="" style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border-primary)', cursor: 'pointer' }} />
+                          ))}
+                        </div>
+                      ) : null })()}
+                      <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {p.author_name} · {formatDateTime(p.created_at)}
+                        {canEditPt && !isEditingThis && (
+                          <button onClick={() => setEditingPoint({ id: p.id, content: p.content })}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--brand)', fontSize: 11, padding: 0 }}>编辑</button>
+                        )}
+                      </div>
                     </div>
                     <span style={{ fontSize: 11, padding: '2px 6px', borderRadius: 4, background: sc.bg, color: sc.text, fontWeight: 500, flexShrink: 0 }}>{sc.label}</span>
                   </div>
@@ -526,34 +574,61 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
       </div>
 
       {/* 审核要点模态框 */}
-      <Modal open={!!showPointsModal} onClose={() => { setShowPointsModal(null); setPointInputs(['']) }}
+      <Modal open={!!showPointsModal} onClose={() => { setShowPointsModal(null); setPointInputs([{ content: '', images: [] }]) }}
         title={showPointsModal?.roundType === 'initial' ? `提出疑问 - ${showPointsModal?.taskTitle}` : `驳回并列出问题 - ${showPointsModal?.taskTitle}`} width={560}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
             {showPointsModal?.roundType === 'initial' ? '请列出需要需求创建者补充说明的要点：' : '请列出验收不通过的具体问题：'}
           </div>
-          {pointInputs.map((val, i) => (
-            <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <span style={{ fontSize: 13, color: 'var(--text-tertiary)', fontWeight: 500, width: 24 }}>{i + 1}.</span>
-              <input value={val} onChange={e => {
-                const arr = [...pointInputs]; arr[i] = e.target.value; setPointInputs(arr)
-              }} placeholder={`要点 ${i + 1}`}
-                style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-secondary)', color: 'var(--text-body)' }}
-              />
-              {pointInputs.length > 1 && (
-                <button onClick={() => setPointInputs(prev => prev.filter((_, j) => j !== i))}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', padding: 4 }}>
-                  <X size={14} />
-                </button>
+          {pointInputs.map((pt, i) => (
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '8px 0', borderBottom: i < pointInputs.length - 1 ? '1px solid var(--border-primary)' : 'none' }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <span style={{ fontSize: 13, color: 'var(--text-tertiary)', fontWeight: 500, width: 24 }}>{i + 1}.</span>
+                <input value={pt.content} onChange={e => {
+                  const arr = [...pointInputs]; arr[i] = { ...arr[i], content: e.target.value }; setPointInputs(arr)
+                }} placeholder={`要点 ${i + 1}`}
+                  style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-secondary)', color: 'var(--text-body)' }}
+                />
+                <label style={{ cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)', display: 'flex', borderRadius: 6 }}
+                  title="添加图片">
+                  <Image size={16} />
+                  <input type="file" accept="image/*" multiple hidden onChange={e => {
+                    if (!e.target.files?.length) return
+                    const arr = [...pointInputs]
+                    arr[i] = { ...arr[i], images: [...arr[i].images, ...Array.from(e.target.files!)] }
+                    setPointInputs(arr)
+                    e.target.value = ''
+                  }} />
+                </label>
+                {pointInputs.length > 1 && (
+                  <button onClick={() => setPointInputs(prev => prev.filter((_, j) => j !== i))}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger)', padding: 4 }}>
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+              {pt.images.length > 0 && (
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginLeft: 32 }}>
+                  {pt.images.map((img, j) => (
+                    <div key={j} style={{ position: 'relative', width: 56, height: 56 }}>
+                      <img src={URL.createObjectURL(img)} alt="" style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border-primary)' }} />
+                      <button onClick={() => {
+                        const arr = [...pointInputs]
+                        arr[i] = { ...arr[i], images: arr[i].images.filter((_, k) => k !== j) }
+                        setPointInputs(arr)
+                      }} style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%', background: 'var(--color-danger)', color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10 }}>×</button>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           ))}
-          <button onClick={() => setPointInputs(prev => [...prev, ''])}
+          <button onClick={() => setPointInputs(prev => [...prev, { content: '', images: [] }])}
             style={{ padding: '6px 12px', borderRadius: 6, border: '1px dashed var(--border-primary)', background: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--brand)', alignSelf: 'flex-start' }}>
             + 添加要点
           </button>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-            <Button variant="secondary" onClick={() => { setShowPointsModal(null); setPointInputs(['']) }}>取消</Button>
+            <Button variant="secondary" onClick={() => { setShowPointsModal(null); setPointInputs([{ content: '', images: [] }]) }}>取消</Button>
             <Button disabled={submitting} onClick={handleSubmitPoints}>
               {submitting ? '提交中...' : showPointsModal?.roundType === 'initial' ? '提出疑问' : '驳回'}
             </Button>
