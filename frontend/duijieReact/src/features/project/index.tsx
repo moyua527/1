@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { Plus, FolderKanban, Loader2, Download, Search, Trash2, RotateCcw, Upload, Link, MoreVertical, Users, ListTodo, X } from 'lucide-react'
+import { Plus, FolderKanban, Loader2, Download, Search, Trash2, RotateCcw, Upload, Link, MoreVertical, X } from 'lucide-react'
 import { projectApi } from './services/api'
 import { can } from '../../stores/permissions'
 import { useProjects, useInvalidate } from '../../hooks/useApi'
@@ -217,9 +217,13 @@ export default function ProjectList() {
           subtitle={projects.length === 0 ? '点击右上角新建项目' : '调整筛选条件试试'}
           action={projects.length === 0 && canCreate ? { label: '新建项目', onClick: () => setShowCreate(true) } : undefined} />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(200px, 1fr))', gap: isMobile ? 10 : 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(auto-fill, minmax(110px, 1fr))', gap: isMobile ? 16 : 24, justifyItems: 'center' }}>
           {filtered.map((p: any) => {
             const displayName = p.my_nickname || p.name
+            const iconSize = isMobile ? 64 : 76
+            const totalNotif = (p.task_count ?? 0)
+            const Icon = getProjectIcon(p.icon)
+            const bgColor = p.icon_color || 'var(--brand)'
             return (
               <div key={p.id}
                 onClick={() => {
@@ -227,43 +231,66 @@ export default function ProjectList() {
                   openTab(p.id, displayName)
                   nav(`/projects/${p.id}`)
                 }}
-                style={{
-                  position: 'relative', display: 'flex', flexDirection: 'column', borderRadius: 14, cursor: 'pointer', border: '1px solid var(--border-primary)', transition: 'box-shadow 0.2s, transform 0.2s', minHeight: isMobile ? 100 : 120, overflow: 'hidden',
-                  background: 'var(--bg-primary)',
-                }}
-                onMouseEnter={e => { if (!isMobile) { e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-2px)' } }}
-                onMouseLeave={e => { if (!isMobile) { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' } }}>
-                {p.cover_image && (
-                  <div style={{ height: isMobile ? 60 : 80, backgroundImage: `url(${p.cover_image})`, backgroundSize: 'cover', backgroundPosition: 'center', flexShrink: 0 }} />
-                )}
-                <div style={{ padding: isMobile ? 14 : 20, display: 'flex', flexDirection: 'column', flex: 1 }}>
-                {unreadProjects.has(p.id) && (() => {
-                  const info = unreadMap[p.id] || {}
-                  const badges: { color: string; label: string }[] = []
-                  if (info.tasks) badges.push({ color: '#8b5cf6', label: '需求' })
-                  if (info.members) badges.push({ color: '#3b82f6', label: '成员' })
-                  if (info.messages) badges.push({ color: '#22c55e', label: '消息' })
-                  return badges.length > 0 ? (
-                    <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 3 }}>
-                      {badges.map(b => (
-                        <span key={b.label} style={{ fontSize: 9, padding: '1px 5px', borderRadius: 6, background: b.color, color: '#fff', fontWeight: 700, lineHeight: '14px' }}>{b.label}</span>
-                      ))}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', position: 'relative', width: isMobile ? 80 : 100 }}
+              >
+                <div style={{ position: 'relative', marginBottom: 8 }}>
+                  {p.cover_image ? (
+                    <div style={{
+                      width: iconSize, height: iconSize, borderRadius: iconSize * 0.22,
+                      backgroundImage: `url(${p.cover_image})`, backgroundSize: 'cover', backgroundPosition: 'center',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                    }} />
+                  ) : (
+                    <div style={{
+                      width: iconSize, height: iconSize, borderRadius: iconSize * 0.22,
+                      background: `linear-gradient(135deg, ${bgColor}, ${bgColor}dd)`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                    }}>
+                      <Icon size={isMobile ? 30 : 36} color="#fff" />
                     </div>
-                  ) : <span style={{ position: 'absolute', top: 10, right: 10, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
-                })()}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  {(() => { const Icon = getProjectIcon(p.icon); return <Icon size={isMobile ? 18 : 22} style={{ color: p.icon_color || 'var(--brand)', flexShrink: 0 }} /> })()}
-                  <span style={{ fontSize: isMobile ? 14 : 16, fontWeight: 600, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
-                    {displayName}
+                  )}
+                  {unreadProjects.has(p.id) && (
+                    <span style={{
+                      position: 'absolute', top: -4, right: -4,
+                      minWidth: 18, height: 18, borderRadius: 9,
+                      background: '#ef4444', color: '#fff',
+                      fontSize: 10, fontWeight: 700,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      padding: '0 4px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                    }}>
+                      {(() => {
+                        const info = unreadMap[p.id] || {}
+                        const c = (info.tasks ? 1 : 0) + (info.members ? 1 : 0) + (info.messages ? 1 : 0)
+                        return c || ''
+                      })()}
+                    </span>
+                  )}
+                  {!unreadProjects.has(p.id) && totalNotif > 0 && (
+                    <span style={{
+                      position: 'absolute', top: -4, right: -4,
+                      minWidth: 18, height: 18, borderRadius: 9,
+                      background: '#ef4444', color: '#fff',
+                      fontSize: 10, fontWeight: 700,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      padding: '0 4px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                    }}>
+                      {totalNotif > 99 ? '99+' : totalNotif}
+                    </span>
+                  )}
+                </div>
+                <span style={{
+                  fontSize: 12, fontWeight: 500, color: 'var(--text-heading)',
+                  textAlign: 'center', lineHeight: 1.3, maxWidth: '100%',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>
+                  {displayName}
+                </span>
+                {p.description && (
+                  <span style={{ fontSize: 10, color: 'var(--text-tertiary)', textAlign: 'center', lineHeight: 1.3, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>
+                    {p.description}
                   </span>
-                </div>
-                {p.my_nickname && <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>原名: {p.name}</div>}
-                {p.description && <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4, marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' } as any}>{p.description}</div>}
-                <div style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 12, color: 'var(--text-tertiary)' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><Users size={12} /> {p.member_count ?? 0}</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}><ListTodo size={12} /> {p.task_count ?? 0}</span>
-                </div>
-                </div>
+                )}
               </div>
             )
           })}
