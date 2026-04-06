@@ -180,6 +180,7 @@ export default function ProjectDetail() {
       if (payload?.project_id && String(payload.project_id) !== String(id)) return
       if (payload?.entity === 'task') loadTasks()
       if (payload?.entity === 'file') setHasNewFiles(true)
+      invalidate('project-unread-summary')
     })
     return off
   }, [id, loadTasks])
@@ -190,9 +191,24 @@ export default function ProjectDetail() {
       if (String(payload?.project_id) !== String(id)) return
       if (payload?.sender_id === user?.id) return
       setHasNewMessages(true)
+      invalidate('project-unread-summary')
     })
     return off
   }, [id, user?.id])
+
+  useEffect(() => {
+    const off = onSocket('new_notification', () => {
+      invalidate('project-unread-summary')
+    })
+    return off
+  }, [])
+
+  useEffect(() => {
+    const off = onSocket('task_created', () => {
+      invalidate('project-unread-summary')
+    })
+    return off
+  }, [])
 
   useEffect(() => {
     if (!id) return
@@ -367,7 +383,7 @@ export default function ProjectDetail() {
 
       {tab === 'tasks' && <TaskTab tasks={tasks} canEdit={canCreateTask} projectId={id!} loadTasks={loadTasks} />}
 
-      {tab === 'todo' && <TodoTab projectId={id!} canEdit={canEdit} isMobile={isMobile} currentUserId={user?.id} members={allMembers} />}
+      {tab === 'todo' && <TodoTab projectId={id!} canEdit={isAdmin || !!projectPerms?.can_create_milestone || !!projectPerms?.can_edit_milestone} isMobile={isMobile} currentUserId={user?.id} members={allMembers} />}
 
       {tab === 'files' && <ProjectFileTab projectId={id!} canEdit={canEdit} members={allMembers} currentUserId={user?.id} />}
 

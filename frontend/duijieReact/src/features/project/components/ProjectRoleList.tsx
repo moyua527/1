@@ -46,6 +46,12 @@ const PERM_GROUPS = [
     { key: 'can_move_task_approve', label: '验收通过' },
     { key: 'can_move_task_resubmit', label: '重新验收' },
   ]},
+  { title: '代办管理', items: [
+    { key: 'can_create_milestone', label: '创建代办' },
+    { key: 'can_edit_milestone', label: '编辑代办' },
+    { key: 'can_delete_milestone', label: '删除代办' },
+    { key: 'can_toggle_milestone', label: '完成/取消完成' },
+  ]},
   { title: '附件与审核', items: [
     { key: 'can_upload_task_attachment', label: '上传附件' },
     { key: 'can_delete_task_attachment', label: '删除附件' },
