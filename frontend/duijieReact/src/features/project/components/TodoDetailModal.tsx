@@ -208,7 +208,7 @@ export default function TodoDetailModal({ open, milestoneId, projectId, canEdit,
 
   return (
     <Modal open={open} onClose={onClose} title={detail?.title || '代办详情'} minHeight={560}>
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 440 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
         {/* 基本信息 */}
         {detail && !editingMs && (
           <div style={{ marginBottom: 12, paddingBottom: 12, borderBottom: '1px solid var(--border-primary)', flexShrink: 0 }}>

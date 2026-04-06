@@ -18,12 +18,12 @@ export default function Modal({ open, onClose, title, children, width = 500, min
   if (!open) return null
   return (
     <div style={overlay}>
-      <div style={{ background: 'var(--bg-primary)', borderRadius: 12, width, minHeight, maxWidth: 'calc(100vw - 24px)', maxHeight: '85vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', margin: 12, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ background: 'var(--bg-primary)', borderRadius: 12, width, minHeight, maxWidth: 'calc(100vw - 24px)', maxHeight: '85vh', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', margin: 12, display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border-primary)', flexShrink: 0 }}>
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>{title}</h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', padding: 4 }}><X size={18} /></button>
         </div>
-        <div style={{ padding: 20, flex: 1 }}>{children}</div>
+        <div style={{ padding: 20, flex: 1, minHeight: 0, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>{children}</div>
       </div>
     </div>
   )
