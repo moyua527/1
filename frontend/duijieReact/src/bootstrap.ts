@@ -35,10 +35,13 @@ async function tryRefreshToken(): Promise<boolean> {
   refreshPromise = (async () => {
     try {
       const rt = getRefreshToken()
+      const csrfMatch = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]+)/)
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+      if (csrfMatch) headers['X-CSRF-Token'] = csrfMatch[1]
       const res = await fetch(`${BACKEND_URL}/api/auth/refresh`, {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: rt ? JSON.stringify({ refresh_token: rt }) : undefined,
       })
       if (!res.ok) return false

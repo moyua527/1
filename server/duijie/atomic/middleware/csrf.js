@@ -30,6 +30,7 @@ const EXEMPT_PATHS = [
   '/api/auth/register-config',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
+  '/api/auth/refresh',
   '/api/auth/logout',
   '/api/auth/2fa/login/verify',
   '/api/open/',          // 合作方开放接口使用 X-API-Key

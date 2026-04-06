@@ -26,6 +26,7 @@ router.get('/tasks/attachments/:attachmentId/download', auth, require('../contro
 // 审核要点
 router.get('/tasks/:id/review-points', auth, reviewPoints.list);
 router.post('/tasks/:id/review-points', auth, taskStaff, reviewPoints.add);
+router.put('/tasks/review-points/:pointId', auth, taskStaff, reviewPoints.update);
 router.put('/tasks/review-points/:pointId/respond', auth, taskStaff, reviewPoints.respond);
 router.put('/tasks/review-points/:pointId/confirm', auth, taskStaff, reviewPoints.confirm);
 

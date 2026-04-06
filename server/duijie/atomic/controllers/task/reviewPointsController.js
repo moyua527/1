@@ -27,7 +27,8 @@ exports.list = async (req, res) => {
 /**
  * POST /tasks/:id/review-points
  * 添加审核要点（批量）
- * body: { points: string[], round_type: 'initial' | 'acceptance' }
+ * body: { points: Array<{ content: string, images?: string[] }>, round_type: 'initial' | 'acceptance' }
+ *   兼容旧格式 points: string[]
  */
 exports.add = async (req, res) => {
   try {
@@ -43,8 +44,6 @@ exports.add = async (req, res) => {
     const [[task]] = await db.query('SELECT id, status, project_id, created_by, assignee_id, title FROM duijie_tasks WHERE id = ? AND is_deleted = 0', [taskId]);
     if (!task) return res.status(404).json({ success: false, message: '任务不存在' });
 
-    // 权限检查：初审由负责人提出，验收由创建者/非负责人提出
-    // 无负责人时放宽限制
     if (round_type === 'initial' && task.assignee_id && task.assignee_id !== req.userId) {
       return res.status(403).json({ success: false, message: '只有任务负责人可以提出初审疑问' });
     }
@@ -52,20 +51,20 @@ exports.add = async (req, res) => {
       return res.status(403).json({ success: false, message: '任务负责人不能驳回自己的任务' });
     }
 
-    // 插入要点
-    const values = points.filter(p => p.trim()).map(p => [taskId, round_type, req.userId, p.trim()]);
+    const values = points
+      .map(p => typeof p === 'string' ? { content: p, images: null } : p)
+      .filter(p => p.content?.trim())
+      .map(p => [taskId, round_type, req.userId, p.content.trim(), p.images && p.images.length > 0 ? JSON.stringify(p.images) : null]);
     if (values.length === 0) return res.status(400).json({ success: false, message: '要点内容不能为空' });
 
     await db.query(
-      'INSERT INTO duijie_task_review_points (task_id, round_type, author_id, content) VALUES ?',
+      'INSERT INTO duijie_task_review_points (task_id, round_type, author_id, content, images) VALUES ?',
       [values]
     );
 
-    // 自动转移任务状态
     const newStatus = round_type === 'initial' ? 'disputed' : 'review_failed';
     await db.query('UPDATE duijie_tasks SET status = ? WHERE id = ?', [newStatus, taskId]);
 
-    // 通知对方
     const targetUserId = round_type === 'initial' ? task.created_by : task.assignee_id;
     if (targetUserId && targetUserId !== req.userId) {
       const label = round_type === 'initial' ? '提出了疑问' : '验收驳回';
@@ -76,6 +75,40 @@ exports.add = async (req, res) => {
     res.json({ success: true });
   } catch (e) {
     console.error('添加审核要点失败:', e);
+    res.status(500).json({ success: false, message: '服务器内部错误' });
+  }
+};
+
+/**
+ * PUT /tasks/review-points/:pointId
+ * 编辑审核要点内容/图片（仅提出人可编辑，且状态为 pending）
+ * body: { content?: string, images?: string[] }
+ */
+exports.update = async (req, res) => {
+  try {
+    const pointId = req.params.pointId;
+    const { content, images } = req.body;
+
+    const [[point]] = await db.query(
+      `SELECT rp.*, t.project_id FROM duijie_task_review_points rp JOIN duijie_tasks t ON t.id = rp.task_id WHERE rp.id = ?`,
+      [pointId]
+    );
+    if (!point) return res.status(404).json({ success: false, message: '要点不存在' });
+    if (point.author_id !== req.userId) return res.status(403).json({ success: false, message: '只有提出人可以编辑' });
+
+    const updates = [];
+    const params = [];
+    if (content !== undefined && content.trim()) { updates.push('content = ?'); params.push(content.trim()); }
+    if (images !== undefined) { updates.push('images = ?'); params.push(images && images.length > 0 ? JSON.stringify(images) : null); }
+    if (updates.length === 0) return res.status(400).json({ success: false, message: '没有需要更新的内容' });
+
+    params.push(pointId);
+    await db.query(`UPDATE duijie_task_review_points SET ${updates.join(', ')} WHERE id = ?`, params);
+
+    broadcast('task', 'updated', { id: point.task_id, project_id: point.project_id, userId: req.userId });
+    res.json({ success: true });
+  } catch (e) {
+    console.error('编辑审核要点失败:', e);
     res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 };
