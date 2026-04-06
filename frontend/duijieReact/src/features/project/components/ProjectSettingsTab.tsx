@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Users, Shield, AppWindow, UserPlus, ChevronRight, UserPlus2, Pencil, Trash2, ClipboardList, ListTodo, Calendar, Copy, Check as CheckIcon } from 'lucide-react'
+import { Users, Shield, AppWindow, UserPlus, ChevronRight, UserPlus2, Pencil, Trash2 } from 'lucide-react'
 import ProjectRoleList from './ProjectRoleList'
 import AppTab from './AppTab'
 import JoinRequestsTab from './JoinRequestsTab'
@@ -47,14 +47,6 @@ const settingsItems: { key: SubTab; label: string; icon: any; desc: string; cond
   { key: 'join_requests', label: '加入申请', icon: UserPlus, desc: '审批成员加入请求', condition: 'canApproveJoin' },
 ]
 
-const statusMap: Record<string, { label: string; color: string; bg: string }> = {
-  planning: { label: '规划中', color: '#6366f1', bg: 'rgba(99,102,241,0.1)' },
-  active: { label: '进行中', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
-  paused: { label: '已暂停', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
-  completed: { label: '已完成', color: '#22c55e', bg: 'rgba(34,197,94,0.1)' },
-  archived: { label: '已归档', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
-}
-
 export default function ProjectSettingsTab({ project, projectId, isOwner, canManageRole, canApproveJoin, canEdit, canDelete, pendingJoinCount, onRefreshProject, onRefreshJoinCount, onOpenAddMember, onMemberClick, onEditProject, onDeleteProject, tasks = [], milestones = [] }: Props) {
   const [sub, setSub] = useState<SubTab | null>(null)
   const user = useUserStore(s => s.user)
@@ -63,8 +55,6 @@ export default function ProjectSettingsTab({ project, projectId, isOwner, canMan
   const currentNickname = myMember?.project_nickname || ''
   const [nicknameInput, setNicknameInput] = useState(currentNickname)
   const [nicknameSaving, setNicknameSaving] = useState(false)
-  const [codeCopied, setCodeCopied] = useState(false)
-
   const saveNickname = async () => {
     setNicknameSaving(true)
     const r = await projectApi.setNickname(projectId, nicknameInput.trim())
@@ -155,54 +145,8 @@ export default function ProjectSettingsTab({ project, projectId, isOwner, canMan
     )
   }
 
-  const completedTasks = tasks.filter((t: any) => t.status === 'done' || t.status === 'completed').length
-  const completedMilestones = milestones.filter((m: any) => m.is_completed).length
-  const st = statusMap[project.status] || statusMap.planning
-  const createdAt = project.created_at ? new Date(project.created_at).toLocaleDateString('zh-CN') : ''
-
-  const overviewStats = [
-    { icon: Users, label: '成员', value: members.length, color: '#3b82f6' },
-    { icon: ClipboardList, label: '需求', value: `${completedTasks}/${tasks.length}`, color: '#8b5cf6' },
-    { icon: ListTodo, label: '代办', value: `${completedMilestones}/${milestones.length}`, color: '#f59e0b' },
-    { icon: Calendar, label: '创建', value: createdAt, color: '#22c55e' },
-  ]
-
   return (
     <div>
-      <div style={{ ...section, padding: 0, overflow: 'hidden' }}>
-        <div style={{ padding: '20px 20px 14px', borderBottom: '1px solid var(--border-primary)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: 'var(--text-heading)' }}>{project.name}</h3>
-            <span style={{ fontSize: 11, padding: '2px 10px', borderRadius: 10, fontWeight: 600, color: st.color, background: st.bg }}>{st.label}</span>
-          </div>
-          {project.description && (
-            <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: 4 }}>{project.description}</div>
-          )}
-          {project.join_code && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, padding: '8px 12px', borderRadius: 8, background: 'var(--bg-tertiary)' }}>
-              <span style={{ fontSize: 12, color: 'var(--text-tertiary)', flexShrink: 0 }}>项目ID</span>
-              <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)', letterSpacing: 1, fontFamily: 'monospace' }}>{project.join_code}</span>
-              <button onClick={() => {
-                const text = project.join_code
-                if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text) } else { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta) }
-                setCodeCopied(true); toast('项目 ID 已复制，分享给他人即可邀请加入', 'success'); setTimeout(() => setCodeCopied(false), 2000)
-              }} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6, border: 'none', background: codeCopied ? 'rgba(34,197,94,0.1)' : 'var(--bg-secondary)', color: codeCopied ? '#22c55e' : 'var(--brand)', fontSize: 12, cursor: 'pointer', fontWeight: 500, flexShrink: 0, transition: 'all 0.2s' }}>
-                {codeCopied ? <><CheckIcon size={12} /> 已复制</> : <><Copy size={12} /> 复制</>}
-              </button>
-            </div>
-          )}
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
-          {overviewStats.map((s, i) => (
-            <div key={i} style={{ padding: '14px 12px', textAlign: 'center', borderRight: i < 3 ? '1px solid var(--border-primary)' : 'none' }}>
-              <s.icon size={18} color={s.color} style={{ marginBottom: 6 }} />
-              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-heading)' }}>{s.value}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
     <div style={section}>
       <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>设置</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
