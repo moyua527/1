@@ -14,10 +14,16 @@ const typeIcon: Record<string, string> = {
 const CATEGORIES = [
   { key: 'all', label: '全部' },
   { key: 'project', label: '项目' },
-  { key: 'task', label: '需求' },
-  { key: 'approval', label: '审批' },
   { key: 'system', label: '系统' },
 ]
+
+const SUB_CAT: Record<string, { label: string; icon: string }> = {
+  task: { label: '需求', icon: '📋' },
+  project: { label: '项目动态', icon: '📂' },
+  approval: { label: '审批', icon: '✅' },
+  system: { label: '系统', icon: '⚙️' },
+  security: { label: '安全', icon: '🔒' },
+}
 
 export default function NotificationBell() {
   const [open, setOpen] = useState(false)
@@ -78,6 +84,30 @@ export default function NotificationBell() {
     if (!n.is_read) markRead(n.id)
     setSelected(n)
   }
+
+  const renderNotifItem = (n: any) => (
+    <div key={n.id} onClick={() => handleClick(n)}
+      style={{ display: 'flex', gap: 10, padding: '10px 16px', cursor: 'pointer', background: n.is_read ? 'transparent' : '#f0f9ff', borderBottom: '1px solid #f8fafc', transition: 'background 0.15s' }}
+      onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-secondary)')}
+      onMouseLeave={e => (e.currentTarget.style.background = n.is_read ? 'transparent' : '#f0f9ff')}>
+      <span style={{ fontSize: 18, lineHeight: 1.2, flexShrink: 0 }}>{typeIcon[n.type] || '🔔'}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 13, fontWeight: n.is_read ? 400 : 600, color: 'var(--text-heading)', marginBottom: 2 }}>{n.title}</div>
+        <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.content}</div>
+        <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 3 }}>{new Date(n.created_at).toLocaleString('zh-CN')}</div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+        {!n.is_read && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--brand)' }} />}
+        <button onClick={(e) => deleteNotif(n.id, e)}
+          title="删除"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--text-tertiary)', opacity: 0.5, transition: 'opacity 0.15s' }}
+          onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+          onMouseLeave={e => (e.currentTarget.style.opacity = '0.5')}>
+          <X size={14} />
+        </button>
+      </div>
+    </div>
+  )
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
@@ -158,29 +188,38 @@ export default function NotificationBell() {
               </div>
             ) : notifications.length === 0 ? (
               <div style={{ padding: 32, textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 13 }}>暂无通知</div>
-            ) : notifications.map(n => (
-              <div key={n.id} onClick={() => handleClick(n)}
-                style={{ display: 'flex', gap: 10, padding: '10px 16px', cursor: 'pointer', background: n.is_read ? 'transparent' : '#f0f9ff', borderBottom: '1px solid #f8fafc', transition: 'background 0.15s' }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-secondary)')}
-                onMouseLeave={e => (e.currentTarget.style.background = n.is_read ? 'transparent' : '#f0f9ff')}>
-                <span style={{ fontSize: 18, lineHeight: 1.2, flexShrink: 0 }}>{typeIcon[n.type] || '🔔'}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: n.is_read ? 400 : 600, color: 'var(--text-heading)', marginBottom: 2 }}>{n.title}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.content}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 3 }}>{new Date(n.created_at).toLocaleString('zh-CN')}</div>
+            ) : (() => {
+              if (activeTab !== 'project') {
+                return notifications.map(n => renderNotifItem(n))
+              }
+              const projects: Record<string, { label: string; subCats: Record<string, any[]> }> = {}
+              for (const n of notifications) {
+                const pKey = n.project_id ? String(n.project_id) : '_none'
+                if (!projects[pKey]) projects[pKey] = { label: n.project_name || '未关联项目', subCats: {} }
+                const cat = n.category || 'system'
+                if (!projects[pKey].subCats[cat]) projects[pKey].subCats[cat] = []
+                projects[pKey].subCats[cat].push(n)
+              }
+              return Object.entries(projects).map(([pKey, proj]) => (
+                <div key={pKey}>
+                  <div style={{ padding: '6px 16px', fontSize: 11, fontWeight: 700, color: 'var(--brand)', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-secondary)', display: 'flex', alignItems: 'center', gap: 4, position: 'sticky', top: 0, zIndex: 2 }}>
+                    📁 {proj.label}
+                    <span style={{ fontSize: 10, color: 'var(--text-tertiary)', fontWeight: 400 }}>({Object.values(proj.subCats).flat().length})</span>
+                  </div>
+                  {Object.entries(proj.subCats).map(([cat, items]) => {
+                    const sub = SUB_CAT[cat] || { label: cat, icon: '🔔' }
+                    return (
+                      <div key={cat}>
+                        <div style={{ padding: '4px 16px 4px 24px', fontSize: 10, fontWeight: 600, color: 'var(--text-secondary)', background: '#fafbfc', borderBottom: '1px solid var(--border-secondary)', display: 'flex', alignItems: 'center', gap: 3 }}>
+                          {sub.icon} {sub.label} ({items.length})
+                        </div>
+                        {items.map(n => renderNotifItem(n))}
+                      </div>
+                    )
+                  })}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-                  {!n.is_read && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--brand)' }} />}
-                  <button onClick={(e) => deleteNotif(n.id, e)}
-                    title="删除"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--text-tertiary)', opacity: 0.5, transition: 'opacity 0.15s' }}
-                    onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
-                    onMouseLeave={e => (e.currentTarget.style.opacity = '0.5')}>
-                    <X size={14} />
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))
+            })()}
           </div>
         </div>
       )}

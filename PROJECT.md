@@ -1,6 +1,6 @@
 # DuiJie（对接）— 客户项目对接平台
 
-> 版本：v1.3.4 | 最后更新：2026-04-06
+> 版本：v1.3.4.2 | 最后更新：2026-04-06
 >
 > 线上地址：http://160.202.253.143:8080
 
@@ -810,7 +810,7 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | `duijie_tags` | 标签表 |
 | `duijie_client_tags` | 客户标签关联表 |
 | `duijie_client_logs` | 客户变更日志表 |
-| `duijie_notifications` | 通知表（user_id, type, category, title, content, link, is_read） |
+| `duijie_notifications` | 通知表（user_id, type, category, title, content, link, is_read, project_id） |
 | `duijie_audit_logs` | 审计日志表（user_id, username, action, entity_type, entity_id, detail, ip） |
 | `duijie_client_members` | 企业成员表（client_id, user_id, name, role[creator/admin/member], position, department_id, phone, email） |
 | `duijie_departments` | 部门表（client_id, name, parent_id, sort_order） |

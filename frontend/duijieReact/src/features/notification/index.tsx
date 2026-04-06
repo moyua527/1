@@ -15,10 +15,16 @@ const typeIcon: Record<string, string> = {
 const CATEGORIES = [
   { key: 'all', label: '全部', icon: '📮' },
   { key: 'project', label: '项目', icon: '📁' },
-  { key: 'task', label: '需求', icon: '📋' },
-  { key: 'approval', label: '审批', icon: '✅' },
   { key: 'system', label: '系统', icon: '⚙️' },
 ]
+
+const SUB_CATEGORY_MAP: Record<string, { label: string; icon: string }> = {
+  task: { label: '需求', icon: '📋' },
+  project: { label: '项目动态', icon: '📂' },
+  approval: { label: '审批', icon: '✅' },
+  system: { label: '系统', icon: '⚙️' },
+  security: { label: '安全', icon: '🔒' },
+}
 
 export default function NotificationCenter() {
   const [activeTab, setActiveTab] = useState('all')
@@ -135,33 +141,66 @@ export default function NotificationCenter() {
               </div>
             ) : (
               <div style={{ background: 'var(--bg-primary)', borderRadius: 12, border: '1px solid var(--border-primary)', overflow: 'hidden' }}>
-                {displayed.map((n, i) => (
-                  <div key={n.id} onClick={() => handleClick(n)}
-                    style={{
-                      display: 'flex', gap: 12, padding: '14px 16px', cursor: 'pointer',
-                      background: n.is_read ? 'transparent' : 'var(--bg-selected)',
-                      borderBottom: i < displayed.length - 1 ? '1px solid var(--border-secondary)' : 'none',
-                      transition: 'background 0.15s',
-                    }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = n.is_read ? 'transparent' : 'var(--bg-selected)')}>
-                    <span style={{ fontSize: 24, lineHeight: 1.2, flexShrink: 0 }}>{typeIcon[n.type] || '🔔'}</span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: n.is_read ? 400 : 600, color: 'var(--text-heading)', marginBottom: 4 }}>{n.title}</div>
-                      <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.content}</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>{new Date(n.created_at).toLocaleString('zh-CN')}</div>
+                {(() => {
+                  const renderItem = (n: any, isLast: boolean) => (
+                    <div key={n.id} onClick={() => handleClick(n)}
+                      style={{
+                        display: 'flex', gap: 12, padding: '14px 16px', cursor: 'pointer',
+                        background: n.is_read ? 'transparent' : 'var(--bg-selected)',
+                        borderBottom: isLast ? 'none' : '1px solid var(--border-secondary)',
+                        transition: 'background 0.15s',
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = n.is_read ? 'transparent' : 'var(--bg-selected)')}>
+                      <span style={{ fontSize: 24, lineHeight: 1.2, flexShrink: 0 }}>{typeIcon[n.type] || '🔔'}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: n.is_read ? 400 : 600, color: 'var(--text-heading)', marginBottom: 4 }}>{n.title}</div>
+                        <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.content}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>{new Date(n.created_at).toLocaleString('zh-CN')}</div>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                        {!n.is_read && <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--brand)' }} />}
+                        <button onClick={(e) => deleteNotif(n.id, e)} title="删除"
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', padding: 2, opacity: 0.5, transition: 'opacity 0.15s' }}
+                          onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+                          onMouseLeave={e => (e.currentTarget.style.opacity = '0.5')}>
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-                      {!n.is_read && <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--brand)' }} />}
-                      <button onClick={(e) => deleteNotif(n.id, e)} title="删除"
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', padding: 2, opacity: 0.5, transition: 'opacity 0.15s' }}
-                        onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
-                        onMouseLeave={e => (e.currentTarget.style.opacity = '0.5')}>
-                        <Trash2 size={14} />
-                      </button>
+                  )
+                  if (activeTab !== 'project') {
+                    return displayed.map((n, i) => renderItem(n, i === displayed.length - 1))
+                  }
+                  const projects: Record<string, { label: string; subCats: Record<string, any[]> }> = {}
+                  for (const n of displayed) {
+                    const pKey = n.project_id ? String(n.project_id) : '_none'
+                    if (!projects[pKey]) projects[pKey] = { label: n.project_name || '未关联项目', subCats: {} }
+                    const cat = n.category || 'system'
+                    if (!projects[pKey].subCats[cat]) projects[pKey].subCats[cat] = []
+                    projects[pKey].subCats[cat].push(n)
+                  }
+                  return Object.entries(projects).map(([pKey, proj]) => (
+                    <div key={pKey}>
+                      <div style={{ padding: '10px 16px', fontSize: 14, fontWeight: 700, color: 'var(--brand)', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-secondary)', display: 'flex', alignItems: 'center', gap: 6, position: 'sticky', top: 0, zIndex: 2 }}>
+                        📁 {proj.label}
+                        <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 400 }}>({Object.values(proj.subCats).flat().length})</span>
+                      </div>
+                      {Object.entries(proj.subCats).map(([cat, items]) => {
+                        const sub = SUB_CATEGORY_MAP[cat] || { label: cat, icon: '🔔' }
+                        return (
+                          <div key={cat}>
+                            <div style={{ padding: '6px 16px 6px 28px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', background: '#fafbfc', borderBottom: '1px solid var(--border-secondary)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                              {sub.icon} {sub.label}
+                              <span style={{ fontSize: 10, color: 'var(--text-tertiary)', fontWeight: 400 }}>({items.length})</span>
+                            </div>
+                            {items.map((n: any, i: number) => renderItem(n, i === items.length - 1))}
+                          </div>
+                        )
+                      })}
                     </div>
-                  </div>
-                ))}
+                  ))
+                })()}
               </div>
             )
           ) : (
