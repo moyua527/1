@@ -31,4 +31,15 @@ export const taskApi = {
     fd.append('file', file)
     return uploadFile('/api/files/upload', fd)
   },
+  // 草稿
+  listDrafts: (projectId: string) => fetchApi(`/api/drafts?project_id=${projectId}`),
+  saveDraft: (projectId: string, title: string, description: string, files?: File[]) => {
+    const fd = new FormData()
+    fd.append('project_id', projectId)
+    fd.append('title', title)
+    fd.append('description', description)
+    if (files) files.forEach(f => fd.append('files', f))
+    return uploadFile('/api/drafts', fd)
+  },
+  deleteDraft: (id: number) => fetchApi(`/api/drafts/${id}`, { method: 'DELETE' }),
 }

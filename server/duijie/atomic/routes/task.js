@@ -9,6 +9,12 @@ const router = express.Router();
 
 const taskStaff = roleGuard('admin', 'member');
 const reviewPoints = require('../controllers/task/reviewPointsController');
+const draftCtrl = require('../controllers/task/draftController');
+
+// Drafts
+router.get('/drafts', auth, draftCtrl.list);
+router.post('/drafts', auth, upload.array('files', 10), draftCtrl.save);
+router.delete('/drafts/:id', auth, draftCtrl.remove);
 
 // Tasks
 router.post('/tasks', auth, roleGuard('admin', 'member', { soft: true }), enterprisePermGuard('can_create_task'), upload.array('files', 10), require('../controllers/task/createController'));

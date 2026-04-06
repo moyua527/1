@@ -427,7 +427,7 @@ export default function ProjectDetail() {
           toast(r.message || '操作失败', 'error'); return false
         }} />
 
-      <MemberInfoModal member={selectedMember} onClose={() => setSelectedMember(null)} />
+      <MemberInfoModal member={selectedMember} onClose={() => setSelectedMember(null)} projectId={id!} remarkMap={myRemarks} onRemarkChange={loadProject} />
       <ClientInfoModal open={clientModal} onClose={() => setClientModal(false)} clientData={clientData} />
       <ProjectGuide open={showProjectGuide} onClose={() => setShowProjectGuide(false)} />
       </div>

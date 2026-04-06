@@ -50,39 +50,45 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks, remarkMa
   const [taskForm, setTaskForm] = useState({ title: '', description: '' })
   const [taskFiles, setTaskFiles] = useState<File[]>([])
   const [showDrafts, setShowDrafts] = useState(false)
-  const [draftVer, setDraftVer] = useState(0)
+  interface DraftItem { id: number; title: string; description: string; files: { filename: string; original_name: string; size: number; mime_type: string }[]; created_at: string }
+  const [drafts, setDrafts] = useState<DraftItem[]>([])
+  const [loadedDraftId, setLoadedDraftId] = useState<number | null>(null)
+  const [draftFiles, setDraftFiles] = useState<{ filename: string; original_name: string; size: number; mime_type: string }[]>([])
   const draftSavedRef = useRef(false)
-  const draftKey = `task_drafts_${projectId}`
-  const drafts: { id: string; title: string; description: string; savedAt: string }[] = (() => {
-    void draftVer
-    try { return JSON.parse(localStorage.getItem(draftKey) || '[]') } catch { return [] }
-  })()
-  const saveDraftAndClose = useCallback((silent?: boolean) => {
-    if (draftSavedRef.current) return
+  const loadDrafts = useCallback(async () => {
+    if (!projectId) return
+    const r = await taskApi.listDrafts(projectId)
+    if (r.success) setDrafts(r.data || [])
+  }, [projectId])
+  useEffect(() => { loadDrafts() }, [loadDrafts])
+  const saveDraftAndClose = useCallback(async (silent?: boolean) => {
+    if (draftSavedRef.current || !projectId) return
     const t = taskForm.title.trim(); const d = taskForm.description.trim()
-    if (!t && !d) { if (!silent) toast('草稿内容为空', 'error'); return }
+    if (!t && !d && taskFiles.length === 0) { if (!silent) toast('草稿内容为空', 'error'); return }
     draftSavedRef.current = true
-    const cur: any[] = (() => { try { return JSON.parse(localStorage.getItem(draftKey) || '[]') } catch { return [] } })()
-    cur.unshift({ id: Date.now().toString(), title: t, description: d, savedAt: new Date().toLocaleString('zh-CN') })
-    if (cur.length > 20) cur.length = 20
-    localStorage.setItem(draftKey, JSON.stringify(cur))
-    setDraftVer(v => v + 1)
-    setShowCreateTask(false)
-    setTaskForm({ title: '', description: '' })
-    setTaskFiles([])
-    if (!silent) toast('草稿已保存', 'success')
+    const r = await taskApi.saveDraft(projectId, t, d, taskFiles.length > 0 ? taskFiles : undefined)
+    if (r.success) {
+      setShowCreateTask(false)
+      setTaskForm({ title: '', description: '' })
+      setTaskFiles([])
+      setDraftFiles([])
+      setLoadedDraftId(null)
+      loadDrafts()
+      if (!silent) toast('草稿已保存', 'success')
+    } else { if (!silent) toast(r.message || '保存失败', 'error') }
     setTimeout(() => { draftSavedRef.current = false }, 300)
-  }, [taskForm, taskFiles, draftKey])
-  const deleteDraft = useCallback((id: string) => {
-    const cur: any[] = (() => { try { return JSON.parse(localStorage.getItem(draftKey) || '[]') } catch { return [] } })()
-    localStorage.setItem(draftKey, JSON.stringify(cur.filter((d: any) => d.id !== id)))
-    setDraftVer(v => v + 1)
-  }, [draftKey])
-  const loadDraft = useCallback((draft: { title: string; description: string; id: string }) => {
+  }, [taskForm, taskFiles, projectId, loadDrafts])
+  const deleteDraft = useCallback(async (id: number) => {
+    const r = await taskApi.deleteDraft(id)
+    if (r.success) loadDrafts()
+    else toast(r.message || '删除失败', 'error')
+  }, [loadDrafts])
+  const loadDraft = useCallback((draft: DraftItem) => {
     setTaskForm({ title: draft.title, description: draft.description })
-    deleteDraft(draft.id)
+    setDraftFiles(draft.files || [])
+    setLoadedDraftId(draft.id)
     setShowDrafts(false); setShowCreateTask(true)
-  }, [deleteDraft])
+  }, [])
   const [deleteSelected, setDeleteSelected] = useState<Set<number>>(new Set())
   const [submitting, setSubmitting] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
@@ -677,12 +683,32 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks, remarkMa
               <textarea value={taskForm.description} onChange={e => setTaskForm({ ...taskForm, description: e.target.value })} onPaste={handleFilePaste}
                 placeholder="输入需求描述，可直接粘贴图片或拖入文件..." rows={3}
                 style={{ width: '100%', padding: '10px 12px', border: 'none', fontSize: 14, outline: 'none', resize: 'vertical', minHeight: 60, fontFamily: 'inherit', background: 'transparent', color: 'var(--text-body)' }} />
-              {taskFiles.length > 0 && (
+              {(taskFiles.length > 0 || draftFiles.length > 0) && (
                 <div style={{ padding: '6px 12px 8px', display: 'flex', flexWrap: 'wrap', gap: 6, borderTop: '1px solid var(--border-primary)' }}>
+                  {draftFiles.map((df, i) => {
+                    const isImg = df.mime_type.startsWith('image/')
+                    const url = `/uploads/${df.filename}`
+                    return (
+                      <div key={`df-${i}`} style={{ position: 'relative', display: 'inline-flex' }}>
+                        {isImg ? (
+                          <div style={{ width: 56, height: 56, borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border-primary)' }}>
+                            <img src={url} alt={df.original_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', background: 'var(--bg-primary)', borderRadius: 6, border: '1px solid var(--border-primary)', fontSize: 12, color: 'var(--text-body)' }}>
+                            <FileText size={12} />
+                            <span style={{ maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{df.original_name}</span>
+                          </div>
+                        )}
+                        <button onClick={() => setDraftFiles(prev => prev.filter((_, j) => j !== i))}
+                          style={{ position: 'absolute', top: -4, right: -4, width: 16, height: 16, borderRadius: '50%', border: 'none', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, lineHeight: 1 }}>×</button>
+                      </div>
+                    )
+                  })}
                   {taskFiles.map((f, i) => {
                     const isImg = f.type.startsWith('image/')
                     return (
-                      <div key={i} style={{ position: 'relative', display: 'inline-flex' }}>
+                      <div key={`f-${i}`} style={{ position: 'relative', display: 'inline-flex' }}>
                         {isImg ? (
                           <div style={{ width: 56, height: 56, borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border-primary)', position: 'relative' }}>
                             <img src={URL.createObjectURL(f)} alt={f.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -725,14 +751,19 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks, remarkMa
               const title = taskForm.title.trim()
               if (!title) { toast('请输入需求标题', 'error'); return }
               setSubmitting(true)
-              const r = await taskApi.create({ project_id: Number(projectId), title, description: taskForm.description, status: 'submitted' }, taskFiles.length > 0 ? taskFiles : undefined)
+              const createData: any = { project_id: Number(projectId), title, description: taskForm.description, status: 'submitted' }
+              if (loadedDraftId) createData.from_draft_id = loadedDraftId
+              if (draftFiles.length > 0) createData.draft_files = JSON.stringify(draftFiles.map(f => f.filename))
+              const r = await taskApi.create(createData, taskFiles.length > 0 ? taskFiles : undefined)
               if (r.success) {
+                if (loadedDraftId) taskApi.deleteDraft(loadedDraftId).then(() => loadDrafts())
                 const rememberResult = await projectApi.rememberTaskTitle(projectId, title)
                 if (!rememberResult.success) toast(rememberResult.message || '需求标题历史保存失败', 'error')
                 toast('需求创建成功', 'success')
                 window.dispatchEvent(new CustomEvent('onboarding-done', { detail: { type: 'create_task' } }))
                 setShowCreateTask(false)
                 resetCreateForm()
+                setDraftFiles([]); setLoadedDraftId(null)
                 loadTasks()
               } else toast(r.message || '创建失败', 'error')
               setSubmitting(false)
@@ -754,7 +785,10 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks, remarkMa
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.title || '(无标题)'}</div>
                 {d.description && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.description}</div>}
-                <div style={{ fontSize: 11, color: 'var(--text-quaternary)', marginTop: 4 }}>{d.savedAt}</div>
+                <div style={{ display: 'flex', gap: 8, fontSize: 11, color: 'var(--text-quaternary)', marginTop: 4 }}>
+                  <span>{formatDateTime(d.created_at)}</span>
+                  {d.files?.length > 0 && <span>{d.files.length} 个附件</span>}
+                </div>
               </div>
               <button onClick={e => { e.stopPropagation(); deleteDraft(d.id); }} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', padding: 4, borderRadius: 6, flexShrink: 0 }}
                 onMouseEnter={e => (e.currentTarget.style.color = 'var(--color-danger)')} onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-tertiary)')}>
