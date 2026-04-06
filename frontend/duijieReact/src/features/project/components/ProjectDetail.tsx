@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
-import { ArrowLeft, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import useProjectTabStore from '../../../stores/useProjectTabStore'
 import { can } from '../../../stores/permissions'
 import { useInvalidate, useProjectUnreadSummary } from '../../../hooks/useApi'
@@ -9,7 +9,6 @@ import { fetchApi } from '../../../bootstrap'
 import { projectApi } from '../services/api'
 import { taskApi } from '../../task/services/api'
 import Button from '../../ui/Button'
-import Badge from '../../ui/Badge'
 import { confirm } from '../../ui/ConfirmDialog'
 import { toast } from '../../ui/Toast'
 import TaskTab from './TaskTab'
@@ -24,13 +23,6 @@ import EditProjectModal from './EditProjectModal'
 import SetClientModal from './SetClientModal'
 import ProjectGuide from '../../ui/ProjectGuide'
 
-const statusMap: Record<string, { label: string; color: string }> = {
-  planning: { label: '规划中', color: 'blue' },
-  in_progress: { label: '进行中', color: 'yellow' },
-  review: { label: '审核中', color: 'blue' },
-  completed: { label: '已完成', color: 'green' },
-  on_hold: { label: '已暂停', color: 'gray' },
-}
 
 
 
@@ -282,7 +274,6 @@ export default function ProjectDetail() {
   )
   if (!project) return <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}>项目不存在</div>
 
-  const st = statusMap[project.status] || statusMap.planning
   const isOwner = (project.members || []).some((m: any) => m.user_id === user?.id && (m.project_role_key === 'owner' || m.member_role === 'owner'))
   const rawMembers = project.members || []
   const allMembers = rawMembers
@@ -338,17 +329,7 @@ export default function ProjectDetail() {
           </div>
         </div>
       )}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexShrink: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' } as any}>
-        <button onClick={() => nav(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', padding: 4, flexShrink: 0 }}><ArrowLeft size={20} /></button>
-        <h1 style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, color: 'var(--text-heading)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flexShrink: 1, minWidth: 0, cursor: project.join_code ? 'pointer' : 'default' }}
-          title={project.join_code ? `点击复制项目 ID: ${project.join_code}` : undefined}
-          onClick={() => { if (!project.join_code) return; const text = project.join_code; if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text) } else { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta) } toast('项目 ID 已复制', 'success') }}>
-          {project.name}
-        </h1>
-        <Badge color={st.color}>{st.label}</Badge>
-
-        <div style={{ width: 1, height: 20, background: 'var(--border-primary)', flexShrink: 0, margin: '0 2px' }} />
-
+      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 12, flexShrink: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' } as any}>
         <div data-tour="project-tabs" style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
           {([['tasks','需求'],['todo','代办'],['files','资料库'],['messages','消息'],['settings','设置']] as [string, string][]).map(([k,v]) => {
             const pInfo = id ? unreadSummary[id] : undefined
