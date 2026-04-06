@@ -547,7 +547,7 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={e => { if (e.target === e.currentTarget) setViewNote(null) }}>
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }} />
-          <div style={{ position: 'relative', background: 'var(--bg-primary)', borderRadius: 16, width: '90%', maxWidth: 520, maxHeight: '70vh', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ position: 'relative', background: 'var(--bg-primary)', borderRadius: 12, width: 500, minHeight: 500, maxWidth: 'calc(100vw - 24px)', maxHeight: '85vh', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', margin: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border-primary)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <StickyNote size={18} color="#f59e0b" />
@@ -575,7 +575,7 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={e => { if (e.target === e.currentTarget) setShowCreateGroup(false) }}>
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }} />
-          <div style={{ position: 'relative', background: 'var(--bg-primary)', borderRadius: 16, width: '90%', maxWidth: 480, boxShadow: '0 20px 60px rgba(0,0,0,0.3)', overflow: 'hidden' }}>
+          <div style={{ position: 'relative', background: 'var(--bg-primary)', borderRadius: 12, width: 500, minHeight: 500, maxWidth: 'calc(100vw - 24px)', maxHeight: '85vh', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', overflow: 'hidden', margin: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border-primary)' }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>创建资料</h3>
               <button onClick={() => setShowCreateGroup(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)' }}><X size={18} /></button>
@@ -633,7 +633,7 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={e => { if (e.target === e.currentTarget) { setActiveGroup(null); setGroupDetail(null); setItemType('') } }}>
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }} />
-          <div style={{ position: 'relative', background: 'var(--bg-primary)', borderRadius: 16, width: '90%', maxWidth: 600, maxHeight: '80vh', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ position: 'relative', background: 'var(--bg-primary)', borderRadius: 12, width: 500, minHeight: 500, maxWidth: 'calc(100vw - 24px)', maxHeight: '85vh', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', overflow: 'hidden', margin: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border-primary)' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>{activeGroup.name}</h3>
@@ -839,7 +839,7 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           onClick={e => { if (e.target === e.currentTarget) setShowAddModal(false) }}>
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }} />
-          <div style={{ position: 'relative', background: 'var(--bg-primary)', borderRadius: 16, width: '90%', maxWidth: 520, maxHeight: '80vh', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.3)', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ position: 'relative', background: 'var(--bg-primary)', borderRadius: 12, width: 500, minHeight: 500, maxWidth: 'calc(100vw - 24px)', maxHeight: '85vh', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', margin: 12 }}>
             {/* 头部 */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border-primary)' }}>
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>添加资料</h3>
