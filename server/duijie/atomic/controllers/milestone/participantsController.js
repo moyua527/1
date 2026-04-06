@@ -5,7 +5,7 @@ exports.list = async (req, res) => {
     const [rows] = await db.query(
       `SELECT mp.user_id, u.username, u.nickname
        FROM duijie_milestone_participants mp
-       JOIN duijie_users u ON u.id = mp.user_id
+       JOIN voice_users u ON u.id = mp.user_id
        WHERE mp.milestone_id = ?
        ORDER BY mp.created_at ASC`,
       [req.params.id]

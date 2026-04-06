@@ -385,7 +385,7 @@ export default function ProjectDetail() {
 
       {tab === 'todo' && <TodoTab projectId={id!} canEdit={isAdmin || !!projectPerms?.can_create_milestone || !!projectPerms?.can_edit_milestone} isMobile={isMobile} currentUserId={user?.id} members={allMembers} />}
 
-      {tab === 'files' && <ProjectFileTab projectId={id!} canEdit={canEdit} members={allMembers} currentUserId={user?.id} />}
+      {tab === 'files' && <ProjectFileTab projectId={id!} canEdit={isAdmin || !!projectPerms?.can_upload_file || !!projectPerms?.can_delete_file} members={allMembers} currentUserId={user?.id} />}
 
       {tab === 'messages' && <div style={{ background: 'var(--bg-primary)', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16, overflow: 'hidden' }}><MessagePanel projectId={id!} /></div>}
 

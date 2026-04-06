@@ -1,9 +1,14 @@
 const db = require('../../../config/db');
+const { getProjectPerms } = require('../../utils/projectPerms');
 
 module.exports = async (req, res) => {
   try {
     const { project_id, title, url, description } = req.body;
     if (!project_id || !url) return res.status(400).json({ success: false, message: '请填写网址' });
+    if (req.userRole !== 'admin') {
+      const perms = await getProjectPerms(req.userId, project_id);
+      if (!perms?.can_upload_file) return res.status(403).json({ success: false, message: '无上传权限' });
+    }
 
     const displayName = title && title.trim() ? title.trim() : url;
     const desc = description && description.trim() ? description.trim() : '';

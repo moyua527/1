@@ -77,6 +77,10 @@ export interface ProjectPerms {
   can_edit_milestone: boolean
   can_delete_milestone: boolean
   can_toggle_milestone: boolean
+  // 资料库
+  can_upload_file: boolean
+  can_delete_file: boolean
+  can_manage_resource_group: boolean
   // 报表
   can_view_report: boolean
   can_export_data: boolean

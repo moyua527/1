@@ -1,10 +1,15 @@
 const db = require('../../../config/db');
 const { broadcast } = require('../../utils/broadcast');
+const { getProjectPerms } = require('../../utils/projectPerms');
 
 module.exports = async (req, res) => {
   try {
     const { project_id, name, visibility, visible_users } = req.body;
     if (!project_id || !name?.trim()) return res.status(400).json({ success: false, message: '请输入资料名称' });
+    if (req.userRole !== 'admin') {
+      const perms = await getProjectPerms(req.userId, project_id);
+      if (!perms?.can_manage_resource_group) return res.status(403).json({ success: false, message: '无资源分组管理权限' });
+    }
 
     const [result] = await db.query(
       'INSERT INTO duijie_resource_groups (project_id, name, visibility, created_by) VALUES (?, ?, ?, ?)',

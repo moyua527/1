@@ -52,6 +52,11 @@ const PERM_GROUPS = [
     { key: 'can_delete_milestone', label: '删除代办' },
     { key: 'can_toggle_milestone', label: '完成/取消完成' },
   ]},
+  { title: '资料库', items: [
+    { key: 'can_upload_file', label: '上传文件/链接/笔记' },
+    { key: 'can_delete_file', label: '删除文件' },
+    { key: 'can_manage_resource_group', label: '管理资源分组' },
+  ]},
   { title: '附件与审核', items: [
     { key: 'can_upload_task_attachment', label: '上传附件' },
     { key: 'can_delete_task_attachment', label: '删除附件' },

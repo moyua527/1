@@ -1,9 +1,14 @@
 const db = require('../../../config/db');
+const { getProjectPerms } = require('../../utils/projectPerms');
 
 module.exports = async (req, res) => {
   try {
     const { project_id, title, content } = req.body;
     if (!project_id || !content?.trim()) return res.status(400).json({ success: false, message: '请填写内容' });
+    if (req.userRole !== 'admin') {
+      const perms = await getProjectPerms(req.userId, project_id);
+      if (!perms?.can_upload_file) return res.status(403).json({ success: false, message: '无上传权限' });
+    }
 
     const displayName = title && title.trim() ? title.trim() : `笔记 ${new Date().toLocaleDateString('zh-CN')}`;
     const text = content.trim();

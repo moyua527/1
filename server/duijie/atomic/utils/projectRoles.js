@@ -22,6 +22,8 @@ const PROJECT_ROLE_FIELDS = [
   'can_add_review_point', 'can_respond_review_point', 'can_confirm_review_point',
   // 代办管理
   'can_create_milestone', 'can_edit_milestone', 'can_delete_milestone', 'can_toggle_milestone',
+  // 资料库
+  'can_upload_file', 'can_delete_file', 'can_manage_resource_group',
   // 数据与应用
   'can_export_data', 'can_manage_app_config',
 ];
@@ -48,6 +50,7 @@ const DEFAULT_PROJECT_ROLE_PRESETS = [
     can_upload_task_attachment: 1, can_delete_task_attachment: 1,
     can_add_review_point: 1, can_respond_review_point: 1, can_confirm_review_point: 1,
     can_create_milestone: 1, can_edit_milestone: 1, can_delete_milestone: 1, can_toggle_milestone: 1,
+    can_upload_file: 1, can_delete_file: 1, can_manage_resource_group: 1,
   },
   {
     role_key: 'viewer', name: '项目查看', color: '#64748b', sort_order: 2, is_default: 1,

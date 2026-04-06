@@ -5,7 +5,7 @@ module.exports = async (req, res) => {
     const [[ms]] = await db.query(
       `SELECT m.*, u.username AS creator_username, u.nickname AS creator_nickname
        FROM duijie_milestones m
-       LEFT JOIN duijie_users u ON u.id = m.created_by
+       LEFT JOIN voice_users u ON u.id = m.created_by
        WHERE m.id = ? AND m.is_deleted = 0`,
       [req.params.id]
     );
