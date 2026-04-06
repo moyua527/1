@@ -50,7 +50,7 @@ export default function TaskDetailModal({ task, open, onClose }: Props) {
 
   return (
     <>
-    <Modal open={open} onClose={onClose} title="需求详情" width={560}>
+    <Modal open={open} onClose={onClose} title="需求详情">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* 标题 */}
         <div>

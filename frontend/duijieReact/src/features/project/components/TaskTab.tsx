@@ -591,7 +591,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
 
       {/* 审核要点模态框 */}
       <Modal open={!!showPointsModal} onClose={() => { setShowPointsModal(null); setPointInputs([{ content: '', images: [] }]) }}
-        title={showPointsModal?.roundType === 'initial' ? `提出疑问 - ${showPointsModal?.taskTitle}` : `驳回并列出问题 - ${showPointsModal?.taskTitle}`} width={560}>
+        title={showPointsModal?.roundType === 'initial' ? `提出疑问 - ${showPointsModal?.taskTitle}` : `驳回并列出问题 - ${showPointsModal?.taskTitle}`}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
             {showPointsModal?.roundType === 'initial' ? '请列出需要需求创建者补充说明的要点：' : '请列出验收不通过的具体问题：'}
@@ -674,7 +674,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
         if (loadedDraftId) { setShowCreateTask(false); resetCreateForm(); setDraftFiles([]); setLoadedDraftId(null) }
         else if (t || d || taskFiles.length > 0) { saveDraftAndClose(true) }
         else { setShowCreateTask(false); resetCreateForm() }
-      }} title="添加需求" width={560}>
+      }} title="添加需求">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <TaskTitleSelector open={showCreateTask} projectId={projectId} value={taskForm.title} onChange={title => setTaskForm({ ...taskForm, title })} required />
           <div>
@@ -781,7 +781,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
       </Modal>
 
       {/* 草稿箱模态框 */}
-      <Modal open={showDrafts} onClose={() => setShowDrafts(false)} title="草稿箱" width={480}>
+      <Modal open={showDrafts} onClose={() => setShowDrafts(false)} title="草稿箱">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {drafts.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontSize: 14, padding: '32px 0' }}>暂无草稿</div>
@@ -808,7 +808,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
       </Modal>
 
       {/* 删除需求模态框 */}
-      <Modal open={showDeleteTask} onClose={() => setShowDeleteTask(false)} title="删除需求" width={560}>
+      <Modal open={showDeleteTask} onClose={() => setShowDeleteTask(false)} title="删除需求">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {tasks.length === 0 ? <div style={{ color: 'var(--text-tertiary)', fontSize: 14, textAlign: 'center', padding: 20 }}>暂无需求</div> : (<>
             <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>选择要删除的需求（删除后可在回收站恢复）：</div>
@@ -863,7 +863,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
       </Modal>
 
       {/* 回收站模态框 */}
-      <Modal open={showTrash} onClose={() => setShowTrash(false)} title="回收站" width={560}>
+      <Modal open={showTrash} onClose={() => setShowTrash(false)} title="回收站">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 4 }}>项目成员（管理员/成员）可以恢复已删除的需求</div>
           {trashLoading ? <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)' }}>加载中...</div> :

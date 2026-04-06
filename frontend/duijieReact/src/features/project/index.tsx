@@ -324,7 +324,7 @@ export default function ProjectList() {
       </Modal>
 
       {/* 项目回收站 */}
-      <Modal open={showTrash} onClose={() => setShowTrash(false)} title="项目回收站" width={560}>
+      <Modal open={showTrash} onClose={() => setShowTrash(false)} title="项目回收站">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {trashLoading ? (
             <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)' }}><Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} /></div>

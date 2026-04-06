@@ -106,7 +106,7 @@ export default function RoleList({ roles, isOwner, canManageRoles, onCreateRole,
         </div>
       )}
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? '编辑角色' : '新建角色'} width={520}>
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? '编辑角色' : '新建角色'}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Input label="角色名称 *" placeholder="如：项目经理" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
 

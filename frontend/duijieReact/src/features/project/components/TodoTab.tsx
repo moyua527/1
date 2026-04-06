@@ -244,7 +244,7 @@ export default function TodoTab({ projectId, canEdit, isMobile }: Props) {
       </div>
 
       {/* 创建弹窗 */}
-      <Modal open={showCreate} onClose={() => { setShowCreate(false); setNewTitle(''); setNewDesc('') }} title="添加代办步骤" width={480}>
+      <Modal open={showCreate} onClose={() => { setShowCreate(false); setNewTitle(''); setNewDesc('') }} title="添加代办步骤">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>步骤名称 *</label>

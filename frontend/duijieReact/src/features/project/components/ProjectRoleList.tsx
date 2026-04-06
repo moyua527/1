@@ -188,7 +188,7 @@ export default function ProjectRoleList({ canEdit, projectId }: Props) {
         </>
       )}
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? '编辑项目角色' : '新建项目角色'} width={520}>
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? '编辑项目角色' : '新建项目角色'}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Input label="角色名称 *" placeholder="如：项目经理、开发负责人" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
 
@@ -246,7 +246,7 @@ export default function ProjectRoleList({ canEdit, projectId }: Props) {
       {viewRole && (() => {
         const permCount = ALL_PERM_KEYS.filter(k => !!viewRole[k]).length
         return (
-          <Modal open={!!viewRole} onClose={() => setViewRole(null)} title={`${viewRole.name} — ${permCount}/${ALL_PERM_KEYS.length} 权限`} width={480}>
+          <Modal open={!!viewRole} onClose={() => setViewRole(null)} title={`${viewRole.name} — ${permCount}/${ALL_PERM_KEYS.length} 权限`}>
             <div style={{ height: 400, overflowY: 'auto' }}>
               {permCount === 0 ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)', fontSize: 14 }}>该角色暂无任何权限</div>
