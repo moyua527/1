@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown, History, List, Trash2 } from 'lucide-react'
+import { ChevronDown, History, List, Plus, Trash2 } from 'lucide-react'
 import { projectApi } from '../../project/services/api'
 import { toast } from '../../ui/Toast'
 
@@ -64,6 +64,8 @@ export default function TaskTitleSelector({
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [inputFocused, setInputFocused] = useState(false)
   const [presetOpen, setPresetOpen] = useState(false)
+  const [newPreset, setNewPreset] = useState('')
+  const [savingPreset, setSavingPreset] = useState(false)
   const suggestRef = useRef<HTMLDivElement>(null)
   const presetRef = useRef<HTMLDivElement>(null)
 
@@ -117,6 +119,34 @@ export default function TaskTitleSelector({
     return options.history.filter(item => item.title.toLowerCase().includes(value.trim().toLowerCase()))
   }, [value, options.history])
 
+  const handleAddPreset = async () => {
+    const name = newPreset.trim()
+    if (!name || !projectId) return
+    if (options.presets.includes(name)) { toast('已存在相同名称', 'error'); return }
+    setSavingPreset(true)
+    const next = [...options.presets, name]
+    const r = await projectApi.updateTaskTitlePresets(String(projectId), next)
+    setSavingPreset(false)
+    if (r.success) {
+      setOptions({ ...options, presets: next })
+      setNewPreset('')
+      toast('已添加', 'success')
+    } else toast(r.message || '添加失败', 'error')
+  }
+
+  const handleDeletePreset = async (name: string) => {
+    if (!projectId) return
+    setSavingPreset(true)
+    const next = options.presets.filter(p => p !== name)
+    const r = await projectApi.updateTaskTitlePresets(String(projectId), next)
+    setSavingPreset(false)
+    if (r.success) {
+      setOptions({ ...options, presets: next })
+      if (value === name) onChange('')
+      toast('已删除', 'success')
+    } else toast(r.message || '删除失败', 'error')
+  }
+
   const handleDeleteHistory = async (id: number) => {
     if (!projectId) return
     setDeletingId(id)
@@ -155,8 +185,6 @@ export default function TaskTitleSelector({
       {mode === 'preset' && (
         loading ? (
           <div style={{ fontSize: 13, color: 'var(--text-tertiary)', padding: '8px 0' }}>加载中...</div>
-        ) : options.presets.length === 0 ? (
-          <div style={{ fontSize: 13, color: 'var(--text-tertiary)', padding: '8px 0' }}>暂无固定功能名，请在项目设置中添加</div>
         ) : (
           <div ref={presetRef} style={{ position: 'relative' }}>
             <button type="button" onClick={() => setPresetOpen(v => !v)}
@@ -165,19 +193,34 @@ export default function TaskTitleSelector({
               <ChevronDown size={16} style={{ color: 'var(--text-tertiary)', flexShrink: 0, transition: 'transform 0.2s', transform: presetOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} />
             </button>
             {presetOpen && (
-              <div style={{ position: 'absolute', left: 0, right: 0, top: '100%', marginTop: 4, background: 'var(--bg-primary)', borderRadius: 8, border: '1px solid var(--border-primary)', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', maxHeight: 200, overflowY: 'auto', zIndex: 10 }}>
+              <div style={{ position: 'absolute', left: 0, right: 0, top: '100%', marginTop: 4, background: 'var(--bg-primary)', borderRadius: 8, border: '1px solid var(--border-primary)', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', maxHeight: 280, overflowY: 'auto', zIndex: 10 }}>
                 {options.presets.map(item => {
                   const selected = item === value
                   return (
                     <div key={item}
-                      onClick={() => { onChange(item); setPresetOpen(false) }}
-                      style={{ padding: '8px 12px', cursor: 'pointer', fontSize: 13, color: 'var(--text-body)', fontWeight: selected ? 600 : 400, background: selected ? 'var(--bg-selected)' : 'transparent' }}
+                      style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', cursor: 'pointer', fontSize: 13, color: 'var(--text-body)', fontWeight: selected ? 600 : 400, background: selected ? 'var(--bg-selected)' : 'transparent' }}
                       onMouseEnter={e => { if (!selected) e.currentTarget.style.background = 'var(--bg-tertiary)' }}
                       onMouseLeave={e => { if (!selected) e.currentTarget.style.background = 'transparent' }}>
-                      {item}
+                      <span style={{ flex: 1 }} onClick={() => { onChange(item); setPresetOpen(false) }}>{item}</span>
+                      <button type="button" disabled={savingPreset}
+                        onClick={e => { e.stopPropagation(); handleDeletePreset(item) }}
+                        style={{ width: 22, height: 22, borderRadius: 4, border: 'none', background: 'transparent', color: 'var(--text-disabled)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                        onMouseEnter={e => { e.currentTarget.style.color = 'var(--color-danger)' }}
+                        onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-disabled)' }}>
+                        <Trash2 size={11} />
+                      </button>
                     </div>
                   )
                 })}
+                <div style={{ borderTop: '1px solid var(--border-primary)', padding: '6px 8px', display: 'flex', gap: 6 }}>
+                  <input value={newPreset} onChange={e => setNewPreset(e.target.value)} placeholder="新增功能名…"
+                    onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) { e.preventDefault(); handleAddPreset() } }}
+                    style={{ flex: 1, padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-secondary)', color: 'var(--text-body)' }} />
+                  <button type="button" disabled={savingPreset || !newPreset.trim()} onClick={handleAddPreset}
+                    style={{ padding: '4px 10px', borderRadius: 6, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 12, fontWeight: 600, cursor: savingPreset || !newPreset.trim() ? 'not-allowed' : 'pointer', opacity: savingPreset || !newPreset.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <Plus size={12} /> 添加
+                  </button>
+                </div>
               </div>
             )}
           </div>

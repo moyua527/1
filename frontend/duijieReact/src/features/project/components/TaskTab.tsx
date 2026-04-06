@@ -10,6 +10,7 @@ import { taskApi } from '../../task/services/api'
 import { toast } from '../../ui/Toast'
 import { formatDateTime } from '../../../utils/datetime'
 import useUserStore from '../../../stores/useUserStore'
+import useNicknameStore from '../../../stores/useNicknameStore'
 import ImageViewer from '../../ui/ImageViewer'
 import ImageEditor from '../../ui/ImageEditor'
 
@@ -32,11 +33,17 @@ interface TaskTabProps {
   canEdit: boolean
   projectId: string
   loadTasks: () => void
+  remarkMap?: Record<string, string>
 }
 
-export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTabProps) {
+export default function TaskTab({ tasks, canEdit, projectId, loadTasks, remarkMap = {} }: TaskTabProps) {
   const user = useUserStore(s => s.user)
   const currentUserId = user?.id
+  const globalDn = useNicknameStore(s => s.getDisplayName)
+  const dn = (uid: number | undefined, fallback: string) => {
+    if (!uid) return fallback
+    return remarkMap[String(uid)] || globalDn(uid, fallback)
+  }
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [showCreateTask, setShowCreateTask] = useState(false)
   const [showDeleteTask, setShowDeleteTask] = useState(false)
@@ -360,7 +367,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                         </div>
                       ) : null })()}
                       <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
-                        {p.author_name} · {formatDateTime(p.created_at)}
+                        {dn(p.author_id, p.author_name)} · {formatDateTime(p.created_at)}
                         {canEditPt && !isEditingThis && (
                           <button onClick={() => setEditingPoint({ id: p.id, content: p.content })}
                             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--brand)', fontSize: 11, padding: 0 }}>编辑</button>
@@ -372,7 +379,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                   {p.response && (
                     <div style={{ marginTop: 6, padding: '6px 8px', background: 'var(--bg-tertiary)', borderRadius: 6, borderLeft: '3px solid var(--brand)' }}>
                       <div style={{ fontSize: 13, color: 'var(--text-body)' }}>{p.response}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>{p.responder_name} · {formatDateTime(p.response_at)}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>{dn(p.response_by, p.responder_name)} · {formatDateTime(p.response_at)}</div>
                     </div>
                   )}
                   {canRespondPt && (
@@ -495,8 +502,8 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                       <div style={{ display: 'flex', gap: 12, marginTop: 2, flexWrap: 'wrap' }}>
                         {t.created_at && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>创建: {formatDateTime(t.created_at)}</span>}
                         {t.due_date && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>截止: {t.due_date}</span>}
-                        {(t.assignee_name || t.assigned_name) && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>负责人: {t.assignee_name || t.assigned_name}</span>}
-                        {t.creator_name && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>创建者: {t.creator_name}</span>}
+                        {(t.assignee_name || t.assigned_name) && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>负责人: {dn(t.assignee_id, t.assignee_name || t.assigned_name)}</span>}
+                        {t.creator_name && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>创建者: {dn(t.created_by, t.creator_name)}</span>}
                       </div>
                       {t.attachments && t.attachments.length > 0 && (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
@@ -786,8 +793,8 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 4 }}>
                       {t.created_at && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>创建: {formatDateTime(t.created_at)}</span>}
                       {t.due_date && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>截止: {t.due_date}</span>}
-                      {(t.assignee_name || t.assigned_name) && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>负责人: {t.assignee_name || t.assigned_name}</span>}
-                      {t.creator_name && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>创建者: {t.creator_name}</span>}
+                      {(t.assignee_name || t.assigned_name) && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>负责人: {dn(t.assignee_id, t.assignee_name || t.assigned_name)}</span>}
+                      {t.creator_name && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>创建者: {dn(t.created_by, t.creator_name)}</span>}
                     </div>
                   </div>
                   <Badge color={(taskStatusMap[t.status] || taskStatusMap.submitted).color}>{(taskStatusMap[t.status] || taskStatusMap.submitted).label}</Badge>
@@ -825,7 +832,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                  <div style={{ flex: 1, minWidth: 0 }}>
                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
                    <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
-                     {t.creator_name && `创建者: ${t.creator_name}`}
+                     {t.creator_name && `创建者: ${dn(t.created_by, t.creator_name)}`}
                      {t.updated_at && ` · 删除于: ${formatDateTime(t.updated_at)}`}
                    </div>
                  </div>

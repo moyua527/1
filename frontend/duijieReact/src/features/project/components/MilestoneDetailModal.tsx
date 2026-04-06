@@ -3,16 +3,23 @@ import { X, Plus, Trash2, Clock, Users, Bell, Send, CheckCircle2, Circle, Loader
 import { milestoneApi } from '../../milestone/services/api'
 import Button from '../../ui/Button'
 import { toast } from '../../ui/Toast'
+import useNicknameStore from '../../../stores/useNicknameStore'
 
 interface Props {
   milestoneId: string
   currentUserId: number
   members: any[]
+  remarkMap?: Record<string, string>
   onClose: () => void
   onRefresh: () => void
 }
 
-export default function MilestoneDetailModal({ milestoneId, currentUserId, members, onClose, onRefresh }: Props) {
+export default function MilestoneDetailModal({ milestoneId, currentUserId, members, remarkMap = {}, onClose, onRefresh }: Props) {
+  const globalDn = useNicknameStore(s => s.getDisplayName)
+  const dn = (uid: number | undefined, fallback: string) => {
+    if (!uid) return fallback
+    return remarkMap[String(uid)] || globalDn(uid, fallback)
+  }
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [activeSection, setActiveSection] = useState<'progress' | 'participants' | 'reminders'>('progress')
@@ -51,7 +58,7 @@ export default function MilestoneDetailModal({ milestoneId, currentUserId, membe
   const canTrack = isCreator || isParticipant
 
   const mentionableUsers = (data?.participants || []).map((p: any) => ({
-    id: p.user_id, name: p.display_name || p.nickname || p.username || ''
+    id: p.user_id, name: dn(p.user_id, p.display_name || p.nickname || p.username || '')
   })).filter((u: any) => u.name)
   const filteredMentions = mentionableUsers.filter((u: any) =>
     u.name.toLowerCase().includes(mentionFilter.toLowerCase())
@@ -251,7 +258,7 @@ export default function MilestoneDetailModal({ milestoneId, currentUserId, membe
                               )}
                             </div>
                             <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 6 }}>
-                              {p.author_name || '未知'} · {p.created_at ? new Date(p.created_at).toLocaleString('zh-CN') : ''}
+                              {dn(p.created_by, p.author_name || '未知')} · {p.created_at ? new Date(p.created_at).toLocaleString('zh-CN') : ''}
                             </div>
                           </div>
                           {p.created_by === currentUserId && (
@@ -280,9 +287,9 @@ export default function MilestoneDetailModal({ milestoneId, currentUserId, membe
                   {participants.map((p: any) => (
                     <div key={p.user_id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 20, background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)' }}>
                       <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--brand)', color: '#fff', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>
-                        {(p.display_name || '?')[0]}
+                        {(dn(p.user_id, p.display_name) || '?')[0]}
                       </div>
-                      <span style={{ fontSize: 13, color: 'var(--text-heading)' }}>{p.display_name}</span>
+                      <span style={{ fontSize: 13, color: 'var(--text-heading)' }}>{dn(p.user_id, p.display_name)}</span>
                       {isCreator && (
                         <button onClick={() => handleToggleParticipant(p.user_id)}
                           style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: 'var(--text-tertiary)', display: 'flex', borderRadius: 4 }}
@@ -307,7 +314,7 @@ export default function MilestoneDetailModal({ milestoneId, currentUserId, membe
                     <div style={{ marginTop: 8, background: 'var(--bg-secondary)', borderRadius: 10, border: '1px solid var(--border-primary)', maxHeight: 240, overflow: 'auto' }}>
                       {members.filter(m => m.user_id !== currentUserId).map((m: any) => {
                         const isIn = participants.some((p: any) => p.user_id === m.user_id)
-                        const name = m.project_nickname || m.nickname || m.username || '?'
+                        const name = dn(m.user_id, m.project_nickname || m.nickname || m.username || '?')
                         return (
                           <div key={m.user_id} onClick={() => handleToggleParticipant(m.user_id)}
                             style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer', transition: 'background 0.1s' }}
