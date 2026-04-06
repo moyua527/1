@@ -231,7 +231,7 @@ export default function TodoDetailModal({ open, milestoneId, projectId, canEdit,
   ]
 
   return (
-    <Modal open={open} onClose={onClose} title={detail?.title || '代办详情'} minHeight={560}>
+    <Modal open={open} onClose={onClose} title={detail?.title || '代办详情'}>
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
         {/* 基本信息 */}
         {detail && !editingMs && (
