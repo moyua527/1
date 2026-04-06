@@ -303,15 +303,15 @@ export default function ProjectDetail() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px - 48px)', overflow: 'hidden' }}>
       {projectTabs.length > 0 && (
-        <div style={{ display: 'flex', gap: 0, marginBottom: 0, flexShrink: 0, alignItems: 'stretch', background: 'var(--bg-secondary)', borderRadius: '10px 10px 0 0', borderBottom: '2px solid var(--brand)', padding: '0 4px' }}>
+        <div style={{ display: 'flex', gap: 0, marginBottom: 0, flexShrink: 0, alignItems: 'stretch', background: 'linear-gradient(180deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.02) 100%)', borderRadius: '10px 10px 0 0', padding: '0 4px' }}>
           <div onClick={() => nav('/projects')}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 600, flexShrink: 0, transition: 'background 0.15s', borderBottom: '2px solid transparent', marginBottom: -2,
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 600, flexShrink: 0, transition: 'background 0.15s',
               color: 'var(--text-secondary)' }}
-            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(59,130,246,0.06)'}
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
             首页
           </div>
-          <div style={{ width: 1, background: 'var(--border-primary)', margin: '8px 2px', flexShrink: 0 }} />
+          <div style={{ width: 1, background: 'rgba(59,130,246,0.15)', margin: '8px 2px', flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', gap: 0 } as any}>
             {projectTabs.map(pt => {
               const isActive = String(pt.id) === String(id)
@@ -325,8 +325,7 @@ export default function ProjectDetail() {
                   onDrop={e => { e.preventDefault(); if (dragTabRef.current != null && dragTabRef.current !== pt.id) reorderTabs(dragTabRef.current, pt.id); dragTabRef.current = null; setDraggingId(null); setDragOverId(null) }}
                   onDragEnd={() => { dragTabRef.current = null; setDraggingId(null); setDragOverId(null) }}
                   onClick={() => { if (!isActive) nav(`/projects/${pt.id}`) }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'grab', whiteSpace: 'nowrap', fontSize: 14, fontWeight: isActive ? 600 : 400, flexShrink: 0, transition: 'all 0.15s', marginBottom: -2,
-                    borderBottom: isActive ? '2px solid #fff' : '2px solid transparent',
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'grab', whiteSpace: 'nowrap', fontSize: 14, fontWeight: isActive ? 600 : 400, flexShrink: 0, transition: 'all 0.15s',
                     background: isActive ? 'var(--brand)' : 'transparent', color: isActive ? '#fff' : 'var(--text-secondary)',
                     borderRadius: isActive ? '8px 8px 0 0' : '0',
                     boxShadow: isDragOver ? '0 0 0 2px var(--brand)' : 'none', opacity: draggingId === pt.id ? 0.5 : 1 }}>
@@ -334,7 +333,7 @@ export default function ProjectDetail() {
                   <button
                     onClick={async e => { e.stopPropagation(); if (!(await confirm({ message: `关闭「${pt.name}」标签页？` }))) return; const nextId = closeTab(pt.id); if (isActive) { if (nextId) nav(`/projects/${nextId}`); else nav('/projects') } }}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, marginLeft: 4, display: 'flex', color: isActive ? 'rgba(255,255,255,0.7)' : 'var(--text-tertiary)', borderRadius: 4 }}
-                    onMouseEnter={e => { e.currentTarget.style.color = isActive ? '#fff' : 'var(--text-heading)'; e.currentTarget.style.background = isActive ? 'rgba(255,255,255,0.15)' : 'var(--bg-secondary)' }}
+                    onMouseEnter={e => { e.currentTarget.style.color = isActive ? '#fff' : 'var(--text-heading)'; e.currentTarget.style.background = isActive ? 'rgba(255,255,255,0.15)' : 'rgba(59,130,246,0.06)' }}
                     onMouseLeave={e => { e.currentTarget.style.color = isActive ? 'rgba(255,255,255,0.7)' : 'var(--text-tertiary)'; e.currentTarget.style.background = 'none' }}>
                     <X size={13} />
                   </button>

@@ -135,12 +135,12 @@ export default function ProjectList() {
   return (
     <div>
       {projectTabs.length > 0 && (
-        <div style={{ display: 'flex', gap: 0, marginBottom: 10, alignItems: 'stretch', background: 'var(--bg-secondary)', borderRadius: '10px 10px 0 0', borderBottom: '2px solid var(--brand)', padding: '0 4px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 600, flexShrink: 0, marginBottom: -2,
+        <div style={{ display: 'flex', gap: 0, marginBottom: 10, alignItems: 'stretch', background: 'linear-gradient(180deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.02) 100%)', borderRadius: '10px 10px 0 0', padding: '0 4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 600, flexShrink: 0,
             background: 'var(--brand)', color: '#fff', borderRadius: '8px 8px 0 0' }}>
             首页
           </div>
-          <div style={{ width: 1, background: 'var(--border-primary)', margin: '8px 2px', flexShrink: 0 }} />
+          <div style={{ width: 1, background: 'rgba(59,130,246,0.15)', margin: '8px 2px', flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', gap: 0 } as any}>
             {projectTabs.map(pt => {
               const isDragOver = dragOverId === pt.id && draggingId !== pt.id
@@ -153,15 +153,14 @@ export default function ProjectList() {
                   onDrop={e => { e.preventDefault(); if (dragTabRef.current != null && dragTabRef.current !== pt.id) reorderTabs(dragTabRef.current, pt.id); dragTabRef.current = null; setDraggingId(null); setDragOverId(null) }}
                   onDragEnd={() => { dragTabRef.current = null; setDraggingId(null); setDragOverId(null) }}
                   onClick={() => nav(`/projects/${pt.id}`)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'grab', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 400, flexShrink: 0, transition: 'all 0.15s', marginBottom: -2,
-                    borderBottom: '2px solid transparent',
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'grab', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 400, flexShrink: 0, transition: 'all 0.15s',
                     background: 'transparent', color: 'var(--text-secondary)',
                     boxShadow: isDragOver ? '0 0 0 2px var(--brand)' : 'none', opacity: draggingId === pt.id ? 0.5 : 1 }}>
                   <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{pt.name}</span>
                   <button
                     onClick={async e => { e.stopPropagation(); if (!(await confirm({ message: `关闭「${pt.name}」标签页？` }))) return; closeTab(pt.id) }}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, marginLeft: 4, display: 'flex', color: 'var(--text-tertiary)', borderRadius: 4 }}
-                    onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-heading)'; e.currentTarget.style.background = 'var(--bg-secondary)' }}
+                    onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-heading)'; e.currentTarget.style.background = 'rgba(59,130,246,0.06)' }}
                     onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-tertiary)'; e.currentTarget.style.background = 'none' }}>
                     <X size={13} />
                   </button>
