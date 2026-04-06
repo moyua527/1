@@ -261,7 +261,7 @@ export default function ProjectDetail() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px - 48px)', overflow: 'hidden' }}>
       {projectTabs.length > 0 && (
-        <div style={{ display: 'flex', gap: 4, marginBottom: 10, flexShrink: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', paddingBottom: 2 } as any}>
+        <div style={{ display: 'flex', gap: 4, marginBottom: 10, flexShrink: 0, alignItems: 'center' }}>
           <div onClick={() => nav('/projects')}
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 500, flexShrink: 0, transition: 'background 0.15s',
               background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)' }}
@@ -269,24 +269,26 @@ export default function ProjectDetail() {
             onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-tertiary)'}>
             首页
           </div>
-          {projectTabs.map(pt => {
-            const isActive = String(pt.id) === String(id)
-            return (
-              <div key={pt.id}
-                onClick={() => { if (!isActive) nav(`/projects/${pt.id}`) }}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 13, fontWeight: isActive ? 600 : 400, flexShrink: 0, transition: 'background 0.15s',
-                  background: isActive ? 'var(--brand)' : 'var(--bg-tertiary)', color: isActive ? '#fff' : 'var(--text-secondary)', border: isActive ? 'none' : '1px solid var(--border-primary)' }}>
-                <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{pt.name}</span>
-                <button
-                  onClick={e => { e.stopPropagation(); const nextId = closeTab(pt.id); if (isActive) { if (nextId) nav(`/projects/${nextId}`); else nav('/projects') } }}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', color: isActive ? 'rgba(255,255,255,0.7)' : 'var(--text-tertiary)', borderRadius: 4 }}
-                  onMouseEnter={e => { e.currentTarget.style.color = isActive ? '#fff' : 'var(--text-heading)'; e.currentTarget.style.background = isActive ? 'rgba(255,255,255,0.15)' : 'var(--bg-secondary)' }}
-                  onMouseLeave={e => { e.currentTarget.style.color = isActive ? 'rgba(255,255,255,0.7)' : 'var(--text-tertiary)'; e.currentTarget.style.background = 'none' }}>
-                  <X size={13} />
-                </button>
-              </div>
-            )
-          })}
+          <div style={{ flex: 1, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', gap: 4, paddingBottom: 2 } as any}>
+            {projectTabs.map(pt => {
+              const isActive = String(pt.id) === String(id)
+              return (
+                <div key={pt.id}
+                  onClick={() => { if (!isActive) nav(`/projects/${pt.id}`) }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 13, fontWeight: isActive ? 600 : 400, flexShrink: 0, transition: 'background 0.15s',
+                    background: isActive ? 'var(--brand)' : 'var(--bg-tertiary)', color: isActive ? '#fff' : 'var(--text-secondary)', border: isActive ? 'none' : '1px solid var(--border-primary)' }}>
+                  <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{pt.name}</span>
+                  <button
+                    onClick={e => { e.stopPropagation(); const nextId = closeTab(pt.id); if (isActive) { if (nextId) nav(`/projects/${nextId}`); else nav('/projects') } }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', color: isActive ? 'rgba(255,255,255,0.7)' : 'var(--text-tertiary)', borderRadius: 4 }}
+                    onMouseEnter={e => { e.currentTarget.style.color = isActive ? '#fff' : 'var(--text-heading)'; e.currentTarget.style.background = isActive ? 'rgba(255,255,255,0.15)' : 'var(--bg-secondary)' }}
+                    onMouseLeave={e => { e.currentTarget.style.color = isActive ? 'rgba(255,255,255,0.7)' : 'var(--text-tertiary)'; e.currentTarget.style.background = 'none' }}>
+                    <X size={13} />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexShrink: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' } as any}>

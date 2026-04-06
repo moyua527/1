@@ -147,26 +147,28 @@ export default function ProjectList() {
   return (
     <div>
       {projectTabs.length > 0 && (
-        <div style={{ display: 'flex', gap: 4, marginBottom: 10, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', paddingBottom: 2 } as any}>
+        <div style={{ display: 'flex', gap: 4, marginBottom: 10, alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, whiteSpace: 'nowrap', fontSize: 13, fontWeight: 600, flexShrink: 0,
             background: 'var(--brand)', color: '#fff' }}>
             首页
           </div>
-          {projectTabs.map(pt => (
-            <div key={pt.id}
-              onClick={() => nav(`/projects/${pt.id}`)}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 400, flexShrink: 0, transition: 'background 0.15s',
-                background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)' }}>
-              <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{pt.name}</span>
-              <button
-                onClick={e => { e.stopPropagation(); closeTab(pt.id) }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', color: 'var(--text-tertiary)', borderRadius: 4 }}
-                onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-heading)'; e.currentTarget.style.background = 'var(--bg-secondary)' }}
-                onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-tertiary)'; e.currentTarget.style.background = 'none' }}>
-                <X size={13} />
-              </button>
-            </div>
-          ))}
+          <div style={{ flex: 1, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', gap: 4, paddingBottom: 2 } as any}>
+            {projectTabs.map(pt => (
+              <div key={pt.id}
+                onClick={() => nav(`/projects/${pt.id}`)}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 400, flexShrink: 0, transition: 'background 0.15s',
+                  background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)' }}>
+                <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{pt.name}</span>
+                <button
+                  onClick={e => { e.stopPropagation(); closeTab(pt.id) }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', color: 'var(--text-tertiary)', borderRadius: 4 }}
+                  onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-heading)'; e.currentTarget.style.background = 'var(--bg-secondary)' }}
+                  onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-tertiary)'; e.currentTarget.style.background = 'none' }}>
+                  <X size={13} />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
       <PageHeader title="项目管理" subtitle={`共 ${filtered.length} 个项目`} actions={

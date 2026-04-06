@@ -90,6 +90,8 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
   const [editingVisibility, setEditingVisibility] = useState(false)
   const [editVisibility, setEditVisibility] = useState<'all' | 'selected'>('all')
   const [editVisibleUsers, setEditVisibleUsers] = useState<number[]>([])
+  const [showAddMenu, setShowAddMenu] = useState(false)
+  void showAddMenu; void setShowAddMenu
 
   const isGroupCreator = (g: any) => g && currentUserId && String(g.created_by) === String(currentUserId)
 
@@ -639,12 +641,56 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
                   <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>创建人：{activeGroup.creator_name || activeGroup.creator_username}</span>
                   <span style={{ fontSize: 11, color: 'var(--text-quaternary)' }}>·</span>
-                  <span style={{ fontSize: 11, color: activeGroup.visibility === 'selected' ? 'var(--color-warning, #f59e0b)' : 'var(--color-success, #22c55e)', display: 'flex', alignItems: 'center', gap: 3 }}>
-                    {activeGroup.visibility === 'selected' ? <><Lock size={10} /> 指定成员可见</> : <><Globe size={10} /> 全部可见</>}
-                  </span>
+                  {isGroupCreator(activeGroup) ? (
+                    <button onClick={() => {
+                      setEditVisibility(activeGroup.visibility === 'selected' ? 'selected' : 'all')
+                      setEditVisibleUsers(groupDetail?.visible_users?.map((u: any) => u.user_id) || [])
+                      setEditingVisibility(!editingVisibility)
+                    }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: 11, color: activeGroup.visibility === 'selected' ? 'var(--color-warning, #f59e0b)' : 'var(--color-success, #22c55e)', display: 'flex', alignItems: 'center', gap: 3 }}>
+                      {activeGroup.visibility === 'selected' ? <><Lock size={10} /> 指定成员可见</> : <><Globe size={10} /> 全部可见</>}
+                    </button>
+                  ) : (
+                    <span style={{ fontSize: 11, color: activeGroup.visibility === 'selected' ? 'var(--color-warning, #f59e0b)' : 'var(--color-success, #22c55e)', display: 'flex', alignItems: 'center', gap: 3 }}>
+                      {activeGroup.visibility === 'selected' ? <><Lock size={10} /> 指定成员可见</> : <><Globe size={10} /> 全部可见</>}
+                    </span>
+                  )}
                 </div>
               </div>
-              <button onClick={() => { setActiveGroup(null); setGroupDetail(null); setItemType(''); setEditingVisibility(false) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)' }}><X size={18} /></button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                {isGroupCreator(activeGroup) && !itemType && (
+                  <div style={{ position: 'relative' }}>
+                    <input ref={groupFileRef} type="file" multiple style={{ display: 'none' }} onChange={handleGroupFileUpload} />
+                    <button onClick={() => setShowAddMenu(!showAddMenu)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, border: 'none', background: 'var(--brand)', color: '#fff', cursor: 'pointer', fontSize: 16 }}>
+                      <Plus size={16} />
+                    </button>
+                    {showAddMenu && (
+                      <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 6, background: 'var(--bg-primary)', borderRadius: 10, border: '1px solid var(--border-primary)', boxShadow: '0 6px 20px rgba(0,0,0,0.12)', minWidth: 140, zIndex: 10, overflow: 'hidden' }}>
+                        <button onClick={() => { setItemType('url'); setShowAddMenu(false) }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--text-body)' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                          <Link2 size={14} color="#06b6d4" /> 网址
+                        </button>
+                        <button onClick={() => { setItemType('text'); setShowAddMenu(false) }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--text-body)' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                          <StickyNote size={14} color="#f59e0b" /> 文字
+                        </button>
+                        <button onClick={() => { groupFileRef.current?.click(); setShowAddMenu(false) }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--text-body)' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                          <Paperclip size={14} color="#3b82f6" /> 文件
+                        </button>
+                        <button onClick={() => { if (groupFileRef.current) { groupFileRef.current.accept = 'image/*'; groupFileRef.current.click(); setTimeout(() => { if (groupFileRef.current) groupFileRef.current.accept = '' }, 100) }; setShowAddMenu(false) }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--text-body)' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                          <Image size={14} color="#a855f7" /> 图片
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <button onClick={() => { setActiveGroup(null); setGroupDetail(null); setItemType(''); setEditingVisibility(false); setShowAddMenu(false) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-tertiary)' }}><X size={18} /></button>
+              </div>
             </div>
             {editingVisibility && isGroupCreator(activeGroup) && (
               <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--border-primary)', background: 'var(--bg-secondary)' }}>
