@@ -279,8 +279,8 @@ export default function ProjectDetail() {
                     background: isActive ? 'var(--brand)' : 'var(--bg-tertiary)', color: isActive ? '#fff' : 'var(--text-secondary)', border: isActive ? 'none' : '1px solid var(--border-primary)' }}>
                   <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{pt.name}</span>
                   <button
-                    onClick={e => { e.stopPropagation(); const nextId = closeTab(pt.id); if (isActive) { if (nextId) nav(`/projects/${nextId}`); else nav('/projects') } }}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', color: isActive ? 'rgba(255,255,255,0.7)' : 'var(--text-tertiary)', borderRadius: 4 }}
+                    onClick={async e => { e.stopPropagation(); if (!(await confirm({ message: `关闭「${pt.name}」标签页？` }))) return; const nextId = closeTab(pt.id); if (isActive) { if (nextId) nav(`/projects/${nextId}`); else nav('/projects') } }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, marginLeft: 4, display: 'flex', color: isActive ? 'rgba(255,255,255,0.7)' : 'var(--text-tertiary)', borderRadius: 4 }}
                     onMouseEnter={e => { e.currentTarget.style.color = isActive ? '#fff' : 'var(--text-heading)'; e.currentTarget.style.background = isActive ? 'rgba(255,255,255,0.15)' : 'var(--bg-secondary)' }}
                     onMouseLeave={e => { e.currentTarget.style.color = isActive ? 'rgba(255,255,255,0.7)' : 'var(--text-tertiary)'; e.currentTarget.style.background = 'none' }}>
                     <X size={13} />

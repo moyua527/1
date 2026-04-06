@@ -9,6 +9,7 @@ import Button from '../ui/Button'
 import Modal from '../ui/Modal'
 import Input from '../ui/Input'
 import { toast } from '../ui/Toast'
+import { confirm } from '../ui/ConfirmDialog'
 import PageHeader from '../ui/PageHeader'
 import EmptyState from '../ui/EmptyState'
 import useLiveData from '../../hooks/useLiveData'
@@ -160,8 +161,8 @@ export default function ProjectList() {
                   background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)' }}>
                 <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{pt.name}</span>
                 <button
-                  onClick={e => { e.stopPropagation(); closeTab(pt.id) }}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', color: 'var(--text-tertiary)', borderRadius: 4 }}
+                  onClick={async e => { e.stopPropagation(); if (!(await confirm({ message: `关闭「${pt.name}」标签页？` }))) return; closeTab(pt.id) }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, marginLeft: 4, display: 'flex', color: 'var(--text-tertiary)', borderRadius: 4 }}
                   onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-heading)'; e.currentTarget.style.background = 'var(--bg-secondary)' }}
                   onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-tertiary)'; e.currentTarget.style.background = 'none' }}>
                   <X size={13} />
