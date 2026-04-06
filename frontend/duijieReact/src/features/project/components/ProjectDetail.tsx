@@ -61,6 +61,9 @@ export default function ProjectDetail() {
   const [tasks, setTasks] = useState<any[]>(cached?.tasks ?? [])
   const [milestones, setMilestones] = useState<any[]>(cached?.milestones ?? [])
   const [hasNewSubmitted, setHasNewSubmitted] = useState(false)
+  const [hasNewMessages, setHasNewMessages] = useState(false)
+  const [hasNewFiles, setHasNewFiles] = useState(false)
+  const [hasNewMilestones, setHasNewMilestones] = useState(false)
   const [selectedMember, setSelectedMember] = useState<any>(null)
   const [searchParams, setSearchParams] = useSearchParams()
   const validTabs = ['tasks', 'files', 'milestones', 'messages', 'settings'] as const
@@ -73,6 +76,9 @@ export default function ProjectDetail() {
       localStorage.setItem(`task_view_${user?.id}_${id}`, new Date().toISOString())
       setHasNewSubmitted(false)
     }
+    if (t === 'messages') setHasNewMessages(false)
+    if (t === 'files') setHasNewFiles(false)
+    if (t === 'milestones') setHasNewMilestones(false)
   }
 
   const [showAddMember, setShowAddMember] = useState(false)
@@ -81,7 +87,7 @@ export default function ProjectDetail() {
   const [clientAvailableUsers, setClientAvailableUsers] = useState<any[]>([])
   const [clientModal, setClientModal] = useState(false)
   const [clientData, setClientData] = useState<any>(null)
-  const [projectRoles] = useState<any[]>([])
+  const [projectRoles, setProjectRoles] = useState<any[]>([])
   const [showSetClient, setShowSetClient] = useState(false)
   const [showEditProject, setShowEditProject] = useState(false)
   const [pendingJoinCount, setPendingJoinCount] = useState(0)
@@ -142,6 +148,13 @@ export default function ProjectDetail() {
     })
   }, [id])
 
+  const loadRoles = useCallback(() => {
+    if (!id) return
+    projectApi.listRoles(id).then(r => {
+      if (r.success) setProjectRoles(r.data || [])
+    })
+  }, [id])
+
   const taskViewKey = `task_view_${user?.id}_${id}`
 
   const loadTasks = useCallback(() => {
@@ -172,12 +185,23 @@ export default function ProjectDetail() {
   useEffect(() => {
     if (!id) return
     const off = onSocket('data_changed', (payload: any) => {
-      if (payload?.entity !== 'task') return
       if (payload?.project_id && String(payload.project_id) !== String(id)) return
-      loadTasks()
+      if (payload?.entity === 'task') loadTasks()
+      if (payload?.entity === 'file') setHasNewFiles(true)
+      if (payload?.entity === 'milestone') { setHasNewMilestones(true); loadTasks() }
     })
     return off
   }, [id, loadTasks])
+
+  useEffect(() => {
+    if (!id) return
+    const off = onSocket('new_message', (payload: any) => {
+      if (String(payload?.project_id) !== String(id)) return
+      if (payload?.sender_id === user?.id) return
+      setHasNewMessages(true)
+    })
+    return off
+  }, [id, user?.id])
 
   useEffect(() => {
     if (!id) return
@@ -185,13 +209,17 @@ export default function ProjectDetail() {
       localStorage.setItem(`task_view_${user.id}_${id}`, new Date().toISOString())
       setHasNewSubmitted(false)
     }
+    if (tab === 'messages') setHasNewMessages(false)
+    if (tab === 'files') setHasNewFiles(false)
+    if (tab === 'milestones') setHasNewMilestones(false)
     const timer = window.setTimeout(() => {
       loadProject()
       loadTasks()
       loadPendingJoinCount()
+      loadRoles()
     }, 0)
     return () => window.clearTimeout(timer)
-  }, [id, loadProject, loadTasks, loadPendingJoinCount])
+  }, [id, loadProject, loadTasks, loadPendingJoinCount, loadRoles])
 
   useEffect(() => {
     if (!project || !user) return
@@ -286,7 +314,7 @@ export default function ProjectDetail() {
         </div>
       )}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexShrink: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' } as any}>
-        <button onClick={() => nav('/projects')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', padding: 4, flexShrink: 0 }}><ArrowLeft size={20} /></button>
+        <button onClick={() => nav(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', padding: 4, flexShrink: 0 }}><ArrowLeft size={20} /></button>
         <h1 style={{ fontSize: isMobile ? 16 : 20, fontWeight: 700, color: 'var(--text-heading)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flexShrink: 1, minWidth: 0, cursor: project.join_code ? 'pointer' : 'default' }}
           title={project.join_code ? `点击复制项目 ID: ${project.join_code}` : undefined}
           onClick={() => { if (!project.join_code) return; const text = project.join_code; if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text) } else { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta) } toast('项目 ID 已复制', 'success') }}>
@@ -304,6 +332,15 @@ export default function ProjectDetail() {
             }}>
               {v}
               {k === 'tasks' && hasNewSubmitted && tab !== 'tasks' && (
+                <span style={{ position: 'absolute', top: -2, right: -2, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
+              )}
+              {k === 'messages' && hasNewMessages && tab !== 'messages' && (
+                <span style={{ position: 'absolute', top: -2, right: -2, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
+              )}
+              {k === 'files' && hasNewFiles && tab !== 'files' && (
+                <span style={{ position: 'absolute', top: -2, right: -2, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
+              )}
+              {k === 'milestones' && hasNewMilestones && tab !== 'milestones' && (
                 <span style={{ position: 'absolute', top: -2, right: -2, width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
               )}
               {k === 'settings' && pendingJoinCount > 0 && (

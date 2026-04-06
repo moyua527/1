@@ -48,6 +48,8 @@ module.exports = async (req, res) => {
       }
     }
 
+    const { broadcast } = require('../../utils/broadcast');
+    broadcast('milestone', 'progress', { project_id: ms.project_id, userId: req.userId });
     res.json({ success: true, data: row });
   } catch (e) {
     console.error('addProgress error:', e);
