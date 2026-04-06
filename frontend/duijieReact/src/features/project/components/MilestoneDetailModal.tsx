@@ -51,8 +51,8 @@ export default function MilestoneDetailModal({ milestoneId, currentUserId, membe
   const canTrack = isCreator || isParticipant
 
   const mentionableUsers = (data?.participants || []).map((p: any) => ({
-    id: p.user_id, name: p.nickname || p.username
-  }))
+    id: p.user_id, name: p.display_name || p.nickname || p.username || ''
+  })).filter((u: any) => u.name)
   const filteredMentions = mentionableUsers.filter((u: any) =>
     u.name.toLowerCase().includes(mentionFilter.toLowerCase())
   )
@@ -145,9 +145,9 @@ export default function MilestoneDetailModal({ milestoneId, currentUserId, membe
               </div>
               {data.description && <p style={{ margin: '0 0 6px', fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>{data.description}</p>}
               <div style={{ display: 'flex', gap: 12, fontSize: 12, color: 'var(--text-tertiary)', flexWrap: 'wrap' }}>
-                {data.due_date && <span>目标: {data.due_date.slice(0, 10)}</span>}
+                {data.due_date && <span>目标: {String(data.due_date).slice(0, 10)}</span>}
                 <span>创建者: {data.creator_name || '未知'}</span>
-                <span>创建于: {new Date(data.created_at).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                <span>创建于: {data.created_at ? new Date(data.created_at).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : ''}</span>
               </div>
             </div>
             <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, color: 'var(--text-tertiary)', borderRadius: 8 }}>
@@ -246,12 +246,12 @@ export default function MilestoneDetailModal({ milestoneId, currentUserId, membe
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontSize: 14, color: 'var(--text-heading)', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                              {p.content.split(/(@\S+)/g).map((part: string, pi: number) =>
+                              {String(p.content || '').split(/(@\S+)/g).map((part: string, pi: number) =>
                                 /^@\S+/.test(part) ? <span key={pi} style={{ color: 'var(--brand)', fontWeight: 500, cursor: 'default' }}>{part}</span> : part
                               )}
                             </div>
                             <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 6 }}>
-                              {p.author_name || '未知'} · {new Date(p.created_at).toLocaleString('zh-CN')}
+                              {p.author_name || '未知'} · {p.created_at ? new Date(p.created_at).toLocaleString('zh-CN') : ''}
                             </div>
                           </div>
                           {p.created_by === currentUserId && (
@@ -374,7 +374,7 @@ export default function MilestoneDetailModal({ milestoneId, currentUserId, membe
                         <Bell size={16} color={r.is_sent ? 'var(--text-tertiary)' : isPast ? 'var(--color-danger)' : 'var(--brand)'} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontSize: 13, color: 'var(--text-heading)' }}>
-                            {r.remind_at_display || new Date(r.remind_at).toLocaleString('zh-CN', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}
+                            {r.remind_at_display || (r.remind_at ? new Date(r.remind_at).toLocaleString('zh-CN', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }) : '')}
                             {!!r.is_sent && <span style={{ fontSize: 11, color: 'var(--text-tertiary)', marginLeft: 6 }}>已发送</span>}
                             {!r.is_sent && isPast && <span style={{ fontSize: 11, color: 'var(--color-danger)', marginLeft: 6 }}>待发送</span>}
                           </div>

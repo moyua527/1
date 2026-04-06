@@ -25,7 +25,7 @@ export default function ProjectList() {
   const invalidate = useInvalidate()
   const [showCreate, setShowCreate] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [form, setForm] = useState({ name: '', description: '', task_title_presets: [] as string[], newPreset: '' })
+  const [form, setForm] = useState({ name: '', description: '' })
   const [search, setSearch] = useState('')
   const [showJoin, setShowJoin] = useState(false)
   const [joinCode, setJoinCode] = useState('')
@@ -108,9 +108,9 @@ export default function ProjectList() {
   const handleCreate = async () => {
     if (!form.name.trim()) { toast('请输入项目名称', 'error'); return }
     setSubmitting(true)
-    const r = await projectApi.create({ name: form.name.trim(), description: form.description.trim(), task_title_presets: form.task_title_presets })
+    const r = await projectApi.create({ name: form.name.trim(), description: form.description.trim() })
     setSubmitting(false)
-    if (r.success) { toast('项目创建成功', 'success'); window.dispatchEvent(new CustomEvent('onboarding-done', { detail: { type: 'create_project' } })); setShowCreate(false); setForm({ name: '', description: '', task_title_presets: [], newPreset: '' }); load() }
+    if (r.success) { toast('项目创建成功', 'success'); window.dispatchEvent(new CustomEvent('onboarding-done', { detail: { type: 'create_project' } })); setShowCreate(false); setForm({ name: '', description: '' }); load() }
     else toast(r.message || '创建失败', 'error')
   }
 
@@ -266,17 +266,6 @@ export default function ProjectList() {
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>项目描述</label>
             <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={3} placeholder="简要描述项目内容"
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', resize: 'vertical', fontFamily: 'inherit' }} />
-          </div>
-          <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>固定功能名称</label>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-              <input value={form.newPreset} onChange={e => setForm({ ...form, newPreset: e.target.value })} placeholder="输入功能名称" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); const v = form.newPreset.trim(); if (v && !form.task_title_presets.includes(v)) setForm(f => ({ ...f, task_title_presets: [...f.task_title_presets, v], newPreset: '' })) } }} style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', fontSize: 14 }} />
-              <Button variant="secondary" onClick={() => { const v = form.newPreset.trim(); if (v && !form.task_title_presets.includes(v)) setForm(f => ({ ...f, task_title_presets: [...f.task_title_presets, v], newPreset: '' })) }}>添加</Button>
-            </div>
-            {form.task_title_presets.length > 0 && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{form.task_title_presets.map((p, i) => (
-              <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 999, background: 'var(--bg-tertiary)', fontSize: 13, color: 'var(--text-body)' }}>{p}<button type="button" onClick={() => setForm(f => ({ ...f, task_title_presets: f.task_title_presets.filter((_, j) => j !== i) }))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text-tertiary)', fontSize: 14, lineHeight: 1 }} onMouseEnter={e => e.currentTarget.style.color = 'var(--color-danger)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--text-tertiary)'}>×</button></span>
-            ))}</div>}
-            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>创建需求时可直接从这些固定功能名称中选择</div>
           </div>
           <p style={{ fontSize: 12, color: 'var(--text-tertiary)', margin: 0 }}>创建后可在项目详情中添加成员、关联应用等</p>
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column-reverse' : 'row', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>

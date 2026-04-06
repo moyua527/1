@@ -586,6 +586,22 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                 <span style={{ fontSize: 13, color: 'var(--text-tertiary)', fontWeight: 500, width: 24 }}>{i + 1}.</span>
                 <input value={pt.content} onChange={e => {
                   const arr = [...pointInputs]; arr[i] = { ...arr[i], content: e.target.value }; setPointInputs(arr)
+                }} onPaste={e => {
+                  const items = e.clipboardData?.items
+                  if (!items) return
+                  const imgs: File[] = []
+                  for (let k = 0; k < items.length; k++) {
+                    if (items[k].type.startsWith('image/')) {
+                      const f = items[k].getAsFile()
+                      if (f) imgs.push(f)
+                    }
+                  }
+                  if (imgs.length) {
+                    e.preventDefault()
+                    const arr = [...pointInputs]
+                    arr[i] = { ...arr[i], images: [...arr[i].images, ...imgs] }
+                    setPointInputs(arr)
+                  }
                 }} placeholder={`要点 ${i + 1}`}
                   style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', background: 'var(--bg-secondary)', color: 'var(--text-body)' }}
                 />
