@@ -367,10 +367,10 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks, remarkMa
                       ) : (
                         <div style={{ fontSize: 13, color: 'var(--text-heading)', fontWeight: 500 }}>{p.content}</div>
                       )}
-                      {(() => { const imgs: string[] = typeof p.images === 'string' ? JSON.parse(p.images || '[]') : (p.images || []); const fullUrls = imgs.map((u: string) => u.startsWith('http') ? u : `/api${u}`); return imgs.length > 0 ? (
+                      {(() => { const imgs: string[] = typeof p.images === 'string' ? JSON.parse(p.images || '[]') : (p.images || []); return imgs.length > 0 ? (
                         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
-                          {fullUrls.map((url: string, idx: number) => (
-                            <img key={idx} src={url} alt="" onClick={() => { setPreviewImg(url); setPreviewImages(fullUrls); setPreviewStartIdx(idx) }}
+                          {imgs.map((url: string, idx: number) => (
+                            <img key={idx} src={url} alt="" onClick={() => { setPreviewImg(url); setPreviewImages(imgs); setPreviewStartIdx(idx) }}
                               style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border-primary)', cursor: 'pointer' }} />
                           ))}
                         </div>

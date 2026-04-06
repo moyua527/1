@@ -104,11 +104,38 @@ export async function fetchApi(path: string, options?: RequestInit) {
   return parseApiResponse(res)
 }
 
-export function uploadFile(path: string, formData: FormData) {
-  return fetch(`${BACKEND_URL}${path}`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { ...authHeaders() },
-    body: formData,
-  }).then(parseApiResponse)
+export async function uploadFile(path: string, formData: FormData) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 60_000)
+  try {
+    const res = await fetch(`${BACKEND_URL}${path}`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { ...authHeaders() },
+      body: formData,
+      signal: controller.signal,
+    })
+    if (res.status === 401) {
+      const refreshed = await tryRefreshToken()
+      if (refreshed) {
+        const retryRes = await fetch(`${BACKEND_URL}${path}`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { ...authHeaders() },
+          body: formData,
+        })
+        return parseApiResponse(retryRes)
+      }
+      clearToken()
+      if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/register')) {
+        window.location.href = '/login'
+      }
+    }
+    return parseApiResponse(res)
+  } catch (e: any) {
+    if (e.name === 'AbortError') return { success: false, message: '上传超时，请重试' }
+    return { success: false, message: '上传失败' }
+  } finally {
+    clearTimeout(timer)
+  }
 }
