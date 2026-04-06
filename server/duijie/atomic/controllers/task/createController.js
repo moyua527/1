@@ -15,6 +15,29 @@ module.exports = async (req, res) => {
       }
     }
 
+    let draftFileNames = [];
+    try { draftFileNames = JSON.parse(req.body.draft_files || '[]') } catch {}
+    if (Array.isArray(draftFileNames) && draftFileNames.length > 0 && req.body.from_draft_id) {
+      const [draftRows] = await db.query(
+        'SELECT files FROM duijie_task_drafts WHERE id = ? AND user_id = ?',
+        [req.body.from_draft_id, req.userId]
+      );
+      if (draftRows.length) {
+        let draftMeta = draftRows[0].files;
+        if (typeof draftMeta === 'string') try { draftMeta = JSON.parse(draftMeta) } catch { draftMeta = [] }
+        if (Array.isArray(draftMeta)) {
+          for (const dm of draftMeta) {
+            if (draftFileNames.includes(dm.filename)) {
+              await db.query(
+                'INSERT INTO duijie_task_attachments (task_id, filename, original_name, file_size, mime_type, created_by) VALUES (?,?,?,?,?,?)',
+                [id, dm.filename, dm.original_name, dm.size, dm.mime_type, req.userId]
+              );
+            }
+          }
+        }
+      }
+    }
+
     if (req.body.assignee_id && req.body.assignee_id !== req.userId) {
       await notify(req.body.assignee_id, 'task_assigned', '新任务指派', `你被指派了任务「${req.body.title}」`, `/tasks`);
     }

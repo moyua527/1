@@ -668,7 +668,9 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks, remarkMa
       {/* 创建需求模态框 */}
       <Modal open={showCreateTask} onClose={() => {
         const t = taskForm.title.trim(); const d = taskForm.description.trim()
-        if (t || d) { saveDraftAndClose(true) } else { setShowCreateTask(false); resetCreateForm() }
+        if (loadedDraftId) { setShowCreateTask(false); resetCreateForm(); setDraftFiles([]); setLoadedDraftId(null) }
+        else if (t || d || taskFiles.length > 0) { saveDraftAndClose(true) }
+        else { setShowCreateTask(false); resetCreateForm() }
       }} title="添加需求" width={560}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <TaskTitleSelector open={showCreateTask} projectId={projectId} value={taskForm.title} onChange={title => setTaskForm({ ...taskForm, title })} required />
