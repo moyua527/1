@@ -11,8 +11,8 @@ module.exports = async (req, res) => {
     const [rows] = await db.query(
       `SELECT u.id, u.username, u.nickname, u.role,
               IF(u.active_enterprise_id IS NOT NULL AND u.active_enterprise_id = ?, 1, 0) AS is_colleague,
-              IF(f.id IS NOT NULL, 1, 0) AS is_friend,
-              IF(cp.user_id IS NOT NULL, 1, 0) AS is_collaborator
+              MAX(IF(f.id IS NOT NULL, 1, 0)) AS is_friend,
+              MAX(IF(cp.user_id IS NOT NULL, 1, 0)) AS is_collaborator
        FROM voice_users u
        LEFT JOIN duijie_friends f
          ON ((f.user_id = ? AND f.friend_id = u.id) OR (f.friend_id = ? AND f.user_id = u.id))
@@ -31,7 +31,7 @@ module.exports = async (req, res) => {
            OR f.id IS NOT NULL
            OR cp.user_id IS NOT NULL
          )
-       GROUP BY u.id
+       GROUP BY u.id, u.username, u.nickname, u.role, u.active_enterprise_id
        ORDER BY is_colleague DESC, is_friend DESC, is_collaborator DESC, u.nickname, u.username`,
       [entId, userId, userId, userId, userId, userId, id, entId]
     );
