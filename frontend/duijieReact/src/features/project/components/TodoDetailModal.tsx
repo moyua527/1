@@ -114,7 +114,7 @@ export default function TodoDetailModal({ open, milestoneId, projectId, canEdit,
       method: 'POST',
       body: JSON.stringify({ user_id: userId }),
     })
-    if (r.success) { loadParticipants(); load() }
+    if (r.success) { toast('已添加', 'success'); await loadParticipants(); load() }
     else toast(r.message || '添加失败', 'error')
   }
 
@@ -439,10 +439,10 @@ export default function TodoDetailModal({ open, milestoneId, projectId, canEdit,
               {detail && (
                 <div style={{ padding: '8px 12px', borderRadius: 8, background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--brand)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 600, flexShrink: 0 }}>
-                    {(dn(detail.created_by, '?'))[0]}
+                    {(detail.creator_nickname || detail.creator_username || '?')[0]}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)' }}>{dn(detail.created_by, '发起人')}</span>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)' }}>{detail.creator_nickname || detail.creator_username || '发起人'}</span>
                     <span style={{ fontSize: 11, color: '#f59e0b', marginLeft: 6 }}>发起人</span>
                   </div>
                 </div>

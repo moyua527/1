@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react
 import { ArrowLeft, X } from 'lucide-react'
 import useProjectTabStore from '../../../stores/useProjectTabStore'
 import { can } from '../../../stores/permissions'
+import { useInvalidate } from '../../../hooks/useApi'
 import useProjectPerms from '../../../hooks/useProjectPerms'
 import { fetchApi } from '../../../bootstrap'
 import { projectApi } from '../services/api'
@@ -40,6 +41,7 @@ const _projectCache = new Map<string, { project: any; tasks: any[]; ts: number }
 export default function ProjectDetail() {
   const { id } = useParams()
   const nav = useNavigate()
+  const invalidate = useInvalidate()
   const { user, isMobile } = useOutletContext<{ user: any; isMobile?: boolean }>()
   const role = user?.role || ''
   const platformCanEdit = can(role, 'project:edit')
@@ -328,6 +330,7 @@ export default function ProjectDetail() {
         </div>
       </div>
       <EditProjectModal open={showEditProject} project={project} onClose={() => setShowEditProject(false)}
+        onCoverChange={() => { loadProject(); invalidate('projects') }}
         onSave={async (data) => {
           const r = await projectApi.update(id!, data)
           if (r.success) { toast('已更新', 'success'); loadProject(); return true }

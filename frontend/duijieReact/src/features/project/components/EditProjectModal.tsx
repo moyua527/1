@@ -20,9 +20,10 @@ interface Props {
   project: any
   onClose: () => void
   onSave: (data: { name: string; description: string; status: string; task_title_presets: string[]; icon: string; icon_color: string }) => Promise<boolean>
+  onCoverChange?: () => void
 }
 
-export default function EditProjectModal({ open, project, onClose, onSave }: Props) {
+export default function EditProjectModal({ open, project, onClose, onSave, onCoverChange }: Props) {
   const [form, setForm] = useState({ name: '', description: '', status: 'planning', task_title_presets: [] as string[], newPreset: '', icon: 'FolderKanban', icon_color: '#3b82f6' })
   const [coverImage, setCoverImage] = useState<string | null>(null)
   const [coverUploading, setCoverUploading] = useState(false)
@@ -52,6 +53,7 @@ export default function EditProjectModal({ open, project, onClose, onSave }: Pro
     if (r.success) {
       setCoverImage(r.data.cover_image)
       toast('封面已更新', 'success')
+      onCoverChange?.()
     } else toast(r.message || '上传失败', 'error')
   }
 
@@ -59,7 +61,7 @@ export default function EditProjectModal({ open, project, onClose, onSave }: Pro
     setCoverUploading(true)
     const r = await projectApi.removeCover(String(project.id))
     setCoverUploading(false)
-    if (r.success) { setCoverImage(null); toast('封面已移除', 'success') }
+    if (r.success) { setCoverImage(null); toast('封面已移除', 'success'); onCoverChange?.() }
     else toast(r.message || '移除失败', 'error')
   }
 
