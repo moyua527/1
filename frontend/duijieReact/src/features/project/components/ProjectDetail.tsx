@@ -303,15 +303,16 @@ export default function ProjectDetail() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px - 48px)', overflow: 'hidden' }}>
       {projectTabs.length > 0 && (
-        <div style={{ display: 'flex', gap: 4, marginBottom: 10, flexShrink: 0, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 0, marginBottom: 0, flexShrink: 0, alignItems: 'stretch', background: 'var(--bg-secondary)', borderRadius: '10px 10px 0 0', borderBottom: '2px solid var(--brand)', padding: '0 4px' }}>
           <div onClick={() => nav('/projects')}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 13, fontWeight: 500, flexShrink: 0, transition: 'background 0.15s',
-              background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 600, flexShrink: 0, transition: 'background 0.15s', borderBottom: '2px solid transparent', marginBottom: -2,
+              color: 'var(--text-secondary)' }}
             onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-tertiary)'}>
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
             首页
           </div>
-          <div style={{ flex: 1, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', gap: 4, paddingBottom: 2 } as any}>
+          <div style={{ width: 1, background: 'var(--border-primary)', margin: '8px 2px', flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', gap: 0 } as any}>
             {projectTabs.map(pt => {
               const isActive = String(pt.id) === String(id)
               const isDragOver = dragOverId === pt.id && dragTabRef.current !== pt.id
@@ -324,8 +325,10 @@ export default function ProjectDetail() {
                   onDrop={e => { e.preventDefault(); if (dragTabRef.current != null && dragTabRef.current !== pt.id) reorderTabs(dragTabRef.current, pt.id); dragTabRef.current = null; setDraggingId(null); setDragOverId(null) }}
                   onDragEnd={() => { dragTabRef.current = null; setDraggingId(null); setDragOverId(null) }}
                   onClick={() => { if (!isActive) nav(`/projects/${pt.id}`) }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, cursor: 'grab', whiteSpace: 'nowrap', fontSize: 13, fontWeight: isActive ? 600 : 400, flexShrink: 0, transition: 'background 0.15s, box-shadow 0.15s',
-                    background: isActive ? 'var(--brand)' : 'var(--bg-tertiary)', color: isActive ? '#fff' : 'var(--text-secondary)', border: isActive ? 'none' : '1px solid var(--border-primary)',
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'grab', whiteSpace: 'nowrap', fontSize: 14, fontWeight: isActive ? 600 : 400, flexShrink: 0, transition: 'all 0.15s', marginBottom: -2,
+                    borderBottom: isActive ? '2px solid #fff' : '2px solid transparent',
+                    background: isActive ? 'var(--brand)' : 'transparent', color: isActive ? '#fff' : 'var(--text-secondary)',
+                    borderRadius: isActive ? '8px 8px 0 0' : '0',
                     boxShadow: isDragOver ? '0 0 0 2px var(--brand)' : 'none', opacity: draggingId === pt.id ? 0.5 : 1 }}>
                   <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{pt.name}</span>
                   <button
@@ -341,26 +344,27 @@ export default function ProjectDetail() {
           </div>
         </div>
       )}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 12, flexShrink: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' } as any}>
-        <div data-tour="project-tabs" style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 12, flexShrink: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', paddingLeft: 4, paddingTop: 6 } as any}>
+        <div data-tour="project-tabs" style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
           {([['tasks','需求'],['todo','代办'],['files','资料库'],['messages','消息'],['settings','设置']] as [string, string][]).map(([k,v]) => {
             const pInfo = id ? unreadSummary[id] : undefined
             const tabCount = pInfo ? (pInfo as any)[k] || 0 : 0
             const badgeCount = k === 'settings' ? pendingJoinCount : tabCount
             return (
               <button key={k} data-tour={`tab-${k}`} onClick={() => setTab(k as any)} style={{
-                padding: '6px 12px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, position: 'relative', whiteSpace: 'nowrap', flexShrink: 0,
-                background: tab === k ? 'var(--brand)' : 'var(--bg-tertiary)', color: tab === k ? 'var(--bg-primary)' : 'var(--text-secondary)',
+                padding: '5px 14px', borderRadius: 14, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 500, position: 'relative', whiteSpace: 'nowrap', flexShrink: 0, transition: 'all 0.15s',
+                background: tab === k ? 'var(--brand-light, rgba(59,130,246,0.1))' : 'transparent', color: tab === k ? 'var(--brand)' : 'var(--text-tertiary)',
+                borderBottom: tab === k ? '2px solid var(--brand)' : '2px solid transparent',
               }}>
                 {v}
                 {badgeCount > 0 && tab !== k && (
                   <span style={{
-                    position: 'absolute', top: -4, right: -4,
-                    minWidth: 16, height: 16, borderRadius: 8,
+                    position: 'absolute', top: -2, right: -2,
+                    minWidth: 14, height: 14, borderRadius: 7,
                     background: '#ef4444', color: '#fff',
-                    fontSize: 10, fontWeight: 600,
+                    fontSize: 9, fontWeight: 600,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    padding: '0 4px', lineHeight: 1,
+                    padding: '0 3px', lineHeight: 1,
                   }}>
                     {badgeCount > 99 ? '99+' : badgeCount}
                   </span>
