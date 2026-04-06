@@ -7,7 +7,12 @@ import { projectApi } from '../services/api'
 import { toast } from '../../ui/Toast'
 import { confirm } from '../../ui/ConfirmDialog'
 
-const PERM_GROUPS = [
+interface PermItem { key: string; label: string; keys?: string[] }
+interface PermGroup { title: string; items: PermItem[] }
+
+const itemKeys = (p: PermItem) => p.keys || [p.key]
+
+const PERM_GROUPS: PermGroup[] = [
   { title: '项目管理', items: [
     { key: 'can_edit_project_name', label: '修改名称' },
     { key: 'can_edit_project_desc', label: '修改描述' },
@@ -29,12 +34,7 @@ const PERM_GROUPS = [
     { key: 'can_delete_role', label: '删除角色' },
   ]},
   { title: '需求管理', items: [
-    { key: 'can_create_task', label: '提出需求' },
-    { key: 'can_edit_task_title', label: '编辑标题' },
-    { key: 'can_edit_task_desc', label: '编辑描述' },
-    { key: 'can_edit_task_priority', label: '编辑优先级' },
-    { key: 'can_edit_task_deadline', label: '编辑截止日期' },
-    { key: 'can_assign_task', label: '指派负责人' },
+    { key: 'can_create_task', label: '提出需求', keys: ['can_create_task', 'can_edit_task_title', 'can_edit_task_desc', 'can_edit_task_priority', 'can_edit_task_deadline', 'can_assign_task'] },
     { key: 'can_delete_task', label: '删除需求' },
   ]},
   { title: '需求状态流转', items: [
@@ -68,9 +68,9 @@ const PERM_GROUPS = [
     { key: 'can_export_data', label: '导出数据' },
     { key: 'can_manage_app_config', label: '管理关联应用' },
   ]},
-] as const
+]
 
-const ALL_PERM_KEYS = PERM_GROUPS.flatMap(g => g.items.map(i => i.key))
+const ALL_PERM_KEYS = [...new Set(PERM_GROUPS.flatMap(g => g.items.flatMap(i => itemKeys(i))))]
 
 const ROLE_COLORS = ['#2563eb', '#9333ea', '#059669', '#d97706', '#dc2626', '#0891b2', '#7c3aed', '#64748b']
 
@@ -221,19 +221,20 @@ export default function ProjectRoleList({ canEdit, projectId }: Props) {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 400, overflowY: 'auto', paddingRight: 4 }}>
               {PERM_GROUPS.map(group => {
-                const allOn = group.items.every(p => (form as any)[p.key])
+                const allOn = group.items.every(p => itemKeys(p).every(k => (form as any)[k]))
                 return (
                   <div key={group.title}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                       <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>{group.title}</span>
-                      <button onClick={() => { const val = !allOn; setForm({ ...form, ...Object.fromEntries(group.items.map(p => [p.key, val])) }) }}
+                      <button onClick={() => { const val = !allOn; setForm({ ...form, ...Object.fromEntries(group.items.flatMap(p => itemKeys(p).map(k => [k, val]))) }) }}
                         style={{ fontSize: 11, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer' }}>{allOn ? '取消全选' : '全选'}</button>
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                       {group.items.map(p => {
-                        const on = !!(form as any)[p.key]
+                        const ks = itemKeys(p)
+                        const on = ks.every(k => !!(form as any)[k])
                         return (
-                          <button key={p.key} onClick={() => setForm({ ...form, [p.key]: !on })}
+                          <button key={p.key} onClick={() => setForm({ ...form, ...Object.fromEntries(ks.map(k => [k, !on])) })}
                             style={{ fontSize: 12, padding: '4px 10px', borderRadius: 6, border: '1px solid', cursor: 'pointer', transition: 'all 0.15s', display: 'inline-flex', alignItems: 'center', gap: 3,
                               borderColor: on ? 'var(--brand)' : 'var(--border-primary)', background: on ? '#eff6ff' : 'var(--bg-primary)', color: on ? 'var(--brand)' : 'var(--text-secondary)' }}>
                             {on && <Check size={10} />}<span>{p.label}</span>
@@ -263,11 +264,11 @@ export default function ProjectRoleList({ canEdit, projectId }: Props) {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)', fontSize: 14 }}>该角色暂无任何权限</div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {PERM_GROUPS.filter(g => g.items.some(p => !!viewRole[p.key])).map(g => (
+                  {PERM_GROUPS.filter(g => g.items.some(p => itemKeys(p).some(k => !!viewRole[k]))).map(g => (
                     <div key={g.title}>
                       <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 6 }}>{g.title}</div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                        {g.items.filter(p => !!viewRole[p.key]).map(p => (
+                        {g.items.filter(p => itemKeys(p).every(k => !!viewRole[k])).map(p => (
                           <span key={p.key} style={{ fontSize: 12, padding: '3px 10px', borderRadius: 5, display: 'inline-flex', alignItems: 'center', gap: 4, background: '#f0fdf4', color: 'var(--color-success)' }}>
                             <Check size={11} /> {p.label}
                           </span>
