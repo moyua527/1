@@ -221,7 +221,6 @@ export default function ProjectList() {
           {filtered.map((p: any) => {
             const displayName = p.my_nickname || p.name
             const iconSize = isMobile ? 64 : 76
-            const totalNotif = (p.task_count ?? 0)
             const Icon = getProjectIcon(p.icon)
             const bgColor = p.icon_color || 'var(--brand)'
             return (
@@ -264,18 +263,6 @@ export default function ProjectList() {
                         const c = (info.tasks ? 1 : 0) + (info.members ? 1 : 0) + (info.messages ? 1 : 0)
                         return c || ''
                       })()}
-                    </span>
-                  )}
-                  {!unreadProjects.has(p.id) && totalNotif > 0 && (
-                    <span style={{
-                      position: 'absolute', top: -4, right: -4,
-                      minWidth: 18, height: 18, borderRadius: 9,
-                      background: '#ef4444', color: '#fff',
-                      fontSize: 10, fontWeight: 700,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      padding: '0 4px', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                    }}>
-                      {totalNotif > 99 ? '99+' : totalNotif}
                     </span>
                   )}
                 </div>

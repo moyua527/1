@@ -45,19 +45,22 @@ export default function TodoDetailModal({ open, milestoneId, projectId, canEdit,
     fetchApi(`/api/milestones/${milestoneId}/detail`).then(r => { if (r.success) setDetail(r.data) })
   }, [milestoneId])
 
-  const loadMessages = useCallback(() => {
+  const loadMessages = useCallback(async () => {
     if (!milestoneId) return
-    fetchApi(`/api/milestones/${milestoneId}/messages`).then(r => { if (r.success) setMessages(r.data || []) })
+    const r = await fetchApi(`/api/milestones/${milestoneId}/messages`)
+    if (r.success) setMessages(r.data || [])
   }, [milestoneId])
 
-  const loadReminders = useCallback(() => {
+  const loadReminders = useCallback(async () => {
     if (!milestoneId) return
-    fetchApi(`/api/milestones/${milestoneId}/reminders`).then(r => { if (r.success) setReminders(r.data || []) })
+    const r = await fetchApi(`/api/milestones/${milestoneId}/reminders`)
+    if (r.success) setReminders(r.data || [])
   }, [milestoneId])
 
-  const loadParticipants = useCallback(() => {
+  const loadParticipants = useCallback(async () => {
     if (!milestoneId) return
-    fetchApi(`/api/milestones/${milestoneId}/participants`).then(r => { if (r.success) setParticipants(r.data || []) })
+    const r = await fetchApi(`/api/milestones/${milestoneId}/participants`)
+    if (r.success) setParticipants(r.data || [])
   }, [milestoneId])
 
   useEffect(() => {
@@ -86,7 +89,8 @@ export default function TodoDetailModal({ open, milestoneId, projectId, canEdit,
     if (r.success) {
       setMsgInput('')
       setMentionList([])
-      loadMessages()
+      await loadMessages()
+      load()
     } else toast(r.message || '发送失败', 'error')
   }
 
@@ -122,7 +126,7 @@ export default function TodoDetailModal({ open, milestoneId, projectId, canEdit,
     if (!milestoneId) return
     if (!(await confirm({ message: '确定移除该参与人？', danger: true }))) return
     const r = await fetchApi(`/api/milestones/${milestoneId}/participants/${userId}`, { method: 'DELETE' })
-    if (r.success) { loadParticipants(); load() }
+    if (r.success) { toast('已移除', 'success'); await loadParticipants(); load() }
     else toast(r.message || '移除失败', 'error')
   }
 
