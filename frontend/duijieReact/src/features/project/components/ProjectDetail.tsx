@@ -60,6 +60,7 @@ export default function ProjectDetail() {
   const [projectLoading, setProjectLoading] = useState(!cached)
   const [projectError, setProjectError] = useState('')
   const [tasks, setTasks] = useState<any[]>(cached?.tasks ?? [])
+  const activeIdRef = useRef(id)
   const [, setHasNewSubmitted] = useState(false)
   const [, setHasNewMessages] = useState(false)
   const [, setHasNewFiles] = useState(false)
@@ -100,6 +101,7 @@ export default function ProjectDetail() {
 
   const loadProject = useCallback(async () => {
     if (!id) return
+    const requestId = id
     setProjectError('')
 
     let message = '项目加载失败，请稍后重试'
@@ -109,6 +111,7 @@ export default function ProjectDetail() {
           projectApi.detail(id),
           new Promise<any>(resolve => setTimeout(() => resolve({ success: false, status: 408, message: '项目加载超时，请重试' }), PROJECT_DETAIL_TIMEOUT_MS)),
         ])
+        if (requestId !== activeIdRef.current) return
         if (r.success && r.data) {
           projectRef.current = r.data
           setProject(r.data)
@@ -130,6 +133,7 @@ export default function ProjectDetail() {
       }
     }
 
+    if (requestId !== activeIdRef.current) return
     if (!projectRef.current) {
       setProject(null)
       setProjectError(message)
@@ -157,8 +161,10 @@ export default function ProjectDetail() {
 
   const loadTasks = useCallback(() => {
     if (!id) return
+    const requestId = id
     taskApi.list(id).then(r => {
       if (!r.success) return
+      if (requestId !== activeIdRef.current) return
       const data = r.data || []
       setTasks(data)
       const prev = _projectCache.get(id!) || { project: null, tasks: [], ts: 0 }
@@ -209,6 +215,16 @@ export default function ProjectDetail() {
     })
     return off
   }, [])
+
+  useEffect(() => {
+    activeIdRef.current = id
+    const c = id ? _projectCache.get(id) : undefined
+    setProject(c?.project ?? null)
+    projectRef.current = c?.project ?? null
+    setProjectLoading(!c)
+    setProjectError('')
+    setTasks(c?.tasks ?? [])
+  }, [id])
 
   useEffect(() => {
     if (!id) return
