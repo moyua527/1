@@ -31,7 +31,7 @@ export default function TodoDetailModal({ open, milestoneId, projectId, canEdit,
   const [reminderTime, setReminderTime] = useState('')
   const [reminderMsg, setReminderMsg] = useState('')
   const [mentioning, setMentioning] = useState(false)
-  const [, setMentionFilter] = useState('')
+  const [mentionFilter, setMentionFilter] = useState('')
   const [mentionList, setMentionList] = useState<number[]>([])
   const [editingMs, setEditingMs] = useState(false)
   const [editMsTitle, setEditMsTitle] = useState('')
@@ -101,14 +101,33 @@ export default function TodoDetailModal({ open, milestoneId, projectId, canEdit,
       e.preventDefault()
       handleSendMsg()
     }
-    if (e.key === '@' || (e.key === '2' && e.shiftKey)) {
-      setMentioning(true)
-      setMentionFilter('')
+    if (e.key === 'Escape' && mentioning) {
+      setMentioning(false)
     }
   }
 
+  const handleMsgChange = (val: string) => {
+    setMsgInput(val)
+    const cursor = inputRef.current?.selectionStart ?? val.length
+    const textBefore = val.slice(0, cursor)
+    const atIdx = textBefore.lastIndexOf('@')
+    if (atIdx !== -1 && (atIdx === 0 || textBefore[atIdx - 1] === ' ' || textBefore[atIdx - 1] === '\n')) {
+      const filterText = textBefore.slice(atIdx + 1)
+      if (!filterText.includes(' ') && !filterText.includes('\n')) {
+        setMentioning(true)
+        setMentionFilter(filterText)
+        return
+      }
+    }
+    setMentioning(false)
+  }
+
   const insertMention = (uid: number, name: string) => {
-    setMsgInput(prev => prev + `@${name} `)
+    const cursor = inputRef.current?.selectionStart ?? msgInput.length
+    const textBefore = msgInput.slice(0, cursor)
+    const atIdx = textBefore.lastIndexOf('@')
+    const newVal = msgInput.slice(0, atIdx) + `@${name} ` + msgInput.slice(cursor)
+    setMsgInput(newVal)
     if (!mentionList.includes(uid)) setMentionList(prev => [...prev, uid])
     setMentioning(false)
     inputRef.current?.focus()
@@ -192,7 +211,12 @@ export default function TodoDetailModal({ open, milestoneId, projectId, canEdit,
 
   const participantIds = new Set(participants.map(p => p.user_id))
   const availableMembers = members.filter(m => !participantIds.has(m.user_id || m.id) && (m.user_id || m.id) !== detail?.created_by)
-  const mentionableUsers = participants.filter(p => p.user_id !== currentUserId)
+  const mentionableUsers = participants.filter(p => {
+    if (p.user_id === currentUserId) return false
+    if (!mentionFilter) return true
+    const name = (dn(p.user_id, p.nickname || p.username) || '').toLowerCase()
+    return name.includes(mentionFilter.toLowerCase())
+  })
 
   const formatDt = (d: string) => {
     try { return new Date(d).toLocaleString('zh-CN') } catch { return d }
@@ -358,9 +382,9 @@ export default function TodoDetailModal({ open, milestoneId, projectId, canEdit,
                   <textarea
                     ref={inputRef}
                     value={msgInput}
-                    onChange={e => { setMsgInput(e.target.value); if (mentioning) setMentioning(false) }}
+                    onChange={e => handleMsgChange(e.target.value)}
                     onKeyDown={handleMsgKeyDown}
-                    placeholder="输入进度... Shift+Enter换行，@提及参与人"
+                    placeholder="输入详细信息... Shift+Enter换行，@相关参与人"
                     rows={2}
                     style={{
                       flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)',
