@@ -40,21 +40,29 @@ const PERM_GROUPS: PermGroup[] = [
     { key: 'can_delete_file', label: '删除文件' },
     { key: 'can_manage_resource_group', label: '管理资源分组' },
   ]},
-  { title: '⚙️ 设置', items: [
-    { key: 'can_edit_project_name', label: '修改项目名称' },
-    { key: 'can_edit_project_desc', label: '修改项目描述' },
-    { key: 'can_edit_project_status', label: '修改项目状态' },
+  { title: '👥 项目成员', items: [
     { key: 'can_add_member', label: '添加成员' },
     { key: 'can_remove_member', label: '移除成员' },
     { key: 'can_assign_member_proj_role', label: '修改成员角色' },
-    { key: 'can_approve_join', label: '批准加入申请' },
-    { key: 'can_reject_join', label: '拒绝加入申请' },
+  ]},
+  { title: '🛡️ 项目角色', items: [
     { key: 'can_create_role', label: '创建角色' },
     { key: 'can_edit_role_name', label: '编辑角色' },
     { key: 'can_edit_role_perms', label: '编辑角色权限' },
     { key: 'can_delete_role', label: '删除角色' },
-    { key: 'can_export_data', label: '导出数据' },
+  ]},
+  { title: '🔗 对接应用', items: [
     { key: 'can_manage_app_config', label: '管理关联应用' },
+  ]},
+  { title: '✅ 项目审批', items: [
+    { key: 'can_approve_join', label: '批准加入申请' },
+    { key: 'can_reject_join', label: '拒绝加入申请' },
+  ]},
+  { title: '⚙️ 管理项目', items: [
+    { key: 'can_edit_project_name', label: '修改项目名称' },
+    { key: 'can_edit_project_desc', label: '修改项目描述' },
+    { key: 'can_edit_project_status', label: '修改项目状态' },
+    { key: 'can_export_data', label: '导出数据' },
   ]},
 ]
 
