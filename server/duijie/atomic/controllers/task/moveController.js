@@ -61,6 +61,27 @@ module.exports = async (req, res) => {
           return res.status(403).json({ success: false, message: '任务负责人不能验收自己的任务' });
         }
       }
+
+      // 项目角色权限校验（细粒度 move 权限）
+      const perms = req.projectPerms;
+      if (perms && req.userRole !== 'admin') {
+        const TRANSITION_PERM = {
+          'submitted->in_progress': 'can_move_task_accept',
+          'submitted->disputed':    'can_move_task_dispute',
+          'disputed->submitted':    'can_move_task_supplement',
+          'in_progress->pending_review': 'can_move_task_submit_review',
+          'pending_review->review_failed': 'can_move_task_reject',
+          'pending_review->accepted': 'can_move_task_approve',
+          'review_failed->pending_review': 'can_move_task_resubmit',
+          'todo->submitted':        'can_move_task_accept',
+          'todo->in_progress':      'can_move_task_accept',
+        };
+        const key = `${current}->${newStatus}`;
+        const needed = TRANSITION_PERM[key];
+        if (needed && !perms[needed]) {
+          return res.status(403).json({ success: false, message: '无权执行此状态转移' });
+        }
+      }
     }
     if (!taskRow) {
       const [rows] = await db.query('SELECT project_id, created_by, assignee_id, title FROM duijie_tasks WHERE id = ? AND is_deleted = 0', [req.params.id]);

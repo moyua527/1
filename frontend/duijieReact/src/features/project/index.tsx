@@ -48,7 +48,7 @@ export default function ProjectList() {
   const openTab = useProjectTabStore(s => s.openTab)
   const projectTabs = useProjectTabStore(s => s.tabs)
   const closeTab = useProjectTabStore(s => s.closeTab)
-  const reorderTabs = useProjectTabStore(s => s.reorderTabs)
+  
   const homeTabScrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -64,68 +64,7 @@ export default function ProjectList() {
     return () => el?.removeEventListener('wheel', handler)
   })
 
-  const reorderRef = useRef<{ id: number; startX: number; moved: boolean; pointerId: number } | null>(null)
-  const dragOffsetRef = useRef(0)
-  const justDraggedRef = useRef(false)
-  const [slidingId, setSlidingId] = useState<number | null>(null)
-  const projectTabsRef = useRef(projectTabs)
-  projectTabsRef.current = projectTabs
-
-  const onContainerPointerDown = useCallback((e: React.PointerEvent) => {
-    const tabEl = (e.target as HTMLElement).closest('[data-tab-id]') as HTMLElement | null
-    if (!tabEl || (e.target as HTMLElement).closest('button')) return
-    const tabId = Number(tabEl.dataset.tabId)
-    reorderRef.current = { id: tabId, startX: e.clientX, moved: false, pointerId: e.pointerId }
-    dragOffsetRef.current = 0
-  }, [])
-
-  const onContainerPointerMove = useCallback((e: React.PointerEvent) => {
-    const r = reorderRef.current
-    if (!r) return
-    const dx = e.clientX - r.startX
-    if (!r.moved && Math.abs(dx) > 8) {
-      r.moved = true
-      try { (e.currentTarget as HTMLElement).setPointerCapture(r.pointerId) } catch {}
-    }
-    if (!r.moved) return
-    setSlidingId(r.id)
-    dragOffsetRef.current = dx
-    const container = e.currentTarget as HTMLElement
-    const dragEl = container.querySelector(`[data-tab-id="${r.id}"]`) as HTMLElement | null
-    if (dragEl) {
-      dragEl.style.transition = 'none'
-      dragEl.style.transform = `translateX(${dx}px) scale(1.05)`
-      dragEl.style.zIndex = '10'
-    }
-    const tabs = projectTabsRef.current
-    const idx = tabs.findIndex(t => t.id === r.id)
-    if (idx < 0) return
-    const els = Array.from(container.querySelectorAll('[data-tab-id]')) as HTMLElement[]
-    const curEl = els[idx]
-    if (!curEl) return
-    const w = curEl.offsetWidth
-    if (dx > w * 0.5 && idx < tabs.length - 1) {
-      reorderTabs(r.id, tabs[idx + 1].id)
-      r.startX += w
-      dragOffsetRef.current = e.clientX - r.startX
-    } else if (dx < -w * 0.5 && idx > 0) {
-      reorderTabs(r.id, tabs[idx - 1].id)
-      r.startX -= w
-      dragOffsetRef.current = e.clientX - r.startX
-    }
-  }, [reorderTabs])
-
-  const onContainerPointerUp = useCallback(() => {
-    const r = reorderRef.current
-    if (!r) return
-    if (r.moved) {
-      justDraggedRef.current = true
-      setTimeout(() => { justDraggedRef.current = false }, 300)
-    }
-    dragOffsetRef.current = 0
-    reorderRef.current = null
-    setSlidingId(null)
-  }, [])
+  
 
   const { data: unreadSummary = {} } = useProjectUnreadSummary()
   const [dismissedSet, setDismissedSet] = useState<Set<number>>(new Set())
@@ -216,22 +155,18 @@ export default function ProjectList() {
             首页
           </div>
           <div style={{ width: 1, background: 'rgba(59,130,246,0.15)', margin: '8px 2px', flexShrink: 0 }} />
-          <div ref={homeTabScrollRef} onPointerDown={onContainerPointerDown} onPointerMove={onContainerPointerMove} onPointerUp={onContainerPointerUp} onPointerCancel={onContainerPointerUp} style={{ flex: 1, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', gap: 0, WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as any}>
+          <div ref={homeTabScrollRef} style={{ flex: 1, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', gap: 0, WebkitOverflowScrolling: 'touch' } as any}>
             {projectTabs.map(pt => {
               return (
-                <div key={pt.id} data-tab-id={pt.id}
-                  onClick={() => { if (!justDraggedRef.current) nav(`/projects/${pt.id}`) }}
+                <div key={pt.id}
+                  onClick={() => nav(`/projects/${pt.id}`)}
                   style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 400, flexShrink: 0,
-                    transition: slidingId === pt.id ? 'none' : 'all 0.2s ease',
-                    transform: slidingId === pt.id ? `translateX(${dragOffsetRef.current}px) scale(1.05)` : 'none',
-                    zIndex: slidingId === pt.id ? 10 : 'auto',
-                    background: 'transparent', color: 'var(--text-secondary)',
-                    boxShadow: slidingId === pt.id ? '0 4px 16px rgba(0,0,0,0.2)' : 'none',
-                    userSelect: 'none' } as any}>
+                    transition: 'all 0.2s ease',
+                    background: 'transparent', color: 'var(--text-secondary)' }}>
                   <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{pt.name}</span>
                   <button
                     onClick={async e => { e.stopPropagation(); if (!(await confirm({ message: `关闭「${pt.name}」标签页？` }))) return; closeTab(pt.id) }}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, marginLeft: 4, display: 'flex', color: 'var(--text-tertiary)', borderRadius: 4 }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, marginLeft: 16, display: 'flex', color: 'var(--text-tertiary)', borderRadius: 4 }}
                     onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-heading)'; e.currentTarget.style.background = 'rgba(59,130,246,0.06)' }}
                     onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-tertiary)'; e.currentTarget.style.background = 'none' }}>
                     <X size={13} />

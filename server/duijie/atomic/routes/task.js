@@ -2,6 +2,8 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const roleGuard = require('../middleware/roleGuard');
 const enterprisePermGuard = require('../middleware/enterprisePermGuard');
+const taskPermGuard = require('../middleware/taskPermGuard');
+const reviewPointPermGuard = require('../middleware/reviewPointPermGuard');
 const validate = require('../middleware/validate');
 const V = require('../middleware/validators');
 const upload = require('./upload');
@@ -21,20 +23,32 @@ router.post('/tasks', auth, roleGuard('admin', 'member', { soft: true }), enterp
 router.get('/tasks/export', auth, require('../controllers/task/exportController'));
 router.get('/tasks/trash', auth, taskStaff, require('../controllers/task/trashController'));
 router.get('/tasks', auth, require('../controllers/task/listController'));
-router.put('/tasks/:id', auth, taskStaff, require('../controllers/task/updateController'));
-router.patch('/tasks/:id/move', auth, taskStaff, require('../controllers/task/moveController'));
-router.delete('/tasks/:id', auth, taskStaff, require('../controllers/task/deleteController'));
-router.patch('/tasks/:id/restore', auth, taskStaff, require('../controllers/task/restoreController'));
-router.post('/tasks/:id/attachments', auth, taskStaff, upload.array('files', 10), require('../controllers/task/uploadAttachmentController'));
-router.delete('/tasks/attachments/:attachmentId', auth, taskStaff, require('../controllers/task/deleteAttachmentController'));
+router.put('/tasks/:id', auth, taskStaff,
+  taskPermGuard(['can_edit_task_title', 'can_edit_task_desc', 'can_edit_task_priority', 'can_edit_task_deadline', 'can_assign_task']),
+  require('../controllers/task/updateController'));
+router.patch('/tasks/:id/move', auth, taskStaff,
+  taskPermGuard(['can_move_task_accept', 'can_move_task_dispute', 'can_move_task_supplement', 'can_move_task_submit_review', 'can_move_task_reject', 'can_move_task_approve', 'can_move_task_resubmit']),
+  require('../controllers/task/moveController'));
+router.delete('/tasks/:id', auth, taskStaff, taskPermGuard('can_delete_task'), require('../controllers/task/deleteController'));
+router.patch('/tasks/:id/restore', auth, taskStaff, taskPermGuard('can_delete_task'), require('../controllers/task/restoreController'));
+router.post('/tasks/:id/attachments', auth, taskStaff, taskPermGuard('can_upload_task_attachment'), upload.array('files', 10), require('../controllers/task/uploadAttachmentController'));
+router.delete('/tasks/attachments/:attachmentId', auth, taskStaff,
+  reviewPointPermGuard('can_delete_task_attachment', { paramName: 'attachmentId', table: 'duijie_task_attachments', fk: 'task_id' }),
+  require('../controllers/task/deleteAttachmentController'));
 router.get('/tasks/attachments/:attachmentId/download', auth, require('../controllers/task/downloadAttachmentController'));
 
 // 审核要点
 router.get('/tasks/:id/review-points', auth, reviewPoints.list);
-router.post('/tasks/:id/review-points', auth, taskStaff, reviewPoints.add);
-router.put('/tasks/review-points/:pointId', auth, taskStaff, reviewPoints.update);
-router.put('/tasks/review-points/:pointId/respond', auth, taskStaff, reviewPoints.respond);
-router.put('/tasks/review-points/:pointId/confirm', auth, taskStaff, reviewPoints.confirm);
+router.post('/tasks/:id/review-points', auth, taskStaff, taskPermGuard('can_add_review_point'), reviewPoints.add);
+router.put('/tasks/review-points/:pointId', auth, taskStaff,
+  reviewPointPermGuard('can_add_review_point', { paramName: 'pointId', table: 'duijie_task_review_points', fk: 'task_id' }),
+  reviewPoints.update);
+router.put('/tasks/review-points/:pointId/respond', auth, taskStaff,
+  reviewPointPermGuard('can_respond_review_point', { paramName: 'pointId', table: 'duijie_task_review_points', fk: 'task_id' }),
+  reviewPoints.respond);
+router.put('/tasks/review-points/:pointId/confirm', auth, taskStaff,
+  reviewPointPermGuard('can_confirm_review_point', { paramName: 'pointId', table: 'duijie_task_review_points', fk: 'task_id' }),
+  reviewPoints.confirm);
 
 // Milestones (代办/项目流程)
 router.post('/milestones', auth, require('../controllers/milestone/createController'));

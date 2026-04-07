@@ -226,6 +226,48 @@ export default function Layout() {
         </div>
       </header>
 
+      {/* ===== Mobile 横向滚动导航栏 ===== */}
+      {isMobile && (
+        <nav style={{
+          flexShrink: 0, background: 'var(--bg-primary)',
+          borderBottom: '1px solid var(--border-primary)',
+          overflowX: 'auto', overflowY: 'hidden', WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'none', msOverflowStyle: 'none',
+          display: 'flex', gap: 0, padding: '0 4px',
+        } as any}>
+          {NAV_ITEMS.map(item => {
+            const isActive = item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                style={{
+                  display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 2,
+                  padding: '6px 12px', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
+                  color: isActive ? 'var(--brand)' : 'var(--text-tertiary)',
+                  borderBottom: isActive ? '2px solid var(--brand)' : '2px solid transparent',
+                  fontSize: 10, fontWeight: isActive ? 600 : 500,
+                  transition: 'color 0.15s',
+                  position: 'relative',
+                }}
+                end={item.path === '/'}
+              >
+                <item.icon size={18} />
+                <span>{item.label}</span>
+                {item.path === '/messaging' && dmUnread > 0 && (
+                  <span style={{
+                    position: 'absolute', top: 2, right: 2,
+                    minWidth: 14, height: 14, borderRadius: 7, background: 'var(--color-danger)', color: '#fff',
+                    fontSize: 8, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: '0 3px',
+                  }}>{dmUnread > 99 ? '99+' : dmUnread}</span>
+                )}
+              </NavLink>
+            )
+          })}
+        </nav>
+      )}
+
       {/* ===== 下方：Sidebar + Content ===== */}
       <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
 
@@ -314,48 +356,6 @@ export default function Layout() {
               </button>
             </div>
           </aside>
-        )}
-
-        {/* Mobile 横向滚动导航栏 */}
-        {isMobile && (
-          <nav style={{
-            flexShrink: 0, background: 'var(--bg-primary)',
-            borderBottom: '1px solid var(--border-primary)',
-            overflowX: 'auto', overflowY: 'hidden', WebkitOverflowScrolling: 'touch',
-            scrollbarWidth: 'none', msOverflowStyle: 'none',
-            display: 'flex', gap: 0, padding: '0 4px',
-          } as any}>
-            {NAV_ITEMS.map(item => {
-              const isActive = item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  style={{
-                    display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 2,
-                    padding: '6px 12px', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
-                    color: isActive ? 'var(--brand)' : 'var(--text-tertiary)',
-                    borderBottom: isActive ? '2px solid var(--brand)' : '2px solid transparent',
-                    fontSize: 10, fontWeight: isActive ? 600 : 500,
-                    transition: 'color 0.15s',
-                    position: 'relative',
-                  }}
-                  end={item.path === '/'}
-                >
-                  <item.icon size={18} />
-                  <span>{item.label}</span>
-                  {item.path === '/messaging' && dmUnread > 0 && (
-                    <span style={{
-                      position: 'absolute', top: 2, right: 2,
-                      minWidth: 14, height: 14, borderRadius: 7, background: 'var(--color-danger)', color: '#fff',
-                      fontSize: 8, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      padding: '0 3px',
-                    }}>{dmUnread > 99 ? '99+' : dmUnread}</span>
-                  )}
-                </NavLink>
-              )
-            })}
-          </nav>
         )}
 
         {/* ===== 主内容区 ===== */}

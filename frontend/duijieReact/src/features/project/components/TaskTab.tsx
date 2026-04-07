@@ -371,6 +371,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
                           {imgs.map((url: string, idx: number) => (
                             <img key={idx} src={url} alt="" onClick={() => { setPreviewImg(url); setPreviewImages(imgs); setPreviewStartIdx(idx) }}
+                              onError={e => { e.currentTarget.style.display = 'none' }}
                               style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border-primary)', cursor: 'pointer' }} />
                           ))}
                         </div>
@@ -519,8 +520,9 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                               const allImgs = t.attachments.filter((x: any) => x.mime_type?.startsWith('image/')).map((x: any) => `/uploads/${x.filename}`)
                               const imgIdx = allImgs.indexOf(fileUrl)
                               return (
-                                <div key={a.id} onClick={() => { setPreviewImg(fileUrl); setPreviewImages(allImgs); setPreviewStartIdx(Math.max(0, imgIdx)) }} style={{ cursor: 'pointer', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border-primary)', width: 80, height: 80, flexShrink: 0 }}>
-                                  <img src={fileUrl} alt={a.original_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                <div key={a.id} onClick={() => { setPreviewImg(fileUrl); setPreviewImages(allImgs); setPreviewStartIdx(Math.max(0, imgIdx)) }} style={{ cursor: 'pointer', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border-primary)', width: 80, height: 80, flexShrink: 0, background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <img src={fileUrl} alt={a.original_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    onError={e => { const el = e.currentTarget; el.style.display = 'none'; const p = el.parentElement; if (p) { const s = document.createElement('span'); s.textContent = '图片丢失'; s.style.cssText = 'font-size:10px;color:var(--text-tertiary)'; p.appendChild(s) } }} />
                                 </div>
                               )
                             }
@@ -692,9 +694,9 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                     return (
                       <div key={`df-${i}`} style={{ position: 'relative', display: 'inline-flex' }}>
                         {isImg ? (
-                          <div style={{ width: 56, height: 56, borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border-primary)', cursor: 'pointer' }}
+                          <div style={{ width: 56, height: 56, borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border-primary)', cursor: 'pointer', background: 'var(--bg-tertiary)' }}
                             onClick={() => { const allImgs = draftFiles.filter(x => x.mime_type.startsWith('image/')).map(x => `/uploads/${x.filename}`); setPreviewImg(url); setPreviewImages(allImgs); setPreviewStartIdx(Math.max(0, allImgs.indexOf(url))) }}>
-                            <img src={url} alt={df.original_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <img src={url} alt={df.original_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none' }} />
                           </div>
                         ) : (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', background: 'var(--bg-primary)', borderRadius: 6, border: '1px solid var(--border-primary)', fontSize: 12, color: 'var(--text-body)' }}>

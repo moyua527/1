@@ -3,9 +3,25 @@ const db = require('../../../config/db');
 const { notify } = require('../../utils/notify');
 const { broadcast } = require('../../utils/broadcast');
 
+const FIELD_PERM_MAP = {
+  title: 'can_edit_task_title',
+  description: 'can_edit_task_desc',
+  priority: 'can_edit_task_priority',
+  deadline: 'can_edit_task_deadline',
+  assignee_id: 'can_assign_task',
+};
+
 module.exports = async (req, res) => {
   try {
     const taskId = req.params.id;
+    const perms = req.projectPerms;
+    if (perms && req.userRole !== 'admin') {
+      for (const [field, perm] of Object.entries(FIELD_PERM_MAP)) {
+        if (req.body[field] !== undefined && !perms[perm]) {
+          return res.status(403).json({ success: false, message: `无权修改「${field}」` });
+        }
+      }
+    }
     const [[oldTask]] = await db.query('SELECT * FROM duijie_tasks WHERE id = ? AND is_deleted = 0', [taskId]);
     await updateTask(taskId, req.body);
 
