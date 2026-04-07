@@ -335,8 +335,8 @@ export default function ProjectDetail() {
           </div>
         </div>
       )}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 0, flexShrink: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', paddingLeft: 4, paddingTop: 4, paddingBottom: 8, background: 'linear-gradient(180deg, rgba(59,130,246,0.03) 0%, transparent 100%)' } as any}>
-        <div data-tour="project-tabs" style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 0, flexShrink: 0, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none', paddingLeft: 4, paddingTop: 4, paddingBottom: 8, background: 'linear-gradient(180deg, rgba(59,130,246,0.03) 0%, transparent 100%)' } as any}>
+        <div data-tour="project-tabs" style={{ display: 'flex', gap: 4, flexShrink: 0, minWidth: 'max-content' }}>
           {([['tasks','需求'],['todo','代办'],['files','资料库'],['messages','消息'],['settings','设置']] as [string, string][]).map(([k,v]) => {
             const pInfo = id ? unreadSummary[id] : undefined
             const tabCount = pInfo ? (pInfo as any)[k] || 0 : 0
