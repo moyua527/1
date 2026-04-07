@@ -64,7 +64,7 @@ def main():
 
     # 2. 后端 npm install
     print('\n[2/6] 安装后端依赖...')
-    run_cmd(ssh, f'cd {remote_server} && npm install --production 2>&1', 'npm install')
+    run_cmd(ssh, f'cd {remote_server} && npm install --omit=dev 2>&1', 'npm install')
 
     # 3. 数据库迁移
     print('\n[3/6] 数据库迁移...')
@@ -76,7 +76,7 @@ def main():
     # 4. 前端构建
     print('\n[4/6] 前端构建...')
     remote_fe = f'{REMOTE_BASE}/frontend/duijieReact'
-    run_cmd(ssh, f'cd {remote_fe} && npm install 2>&1', 'npm install (frontend)')
+    run_cmd(ssh, f'cd {remote_fe} && npm install --legacy-peer-deps 2>&1', 'npm install (frontend)', timeout=600)
     run_cmd(ssh, f'cd {remote_fe} && npm run build 2>&1', 'npm run build', fatal=True, timeout=600)
 
     # 5. 重启后端
