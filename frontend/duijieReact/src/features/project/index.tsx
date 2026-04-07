@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import { Plus, FolderKanban, Loader2, Download, Search, Trash2, RotateCcw, Upload, Link, MoreVertical, X } from 'lucide-react'
 import { projectApi } from './services/api'
@@ -48,13 +48,20 @@ export default function ProjectList() {
   const openTab = useProjectTabStore(s => s.openTab)
   const projectTabs = useProjectTabStore(s => s.tabs)
   const closeTab = useProjectTabStore(s => s.closeTab)
-  const handleWheelScroll = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
-    const el = e.currentTarget
-    if (el.scrollWidth > el.clientWidth) {
-      e.preventDefault()
-      el.scrollLeft += e.deltaY || e.deltaX
+  const homeTabScrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handler = (e: WheelEvent) => {
+      const el = e.currentTarget as HTMLDivElement
+      if (el && el.scrollWidth > el.clientWidth) {
+        e.preventDefault()
+        el.scrollBy({ left: e.deltaY || e.deltaX, behavior: 'smooth' })
+      }
     }
-  }, [])
+    const el = homeTabScrollRef.current
+    el?.addEventListener('wheel', handler, { passive: false })
+    return () => el?.removeEventListener('wheel', handler)
+  })
 
   const { data: unreadSummary = {} } = useProjectUnreadSummary()
   const [dismissedSet, setDismissedSet] = useState<Set<number>>(new Set())
@@ -145,7 +152,7 @@ export default function ProjectList() {
             首页
           </div>
           <div style={{ width: 1, background: 'rgba(59,130,246,0.15)', margin: '8px 2px', flexShrink: 0 }} />
-          <div onWheel={handleWheelScroll} style={{ flex: 1, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', gap: 0, WebkitOverflowScrolling: 'touch' } as any}>
+          <div ref={homeTabScrollRef} style={{ flex: 1, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', gap: 0, WebkitOverflowScrolling: 'touch' } as any}>
             {projectTabs.map(pt => {
               return (
                 <div key={pt.id}

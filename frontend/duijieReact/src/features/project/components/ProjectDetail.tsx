@@ -260,13 +260,24 @@ export default function ProjectDetail() {
 
   const tabScrollRef = useRef<HTMLDivElement>(null)
   const subTabScrollRef = useRef<HTMLDivElement>(null)
-  const handleWheelScroll = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
-    const el = e.currentTarget
-    if (el.scrollWidth > el.clientWidth) {
-      e.preventDefault()
-      el.scrollLeft += e.deltaY || e.deltaX
+
+  useEffect(() => {
+    const handler = (e: WheelEvent) => {
+      const el = e.currentTarget as HTMLDivElement
+      if (el && el.scrollWidth > el.clientWidth) {
+        e.preventDefault()
+        el.scrollBy({ left: e.deltaY || e.deltaX, behavior: 'smooth' })
+      }
     }
-  }, [])
+    const a = tabScrollRef.current
+    const b = subTabScrollRef.current
+    a?.addEventListener('wheel', handler, { passive: false })
+    b?.addEventListener('wheel', handler, { passive: false })
+    return () => {
+      a?.removeEventListener('wheel', handler)
+      b?.removeEventListener('wheel', handler)
+    }
+  })
 
   useEffect(() => {
     if (project && id) {
@@ -318,7 +329,7 @@ export default function ProjectDetail() {
             首页
           </div>
           <div style={{ width: 1, background: 'rgba(59,130,246,0.15)', margin: '8px 2px', flexShrink: 0 }} />
-          <div ref={tabScrollRef} onWheel={handleWheelScroll} style={{ flex: 1, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', gap: 0, WebkitOverflowScrolling: 'touch' } as any}>
+          <div ref={tabScrollRef} style={{ flex: 1, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', gap: 0, WebkitOverflowScrolling: 'touch' } as any}>
             {projectTabs.map(pt => {
               const isActive = String(pt.id) === String(id)
               return (
@@ -343,7 +354,7 @@ export default function ProjectDetail() {
           </div>
         </div>
       )}
-      <div ref={subTabScrollRef} onWheel={handleWheelScroll} style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 0, flexShrink: 0, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none', paddingLeft: 4, paddingTop: 4, paddingBottom: 8, background: 'linear-gradient(180deg, rgba(59,130,246,0.03) 0%, transparent 100%)' } as any}>
+      <div ref={subTabScrollRef} style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 0, flexShrink: 0, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none', paddingLeft: 4, paddingTop: 4, paddingBottom: 8, background: 'linear-gradient(180deg, rgba(59,130,246,0.03) 0%, transparent 100%)' } as any}>
         <div data-tour="project-tabs" style={{ display: 'flex', gap: 4, flexShrink: 0, minWidth: 'max-content' }}>
           {([['tasks','需求'],['todo','代办'],['files','资料库'],['messages','消息'],['settings','设置']] as [string, string][]).map(([k,v]) => {
             const pInfo = id ? unreadSummary[id] : undefined
