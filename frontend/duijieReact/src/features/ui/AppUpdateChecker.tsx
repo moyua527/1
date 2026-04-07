@@ -63,8 +63,13 @@ export default function AppUpdateChecker() {
 
   const isForce = info.forceUpdate || compareVersions(nativeVer, info.minVersion) < 0
 
-  const handleDownload = () => {
-    window.open(info.downloadUrl, '_system')
+  const handleDownload = async () => {
+    try {
+      const { Browser } = await import('@capacitor/browser')
+      await Browser.open({ url: info.downloadUrl })
+    } catch {
+      window.location.href = info.downloadUrl
+    }
   }
 
   const handleDismiss = () => {

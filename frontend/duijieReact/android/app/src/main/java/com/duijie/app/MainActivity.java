@@ -2,10 +2,17 @@ package com.duijie.app;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.core.view.WindowCompat;
+import android.app.DownloadManager;
+import android.content.Context;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.webkit.DownloadListener;
+import android.webkit.URLUtil;
 import android.webkit.WebView;
 import android.webkit.WebSettings;
 import android.view.KeyEvent;
+import android.widget.Toast;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -32,6 +39,21 @@ public class MainActivity extends BridgeActivity {
             webView.setOverScrollMode(WebView.OVER_SCROLL_ALWAYS);
             webView.setVerticalScrollBarEnabled(true);
             webView.setHorizontalScrollBarEnabled(false);
+
+            webView.setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> {
+                DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+                request.setMimeType(mimeType);
+                request.addRequestHeader("User-Agent", userAgent);
+                request.setDescription("正在下载对接更新包...");
+                String fileName = URLUtil.guessFileName(url, contentDisposition, mimeType);
+                request.setTitle(fileName);
+                request.allowScanningByMediaScanner();
+                request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
+                DownloadManager dm = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
+                dm.enqueue(request);
+                Toast.makeText(getApplicationContext(), "正在下载更新包...", Toast.LENGTH_LONG).show();
+            });
         }
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
