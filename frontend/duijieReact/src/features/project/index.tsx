@@ -242,11 +242,11 @@ export default function ProjectList() {
                   ) : (
                     <div style={{
                       width: iconSize, height: iconSize, borderRadius: iconSize * 0.22,
-                      background: `linear-gradient(135deg, ${bgColor}, ${bgColor}dd)`,
+                      background: `linear-gradient(135deg, ${bgColor}99, ${bgColor}66)`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
                     }}>
-                      <Icon size={48} color="#fff" />
+                      <Icon size={48} color="rgba(255,255,255,0.9)" />
                     </div>
                   )}
                   {(() => {
