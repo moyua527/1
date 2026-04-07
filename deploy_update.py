@@ -29,6 +29,9 @@ def ssh_connect():
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.connect(SERVER, username=USER, password=os.environ.get('SSH_PASS') or getpass.getpass(f'SSH password for {USER}@{SERVER}: '))
+    transport = ssh.get_transport()
+    if transport:
+        transport.set_keepalive(15)
     return ssh
 
 def run_cmd(ssh, cmd, desc='', fatal=False):

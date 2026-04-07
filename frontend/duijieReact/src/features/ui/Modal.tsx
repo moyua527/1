@@ -40,7 +40,7 @@ export default function Modal({ open, onClose, title, children, width = 600, hei
 
   if (!open) return null
   return (
-    <div style={overlay} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+    <div style={overlay}>
       <div style={{
         background: 'var(--bg-primary)', borderRadius: 12, width, height,
         maxWidth: 'calc(100vw - 24px)', maxHeight: '85vh', overflow: 'hidden',
