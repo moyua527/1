@@ -62,7 +62,8 @@ exports.update = async (req, res) => {
       vals.push(f === 'can_delete_project' ? 0 : (req.body[f] ? 1 : 0));
     });
     vals.push(roleId, id);
-    await db.query(`UPDATE project_roles SET ${sets.join(', ')} WHERE id = ? AND project_id = ?`, vals);
+    const [result] = await db.query(`UPDATE project_roles SET ${sets.join(', ')} WHERE id = ? AND project_id = ?`, vals);
+    if (result.affectedRows === 0) return res.status(404).json({ success: false, message: '角色更新失败，记录未找到' });
     broadcast('project', 'role_updated', { id, userId: req.userId });
     res.json({ success: true });
   } catch (e) {

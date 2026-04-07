@@ -1,5 +1,13 @@
 apply plugin: 'com.android.application'
 
+def versionProps = new Properties()
+def versionFile = file('version.properties')
+if (versionFile.exists()) {
+    versionProps.load(versionFile.newDataInputStream())
+}
+def appVersionCode = (versionProps['VERSION_CODE'] ?: '1').toInteger()
+def appVersionName = versionProps['VERSION_NAME'] ?: '1.0.0'
+
 android {
     namespace = "com.duijie.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,8 +15,8 @@ android {
         applicationId "com.duijie.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 52
-        versionName "1.1.52"
+        versionCode appVersionCode
+        versionName appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,10 +24,19 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            storeFile file('duijie-release.keystore')
+            storePassword 'DuiJie2026'
+            keyAlias 'duijie'
+            keyPassword 'DuiJie2026'
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
 }

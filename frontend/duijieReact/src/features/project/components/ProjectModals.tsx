@@ -31,9 +31,13 @@ interface ManageMembersModalProps {
   onGoToRoles?: () => void
 }
 
-function parseRoleValue(val: string): { role: string; project_role_id?: number } {
-  if (val.startsWith('proj-')) return { role: 'editor', project_role_id: Number(val.slice(5)) }
-  return { role: 'editor' }
+function parseRoleValue(val: string, projectRoles: any[] = []): { role: string; project_role_id?: number } {
+  if (val.startsWith('proj-')) {
+    const roleId = Number(val.slice(5))
+    const pr = projectRoles.find((r: any) => r.id === roleId)
+    return { role: pr?.role_key || 'viewer', project_role_id: roleId }
+  }
+  return { role: 'viewer' }
 }
 
 function getMemberRoleValue(m: any): string {
@@ -134,7 +138,7 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
                     <>
                       <select value={getMemberRoleValue(m)}
                         onChange={async (e) => {
-                          const { role, project_role_id } = parseRoleValue(e.target.value)
+                          const { role, project_role_id } = parseRoleValue(e.target.value, projectRoles)
                           const r = await projectApi.updateMemberRole(projectId, String(m.pm_id), { role, project_role_id: project_role_id ?? null })
                           if (r.success) { toast('角色已更新', 'success'); onRefresh() } else toast(r.message || '更新失败', 'error')
                         }}
@@ -198,7 +202,7 @@ export function ManageMembersModal({ open, onClose, projectId, members, availabl
             {selectedUserIds.size > 0 && <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>已选 {selectedUserIds.size} 人</span>}
             <Button disabled={selectedUserIds.size === 0 || submitting} onClick={async () => {
               setSubmitting(true)
-              const { role, project_role_id } = parseRoleValue(selectedRole)
+              const { role, project_role_id } = parseRoleValue(selectedRole, projectRoles)
               let ok = 0
               let lastErr = ''
               for (const uid of selectedUserIds) {

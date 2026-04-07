@@ -1,6 +1,6 @@
 {
-  "version": "1.2.99",
-  "versionCode": 300,
+  "version": "1.3.0",
+  "versionCode": 301,
   "minVersion": "1.0.0",
-  "changelog": "项目卡片自定义图标与颜色：编辑项目时可选择图标和配色方案，项目列表卡片显示个性化样式"
+  "changelog": "修复角色权限更新不生效：修正成员project_role_id分配错误、角色权限保存校验、数据迁移"
 }

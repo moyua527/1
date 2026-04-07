@@ -21,7 +21,7 @@ module.exports = async (req, res) => {
     );
     if (existing) return res.status(400).json({ success: false, message: '该用户已是项目成员' });
 
-    const finalRoleId = project_role_id || await resolveProjectRoleId(id, 'viewer');
+    const finalRoleId = project_role_id || await resolveProjectRoleId(id, memberRole);
 
     await db.query(
       "INSERT INTO duijie_project_members (project_id, user_id, role, source, enterprise_role_id, project_role_id) VALUES (?, ?, ?, 'internal', ?, ?)",

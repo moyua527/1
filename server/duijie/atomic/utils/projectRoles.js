@@ -87,33 +87,35 @@ async function ensureDefaultProjectRoles(projectId, createdBy = null, conn = db)
   const existingKeys = new Set(existing.filter(r => r.role_key).map(r => r.role_key));
 
   const missing = DEFAULT_PROJECT_ROLE_PRESETS.filter(p => !existingKeys.has(p.role_key));
-  if (missing.length === 0) return existing;
 
-  const roleCreatorId = createdBy || await getProjectCreatorId(projectId, conn);
-  for (const preset of missing) {
-    await conn.query(
-      `INSERT INTO project_roles (
-        project_id, role_key, name, color, ${PROJECT_ROLE_FIELDS.join(', ')}, sort_order, is_default, created_by
-      ) VALUES (?, ?, ?, ?, ${PROJECT_ROLE_FIELDS.map(() => '?').join(', ')}, ?, ?, ?)`,
-      [
-        projectId,
-        preset.role_key,
-        preset.name,
-        preset.color,
-        ...PROJECT_ROLE_FIELDS.map(field => preset[field]),
-        preset.sort_order,
-        preset.is_default,
-        roleCreatorId,
-      ]
-    );
+  if (missing.length > 0) {
+    const roleCreatorId = createdBy || await getProjectCreatorId(projectId, conn);
+    for (const preset of missing) {
+      await conn.query(
+        `INSERT INTO project_roles (
+          project_id, role_key, name, color, ${PROJECT_ROLE_FIELDS.join(', ')}, sort_order, is_default, created_by
+        ) VALUES (?, ?, ?, ?, ${PROJECT_ROLE_FIELDS.map(() => '?').join(', ')}, ?, ?, ?)`,
+        [
+          projectId,
+          preset.role_key,
+          preset.name,
+          preset.color,
+          ...PROJECT_ROLE_FIELDS.map(field => preset[field]),
+          preset.sort_order,
+          preset.is_default,
+          roleCreatorId,
+        ]
+      );
+    }
   }
 
-  const roles = await listProjectRoles(projectId, conn);
+  const roles = missing.length > 0 ? await listProjectRoles(projectId, conn) : existing;
 
   const roleIdMap = {};
   roles.forEach(role => {
     if (role.role_key) roleIdMap[role.role_key] = role.id;
   });
+
   for (const roleKey of Object.keys(roleIdMap)) {
     await conn.query(
       'UPDATE duijie_project_members SET project_role_id = ? WHERE project_id = ? AND role = ? AND project_role_id IS NULL',
