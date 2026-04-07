@@ -238,7 +238,7 @@ export default function ProjectList() {
                 onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(3px) scale(0.97)'; e.currentTarget.style.filter = 'brightness(0.88)' }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.filter = 'brightness(1)' }}
               >
-                <div style={{ position: 'relative', marginBottom: 6, width: isMobile ? '80%' : '100%', aspectRatio: '1', maxWidth: isMobile ? undefined : 120, margin: '0 auto 6px' }}>
+                <div style={{ position: 'relative', marginBottom: 6, width: '100%', aspectRatio: '1' }}>
                   {p.cover_image ? (
                     <div style={{
                       width: '100%', height: '100%', borderRadius: '22%',
