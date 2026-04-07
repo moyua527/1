@@ -75,7 +75,7 @@ export default function EnterpriseModals(props: Props) {
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--brand)', borderBottom: '1px solid var(--border-primary)', paddingBottom: 6 }}>基本信息</div>
           <Input label="企业名称 *" value={entForm.name} onChange={e => setEntForm({ ...entForm, name: e.target.value })} />
           <Input label="公司全称" placeholder="如：XX科技有限公司" value={entForm.company} onChange={e => setEntForm({ ...entForm, company: e.target.value })} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
             <div>
               <label style={labelStyle}>企业类型</label>
               <select value={entForm.company_type} onChange={e => setEntForm({ ...entForm, company_type: e.target.value })} style={selectStyle}>
@@ -91,7 +91,7 @@ export default function EnterpriseModals(props: Props) {
               </select>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
             <div>
               <label style={labelStyle}>规模</label>
               <select value={entForm.scale} onChange={e => setEntForm({ ...entForm, scale: e.target.value })} style={selectStyle}>
@@ -104,7 +104,7 @@ export default function EnterpriseModals(props: Props) {
 
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--brand)', borderBottom: '1px solid var(--border-primary)', paddingBottom: 6, marginTop: 4 }}>工商信息</div>
           <Input label="统一社会信用代码" placeholder="18位信用代码" maxLength={18} value={entForm.credit_code} onChange={e => setEntForm({ ...entForm, credit_code: e.target.value.toUpperCase() })} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
             <Input label="法定代表人" placeholder="法人姓名" value={entForm.legal_person} onChange={e => setEntForm({ ...entForm, legal_person: e.target.value })} />
             <Input label="注册资本" placeholder="如：100万元人民币" value={entForm.registered_capital} onChange={e => setEntForm({ ...entForm, registered_capital: e.target.value })} />
           </div>
@@ -114,7 +114,7 @@ export default function EnterpriseModals(props: Props) {
           </div>
 
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--brand)', borderBottom: '1px solid var(--border-primary)', paddingBottom: 6, marginTop: 4 }}>联系方式</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
             <Input label="邮箱" value={entForm.email} onChange={e => setEntForm({ ...entForm, email: e.target.value })} />
             <Input label="电话" maxLength={11} value={entForm.phone} onChange={e => setEntForm({ ...entForm, phone: e.target.value.replace(/\D/g, '').slice(0, 11) })} />
           </div>

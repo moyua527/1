@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import useIsMobile from '../ui/useIsMobile'
 import { fetchApi } from '../../bootstrap'
 import { usePartners, useInvalidate } from '../../hooks/useApi'
 import { toast } from '../ui/Toast'
@@ -114,6 +115,7 @@ function AppViewer({ partner, onBack }: { partner: Partner; onBack: () => void }
 }
 
 export default function PartnerManagement() {
+  const isMobile = useIsMobile()
   const { data: partners = [], isLoading: loading } = usePartners()
   const invalidate = useInvalidate()
   const [modalOpen, setModalOpen] = useState(false)
@@ -215,7 +217,7 @@ export default function PartnerManagement() {
           <Button onClick={openCreate}><Plus size={14} /> 添加第一个合作方</Button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(340px, 1fr))', gap: isMobile ? 12 : 16 }}>
           {partners.map(p => (
             <div key={p.id} style={{ ...card, display: 'flex', flexDirection: 'column' }}>
               <div style={{ padding: '20px 24px', flex: 1 }}>

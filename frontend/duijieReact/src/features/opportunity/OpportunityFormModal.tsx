@@ -4,6 +4,7 @@ import Modal from '../ui/Modal'
 import Input from '../ui/Input'
 import Button from '../ui/Button'
 import { toast } from '../ui/Toast'
+import useIsMobile from '../ui/useIsMobile'
 
 const stageKeys = ['lead', 'qualify', 'proposal', 'negotiate', 'won', 'lost']
 const stageLabels: Record<string, string> = {
@@ -22,6 +23,7 @@ interface OpportunityFormModalProps {
 }
 
 export default function OpportunityFormModal({ open, onClose, editing, clients, staffMembers, onSaved }: OpportunityFormModalProps) {
+  const isMobile = useIsMobile()
   const [form, setForm] = useState(defaultForm)
   const [submitting, setSubmitting] = useState(false)
 
@@ -67,11 +69,11 @@ export default function OpportunityFormModal({ open, onClose, editing, clients, 
             {clients.map((c: any) => <option key={c.id} value={c.id}>#{c.id} {c.name}{c.company ? ` (${c.company})` : ''}</option>)}
           </select>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
           <Input label="预计金额 (¥)" type="number" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} />
           <Input label="成交概率 (%)" type="number" value={form.probability} onChange={e => setForm({ ...form, probability: e.target.value })} />
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>商机阶段</label>
             <select value={form.stage} onChange={e => setForm({ ...form, stage: e.target.value })}

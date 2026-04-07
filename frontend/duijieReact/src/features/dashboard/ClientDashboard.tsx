@@ -32,7 +32,10 @@ const contractStatusMap: Record<string, { label: string; color: string }> = {
   expired: { label: '已到期', color: 'var(--color-warning)' }, terminated: { label: '已终止', color: 'var(--color-danger)' },
 }
 
+import useIsMobile from '../ui/useIsMobile'
+
 export default function ClientDashboard({ stats, nav }: { stats: Stats; nav: (p: string) => void }) {
+  const isMobile = useIsMobile()
   const projects = stats.projects || []
   const files = stats.files || []
   const contracts = (stats as any).contracts || []
@@ -45,7 +48,7 @@ export default function ClientDashboard({ stats, nav }: { stats: Stats; nav: (p:
       </div>
 
       {/* Summary cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(200px, 1fr))', gap: isMobile ? 10 : 16, marginBottom: 24 }}>
         {[
           { label: '我的项目', value: stats.totalProjects, icon: FolderKanban, bg: 'var(--brand-light-2)', color: 'var(--brand)', path: '/projects' },
           { label: '进行中', value: stats.activeProjects, icon: TrendingUp, bg: '#fef3c7', color: 'var(--color-warning)', path: '/projects' },
@@ -64,7 +67,7 @@ export default function ClientDashboard({ stats, nav }: { stats: Stats; nav: (p:
         ))}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(360px, 1fr))', gap: isMobile ? 12 : 20 }}>
         {/* Projects with progress */}
         <div style={{ background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
