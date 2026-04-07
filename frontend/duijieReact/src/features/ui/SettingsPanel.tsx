@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { ArrowLeft, Globe, Check, Volume2 } from 'lucide-react'
+import { X, Globe, Check, Volume2, Mail, Phone, Hash } from 'lucide-react'
+import Avatar from './Avatar'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
 import useThemeStore from '../../stores/useThemeStore'
@@ -32,7 +33,7 @@ export function isSoundEnabled(key: string): boolean {
 }
 
 interface Props {
-  tab: 'account' | 'sound' | 'appearance' | 'notification'
+  tab: 'profile' | 'account' | 'sound' | 'appearance' | 'notification'
   onBack: () => void
   isMobile?: boolean
 }
@@ -90,22 +91,49 @@ export default function SettingsPanel({ tab, onBack, isMobile }: Props) {
 
   return (
     <div style={{
-      width: isMobile ? '100%' : 360, background: 'var(--bg-primary)',
-      border: isMobile ? 'none' : '1px solid var(--border-primary)',
-      borderRadius: isMobile ? 0 : '12px 0 0 12px',
-      boxShadow: isMobile ? 'none' : '0 8px 24px rgba(0,0,0,0.12)',
-      overflow: 'hidden', borderRight: 'none',
-      maxHeight: isMobile ? '100%' : 'calc(100vh - 80px)', overflowY: 'auto',
+      width: '100%', height: '100%', background: 'var(--bg-primary)',
+      overflow: 'hidden', display: 'flex', flexDirection: 'column',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', borderBottom: '1px solid var(--border-secondary)', cursor: 'pointer' }}
-        onClick={() => onBack()}>
-        <ArrowLeft size={16} style={{ color: 'var(--text-tertiary)' }} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid var(--border-secondary)' }}>
         <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)' }}>
-          {tab === 'account' ? '账号与安全' : tab === 'sound' ? '声音设置' : tab === 'appearance' ? '外观与语言' : '通知偏好'}
+          {tab === 'profile' ? '个人信息' : tab === 'account' ? '账号与安全' : tab === 'sound' ? '声音设置' : tab === 'appearance' ? '外观与语言' : '通知偏好'}
         </span>
+        <div onClick={() => onBack()} style={{ cursor: 'pointer', padding: 4, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+          <X size={16} style={{ color: 'var(--text-tertiary)' }} />
+        </div>
       </div>
 
-      <div style={{ padding: 16 }}>
+      <div style={{ padding: 16, flex: 1, overflowY: 'auto' }}>
+        {tab === 'profile' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16, background: 'var(--bg-secondary)', borderRadius: 12 }}>
+              <Avatar name={user.nickname || user.username} size={56} src={user.avatar || undefined} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-heading)', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.nickname || user.username}</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <Hash size={11} /> {user.display_id || `#${user.id}`}
+                  </div>
+                  {user.email && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <Mail size={11} /> {user.email}
+                  </div>}
+                  {user.phone && <div style={{ fontSize: 12, color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <Phone size={11} /> {user.phone}
+                  </div>}
+                </div>
+              </div>
+            </div>
+            <div style={{ borderTop: '1px solid var(--border-secondary)', paddingTop: 16 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-heading)', marginBottom: 6 }}>账号信息</div>
+              <div style={{ fontSize: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px' }}>
+                <div><span style={{ color: 'var(--text-tertiary)' }}>用户名</span><div style={{ color: 'var(--text-heading)', fontWeight: 500, marginTop: 2 }}>{user.username}</div></div>
+                <div><span style={{ color: 'var(--text-tertiary)' }}>注册时间</span><div style={{ color: 'var(--text-heading)', fontWeight: 500, marginTop: 2 }}>{user.created_at ? new Date(user.created_at).toLocaleDateString('zh-CN') : '-'}</div></div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {tab === 'account' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
@@ -119,13 +147,6 @@ export default function SettingsPanel({ tab, onBack, isMobile }: Props) {
                   style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', alignSelf: 'flex-end', opacity: pwSaving ? 0.6 : 1 }}>
                   {pwSaving ? '修改中...' : '修改密码'}
                 </button>
-              </div>
-            </div>
-            <div style={{ borderTop: '1px solid var(--border-secondary)', paddingTop: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-heading)', marginBottom: 6 }}>账号信息</div>
-              <div style={{ fontSize: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px' }}>
-                <div><span style={{ color: 'var(--text-tertiary)' }}>用户名</span><div style={{ color: 'var(--text-heading)', fontWeight: 500, marginTop: 2 }}>{user.username}</div></div>
-                <div><span style={{ color: 'var(--text-tertiary)' }}>注册时间</span><div style={{ color: 'var(--text-heading)', fontWeight: 500, marginTop: 2 }}>{user.created_at ? new Date(user.created_at).toLocaleDateString('zh-CN') : '-'}</div></div>
               </div>
             </div>
           </div>

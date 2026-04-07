@@ -20,6 +20,7 @@ exports.register = [
 ];
 
 exports.profile = [
+  body('username').optional().trim().matches(/^[a-zA-Z0-9_]{3,20}$/).withMessage('用户名只能包含英文、数字和下划线，3-20位'),
   body('nickname').optional().trim().isLength({ max: 50 }).withMessage('昵称不超过50字'),
   body('phone').optional().matches(/^\d{11}$/).withMessage('手机号格式不正确'),
   body('email').optional().isEmail().withMessage('邮箱格式不正确'),

@@ -300,21 +300,23 @@ export default function ProjectList() {
                   openTab(p.id, displayName)
                   nav(`/projects/${p.id}`)
                 }}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', position: 'relative', width: 120 }}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', position: 'relative', width: 120, transition: 'transform 0.2s ease, filter 0.2s ease' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(3px) scale(0.97)'; e.currentTarget.style.filter = 'brightness(0.88)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.filter = 'brightness(1)' }}
               >
                 <div style={{ position: 'relative', marginBottom: 8 }}>
                   {p.cover_image ? (
                     <div style={{
                       width: iconSize, height: iconSize, borderRadius: iconSize * 0.22,
                       backgroundImage: `url(${p.cover_image})`, backgroundSize: 'cover', backgroundPosition: 'center',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                      boxShadow: '0 6px 20px rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.12)',
                     }} />
                   ) : (
                     <div style={{
                       width: iconSize, height: iconSize, borderRadius: iconSize * 0.22,
-                      background: `linear-gradient(135deg, ${bgColor}99, ${bgColor}66)`,
+                      background: `linear-gradient(145deg, ${bgColor}aa, ${bgColor}55)`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                      boxShadow: '0 6px 20px rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.12)',
                     }}>
                       <Icon size={48} color="rgba(255,255,255,0.9)" />
                     </div>

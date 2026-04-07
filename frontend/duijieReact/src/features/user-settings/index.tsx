@@ -53,7 +53,7 @@ export default function UserSettings() {
 
   // Account editing
   const [editing, setEditing] = useState(false)
-  const [form, setForm] = useState({ nickname: '', email: '', phone: '' })
+  const [form, setForm] = useState({ username: '', nickname: '', email: '', phone: '' })
   const [saving, setSaving] = useState(false)
 
   // Change password
@@ -84,12 +84,17 @@ export default function UserSettings() {
   }, [tab])
 
   const startEditing = () => {
-    if (user) setForm({ nickname: user.nickname || '', email: user.email || '', phone: user.phone || '' })
+    if (user) setForm({ username: user.username || '', nickname: user.nickname || '', email: user.email || '', phone: user.phone || '' })
     setEditing(true)
   }
 
   const handleSave = async () => {
     const body: any = {}
+    if (form.username.trim() && form.username.trim() !== (user?.username || '')) {
+      const uname = form.username.trim()
+      if (!/^[a-zA-Z0-9_]{3,20}$/.test(uname)) { toast('用户名只能包含英文、数字和下划线，3-20位', 'error'); return }
+      body.username = uname
+    }
     if (form.nickname.trim() && form.nickname.trim() !== (user?.nickname || '')) body.nickname = form.nickname.trim()
     if (form.email.trim() !== (user?.email || '')) body.email = form.email.trim()
     if (form.phone.trim() !== (user?.phone || '')) body.phone = form.phone.trim()
@@ -187,6 +192,7 @@ export default function UserSettings() {
               {editing ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <SectionTitle>基本信息</SectionTitle>
+                  <Input label="用户名" placeholder="英文、数字和下划线，3-20位" value={form.username} onChange={e => setForm({ ...form, username: e.target.value.replace(/[^a-zA-Z0-9_]/g, '') })} />
                   <Input label="昵称" placeholder="输入昵称" value={form.nickname} onChange={e => setForm({ ...form, nickname: e.target.value })} />
                   <Input label="邮箱" placeholder="your@email.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
                   <Input label="手机号" placeholder="输入手机号" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />

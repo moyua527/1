@@ -74,7 +74,7 @@ export default function ProjectDetail() {
       fetchApi('/api/notifications/read-by-tab', {
         method: 'PATCH',
         body: JSON.stringify({ project_id: id, tab: t }),
-      }).then(() => invalidate('project-unread-summary'))
+      }).then(() => invalidate('project-unread-summary')).catch(() => {})
     }
   }
 
@@ -236,7 +236,7 @@ export default function ProjectDetail() {
       fetchApi('/api/notifications/read-by-tab', {
         method: 'PATCH',
         body: JSON.stringify({ project_id: id, tab }),
-      }).then(() => invalidate('project-unread-summary'))
+      }).then(() => invalidate('project-unread-summary')).catch(() => {})
     }
     const timer = window.setTimeout(() => {
       loadProject()

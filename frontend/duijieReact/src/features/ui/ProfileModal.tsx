@@ -20,7 +20,7 @@ interface Props {
 
 export default function ProfileModal({ open, onClose, user, onProfileUpdated }: Props) {
   const [editing, setEditing] = useState(false)
-  const [form, setForm] = useState({ nickname: '', email: '', phone: '', password: '', confirmPassword: '' })
+  const [form, setForm] = useState({ username: '', nickname: '', email: '', phone: '', password: '', confirmPassword: '' })
   const [saving, setSaving] = useState(false)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -64,12 +64,17 @@ export default function ProfileModal({ open, onClose, user, onProfileUpdated }: 
   }
 
   const startEditing = () => {
-    if (user) setForm({ nickname: user.nickname || '', email: user.email || '', phone: user.phone || '', password: '', confirmPassword: '' })
+    if (user) setForm({ username: user.username || '', nickname: user.nickname || '', email: user.email || '', phone: user.phone || '', password: '', confirmPassword: '' })
     setEditing(true)
   }
 
   const handleSave = async () => {
     const body: any = {}
+    if (form.username.trim() && form.username.trim() !== (user?.username || '')) {
+      const uname = form.username.trim()
+      if (!/^[a-zA-Z0-9_]{3,20}$/.test(uname)) { toast('用户名只能包含英文、数字和下划线，3-20位', 'error'); return }
+      body.username = uname
+    }
     if (form.nickname.trim() && form.nickname.trim() !== (user?.nickname || '')) body.nickname = form.nickname.trim()
     if (form.email.trim() !== (user?.email || '')) body.email = form.email.trim()
     if (form.phone.trim() !== (user?.phone || '')) body.phone = form.phone.trim()
@@ -172,6 +177,7 @@ export default function ProfileModal({ open, onClose, user, onProfileUpdated }: 
           <div>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-body)', marginBottom: 10, paddingBottom: 6, borderBottom: '1px solid var(--border-primary)' }}>基本信息</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <Input label="用户名" placeholder="英文、数字和下划线，3-20位" value={form.username} onChange={e => setForm({ ...form, username: e.target.value.replace(/[^a-zA-Z0-9_]/g, '') })} />
               <Input label="昵称" placeholder="输入昵称" value={form.nickname} onChange={e => setForm({ ...form, nickname: e.target.value })} />
               <Input label="邮箱" placeholder="your@email.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
               <Input label="手机号" placeholder="输入手机号" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />

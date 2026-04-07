@@ -431,47 +431,43 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <div style={{ ...section, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, marginBottom: 0, overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>需求列表</h3>
-          {canEdit && <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button onClick={() => setShowCreateTask(true)} style={{
-              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8,
-              background: 'var(--brand)', color: 'var(--bg-primary)', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500,
-            }}><Plus size={14} /> 添加</button>
-            <button onClick={() => setShowDrafts(true)} style={{
-              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, position: 'relative',
-              background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)', cursor: 'pointer', fontSize: 13, fontWeight: 500,
-            }}><Archive size={14} /> 草稿{drafts.length > 0 && <span style={{ position: 'absolute', top: -4, right: -4, width: 16, height: 16, borderRadius: '50%', background: 'var(--brand)', color: '#fff', fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{drafts.length}</span>}</button>
-            <div ref={dropdownRef} style={{ position: 'relative' }}>
-              <button onClick={() => setDropdownOpen(!dropdownOpen)} style={{
-                display: 'flex', alignItems: 'center', padding: '8px 10px', borderRadius: 8,
-                background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)', cursor: 'pointer',
-              }}><ChevronDown size={16} /></button>
-              {dropdownOpen && (
-                <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'var(--bg-primary)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid var(--border-primary)', minWidth: 120, zIndex: 10, overflow: 'hidden' }}>
-                  <button onClick={() => { setDropdownOpen(false); setDeleteSelected(new Set()); setShowDeleteTask(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--color-danger)' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-                    <Trash2 size={14} /> 删除
-                  </button>
-                  <button onClick={() => { setDropdownOpen(false); setShowTrash(true); loadTrash() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-secondary)' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-tertiary)')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
-                    🗑️ 回收站
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>}
-        </div>
-
-        {/* 状态筛选 */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
-          {[{ key: '', label: '全部' }, ...ALL_STATUSES.map(s => ({ key: s, label: taskStatusMap[s].label }))].map(f => (
-            <button key={f.key} onClick={() => setStatusFilter(f.key)}
-              style={{ padding: '5px 14px', borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500,
-                background: statusFilter === f.key ? 'var(--brand)' : 'var(--bg-tertiary)',
-                color: statusFilter === f.key ? '#fff' : 'var(--text-secondary)',
-              }}>{f.label}{f.key === '' ? ` (${tasks.length})` : ` (${tasks.filter(t => t.status === f.key).length})`}</button>
-          ))}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+              style={{ padding: '7px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: statusFilter ? 'var(--text-heading)' : 'var(--text-tertiary)', cursor: 'pointer' }}>
+              <option value="">全部状态 ({tasks.length})</option>
+              {ALL_STATUSES.map(s => <option key={s} value={s}>{taskStatusMap[s].label} ({tasks.filter(t => t.status === s).length})</option>)}
+            </select>
+            {canEdit && <>
+              <button onClick={() => setShowCreateTask(true)} style={{
+                display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8,
+                background: 'var(--brand)', color: 'var(--bg-primary)', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500,
+              }}><Plus size={14} /> 添加</button>
+              <button onClick={() => setShowDrafts(true)} style={{
+                display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, position: 'relative',
+                background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)', cursor: 'pointer', fontSize: 13, fontWeight: 500,
+              }}><Archive size={14} /> 草稿{drafts.length > 0 && <span style={{ position: 'absolute', top: -4, right: -4, width: 16, height: 16, borderRadius: '50%', background: 'var(--brand)', color: '#fff', fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{drafts.length}</span>}</button>
+              <div ref={dropdownRef} style={{ position: 'relative' }}>
+                <button onClick={() => setDropdownOpen(!dropdownOpen)} style={{
+                  display: 'flex', alignItems: 'center', padding: '8px 10px', borderRadius: 8,
+                  background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)', cursor: 'pointer',
+                }}><ChevronDown size={16} /></button>
+                {dropdownOpen && (
+                  <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'var(--bg-primary)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid var(--border-primary)', minWidth: 120, zIndex: 10, overflow: 'hidden' }}>
+                    <button onClick={() => { setDropdownOpen(false); setDeleteSelected(new Set()); setShowDeleteTask(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--color-danger)' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                      <Trash2 size={14} /> 删除
+                    </button>
+                    <button onClick={() => { setDropdownOpen(false); setShowTrash(true); loadTrash() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-secondary)' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-tertiary)')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                      🗑️ 回收站
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>}
+          </div>
         </div>
 
         {/* 工作流说明 */}

@@ -5,9 +5,16 @@ const cache = require('../../utils/memoryCache');
 module.exports = async (req, res) => {
   try {
     const userId = req.userId;
-    const { nickname, email, phone } = req.body;
+    const { nickname, email, phone, username } = req.body;
     const fields = [];
     const values = [];
+    if (username !== undefined) {
+      const uname = username.trim();
+      if (!/^[a-zA-Z0-9_]{3,20}$/.test(uname)) return res.status(400).json({ success: false, message: '用户名只能包含英文、数字和下划线，3-20位' });
+      const [dup] = await db.query('SELECT id FROM voice_users WHERE username = ? AND id != ? AND is_deleted = 0', [uname, userId]);
+      if (dup.length > 0) return res.status(400).json({ success: false, message: '该用户名已被占用' });
+      fields.push('username = ?'); values.push(uname);
+    }
     if (nickname !== undefined) { fields.push('nickname = ?'); values.push(nickname); }
     if (email !== undefined) { fields.push('email = ?'); values.push(email || null); }
     if (phone !== undefined) { fields.push('phone = ?'); values.push(phone || null); }

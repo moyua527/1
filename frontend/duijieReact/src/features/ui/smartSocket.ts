@@ -14,21 +14,35 @@ let currentUserId: number | null = null
 const listeners: Map<string, Set<Listener>> = new Map()
 const joinedProjects = new Set<string>()
 
+function resolveSocketUrl() {
+  if (isCapacitor) return SERVER_URL
+
+  const configuredUrl = (BACKEND_URL || '').trim()
+  if (!configuredUrl) return undefined
+
+  try {
+    return new URL(configuredUrl, window.location.origin).origin
+  } catch {
+    return undefined
+  }
+}
+
 function getSocket(): Socket {
   if (socket) return socket
 
-  const socketOrigin = isCapacitor
-    ? SERVER_URL
-    : (BACKEND_URL || window.location.origin)
-
-  socket = io(socketOrigin, {
-    path: '/socket.io',
+  const socketUrl = resolveSocketUrl()
+  const socketOptions = {
+    path: '/socket.io/',
     withCredentials: true,
     reconnection: true,
     reconnectionAttempts: Infinity,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 30000,
-  })
+  }
+
+  socket = socketUrl
+    ? io(socketUrl, socketOptions)
+    : io(undefined, socketOptions)
 
   socket.on('connect', () => {
     const token = getToken()

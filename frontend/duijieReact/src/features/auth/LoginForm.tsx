@@ -97,7 +97,7 @@ export default function LoginForm({ onLogin, onSwitchToForgot }: LoginFormProps)
       {loginMode === 'password' && (
         <form onSubmit={handlePasswordLogin}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <Input label="账号" placeholder="输入用户名" value={username} onChange={e => setUsername(e.target.value)} />
+            <Input label="账号" placeholder="用户名 / 手机号 / ID" value={username} onChange={e => setUsername(e.target.value)} />
             <Input label="密码" type="password" placeholder="输入密码" value={password} onChange={e => setPassword(e.target.value)} />
             <div style={{ textAlign: 'right', marginTop: -8 }}>
               <span onClick={onSwitchToForgot} style={{ fontSize: 12, color: 'var(--brand)', cursor: 'pointer' }}>忘记密码？</span>

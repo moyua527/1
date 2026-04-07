@@ -78,22 +78,31 @@ async function parseApiResponse(res: Response) {
 export async function fetchApi(path: string, options?: RequestInit) {
   const { headers: extraHeaders, ...restOpts } = options || {}
   const mergedHeaders = { 'Content-Type': 'application/json', ...authHeaders(), ...(extraHeaders as Record<string, string>) }
-  const res = await fetch(`${BACKEND_URL}${path}`, {
-    credentials: 'include',
-    ...restOpts,
-    headers: mergedHeaders,
-  })
+  let res: Response
+  try {
+    res = await fetch(`${BACKEND_URL}${path}`, {
+      credentials: 'include',
+      ...restOpts,
+      headers: mergedHeaders,
+    })
+  } catch {
+    return { success: false, message: '网络连接失败，请检查网络后重试', status: 0 }
+  }
   // 401 时自动尝试刷新 token 并重试一次
   if (res.status === 401 && !path.includes('/auth/refresh') && !path.includes('/auth/login')) {
     const refreshed = await tryRefreshToken()
     if (refreshed) {
       const retryHeaders = { 'Content-Type': 'application/json', ...authHeaders(), ...(extraHeaders as Record<string, string>) }
-      const retryRes = await fetch(`${BACKEND_URL}${path}`, {
-        credentials: 'include',
-        ...restOpts,
-        headers: retryHeaders,
-      })
-      return parseApiResponse(retryRes)
+      try {
+        const retryRes = await fetch(`${BACKEND_URL}${path}`, {
+          credentials: 'include',
+          ...restOpts,
+          headers: retryHeaders,
+        })
+        return parseApiResponse(retryRes)
+      } catch {
+        return { success: false, message: '网络连接失败，请检查网络后重试', status: 0 }
+      }
     }
     // refresh 也失败，清除 token 并跳转登录页
     clearToken()

@@ -45,7 +45,10 @@ const useEnterpriseStore = create<EnterpriseState>((set, get) => ({
   activeEnterpriseId: null,
 
   setHasEnterprise: (v) => set({ hasEnterprise: v }),
-  setHasProjects: (v) => set({ hasProjects: v }),
+  setHasProjects: (v) => {
+    set({ hasProjects: v })
+    if (v) localStorage.setItem('onboarding_done', '1')
+  },
 
   init: async (role) => {
     if (role === 'admin') {
@@ -72,12 +75,17 @@ const useEnterpriseStore = create<EnterpriseState>((set, get) => ({
         })
       } else if (r.success) {
         set({ hasEnterprise: false, enterprisePerms: {}, myEnterprises: [], activeEnterpriseId: null })
-        try {
-          const pr = await fetchApi('/api/projects')
-          const hasPrj = pr.success && Array.isArray(pr.data) && pr.data.length > 0
-          set({ hasProjects: hasPrj })
-        } catch {
-          set({ hasProjects: false })
+        if (localStorage.getItem('onboarding_done') === '1') {
+          set({ hasProjects: true })
+        } else {
+          try {
+            const pr = await fetchApi('/api/projects')
+            const hasPrj = pr.success && Array.isArray(pr.data) && pr.data.length > 0
+            set({ hasProjects: hasPrj })
+            if (hasPrj) localStorage.setItem('onboarding_done', '1')
+          } catch {
+            set({ hasProjects: false })
+          }
         }
       }
     } catch {}
@@ -113,13 +121,16 @@ const useEnterpriseStore = create<EnterpriseState>((set, get) => ({
     } catch {}
   },
 
-  reset: () => set({
-    hasEnterprise: true,
-    hasProjects: true,
-    enterprisePerms: {},
-    myEnterprises: [],
-    activeEnterpriseId: null,
-  }),
+  reset: () => {
+    localStorage.removeItem('onboarding_done')
+    set({
+      hasEnterprise: true,
+      hasProjects: true,
+      enterprisePerms: {},
+      myEnterprises: [],
+      activeEnterpriseId: null,
+    })
+  },
 }))
 
 export default useEnterpriseStore
