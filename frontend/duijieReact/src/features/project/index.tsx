@@ -222,7 +222,7 @@ export default function ProjectList() {
           subtitle={projects.length === 0 ? '点击右上角新建项目' : '调整筛选条件试试'}
           action={projects.length === 0 && canCreate ? { label: '新建项目', onClick: () => setShowCreate(true) } : undefined} />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 12 : 24, justifyItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 12 : 24, justifyItems: 'center', alignItems: 'start' }}>
           {filtered.map((p: any) => {
             const displayName = p.my_nickname || p.name
             const Icon = getProjectIcon(p.icon)
@@ -234,11 +234,11 @@ export default function ProjectList() {
                   openTab(p.id, displayName)
                   nav(`/projects/${p.id}`)
                 }}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', position: 'relative', width: '100%', maxWidth: 140, transition: 'transform 0.2s ease, filter 0.2s ease' }}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', position: 'relative', width: '100%', maxWidth: isMobile ? undefined : 140, transition: 'transform 0.2s ease, filter 0.2s ease' }}
                 onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(3px) scale(0.97)'; e.currentTarget.style.filter = 'brightness(0.88)' }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.filter = 'brightness(1)' }}
               >
-                <div style={{ position: 'relative', marginBottom: 6, width: '100%', aspectRatio: '1', maxWidth: 120 }}>
+                <div style={{ position: 'relative', marginBottom: 6, width: isMobile ? '80%' : '100%', aspectRatio: '1', maxWidth: isMobile ? undefined : 120, margin: '0 auto 6px' }}>
                   {p.cover_image ? (
                     <div style={{
                       width: '100%', height: '100%', borderRadius: '22%',
