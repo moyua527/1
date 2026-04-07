@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Download } from 'lucide-react'
-import { isCapacitor, APP_VERSION, SERVER_URL } from '../../utils/capacitor'
+import { isCapacitor, SERVER_URL } from '../../utils/capacitor'
 
 function compareVersions(a: string, b: string): number {
   const pa = a.split('.').map(Number)
@@ -10,6 +10,16 @@ function compareVersions(a: string, b: string): number {
     if ((pa[i] || 0) > (pb[i] || 0)) return 1
   }
   return 0
+}
+
+async function getNativeVersion(): Promise<string> {
+  try {
+    const { App } = await import('@capacitor/app')
+    const info = await App.getInfo()
+    return info.version
+  } catch {
+    return '0.0.0'
+  }
 }
 
 interface VersionInfo {
@@ -23,35 +33,42 @@ interface VersionInfo {
 
 export default function AppUpdateChecker() {
   const [info, setInfo] = useState<VersionInfo | null>(null)
+  const [nativeVer, setNativeVer] = useState('')
   const [dismissed, setDismissed] = useState(false)
 
   useEffect(() => {
     if (!isCapacitor) return
-    if (sessionStorage.getItem(`update_skip_${APP_VERSION}`)) return
 
-    const apiUrl = `${SERVER_URL}/api/app/version`
-    fetch(apiUrl)
-      .then(r => r.json())
-      .then(res => {
-        if (!res.success || !res.data) return
-        const remote = res.data as VersionInfo
-        if (compareVersions(APP_VERSION, remote.version) < 0) {
-          setInfo(remote)
-        }
-      })
-      .catch(() => {})
+    let cancelled = false
+    ;(async () => {
+      const localVer = await getNativeVersion()
+      if (cancelled) return
+      setNativeVer(localVer)
+
+      if (sessionStorage.getItem(`update_skip_${localVer}`)) return
+
+      const apiUrl = `${SERVER_URL}/api/app/version`
+      const res = await fetch(apiUrl).then(r => r.json()).catch(() => null)
+      if (cancelled || !res?.success || !res.data) return
+
+      const remote = res.data as VersionInfo
+      if (compareVersions(localVer, remote.version) < 0) {
+        setInfo(remote)
+      }
+    })()
+    return () => { cancelled = true }
   }, [])
 
   if (!info || dismissed) return null
 
-  const isForce = info.forceUpdate || compareVersions(APP_VERSION, info.minVersion) < 0
+  const isForce = info.forceUpdate || compareVersions(nativeVer, info.minVersion) < 0
 
   const handleDownload = () => {
     window.open(info.downloadUrl, '_system')
   }
 
   const handleDismiss = () => {
-    sessionStorage.setItem(`update_skip_${APP_VERSION}`, '1')
+    sessionStorage.setItem(`update_skip_${nativeVer}`, '1')
     setDismissed(true)
   }
 
@@ -71,7 +88,7 @@ export default function AppUpdateChecker() {
           <Download size={36} style={{ marginBottom: 8 }} />
           <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>发现新版本</h3>
           <p style={{ margin: '6px 0 0', fontSize: 14, opacity: 0.9 }}>
-            v{APP_VERSION} → v{info.version}
+            v{nativeVer} → v{info.version}
           </p>
         </div>
 
