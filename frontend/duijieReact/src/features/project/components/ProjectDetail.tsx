@@ -279,43 +279,46 @@ export default function ProjectDetail() {
     }
   })
 
-  const reorderRef = useRef<{ id: number; startX: number; moved: boolean } | null>(null)
+  const reorderRef = useRef<{ id: number; startX: number; moved: boolean; pointerId: number } | null>(null)
   const [slidingId, setSlidingId] = useState<number | null>(null)
+  const projectTabsRef = useRef(projectTabs)
+  projectTabsRef.current = projectTabs
 
-  const onTabPointerDown = useCallback((e: React.PointerEvent, tabId: number) => {
-    if ((e.target as HTMLElement).closest('button')) return
-    reorderRef.current = { id: tabId, startX: e.clientX, moved: false }
+  const onContainerPointerDown = useCallback((e: React.PointerEvent) => {
+    const tabEl = (e.target as HTMLElement).closest('[data-tab-id]') as HTMLElement | null
+    if (!tabEl || (e.target as HTMLElement).closest('button')) return
+    const tabId = Number(tabEl.dataset.tabId)
+    reorderRef.current = { id: tabId, startX: e.clientX, moved: false, pointerId: e.pointerId }
     ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
   }, [])
 
-  const onTabPointerMove = useCallback((e: React.PointerEvent) => {
+  const onContainerPointerMove = useCallback((e: React.PointerEvent) => {
     const r = reorderRef.current
     if (!r) return
     const dx = e.clientX - r.startX
     if (Math.abs(dx) > 8) r.moved = true
     if (!r.moved) return
     setSlidingId(r.id)
-    const container = (e.currentTarget as HTMLElement).parentElement
-    if (!container) return
-    const els = Array.from(container.children) as HTMLElement[]
-    const idx = els.indexOf(e.currentTarget as HTMLElement)
+    const tabs = projectTabsRef.current
+    const idx = tabs.findIndex(t => t.id === r.id)
     if (idx < 0) return
-    const w = (e.currentTarget as HTMLElement).offsetWidth
-    if (dx > w * 0.5 && idx < projectTabs.length - 1) {
-      reorderTabs(r.id, projectTabs[idx + 1].id)
+    const container = e.currentTarget as HTMLElement
+    const els = Array.from(container.querySelectorAll('[data-tab-id]')) as HTMLElement[]
+    const curEl = els[idx]
+    if (!curEl) return
+    const w = curEl.offsetWidth
+    if (dx > w * 0.5 && idx < tabs.length - 1) {
+      reorderTabs(r.id, tabs[idx + 1].id)
       r.startX = e.clientX
     } else if (dx < -w * 0.5 && idx > 0) {
-      reorderTabs(r.id, projectTabs[idx - 1].id)
+      reorderTabs(r.id, tabs[idx - 1].id)
       r.startX = e.clientX
     }
-  }, [projectTabs, reorderTabs])
+  }, [reorderTabs])
 
-  const onTabPointerUp = useCallback((e: React.PointerEvent) => {
-    const r = reorderRef.current
-    const wasMoved = r?.moved
+  const onContainerPointerUp = useCallback(() => {
     reorderRef.current = null
     setSlidingId(null)
-    if (wasMoved) e.preventDefault()
   }, [])
 
   useEffect(() => {
@@ -368,15 +371,13 @@ export default function ProjectDetail() {
             首页
           </div>
           <div style={{ width: 1, background: 'rgba(59,130,246,0.15)', margin: '8px 2px', flexShrink: 0 }} />
-          <div ref={tabScrollRef} style={{ flex: 1, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', gap: 0, WebkitOverflowScrolling: 'touch' } as any}>
+          <div ref={tabScrollRef} onPointerDown={onContainerPointerDown} onPointerMove={onContainerPointerMove} onPointerUp={onContainerPointerUp} style={{ flex: 1, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', gap: 0, WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as any}>
             {projectTabs.map(pt => {
               const isActive = String(pt.id) === String(id)
               return (
-                <div key={pt.id}
-                  onPointerDown={e => onTabPointerDown(e, pt.id)}
-                  onPointerMove={onTabPointerMove}
-                  onPointerUp={e => { const wasDrag = reorderRef.current?.moved; onTabPointerUp(e); if (!wasDrag && !isActive) nav(`/projects/${pt.id}`) }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 14, fontWeight: isActive ? 600 : 400, flexShrink: 0, transition: slidingId === pt.id ? 'none' : 'all 0.15s', touchAction: 'pan-y',
+                <div key={pt.id} data-tab-id={pt.id}
+                  onClick={() => { if (!reorderRef.current?.moved && !isActive) nav(`/projects/${pt.id}`) }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 14, fontWeight: isActive ? 600 : 400, flexShrink: 0, transition: slidingId === pt.id ? 'none' : 'all 0.15s',
                     background: isActive ? 'rgba(59,130,246,0.12)' : 'transparent', color: isActive ? 'var(--brand)' : 'var(--text-secondary)',
                     borderRadius: isActive ? '10px 10px 0 0' : '6px 6px 0 0',
                     boxShadow: slidingId === pt.id ? '0 2px 12px rgba(0,0,0,0.15)' : isActive ? '0 -2px 8px rgba(59,130,246,0.15), 0 -1px 3px rgba(0,0,0,0.06)' : 'none',
