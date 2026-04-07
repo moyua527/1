@@ -220,7 +220,7 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     <script>
-      if ('serviceWorker' in navigator && !(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform())) {
+      if ('serviceWorker' in navigator) {
         var refreshing = false;
         navigator.serviceWorker.addEventListener('controllerchange', function() {
           if (!refreshing) { refreshing = true; window.location.reload(); }

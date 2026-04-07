@@ -27,6 +27,8 @@ public class MainActivity extends BridgeActivity {
             settings.setDisplayZoomControls(false);
             settings.setUseWideViewPort(true);
             settings.setLoadWithOverviewMode(true);
+            settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+            webView.clearCache(true);
             webView.setOverScrollMode(WebView.OVER_SCROLL_ALWAYS);
             webView.setVerticalScrollBarEnabled(true);
             webView.setHorizontalScrollBarEnabled(false);
