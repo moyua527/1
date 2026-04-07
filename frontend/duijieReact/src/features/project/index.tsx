@@ -137,7 +137,9 @@ export default function ProjectList() {
       {projectTabs.length > 0 && (
         <div style={{ display: 'flex', gap: 0, marginBottom: 0, alignItems: 'stretch', background: 'linear-gradient(180deg, rgba(59,130,246,0.10) 0%, rgba(59,130,246,0.04) 100%)', borderRadius: '10px 10px 0 0', padding: '0 4px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 600, flexShrink: 0,
-            background: 'var(--brand)', color: '#fff', borderRadius: '8px 8px 0 0' }}>
+            background: 'rgba(59,130,246,0.12)', color: 'var(--brand)', borderRadius: '10px 10px 0 0',
+            boxShadow: '0 -2px 8px rgba(59,130,246,0.15), 0 -1px 3px rgba(0,0,0,0.06)',
+            borderBottom: '2px solid var(--brand)' }}>
             首页
           </div>
           <div style={{ width: 1, background: 'rgba(59,130,246,0.15)', margin: '8px 2px', flexShrink: 0 }} />
