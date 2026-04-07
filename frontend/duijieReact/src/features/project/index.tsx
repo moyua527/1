@@ -65,6 +65,7 @@ export default function ProjectList() {
   })
 
   const reorderRef = useRef<{ id: number; startX: number; moved: boolean; pointerId: number } | null>(null)
+  const dragOffsetRef = useRef(0)
   const [slidingId, setSlidingId] = useState<number | null>(null)
   const projectTabsRef = useRef(projectTabs)
   projectTabsRef.current = projectTabs
@@ -74,6 +75,7 @@ export default function ProjectList() {
     if (!tabEl || (e.target as HTMLElement).closest('button')) return
     const tabId = Number(tabEl.dataset.tabId)
     reorderRef.current = { id: tabId, startX: e.clientX, moved: false, pointerId: e.pointerId }
+    dragOffsetRef.current = 0
     ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
   }, [])
 
@@ -84,24 +86,35 @@ export default function ProjectList() {
     if (Math.abs(dx) > 8) r.moved = true
     if (!r.moved) return
     setSlidingId(r.id)
+    dragOffsetRef.current = dx
+    const container = e.currentTarget as HTMLElement
+    const dragEl = container.querySelector(`[data-tab-id="${r.id}"]`) as HTMLElement | null
+    if (dragEl) {
+      dragEl.style.transition = 'none'
+      dragEl.style.transform = `translateX(${dx}px) scale(1.05)`
+      dragEl.style.zIndex = '10'
+    }
     const tabs = projectTabsRef.current
     const idx = tabs.findIndex(t => t.id === r.id)
     if (idx < 0) return
-    const container = e.currentTarget as HTMLElement
     const els = Array.from(container.querySelectorAll('[data-tab-id]')) as HTMLElement[]
     const curEl = els[idx]
     if (!curEl) return
     const w = curEl.offsetWidth
     if (dx > w * 0.5 && idx < tabs.length - 1) {
       reorderTabs(r.id, tabs[idx + 1].id)
-      r.startX = e.clientX
+      r.startX += w
+      dragOffsetRef.current = e.clientX - r.startX
     } else if (dx < -w * 0.5 && idx > 0) {
       reorderTabs(r.id, tabs[idx - 1].id)
-      r.startX = e.clientX
+      r.startX -= w
+      dragOffsetRef.current = e.clientX - r.startX
     }
   }, [reorderTabs])
 
   const onContainerPointerUp = useCallback(() => {
+    if (!reorderRef.current) return
+    dragOffsetRef.current = 0
     reorderRef.current = null
     setSlidingId(null)
   }, [])
@@ -195,15 +208,18 @@ export default function ProjectList() {
             首页
           </div>
           <div style={{ width: 1, background: 'rgba(59,130,246,0.15)', margin: '8px 2px', flexShrink: 0 }} />
-          <div ref={homeTabScrollRef} onPointerDown={onContainerPointerDown} onPointerMove={onContainerPointerMove} onPointerUp={onContainerPointerUp} style={{ flex: 1, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', gap: 0, WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as any}>
+          <div ref={homeTabScrollRef} onPointerDown={onContainerPointerDown} onPointerMove={onContainerPointerMove} onPointerUp={onContainerPointerUp} onPointerCancel={onContainerPointerUp} style={{ flex: 1, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', gap: 0, WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as any}>
             {projectTabs.map(pt => {
               return (
                 <div key={pt.id} data-tab-id={pt.id}
                   onClick={() => { if (!reorderRef.current?.moved) nav(`/projects/${pt.id}`) }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 400, flexShrink: 0, transition: slidingId === pt.id ? 'none' : 'all 0.15s',
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 400, flexShrink: 0,
+                    transition: slidingId === pt.id ? 'none' : 'all 0.2s ease',
+                    transform: slidingId === pt.id ? `translateX(${dragOffsetRef.current}px) scale(1.05)` : 'none',
+                    zIndex: slidingId === pt.id ? 10 : 'auto',
                     background: 'transparent', color: 'var(--text-secondary)',
-                    boxShadow: slidingId === pt.id ? '0 2px 12px rgba(0,0,0,0.15)' : 'none',
-                    opacity: slidingId === pt.id ? 0.8 : 1, userSelect: 'none' } as any}>
+                    boxShadow: slidingId === pt.id ? '0 4px 16px rgba(0,0,0,0.2)' : 'none',
+                    userSelect: 'none' } as any}>
                   <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{pt.name}</span>
                   <button
                     onClick={async e => { e.stopPropagation(); if (!(await confirm({ message: `关闭「${pt.name}」标签页？` }))) return; closeTab(pt.id) }}
