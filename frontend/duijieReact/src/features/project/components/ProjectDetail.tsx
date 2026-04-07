@@ -256,7 +256,7 @@ export default function ProjectDetail() {
     }
   }, [project, user])
 
-  const { tabs: projectTabs, openTab, closeTab, updateTabName } = useProjectTabStore()
+  const { tabs: projectTabs, openTab, closeTab, updateTabName, reorderTabs } = useProjectTabStore()
 
   const tabScrollRef = useRef<HTMLDivElement>(null)
   const subTabScrollRef = useRef<HTMLDivElement>(null)
@@ -278,6 +278,45 @@ export default function ProjectDetail() {
       b?.removeEventListener('wheel', handler)
     }
   })
+
+  const reorderRef = useRef<{ id: number; startX: number; moved: boolean } | null>(null)
+  const [slidingId, setSlidingId] = useState<number | null>(null)
+
+  const onTabPointerDown = useCallback((e: React.PointerEvent, tabId: number) => {
+    if ((e.target as HTMLElement).closest('button')) return
+    reorderRef.current = { id: tabId, startX: e.clientX, moved: false }
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+  }, [])
+
+  const onTabPointerMove = useCallback((e: React.PointerEvent) => {
+    const r = reorderRef.current
+    if (!r) return
+    const dx = e.clientX - r.startX
+    if (Math.abs(dx) > 8) r.moved = true
+    if (!r.moved) return
+    setSlidingId(r.id)
+    const container = (e.currentTarget as HTMLElement).parentElement
+    if (!container) return
+    const els = Array.from(container.children) as HTMLElement[]
+    const idx = els.indexOf(e.currentTarget as HTMLElement)
+    if (idx < 0) return
+    const w = (e.currentTarget as HTMLElement).offsetWidth
+    if (dx > w * 0.5 && idx < projectTabs.length - 1) {
+      reorderTabs(r.id, projectTabs[idx + 1].id)
+      r.startX = e.clientX
+    } else if (dx < -w * 0.5 && idx > 0) {
+      reorderTabs(r.id, projectTabs[idx - 1].id)
+      r.startX = e.clientX
+    }
+  }, [projectTabs, reorderTabs])
+
+  const onTabPointerUp = useCallback((e: React.PointerEvent) => {
+    const r = reorderRef.current
+    const wasMoved = r?.moved
+    reorderRef.current = null
+    setSlidingId(null)
+    if (wasMoved) e.preventDefault()
+  }, [])
 
   useEffect(() => {
     if (project && id) {
@@ -334,12 +373,15 @@ export default function ProjectDetail() {
               const isActive = String(pt.id) === String(id)
               return (
                 <div key={pt.id}
-                  onClick={() => { if (!isActive) nav(`/projects/${pt.id}`) }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 14, fontWeight: isActive ? 600 : 400, flexShrink: 0, transition: 'all 0.15s',
+                  onPointerDown={e => onTabPointerDown(e, pt.id)}
+                  onPointerMove={onTabPointerMove}
+                  onPointerUp={e => { const wasDrag = reorderRef.current?.moved; onTabPointerUp(e); if (!wasDrag && !isActive) nav(`/projects/${pt.id}`) }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 14, fontWeight: isActive ? 600 : 400, flexShrink: 0, transition: slidingId === pt.id ? 'none' : 'all 0.15s', touchAction: 'pan-y',
                     background: isActive ? 'rgba(59,130,246,0.12)' : 'transparent', color: isActive ? 'var(--brand)' : 'var(--text-secondary)',
                     borderRadius: isActive ? '10px 10px 0 0' : '6px 6px 0 0',
-                    boxShadow: isActive ? '0 -2px 8px rgba(59,130,246,0.15), 0 -1px 3px rgba(0,0,0,0.06)' : 'none',
-                    borderBottom: isActive ? '2px solid var(--brand)' : '2px solid transparent' }}>
+                    boxShadow: slidingId === pt.id ? '0 2px 12px rgba(0,0,0,0.15)' : isActive ? '0 -2px 8px rgba(59,130,246,0.15), 0 -1px 3px rgba(0,0,0,0.06)' : 'none',
+                    borderBottom: isActive ? '2px solid var(--brand)' : '2px solid transparent',
+                    opacity: slidingId === pt.id ? 0.8 : 1, userSelect: 'none' } as any}>
                   <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{pt.name}</span>
                   <button
                     onClick={async e => { e.stopPropagation(); if (!(await confirm({ message: `关闭「${pt.name}」标签页？` }))) return; const nextId = closeTab(pt.id); if (isActive) { if (nextId) nav(`/projects/${nextId}`); else nav('/projects') } }}

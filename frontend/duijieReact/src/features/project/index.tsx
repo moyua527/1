@@ -48,6 +48,7 @@ export default function ProjectList() {
   const openTab = useProjectTabStore(s => s.openTab)
   const projectTabs = useProjectTabStore(s => s.tabs)
   const closeTab = useProjectTabStore(s => s.closeTab)
+  const reorderTabs = useProjectTabStore(s => s.reorderTabs)
   const homeTabScrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -62,6 +63,42 @@ export default function ProjectList() {
     el?.addEventListener('wheel', handler, { passive: false })
     return () => el?.removeEventListener('wheel', handler)
   })
+
+  const reorderRef = useRef<{ id: number; startX: number; moved: boolean } | null>(null)
+  const [slidingId, setSlidingId] = useState<number | null>(null)
+
+  const onTabPointerDown = useCallback((e: React.PointerEvent, tabId: number) => {
+    if ((e.target as HTMLElement).closest('button')) return
+    reorderRef.current = { id: tabId, startX: e.clientX, moved: false }
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+  }, [])
+
+  const onTabPointerMove = useCallback((e: React.PointerEvent) => {
+    const r = reorderRef.current
+    if (!r) return
+    const dx = e.clientX - r.startX
+    if (Math.abs(dx) > 8) r.moved = true
+    if (!r.moved) return
+    setSlidingId(r.id)
+    const container = (e.currentTarget as HTMLElement).parentElement
+    if (!container) return
+    const els = Array.from(container.children) as HTMLElement[]
+    const idx = els.indexOf(e.currentTarget as HTMLElement)
+    if (idx < 0) return
+    const w = (e.currentTarget as HTMLElement).offsetWidth
+    if (dx > w * 0.5 && idx < projectTabs.length - 1) {
+      reorderTabs(r.id, projectTabs[idx + 1].id)
+      r.startX = e.clientX
+    } else if (dx < -w * 0.5 && idx > 0) {
+      reorderTabs(r.id, projectTabs[idx - 1].id)
+      r.startX = e.clientX
+    }
+  }, [projectTabs, reorderTabs])
+
+  const onTabPointerUp = useCallback(() => {
+    reorderRef.current = null
+    setSlidingId(null)
+  }, [])
 
   const { data: unreadSummary = {} } = useProjectUnreadSummary()
   const [dismissedSet, setDismissedSet] = useState<Set<number>>(new Set())
@@ -156,9 +193,13 @@ export default function ProjectList() {
             {projectTabs.map(pt => {
               return (
                 <div key={pt.id}
-                  onClick={() => nav(`/projects/${pt.id}`)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 400, flexShrink: 0, transition: 'all 0.15s',
-                    background: 'transparent', color: 'var(--text-secondary)' }}>
+                  onPointerDown={e => onTabPointerDown(e, pt.id)}
+                  onPointerMove={onTabPointerMove}
+                  onPointerUp={e => { const wasDrag = reorderRef.current?.moved; onTabPointerUp(); if (!wasDrag) nav(`/projects/${pt.id}`) }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 400, flexShrink: 0, transition: slidingId === pt.id ? 'none' : 'all 0.15s', touchAction: 'pan-y',
+                    background: 'transparent', color: 'var(--text-secondary)',
+                    boxShadow: slidingId === pt.id ? '0 2px 12px rgba(0,0,0,0.15)' : 'none',
+                    opacity: slidingId === pt.id ? 0.8 : 1, userSelect: 'none' } as any}>
                   <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{pt.name}</span>
                   <button
                     onClick={async e => { e.stopPropagation(); if (!(await confirm({ message: `关闭「${pt.name}」标签页？` }))) return; closeTab(pt.id) }}
