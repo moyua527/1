@@ -281,6 +281,7 @@ export default function ProjectDetail() {
 
   const reorderRef = useRef<{ id: number; startX: number; moved: boolean; pointerId: number } | null>(null)
   const dragOffsetRef = useRef(0)
+  const justDraggedRef = useRef(false)
   const [slidingId, setSlidingId] = useState<number | null>(null)
   const projectTabsRef = useRef(projectTabs)
   projectTabsRef.current = projectTabs
@@ -291,14 +292,16 @@ export default function ProjectDetail() {
     const tabId = Number(tabEl.dataset.tabId)
     reorderRef.current = { id: tabId, startX: e.clientX, moved: false, pointerId: e.pointerId }
     dragOffsetRef.current = 0
-    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
   }, [])
 
   const onContainerPointerMove = useCallback((e: React.PointerEvent) => {
     const r = reorderRef.current
     if (!r) return
     const dx = e.clientX - r.startX
-    if (Math.abs(dx) > 8) r.moved = true
+    if (!r.moved && Math.abs(dx) > 8) {
+      r.moved = true
+      try { (e.currentTarget as HTMLElement).setPointerCapture(r.pointerId) } catch {}
+    }
     if (!r.moved) return
     setSlidingId(r.id)
     dragOffsetRef.current = dx
@@ -328,7 +331,12 @@ export default function ProjectDetail() {
   }, [reorderTabs])
 
   const onContainerPointerUp = useCallback(() => {
-    if (!reorderRef.current) return
+    const r = reorderRef.current
+    if (!r) return
+    if (r.moved) {
+      justDraggedRef.current = true
+      setTimeout(() => { justDraggedRef.current = false }, 300)
+    }
     dragOffsetRef.current = 0
     reorderRef.current = null
     setSlidingId(null)
@@ -389,7 +397,7 @@ export default function ProjectDetail() {
               const isActive = String(pt.id) === String(id)
               return (
                 <div key={pt.id} data-tab-id={pt.id}
-                  onClick={() => { if (!reorderRef.current?.moved && !isActive) nav(`/projects/${pt.id}`) }}
+                  onClick={() => { if (!justDraggedRef.current && !isActive) nav(`/projects/${pt.id}`) }}
                   style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 14, fontWeight: isActive ? 600 : 400, flexShrink: 0,
                     transition: slidingId === pt.id ? 'none' : 'all 0.2s ease',
                     transform: slidingId === pt.id ? `translateX(${dragOffsetRef.current}px) scale(1.05)` : 'none',
