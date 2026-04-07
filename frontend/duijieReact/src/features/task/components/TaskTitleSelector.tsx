@@ -48,6 +48,7 @@ export default function TaskTitleSelector({
   placeholder = '输入需求标题',
 }: Props) {
   const storageKey = projectId ? `task_title_mode_${projectId}` : ''
+  const lastTitleKey = projectId ? `task_last_title_${projectId}` : ''
   const [mode, _setMode] = useState<'preset' | 'history'>(() => {
     if (storageKey) {
       const saved = localStorage.getItem(storageKey)
@@ -58,6 +59,9 @@ export default function TaskTitleSelector({
   const setMode = (m: 'preset' | 'history') => {
     _setMode(m)
     if (storageKey) localStorage.setItem(storageKey, m)
+  }
+  const saveLastTitle = (title: string) => {
+    if (lastTitleKey && title) localStorage.setItem(lastTitleKey, title)
   }
   const [options, setOptions] = useState<TaskTitleOptions>({ presets: [], history: [] })
   const [loading, setLoading] = useState(false)
@@ -87,8 +91,15 @@ export default function TaskTitleSelector({
         const presets = Array.isArray(r.data?.presets) ? r.data.presets : []
         const history = Array.isArray(r.data?.history) ? r.data.history : []
         setOptions({ presets, history })
-        if (mode === 'history' && !value && history.length > 0) {
-          onChange(history[0].title)
+        if (!value) {
+          const last = lastTitleKey ? localStorage.getItem(lastTitleKey) : null
+          if (mode === 'preset' && last && presets.includes(last)) {
+            onChange(last)
+          } else if (mode === 'history' && last) {
+            onChange(last)
+          } else if (mode === 'history' && history.length > 0) {
+            onChange(history[0].title)
+          }
         }
         return
       }
@@ -201,7 +212,7 @@ export default function TaskTitleSelector({
                       style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', cursor: 'pointer', fontSize: 13, color: 'var(--text-body)', fontWeight: selected ? 600 : 400, background: selected ? 'var(--bg-selected)' : 'transparent' }}
                       onMouseEnter={e => { if (!selected) e.currentTarget.style.background = 'var(--bg-tertiary)' }}
                       onMouseLeave={e => { if (!selected) e.currentTarget.style.background = 'transparent' }}>
-                      <span style={{ flex: 1 }} onClick={() => { onChange(item); setPresetOpen(false) }}>{item}</span>
+                      <span style={{ flex: 1 }} onClick={() => { onChange(item); saveLastTitle(item); setPresetOpen(false) }}>{item}</span>
                       <button type="button" disabled={savingPreset}
                         onClick={e => { e.stopPropagation(); handleDeletePreset(item) }}
                         style={{ width: 22, height: 22, borderRadius: 4, border: 'none', background: 'transparent', color: 'var(--text-disabled)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
@@ -243,7 +254,7 @@ export default function TaskTitleSelector({
                   <div key={item.id} style={{ display: 'flex', alignItems: 'center', padding: '6px 12px', cursor: 'pointer', background: active ? 'var(--bg-selected)' : 'transparent' }}
                     onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'var(--bg-tertiary)' }}
                     onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}>
-                    <button type="button" onClick={() => { onChange(item.title); setInputFocused(false) }}
+                    <button type="button" onClick={() => { onChange(item.title); saveLastTitle(item.title); setInputFocused(false) }}
                       style={{ flex: 1, textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer', fontSize: 13, color: active ? 'var(--brand)' : 'var(--text-body)', padding: 0 }}>
                       {item.title}
                     </button>

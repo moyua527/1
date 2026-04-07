@@ -138,6 +138,7 @@ export default function TaskCreateModal({ open, onClose, onCreated, projects }: 
     if (r.success) {
       const rememberResult = await projectApi.rememberTaskTitle(currentProjectId, title)
       if (!rememberResult.success) toast(rememberResult.message || '需求标题历史保存失败', 'error')
+      localStorage.setItem(`task_last_title_${currentProjectId}`, title)
       toast('需求已创建', 'success')
       handleClose()
       onCreated()
