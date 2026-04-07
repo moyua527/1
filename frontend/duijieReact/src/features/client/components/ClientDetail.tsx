@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import useIsMobile from '../../ui/useIsMobile'
 import { ArrowLeft, Tag, Building, Mail, Phone, FileText, Clock, MoreVertical, Settings, History, Trash2, UserPlus, Users, Sparkles, Loader2, Building2, UserCircle, ChevronRight, Contact, FileSignature, MessageSquare, FolderKanban, FolderTree, Calendar, User, Crown, KeyRound, TrendingUp } from 'lucide-react'
 import { clientApi } from '../services/api'
 import Avatar from '../../ui/Avatar'
@@ -18,6 +19,7 @@ import TagManageModal from './TagManageModal'
 import Badge from '../../ui/Badge'
 
 export default function ClientDetail() {
+  const isMobile = useIsMobile()
   const { id } = useParams()
   const nav = useNavigate()
   const [client, setClient] = useState<any>(null)
@@ -192,7 +194,7 @@ export default function ClientDetail() {
             {members.length === 0 ? (
               <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-tertiary)', fontSize: 14 }}>暂无组织成员</div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
                 {members.map((m: any) => {
                   const isCreator = m.role === 'creator'
                   const borderColor = isCreator ? '#9333ea' : m.enterprise_role_name ? (m.enterprise_role_color || 'var(--border-primary)') : 'var(--border-primary)'
@@ -334,7 +336,7 @@ export default function ClientDetail() {
               <Building2 size={18} color="var(--brand)" />
               <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-body)' }}>企业工商信息</span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 6 : '8px 24px' }}>
               {client.company_type && <div style={{ fontSize: 13 }}><span style={{ color: 'var(--text-tertiary)', marginRight: 6 }}>企业类型:</span><span style={{ color: 'var(--text-heading)', fontWeight: 500 }}>{client.company_type}</span></div>}
               {client.industry && <div style={{ fontSize: 13 }}><span style={{ color: 'var(--text-tertiary)', marginRight: 6 }}>行业:</span><span style={{ color: 'var(--text-heading)', fontWeight: 500 }}>{client.industry}</span></div>}
               {client.scale && <div style={{ fontSize: 13 }}><span style={{ color: 'var(--text-tertiary)', marginRight: 6 }}>规模:</span><span style={{ color: 'var(--text-heading)', fontWeight: 500 }}>{client.scale}</span></div>}
@@ -381,7 +383,7 @@ export default function ClientDetail() {
           { key: 'followups', icon: <MessageSquare size={22} color="#0891b2" />, label: '跟进记录', count: followUps.length, bg: '#ecfeff', border: '#cffafe' },
         ]
         return (<>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12, marginTop: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(180px, 1fr))', gap: isMobile ? 8 : 12, marginTop: 16 }}>
             {cards.map(c => (
               <div key={c.key} onClick={() => setOpenSection(c.key)}
                 style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '16px 18px', background: c.bg, borderRadius: 12, border: `1px solid ${c.border}`, cursor: 'pointer', transition: 'all 0.2s' }}

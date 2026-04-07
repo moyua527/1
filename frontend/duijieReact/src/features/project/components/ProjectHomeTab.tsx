@@ -45,7 +45,7 @@ export default function ProjectHomeTab({ project, projectId, tasks, onTabSwitch,
 
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(3, 1fr)', gap: isMobile ? 8 : 12, marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${stats.length}, 1fr)`, gap: isMobile ? 8 : 12, marginBottom: 16 }}>
         {stats.map(s => (
           <div key={s.label} style={{ ...section, marginBottom: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: isMobile ? '14px 8px' : '16px 12px', gap: 6, cursor: 'pointer' }}
             onClick={() => onTabSwitch(s.label === '成员' ? 'settings' : 'tasks')}>

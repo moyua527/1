@@ -208,7 +208,7 @@ export default function ProjectList() {
       } />
 
       {projects.length > 3 && <div style={{ marginBottom: 16 }}>
-        <div style={{ position: 'relative', maxWidth: 320 }}>
+        <div style={{ position: 'relative', maxWidth: isMobile ? '100%' : 320 }}>
           <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索项目..."
             style={{ width: '100%', padding: '8px 12px 8px 34px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', fontSize: 14, outline: 'none' }} />
@@ -222,10 +222,9 @@ export default function ProjectList() {
           subtitle={projects.length === 0 ? '点击右上角新建项目' : '调整筛选条件试试'}
           action={projects.length === 0 && canCreate ? { label: '新建项目', onClick: () => setShowCreate(true) } : undefined} />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 16 : 24, justifyItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 12 : 24, justifyItems: 'center' }}>
           {filtered.map((p: any) => {
             const displayName = p.my_nickname || p.name
-            const iconSize = 120
             const Icon = getProjectIcon(p.icon)
             const bgColor = p.icon_color || 'var(--brand)'
             return (
@@ -235,25 +234,25 @@ export default function ProjectList() {
                   openTab(p.id, displayName)
                   nav(`/projects/${p.id}`)
                 }}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', position: 'relative', width: 120, transition: 'transform 0.2s ease, filter 0.2s ease' }}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', position: 'relative', width: '100%', maxWidth: 140, transition: 'transform 0.2s ease, filter 0.2s ease' }}
                 onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(3px) scale(0.97)'; e.currentTarget.style.filter = 'brightness(0.88)' }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.filter = 'brightness(1)' }}
               >
-                <div style={{ position: 'relative', marginBottom: 8 }}>
+                <div style={{ position: 'relative', marginBottom: 6, width: '100%', aspectRatio: '1', maxWidth: 120 }}>
                   {p.cover_image ? (
                     <div style={{
-                      width: iconSize, height: iconSize, borderRadius: iconSize * 0.22,
+                      width: '100%', height: '100%', borderRadius: '22%',
                       backgroundImage: `url(${p.cover_image})`, backgroundSize: 'cover', backgroundPosition: 'center',
-                      boxShadow: '0 6px 20px rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.12)',
+                      boxShadow: '0 4px 14px rgba(0,0,0,0.15), 0 1px 4px rgba(0,0,0,0.1)',
                     }} />
                   ) : (
                     <div style={{
-                      width: iconSize, height: iconSize, borderRadius: iconSize * 0.22,
+                      width: '100%', height: '100%', borderRadius: '22%',
                       background: `linear-gradient(145deg, ${bgColor}aa, ${bgColor}55)`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      boxShadow: '0 6px 20px rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.12)',
+                      boxShadow: '0 4px 14px rgba(0,0,0,0.15), 0 1px 4px rgba(0,0,0,0.1)',
                     }}>
-                      <Icon size={48} color="rgba(255,255,255,0.9)" />
+                      <Icon size={isMobile ? 36 : 48} color="rgba(255,255,255,0.9)" />
                     </div>
                   )}
                   {(() => {
@@ -275,7 +274,7 @@ export default function ProjectList() {
                   })()}
                 </div>
                 <span style={{
-                  fontSize: 12, fontWeight: 500, color: 'var(--text-heading)',
+                  fontSize: isMobile ? 11 : 12, fontWeight: 500, color: 'var(--text-heading)',
                   textAlign: 'center', lineHeight: 1.3, maxWidth: '100%',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>

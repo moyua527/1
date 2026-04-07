@@ -1,6 +1,6 @@
 {
-  "version": "1.3.2",
-  "versionCode": 303,
+  "version": "1.3.3",
+  "versionCode": 304,
   "minVersion": "1.0.0",
   "changelog": "修复角色权限更新不生效：修正成员project_role_id分配错误、角色权限保存校验、数据迁移"
 }

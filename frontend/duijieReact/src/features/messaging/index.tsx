@@ -200,7 +200,7 @@ export default function Messaging() {
   }
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 80px)', background: 'var(--bg-primary)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+    <div style={{ display: 'flex', height: isMobile ? 'calc(100vh - 120px)' : 'calc(100vh - 80px)', background: 'var(--bg-primary)', borderRadius: isMobile ? 0 : 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
       {/* 左栏 */}
       <div style={{ width: isMobile ? ((selectedUser || selectedGroup) ? 0 : '100%') : 320, borderRight: '1px solid var(--border-primary)', display: 'flex', flexDirection: 'column', flexShrink: 0, overflow: 'hidden', transition: 'width 0.2s' }}>
         {/* 标题 + 操作按钮 */}
@@ -212,13 +212,13 @@ export default function Messaging() {
           <div style={{ display: 'flex', gap: 6 }}>
             <button onClick={() => { setShowAddFriend(true); setPhoneSearch(''); setSearchResults([]) }}
               title="添加联系人"
-              style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>
-              <UserPlus size={14} /> 添加联系人
+              style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 8, padding: isMobile ? '6px 8px' : '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>
+              <UserPlus size={14} />{!isMobile && ' 添加联系人'}
             </button>
             <button title="添加群"
-              style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}
+              style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: 8, padding: isMobile ? '6px 8px' : '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}
               onClick={() => { setShowCreateGroup(true); setGroupName(''); setSelectedFriendIds([]); friendApi.list().then(r => { if (r.success) setFriendsList(r.data || []) }) }}>
-              <Users size={14} /> 添加群
+              <Users size={14} />{!isMobile && ' 添加群'}
             </button>
           </div>
         </div>
