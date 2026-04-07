@@ -217,10 +217,10 @@ export default function ProjectList() {
           subtitle={projects.length === 0 ? '点击右上角新建项目' : '调整筛选条件试试'}
           action={projects.length === 0 && canCreate ? { label: '新建项目', onClick: () => setShowCreate(true) } : undefined} />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(auto-fill, minmax(110px, 1fr))', gap: isMobile ? 16 : 24, justifyItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 16 : 24, justifyItems: 'center' }}>
           {filtered.map((p: any) => {
             const displayName = p.my_nickname || p.name
-            const iconSize = isMobile ? 64 : 76
+            const iconSize = 120
             const Icon = getProjectIcon(p.icon)
             const bgColor = p.icon_color || 'var(--brand)'
             return (
@@ -230,7 +230,7 @@ export default function ProjectList() {
                   openTab(p.id, displayName)
                   nav(`/projects/${p.id}`)
                 }}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', position: 'relative', width: isMobile ? 80 : 100 }}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer', position: 'relative', width: 120 }}
               >
                 <div style={{ position: 'relative', marginBottom: 8 }}>
                   {p.cover_image ? (
@@ -246,7 +246,7 @@ export default function ProjectList() {
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
                     }}>
-                      <Icon size={isMobile ? 30 : 36} color="#fff" />
+                      <Icon size={48} color="#fff" />
                     </div>
                   )}
                   {(() => {
