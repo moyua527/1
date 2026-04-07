@@ -1,6 +1,6 @@
 {
-  "version": "1.2.90",
-  "versionCode": 291,
+  "version": "1.2.91",
+  "versionCode": 292,
   "minVersion": "1.0.0",
   "changelog": "项目卡片自定义图标与颜色：编辑项目时可选择图标和配色方案，项目列表卡片显示个性化样式"
 }

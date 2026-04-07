@@ -256,11 +256,9 @@ export default function ProjectDetail() {
     }
   }, [project, user])
 
-  const { tabs: projectTabs, openTab, closeTab, updateTabName, reorderTabs } = useProjectTabStore()
+  const { tabs: projectTabs, openTab, closeTab, updateTabName } = useProjectTabStore()
 
-  const dragTabRef = useRef<number | null>(null)
-  const [draggingId, setDraggingId] = useState<number | null>(null)
-  const [dragOverId, setDragOverId] = useState<number | null>(null)
+  const tabScrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (project && id) {
@@ -312,25 +310,17 @@ export default function ProjectDetail() {
             首页
           </div>
           <div style={{ width: 1, background: 'rgba(59,130,246,0.15)', margin: '8px 2px', flexShrink: 0 }} />
-          <div style={{ flex: 1, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', gap: 0 } as any}>
+          <div ref={tabScrollRef} style={{ flex: 1, minWidth: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', gap: 0, WebkitOverflowScrolling: 'touch' } as any}>
             {projectTabs.map(pt => {
               const isActive = String(pt.id) === String(id)
-              const isDragOver = dragOverId === pt.id && dragTabRef.current !== pt.id
               return (
                 <div key={pt.id}
-                  draggable
-                  onDragStart={e => { dragTabRef.current = pt.id; setDraggingId(pt.id); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(pt.id)) }}
-                  onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOverId(pt.id) }}
-                  onDragLeave={() => { if (dragOverId === pt.id) setDragOverId(null) }}
-                  onDrop={e => { e.preventDefault(); if (dragTabRef.current != null && dragTabRef.current !== pt.id) reorderTabs(dragTabRef.current, pt.id); dragTabRef.current = null; setDraggingId(null); setDragOverId(null) }}
-                  onDragEnd={() => { dragTabRef.current = null; setDraggingId(null); setDragOverId(null) }}
                   onClick={() => { if (!isActive) nav(`/projects/${pt.id}`) }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'grab', whiteSpace: 'nowrap', fontSize: 14, fontWeight: isActive ? 600 : 400, flexShrink: 0, transition: 'all 0.15s',
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 14, fontWeight: isActive ? 600 : 400, flexShrink: 0, transition: 'all 0.15s',
                     background: isActive ? 'rgba(59,130,246,0.12)' : 'transparent', color: isActive ? 'var(--brand)' : 'var(--text-secondary)',
                     borderRadius: isActive ? '10px 10px 0 0' : '6px 6px 0 0',
-                    boxShadow: isDragOver ? '0 0 0 2px var(--brand)' : isActive ? '0 -2px 8px rgba(59,130,246,0.15), 0 -1px 3px rgba(0,0,0,0.06)' : 'none',
-                    borderBottom: isActive ? '2px solid var(--brand)' : '2px solid transparent',
-                    opacity: draggingId === pt.id ? 0.5 : 1 }}>
+                    boxShadow: isActive ? '0 -2px 8px rgba(59,130,246,0.15), 0 -1px 3px rgba(0,0,0,0.06)' : 'none',
+                    borderBottom: isActive ? '2px solid var(--brand)' : '2px solid transparent' }}>
                   <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{pt.name}</span>
                   <button
                     onClick={async e => { e.stopPropagation(); if (!(await confirm({ message: `关闭「${pt.name}」标签页？` }))) return; const nextId = closeTab(pt.id); if (isActive) { if (nextId) nav(`/projects/${nextId}`); else nav('/projects') } }}
