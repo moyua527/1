@@ -303,7 +303,7 @@ export default function ProjectDetail() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px - 48px)', overflow: 'hidden' }}>
       {projectTabs.length > 0 && (
-        <div style={{ display: 'flex', gap: 0, marginBottom: 0, flexShrink: 0, alignItems: 'stretch', background: 'linear-gradient(180deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.02) 100%)', borderRadius: '10px 10px 0 0', padding: '0 4px' }}>
+        <div style={{ display: 'flex', gap: 0, marginBottom: 0, flexShrink: 0, alignItems: 'stretch', background: 'linear-gradient(180deg, rgba(59,130,246,0.10) 0%, rgba(59,130,246,0.04) 100%)', borderRadius: '10px 10px 0 0', padding: '0 4px' }}>
           <div onClick={() => nav('/projects')}
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 600, flexShrink: 0, transition: 'background 0.15s',
               color: 'var(--text-secondary)' }}
@@ -343,7 +343,7 @@ export default function ProjectDetail() {
           </div>
         </div>
       )}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 12, flexShrink: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', paddingLeft: 4, paddingTop: 6 } as any}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 0, flexShrink: 0, overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', paddingLeft: 4, paddingTop: 4, paddingBottom: 8, background: 'linear-gradient(180deg, rgba(59,130,246,0.03) 0%, transparent 100%)' } as any}>
         <div data-tour="project-tabs" style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
           {([['tasks','需求'],['todo','代办'],['files','资料库'],['messages','消息'],['settings','设置']] as [string, string][]).map(([k,v]) => {
             const pInfo = id ? unreadSummary[id] : undefined
