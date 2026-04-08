@@ -9,6 +9,7 @@ import { projectApi } from '../services/api'
 import { taskApi } from '../../task/services/api'
 import { toast } from '../../ui/Toast'
 import { formatDateTime } from '../../../utils/datetime'
+import { resolveAssetUrl } from '../../../utils/capacitor'
 import useUserStore from '../../../stores/useUserStore'
 import useNicknameStore from '../../../stores/useNicknameStore'
 import ImageViewer from '../../ui/ImageViewer'
@@ -535,9 +536,9 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
                           {t.attachments.map((a: any) => {
                             const isImage = a.mime_type?.startsWith('image/')
-                            const fileUrl = `/uploads/${a.filename}`
+                            const fileUrl = resolveAssetUrl(`/uploads/${a.filename}`)
                             if (isImage) {
-                              const allImgs = t.attachments.filter((x: any) => x.mime_type?.startsWith('image/')).map((x: any) => `/uploads/${x.filename}`)
+                              const allImgs = t.attachments.filter((x: any) => x.mime_type?.startsWith('image/')).map((x: any) => resolveAssetUrl(`/uploads/${x.filename}`))
                               const imgIdx = allImgs.indexOf(fileUrl)
                               return (
                                 <div key={a.id} onClick={() => { setPreviewImg(fileUrl); setPreviewImages(allImgs); setPreviewStartIdx(Math.max(0, imgIdx)) }} style={{ cursor: 'pointer', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border-primary)', width: 80, height: 80, flexShrink: 0, background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -710,12 +711,12 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                 <div style={{ padding: '6px 12px 8px', display: 'flex', flexWrap: 'wrap', gap: 6, borderTop: '1px solid var(--border-primary)' }}>
                   {draftFiles.map((df, i) => {
                     const isImg = df.mime_type.startsWith('image/')
-                    const url = `/uploads/${df.filename}`
+                    const url = resolveAssetUrl(`/uploads/${df.filename}`)
                     return (
                       <div key={`df-${i}`} style={{ position: 'relative', display: 'inline-flex' }}>
                         {isImg ? (
                           <div style={{ width: 56, height: 56, borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border-primary)', cursor: 'pointer', background: 'var(--bg-tertiary)' }}
-                            onClick={() => { const allImgs = draftFiles.filter(x => x.mime_type.startsWith('image/')).map(x => `/uploads/${x.filename}`); setPreviewImg(url); setPreviewImages(allImgs); setPreviewStartIdx(Math.max(0, allImgs.indexOf(url))) }}>
+                            onClick={() => { const allImgs = draftFiles.filter(x => x.mime_type.startsWith('image/')).map(x => resolveAssetUrl(`/uploads/${x.filename}`)); setPreviewImg(url); setPreviewImages(allImgs); setPreviewStartIdx(Math.max(0, allImgs.indexOf(url))) }}>
                             <img src={url} alt={df.original_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none' }} />
                           </div>
                         ) : (

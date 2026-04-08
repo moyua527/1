@@ -15,6 +15,7 @@ import EmptyState from '../ui/EmptyState'
 import useLiveData from '../../hooks/useLiveData'
 import { onSocket } from '../ui/smartSocket'
 import { getProjectIcon } from '../../utils/projectIcons'
+import { resolveAssetUrl } from '../../utils/capacitor'
 import useProjectTabStore from '../../stores/useProjectTabStore'
 
 const statusMap: Record<string, string> = {
@@ -249,7 +250,7 @@ export default function ProjectList() {
                   {p.cover_image ? (
                     <div style={{
                       width: '100%', height: '100%', borderRadius: isMobile ? 16 : '22%',
-                      backgroundImage: `url(${p.cover_image})`, backgroundSize: 'cover', backgroundPosition: 'center',
+                      backgroundImage: `url(${resolveAssetUrl(p.cover_image)})`, backgroundSize: 'cover', backgroundPosition: 'center',
                       boxShadow: '0 4px 14px rgba(0,0,0,0.15), 0 1px 4px rgba(0,0,0,0.1)',
                     }} />
                   ) : (

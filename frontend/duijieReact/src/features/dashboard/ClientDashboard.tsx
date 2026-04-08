@@ -1,4 +1,5 @@
 import { FolderKanban, TrendingUp, CheckCircle, MessageSquare, FileSignature, FileText, Download } from 'lucide-react'
+import { resolveAssetUrl } from '../../utils/capacitor'
 
 interface Stats {
   totalProjects: number; activeProjects: number; completedProjects: number
@@ -131,7 +132,7 @@ export default function ClientDashboard({ stats, nav }: { stats: Stats; nav: (p:
             </div>
             {files.map((f: any) => (
               <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderTop: '1px solid var(--border-secondary)', cursor: 'pointer' }}
-                onClick={() => window.open(`/api/files/${f.id}/download`, '_blank')}>
+                onClick={() => window.open(resolveAssetUrl(`/api/files/${f.id}/download`), '_blank')}>
                 <Download size={14} color="var(--color-purple)" />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.original_name}</div>
