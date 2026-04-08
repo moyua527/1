@@ -92,13 +92,19 @@ module.exports = async (req, res) => {
 
     // 通知对方
     if (newStatus && taskRow.title) {
+      let projectName = '';
+      if (taskRow.project_id) {
+        const [[proj]] = await db.query('SELECT name FROM duijie_projects WHERE id = ?', [taskRow.project_id]);
+        projectName = proj?.name || '';
+      }
+      const pPrefix = projectName ? `【${projectName}】` : '';
       const label = STATUS_LABEL[newStatus] || newStatus;
       let targetId = null;
       if (newStatus === 'in_progress' && taskRow.created_by !== req.userId) targetId = taskRow.created_by;
       if (newStatus === 'pending_review' && taskRow.created_by !== req.userId) targetId = taskRow.created_by;
       if (newStatus === 'accepted' && taskRow.assignee_id !== req.userId) targetId = taskRow.assignee_id;
       if (targetId) {
-        await notify(targetId, 'task_status', '任务状态变更', `任务「${taskRow.title}」状态变为「${label}」`, '/tasks', taskRow.project_id != null ? Number(taskRow.project_id) : null);
+        await notify(targetId, 'task_status', '任务状态变更', `${pPrefix}任务「${taskRow.title}」状态变为「${label}」`, '/tasks', taskRow.project_id != null ? Number(taskRow.project_id) : null);
       }
     }
 

@@ -25,12 +25,19 @@ module.exports = async (req, res) => {
     const [[oldTask]] = await db.query('SELECT * FROM duijie_tasks WHERE id = ? AND is_deleted = 0', [taskId]);
     await updateTask(taskId, req.body);
 
+    let projectName = '';
+    if (oldTask?.project_id) {
+      const [[proj]] = await db.query('SELECT name FROM duijie_projects WHERE id = ?', [oldTask.project_id]);
+      projectName = proj?.name || '';
+    }
+    const pPrefix = projectName ? `【${projectName}】` : '';
+
     if (oldTask && req.body.assignee_id && req.body.assignee_id !== oldTask.assignee_id && req.body.assignee_id !== req.userId) {
-      await notify(req.body.assignee_id, 'task_assigned', '任务指派', `你被指派了任务「${oldTask.title}」`, `/tasks`, oldTask.project_id != null ? Number(oldTask.project_id) : null);
+      await notify(req.body.assignee_id, 'task_assigned', '任务指派', `${pPrefix}你被指派了任务「${oldTask.title}」`, `/tasks`, oldTask.project_id != null ? Number(oldTask.project_id) : null);
     }
     if (oldTask && req.body.status && req.body.status !== oldTask.status && oldTask.created_by && oldTask.created_by !== req.userId) {
       const statusLabel = { todo: '待办', submitted: '已提出', disputed: '待补充', in_progress: '执行中', pending_review: '待验收', review_failed: '验收不通过', accepted: '验收通过' };
-      await notify(oldTask.created_by, 'task_status', '任务状态变更', `任务「${oldTask.title}」状态变为「${statusLabel[req.body.status] || req.body.status}」`, `/tasks`, oldTask.project_id != null ? Number(oldTask.project_id) : null);
+      await notify(oldTask.created_by, 'task_status', '任务状态变更', `${pPrefix}任务「${oldTask.title}」状态变为「${statusLabel[req.body.status] || req.body.status}」`, `/tasks`, oldTask.project_id != null ? Number(oldTask.project_id) : null);
     }
 
     broadcast('task', 'updated', { id: taskId, project_id: oldTask?.project_id, userId: req.userId });

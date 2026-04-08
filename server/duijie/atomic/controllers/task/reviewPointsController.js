@@ -67,8 +67,11 @@ exports.add = async (req, res) => {
 
     const targetUserId = round_type === 'initial' ? task.created_by : task.assignee_id;
     if (targetUserId && targetUserId !== req.userId) {
+      let rpProjectName = '';
+      if (task.project_id) { const [[rp]] = await db.query('SELECT name FROM duijie_projects WHERE id = ?', [task.project_id]); rpProjectName = rp?.name || ''; }
+      const rpPrefix = rpProjectName ? `【${rpProjectName}】` : '';
       const label = round_type === 'initial' ? '提出了疑问' : '验收驳回';
-      await notify(targetUserId, 'task_status', '任务审核', `任务「${task.title}」${label}，共 ${values.length} 个要点需要处理`, '/tasks', task.project_id != null ? Number(task.project_id) : null);
+      await notify(targetUserId, 'task_status', '任务审核', `${rpPrefix}任务「${task.title}」${label}，共 ${values.length} 个要点需要处理`, '/tasks', task.project_id != null ? Number(task.project_id) : null);
     }
 
     broadcast('task', 'updated', { id: taskId, project_id: task.project_id, userId: req.userId });
@@ -160,8 +163,11 @@ exports.respond = async (req, res) => {
       }
       // 通知提出人
       if (point.author_id !== req.userId) {
+        let rpName2 = '';
+        if (point.project_id) { const [[rp2]] = await db.query('SELECT name FROM duijie_projects WHERE id = ?', [point.project_id]); rpName2 = rp2?.name || ''; }
+        const rpPre2 = rpName2 ? `【${rpName2}】` : '';
         const label = point.round_type === 'initial' ? '已补充所有疑问' : '已修复所有问题';
-        await notify(point.author_id, 'task_status', '任务审核', `任务「${point.task_title}」${label}，请查看`, '/tasks', point.project_id != null ? Number(point.project_id) : null);
+        await notify(point.author_id, 'task_status', '任务审核', `${rpPre2}任务「${point.task_title}」${label}，请查看`, '/tasks', point.project_id != null ? Number(point.project_id) : null);
       }
       broadcast('task', 'updated', { id: point.task_id, project_id: point.project_id, userId: req.userId });
     }
