@@ -4,7 +4,6 @@ import Avatar from './Avatar'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
 import useThemeStore from '../../stores/useThemeStore'
-import useI18nStore, { Locale } from '../../stores/useI18nStore'
 import Input from './Input'
 import { playNotificationSound } from '../../utils/notificationSound'
 import { isCapacitor } from '../../utils/capacitor'
@@ -248,7 +247,6 @@ interface Props {
 export default function SettingsPanel({ tab, onBack, isMobile }: Props) {
   const { user } = useUserStore()
   const { mode, setMode } = useThemeStore()
-  const { locale, setLocale } = useI18nStore()
 
   const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' })
   const [pwSaving, setPwSaving] = useState(false)
@@ -461,22 +459,15 @@ export default function SettingsPanel({ tab, onBack, isMobile }: Props) {
             </div>
             <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 8 }}>显示语言</div>
             <div style={{ display: 'flex', gap: 8 }}>
-              {([
-                { v: 'zh-CN' as Locale, l: '简体中文' },
-                { v: 'en-US' as Locale, l: 'English' },
-              ]).map(o => (
-                <div key={o.v} onClick={() => setLocale(o.v)} style={{
-                  flex: 1, padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
-                  border: locale === o.v ? '2px solid var(--brand)' : '2px solid var(--border-primary)',
-                  background: locale === o.v ? 'var(--bg-selected)' : 'transparent',
-                  fontSize: 12, fontWeight: locale === o.v ? 600 : 400,
-                  color: locale === o.v ? 'var(--brand)' : 'var(--text-secondary)',
-                  display: 'flex', alignItems: 'center', gap: 6,
-                }}>
-                  <Globe size={14} /> {o.l}
-                  {locale === o.v && <Check size={12} style={{ marginLeft: 'auto', color: 'var(--brand)' }} />}
-                </div>
-              ))}
+              <div style={{
+                flex: 1, padding: '10px 12px', borderRadius: 8,
+                border: '2px solid var(--brand)', background: 'var(--bg-selected)',
+                fontSize: 12, fontWeight: 600, color: 'var(--brand)',
+                display: 'flex', alignItems: 'center', gap: 6,
+              }}>
+                <Globe size={14} /> 简体中文
+                <Check size={12} style={{ marginLeft: 'auto', color: 'var(--brand)' }} />
+              </div>
             </div>
           </div>
         )}

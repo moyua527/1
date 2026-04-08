@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react'
 import { User, Bell, Palette, Globe, Save, Copy, ArrowLeft, Check, Loader2, Lock, Smartphone, Monitor, Trash2, LogOut } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
 import useThemeStore from '../../stores/useThemeStore'
-import useI18nStore, { Locale } from '../../stores/useI18nStore'
 import Avatar from '../ui/Avatar'
 import Input from '../ui/Input'
 import Button from '../ui/Button'
@@ -46,10 +45,12 @@ function getNotifPrefs(): Record<string, boolean> {
 export default function UserSettings() {
   const isMobile = useIsMobile()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { user, updateProfile } = useUserStore()
   const { mode, setMode } = useThemeStore()
-  const { locale, setLocale } = useI18nStore()
-  const [tab, setTab] = useState<Tab>('account')
+
+  const initialTab = (searchParams.get('tab') as Tab) || 'account'
+  const [tab, setTab] = useState<Tab>(initialTab)
 
   // Account editing
   const [editing, setEditing] = useState(false)
@@ -143,32 +144,36 @@ export default function UserSettings() {
 
   return (
     <div>
-      <PageHeader
-        title="设置"
-        actions={
-          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', padding: 4 }}>
-            <ArrowLeft size={20} />
-          </button>
-        }
-      />
+      {!isMobile && (
+        <PageHeader
+          title="设置"
+          actions={
+            <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', padding: 4 }}>
+              <ArrowLeft size={20} />
+            </button>
+          }
+        />
+      )}
 
       <div style={{
         display: 'flex', flexDirection: isMobile ? 'column' : 'row',
-        background: 'var(--bg-primary)', borderRadius: 12,
-        border: '1px solid var(--border-primary)',
+        background: isMobile ? 'transparent' : 'var(--bg-primary)', borderRadius: isMobile ? 0 : 12,
+        border: isMobile ? 'none' : '1px solid var(--border-primary)',
         minHeight: isMobile ? 'auto' : 500, overflow: 'hidden',
       }}>
-        {/* 左侧 Tab 导航 */}
-        <div style={sidebarStyle}>
-          {TABS.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)} style={tabBtnStyle(tab === t.key)}>
-              <t.icon size={16} /> {t.label}
-            </button>
-          ))}
-        </div>
+        {/* 左侧 Tab 导航（仅 PC） */}
+        {!isMobile && (
+          <div style={sidebarStyle}>
+            {TABS.map(t => (
+              <button key={t.key} onClick={() => setTab(t.key)} style={tabBtnStyle(tab === t.key)}>
+                <t.icon size={16} /> {t.label}
+              </button>
+            ))}
+          </div>
+        )}
 
-        {/* 右侧内容区 */}
-        <div style={{ flex: 1, padding: isMobile ? 16 : 32, overflowY: 'auto', background: 'var(--bg-secondary)' }}>
+        {/* 内容区 */}
+        <div style={{ flex: 1, padding: isMobile ? 4 : 32, overflowY: 'auto', background: isMobile ? 'transparent' : 'var(--bg-secondary)' }}>
 
           {/* ===== 账号与安全 ===== */}
           {tab === 'account' && user && (
@@ -387,28 +392,21 @@ export default function UserSettings() {
                 ))}
               </div>
 
-              {/* 语言 */}
+              {/* 语言 - 暂时仅支持中文 */}
               <SectionTitle>显示语言</SectionTitle>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                {([
-                  { value: 'zh-CN' as Locale, label: '简体中文', sub: 'Chinese Simplified' },
-                  { value: 'en-US' as Locale, label: 'English', sub: 'US English' },
-                ]).map(opt => (
-                  <div key={opt.value} onClick={() => setLocale(opt.value)}
-                    style={{
-                      flex: '1 1 140px', padding: '14px 16px', borderRadius: 10, cursor: 'pointer',
-                      border: locale === opt.value ? '2px solid var(--brand)' : '2px solid var(--border-primary)',
-                      background: locale === opt.value ? 'var(--bg-selected)' : 'var(--bg-secondary)',
-                      display: 'flex', alignItems: 'center', gap: 10, transition: 'all 0.15s',
-                    }}>
-                    <Globe size={18} style={{ color: locale === opt.value ? 'var(--brand)' : 'var(--text-tertiary)' }} />
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: locale === opt.value ? 'var(--brand)' : 'var(--text-heading)' }}>{opt.label}</div>
-                      <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>{opt.sub}</div>
-                    </div>
-                    {locale === opt.value && <Check size={14} style={{ color: 'var(--brand)', marginLeft: 'auto' }} />}
+                <div style={{
+                  flex: '1 1 140px', padding: '14px 16px', borderRadius: 10,
+                  border: '2px solid var(--brand)', background: 'var(--bg-selected)',
+                  display: 'flex', alignItems: 'center', gap: 10,
+                }}>
+                  <Globe size={18} style={{ color: 'var(--brand)' }} />
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--brand)' }}>简体中文</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>Chinese Simplified</div>
                   </div>
-                ))}
+                  <Check size={14} style={{ color: 'var(--brand)', marginLeft: 'auto' }} />
+                </div>
               </div>
             </div>
           )}

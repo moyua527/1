@@ -2,16 +2,18 @@ import { type ComponentType } from 'react'
 import {
   LayoutDashboard, FolderKanban, Users, ListTodo, Building2,
   MessageSquare, CalendarDays, FileText, BellRing,
-  Shield, ScrollText, Plug2, Settings,
+  Shield, ScrollText, Plug2, Settings, LayoutGrid, UserCircle,
 } from 'lucide-react'
 
 export interface RouteEntry {
   path: string
   label: string
+  mobileLabel?: string           // short label for mobile bottom nav
   icon: ComponentType<any>
   perm: string | null            // null = always accessible
   importFn: () => Promise<{ default: ComponentType<any> }>
   showInNav: boolean             // whether to show in sidebar/top nav
+  mobileNav?: boolean            // show in mobile bottom tab bar
   exact?: boolean                // NavLink end prop (for '/')
   prefetch?: boolean             // prefetch on idle
   children?: RouteEntry[]        // nested routes (detail pages)
@@ -20,14 +22,14 @@ export interface RouteEntry {
 
 const ROUTES: RouteEntry[] = [
   {
-    path: '/', label: '仪表盘', icon: LayoutDashboard, perm: 'dashboard:view',
+    path: '/', label: '仪表盘', mobileLabel: '首页', icon: LayoutDashboard, perm: 'dashboard:view',
     importFn: () => import('../features/dashboard/index'),
-    showInNav: true, exact: true, prefetch: true, group: 'workspace',
+    showInNav: true, mobileNav: true, exact: true, prefetch: true, group: 'workspace',
   },
   {
-    path: '/projects', label: '项目管理', icon: FolderKanban, perm: 'project:view',
+    path: '/projects', label: '项目管理', mobileLabel: '项目', icon: FolderKanban, perm: 'project:view',
     importFn: () => import('../features/project/index'),
-    showInNav: true, prefetch: true, group: 'business',
+    showInNav: true, mobileNav: true, prefetch: true, group: 'business',
     children: [
       { path: '/projects/:id', label: '项目详情', icon: FolderKanban, perm: 'project:view', importFn: () => import('../features/project/components/ProjectDetail'), showInNav: false },
     ],
@@ -46,14 +48,14 @@ const ROUTES: RouteEntry[] = [
     showInNav: true, prefetch: true, group: 'business',
   },
   {
-    path: '/enterprise', label: '企业管理', icon: Building2, perm: 'enterprise:view',
+    path: '/enterprise', label: '企业管理', mobileLabel: '企业', icon: Building2, perm: 'enterprise:view',
     importFn: () => import('../features/enterprise/index'),
-    showInNav: true, group: 'org',
+    showInNav: true, mobileNav: true, group: 'org',
   },
   {
-    path: '/messaging', label: '消息', icon: MessageSquare, perm: 'messaging:view',
+    path: '/messaging', label: '消息', mobileLabel: '消息', icon: MessageSquare, perm: 'messaging:view',
     importFn: () => import('../features/messaging/index'),
-    showInNav: true, prefetch: true, group: 'workspace',
+    showInNav: true, mobileNav: true, prefetch: true, group: 'workspace',
   },
   {
     path: '/calendar', label: '日历日程', icon: CalendarDays, perm: 'dashboard:view',
@@ -98,6 +100,16 @@ const ROUTES: RouteEntry[] = [
   {
     path: '/user-settings', label: '个人设置', icon: Settings, perm: null,
     importFn: () => import('../features/user-settings/index'),
+    showInNav: false,
+  },
+  {
+    path: '/services', label: '服务', icon: LayoutGrid, perm: null,
+    importFn: () => import('../features/mobile/ServicesPage'),
+    showInNav: false,
+  },
+  {
+    path: '/my', label: '我的', icon: UserCircle, perm: null,
+    importFn: () => import('../features/mobile/MyPage'),
     showInNav: false,
   },
 ]

@@ -17,6 +17,7 @@ interface User {
   gender?: number
   created_at?: string
   personal_invite_code?: string
+  guide_done?: number
 }
 
 interface UserState {

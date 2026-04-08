@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { LogOut, User, Shield, ChevronRight, ChevronLeft, Palette, Bell, Settings, Search, HelpCircle, Volume2, ArrowLeft } from 'lucide-react'
+import { LogOut, User, Shield, ChevronRight, ChevronLeft, Palette, Bell, Settings, Search, HelpCircle, Volume2, ArrowLeft, LayoutGrid, UserCircle, Home } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
 import { can } from '../../stores/permissions'
@@ -40,19 +40,20 @@ export default function Layout() {
   const location = useLocation()
   const role = user?.role || 'member'
   const NAV_ITEMS = navItems().filter(n => !n.perm || can(role, n.perm))
+  
   const groups = navItemsByGroup(NAV_ITEMS)
   const currentNav = NAV_ITEMS.find(n => n.path === '/' ? location.pathname === '/' : location.pathname.startsWith(n.path))
+  
 
   
 
   useEffect(() => {
     if (!user?.id) return
-    const key = `guide_done_${user.id}`
-    if (!localStorage.getItem(key)) {
-      localStorage.setItem(key, '1')
-      const t = setTimeout(() => setGuideOpen(true), 800)
-      return () => clearTimeout(t)
-    }
+    if (user.guide_done) return
+    const localKey = `guide_done_${user.id}`
+    if (localStorage.getItem(localKey)) return
+    const t = setTimeout(() => setGuideOpen(true), 800)
+    return () => clearTimeout(t)
   }, [user])
 
   useEffect(() => {
@@ -162,10 +163,10 @@ export default function Layout() {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, background: 'var(--bg-secondary)', fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" }}>
       <CommandPalette />
 
-      {/* ===== 顶栏 56px ===== */}
+      {/* ===== 顶栏 56px (PC only) ===== */}
       <header style={{
         height: 56, background: 'var(--bg-primary)', borderBottom: '1px solid var(--border-primary)',
-        display: 'flex', alignItems: 'center', padding: '0 16px', gap: 12, flexShrink: 0, zIndex: 100,
+        display: isMobile ? 'none' : 'flex', alignItems: 'center', padding: '0 16px', gap: 12, flexShrink: 0, zIndex: 100,
       }}>
         {/* Logo */}
         <div data-tour="logo" style={{ fontSize: 20, fontWeight: 800, color: 'var(--brand)', letterSpacing: -0.5, cursor: 'pointer', flexShrink: 0, minWidth: isMobile ? 'auto' : sidebarW - 32 }}
@@ -251,116 +252,24 @@ export default function Layout() {
                 </div>
               )}
 
-              {/* 设置弹窗 - PC:600x600居中 / 移动端:全屏单列 */}
-              {settingsTab && !isMobile && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)' }}
-                 onClick={() => setSettingsTab(null)}>
-                  <div style={{ width: 600, height: 600, maxWidth: '95vw', maxHeight: '90vh', background: 'var(--bg-primary)', borderRadius: 16, boxShadow: '0 16px 48px rgba(0,0,0,0.2)', overflow: 'hidden', display: 'flex', flexDirection: 'row' }}
-                    onClick={e => e.stopPropagation()}>
-                    <div style={{ width: 160, flexShrink: 0, borderRight: '1px solid var(--border-secondary)', padding: '16px 0', display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      {([
-                        { icon: User, label: '个人信息', tab: 'profile' as const },
-                        { icon: Shield, label: '账号与安全', tab: 'account' as const },
-                        { icon: Volume2, label: '声音设置', tab: 'sound' as const },
-                        { icon: Palette, label: '外观与语言', tab: 'appearance' as const },
-                        { icon: Bell, label: '通知偏好', tab: 'notification' as const },
-                      ]).map(item => (
-                        <div key={item.tab} onClick={() => setSettingsTab(item.tab)}
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', cursor: 'pointer',
-                            fontSize: 13, fontWeight: settingsTab === item.tab ? 600 : 400,
-                            color: settingsTab === item.tab ? 'var(--brand)' : 'var(--text-primary)',
-                            background: settingsTab === item.tab ? 'var(--bg-selected)' : 'transparent',
-                            borderLeft: settingsTab === item.tab ? '3px solid var(--brand)' : '3px solid transparent',
-                            transition: 'all 0.15s',
-                          }}
-                          onMouseEnter={e => { if (settingsTab !== item.tab) e.currentTarget.style.background = 'var(--bg-hover)' }}
-                          onMouseLeave={e => { if (settingsTab !== item.tab) e.currentTarget.style.background = 'transparent' }}>
-                          <item.icon size={15} /> {item.label}
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ flex: 1, overflow: 'hidden' }}>
-                      <SettingsPanel tab={settingsTab} onBack={() => setSettingsTab(null)} isMobile={false} />
-                    </div>
-                  </div>
-                </div>
-              )}
-              {settingsTab && isMobile && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'var(--bg-primary)', display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', borderBottom: '1px solid var(--border-secondary)', flexShrink: 0 }}>
-                    <div onClick={() => setSettingsTab(null)} style={{ display: 'flex', cursor: 'pointer', padding: 4 }}><ArrowLeft size={20} /></div>
-                    <span style={{ fontSize: 16, fontWeight: 600 }}>设置</span>
-                  </div>
-                  <div style={{ display: 'flex', overflowX: 'auto', gap: 0, padding: '0 8px', borderBottom: '1px solid var(--border-secondary)', flexShrink: 0, WebkitOverflowScrolling: 'touch' } as any}>
-                    {([
-                      { icon: User, label: '个人信息', tab: 'profile' as const },
-                      { icon: Shield, label: '账号安全', tab: 'account' as const },
-                      { icon: Volume2, label: '声音', tab: 'sound' as const },
-                      { icon: Palette, label: '外观', tab: 'appearance' as const },
-                      { icon: Bell, label: '通知', tab: 'notification' as const },
-                    ]).map(item => (
-                      <div key={item.tab} onClick={() => setSettingsTab(item.tab)}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 5, padding: '10px 12px', cursor: 'pointer',
-                          fontSize: 13, fontWeight: settingsTab === item.tab ? 600 : 400, whiteSpace: 'nowrap',
-                          color: settingsTab === item.tab ? 'var(--brand)' : 'var(--text-secondary)',
-                          borderBottom: settingsTab === item.tab ? '2px solid var(--brand)' : '2px solid transparent',
-                        }}>
-                        <item.icon size={14} /> {item.label}
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ flex: 1, overflow: 'auto' }}>
-                    <SettingsPanel tab={settingsTab} onBack={() => setSettingsTab(null)} isMobile={true} />
-                  </div>
-                </div>
-              )}
+              
             </div>
           )}
         </div>
       </header>
 
-      {/* ===== Mobile 横向滚动导航栏 ===== */}
-      {isMobile && (
-        <nav style={{
-          flexShrink: 0, background: 'var(--bg-primary)',
-          borderBottom: '1px solid var(--border-primary)',
-          overflowX: 'auto', overflowY: 'hidden', WebkitOverflowScrolling: 'touch',
-          scrollbarWidth: 'none', msOverflowStyle: 'none',
-          display: 'flex', gap: 0, padding: '0 4px',
-        } as any}>
-          {NAV_ITEMS.map(item => {
-            const isActive = item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                style={{
-                  display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 2,
-                  padding: '6px 12px', textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
-                  color: isActive ? 'var(--brand)' : 'var(--text-tertiary)',
-                  borderBottom: isActive ? '2px solid var(--brand)' : '2px solid transparent',
-                  fontSize: 10, fontWeight: isActive ? 600 : 500,
-                  transition: 'color 0.15s',
-                  position: 'relative',
-                }}
-                end={item.path === '/'}
-              >
-                <item.icon size={18} />
-                <span>{item.label}</span>
-                {item.path === '/messaging' && dmUnread > 0 && (
-                  <span style={{
-                    position: 'absolute', top: 2, right: 2,
-                    minWidth: 14, height: 14, borderRadius: 7, background: 'var(--color-danger)', color: '#fff',
-                    fontSize: 8, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    padding: '0 3px',
-                  }}>{dmUnread > 99 ? '99+' : dmUnread}</span>
-                )}
-              </NavLink>
-            )
-          })}
-        </nav>
+      {/* ===== Mobile 子页面返回按钮 ===== */}
+      {isMobile && !['/', '/services', '/my'].includes(location.pathname) && (
+        <div style={{
+          height: 44, display: 'flex', alignItems: 'center',
+          padding: '0 8px', flexShrink: 0,
+          background: 'var(--bg-primary)', borderBottom: '1px solid var(--border-primary)',
+        }}>
+          <div onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', padding: '4px 8px', borderRadius: 6, color: 'var(--text-secondary)', fontSize: 14 }}>
+            <ArrowLeft size={18} />
+            <span>返回</span>
+          </div>
+        </div>
       )}
 
       {/* ===== 下方：Sidebar + Content ===== */}
@@ -455,7 +364,7 @@ export default function Layout() {
 
         {/* ===== 主内容区 ===== */}
         <main ref={mainRef} data-tour="main-content"
-          style={{ flex: 1, overflow: 'auto', minHeight: 0, padding: isMobile ? 12 : 24, WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain' }}>
+          style={{ flex: 1, overflow: 'auto', minHeight: 0, padding: isMobile ? '12px 12px 0' : 24, WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain' }}>
           {isMobile && (ptrY > 0 || ptrRefreshing) && (
             <div style={{ display: 'flex', justifyContent: 'center', height: ptrY || 55, overflow: 'hidden', transition: ptrY > 0 ? 'none' : 'height 0.25s ease' }}>
               <div style={{ width: 24, height: 24, borderRadius: '50%', border: '2.5px solid #e5e7eb', borderTopColor: 'var(--brand)', margin: 'auto',
@@ -465,14 +374,106 @@ export default function Layout() {
               }} />
             </div>
           )}
-          <Outlet context={{ user, isMobile }} />
+          <Outlet context={{
+            user, isMobile, dmUnread,
+            openSettings: (tab: string) => setSettingsTab(tab as any),
+            openProfile: () => setProfileOpen(true),
+            openGuide: () => setGuideOpen(true),
+          }} />
           {isMobile && <style>{`@keyframes ptr-spin{to{transform:rotate(360deg)}}`}</style>}
         </main>
       </div>
 
+      {/* ===== Mobile 底部导航栏（仅主页面显示） ===== */}
+      {isMobile && ['/', '/services', '/my'].includes(location.pathname) && (
+        <nav data-tour="mobile-nav" style={{
+          flexShrink: 0, background: 'var(--bg-primary)',
+          borderTop: '1px solid var(--border-primary)',
+          display: 'flex', justifyContent: 'space-around', padding: '6px 0 env(safe-area-inset-bottom, 6px)',
+          zIndex: 100,
+        }}>
+          <NavLink to="/" end data-tour="mobile-home"
+            style={{
+              display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 2,
+              padding: '4px 0', textDecoration: 'none', flex: 1,
+              color: location.pathname === '/' ? 'var(--brand)' : 'var(--text-tertiary)',
+              fontSize: 11, fontWeight: location.pathname === '/' ? 600 : 400,
+            }}>
+            <Home size={24} />
+            <span>首页</span>
+          </NavLink>
+          <NavLink to="/services" data-tour="mobile-services"
+            style={{
+              display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 2,
+              padding: '4px 0', textDecoration: 'none', flex: 1, position: 'relative',
+              color: location.pathname !== '/' && location.pathname !== '/my' ? 'var(--brand)' : 'var(--text-tertiary)',
+              fontSize: 11, fontWeight: location.pathname !== '/' && location.pathname !== '/my' ? 600 : 400,
+            }}>
+            <LayoutGrid size={24} />
+            <span>服务</span>
+            {dmUnread > 0 && (
+              <span style={{
+                position: 'absolute', top: 0, left: '50%', marginLeft: 8,
+                minWidth: 14, height: 14, borderRadius: 7, background: 'var(--color-danger)', color: '#fff',
+                fontSize: 8, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: '0 3px',
+              }}>{dmUnread > 99 ? '99+' : dmUnread}</span>
+            )}
+          </NavLink>
+          <NavLink to="/my" data-tour="mobile-my"
+            style={{
+              display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 2,
+              padding: '4px 0', textDecoration: 'none', flex: 1,
+              color: location.pathname === '/my' ? 'var(--brand)' : 'var(--text-tertiary)',
+              fontSize: 11, fontWeight: location.pathname === '/my' ? 600 : 400,
+            }}>
+            <UserCircle size={24} />
+            <span>我的</span>
+          </NavLink>
+        </nav>
+      )}
+
+      {/* 设置弹窗 - PC:600x600居中 / 移动端:全屏单列 */}
+      {settingsTab && !isMobile && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)' }}
+         onClick={() => setSettingsTab(null)}>
+          <div style={{ width: 600, height: 600, maxWidth: '95vw', maxHeight: '90vh', background: 'var(--bg-primary)', borderRadius: 16, boxShadow: '0 16px 48px rgba(0,0,0,0.2)', overflow: 'hidden', display: 'flex', flexDirection: 'row' }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ width: 160, flexShrink: 0, borderRight: '1px solid var(--border-secondary)', padding: '16px 0', display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {([
+                { icon: User, label: '个人信息', tab: 'profile' as const },
+                { icon: Shield, label: '账号与安全', tab: 'account' as const },
+                { icon: Volume2, label: '声音设置', tab: 'sound' as const },
+                { icon: Palette, label: '外观与语言', tab: 'appearance' as const },
+                { icon: Bell, label: '通知偏好', tab: 'notification' as const },
+              ]).map(item => (
+                <div key={item.tab} onClick={() => setSettingsTab(item.tab)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', cursor: 'pointer',
+                    fontSize: 13, fontWeight: settingsTab === item.tab ? 600 : 400,
+                    color: settingsTab === item.tab ? 'var(--brand)' : 'var(--text-primary)',
+                    background: settingsTab === item.tab ? 'var(--bg-selected)' : 'transparent',
+                    borderLeft: settingsTab === item.tab ? '3px solid var(--brand)' : '3px solid transparent',
+                    transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => { if (settingsTab !== item.tab) e.currentTarget.style.background = 'var(--bg-hover)' }}
+                  onMouseLeave={e => { if (settingsTab !== item.tab) e.currentTarget.style.background = 'transparent' }}>
+                  <item.icon size={15} /> {item.label}
+                </div>
+              ))}
+            </div>
+            <div style={{ flex: 1, overflow: 'hidden' }}>
+              <SettingsPanel tab={settingsTab} onBack={() => setSettingsTab(null)} isMobile={false} />
+            </div>
+          </div>
+        </div>
+      )}
       <UserGuide open={guideOpen} onClose={() => {
         setGuideOpen(false)
-        if (user) localStorage.setItem(`guide_done_${user.id}`, '1')
+        if (user) {
+          localStorage.setItem(`guide_done_${user.id}`, '1')
+          fetchApi('/api/auth/guide-done', { method: 'POST' }).catch(() => {})
+        }
       }} />
       <OnboardingChecklist />
       <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} user={user} onProfileUpdated={updateProfile} />

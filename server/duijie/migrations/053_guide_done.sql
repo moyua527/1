@@ -1,0 +1,1 @@
+ALTER TABLE voice_users ADD COLUMN guide_done TINYINT(1) DEFAULT 0;

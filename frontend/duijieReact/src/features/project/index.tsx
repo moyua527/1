@@ -161,9 +161,16 @@ export default function ProjectList() {
                 <div key={pt.id}
                   onClick={() => nav(`/projects/${pt.id}`)}
                   style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 400, flexShrink: 0,
-                    transition: 'all 0.2s ease',
+                    transition: 'all 0.2s ease', position: 'relative',
                     background: 'transparent', color: 'var(--text-secondary)' }}>
-                  <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{pt.name}</span>
+                  {(() => { const cnt = unreadSummary[String(pt.id)]?.total || 0; if (cnt <= 0) return null; return (
+                    <span style={{ position: 'absolute', top: 2, right: 2, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 8, background: '#ef4444', color: '#fff', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, zIndex: 1 }}>
+                      {cnt > 99 ? '99+' : cnt}
+                    </span>
+                  ) })()}
+                  <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {pt.name}
+                  </span>
                   <button
                     onClick={async e => { e.stopPropagation(); if (!(await confirm({ message: `关闭「${pt.name}」标签页？` }))) return; closeTab(pt.id) }}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, marginLeft: 16, display: 'flex', color: 'var(--text-tertiary)', borderRadius: 4 }}
@@ -222,7 +229,7 @@ export default function ProjectList() {
           subtitle={projects.length === 0 ? '点击右上角新建项目' : '调整筛选条件试试'}
           action={projects.length === 0 && canCreate ? { label: '新建项目', onClick: () => setShowCreate(true) } : undefined} />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 12 : 24, justifyItems: 'center', alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 10 : 24, alignItems: 'start' }}>
           {filtered.map((p: any) => {
             const displayName = p.my_nickname || p.name
             const Icon = getProjectIcon(p.icon)
@@ -241,18 +248,18 @@ export default function ProjectList() {
                 <div style={{ position: 'relative', marginBottom: 6, width: '100%', aspectRatio: '1' }}>
                   {p.cover_image ? (
                     <div style={{
-                      width: '100%', height: '100%', borderRadius: '22%',
+                      width: '100%', height: '100%', borderRadius: isMobile ? 16 : '22%',
                       backgroundImage: `url(${p.cover_image})`, backgroundSize: 'cover', backgroundPosition: 'center',
                       boxShadow: '0 4px 14px rgba(0,0,0,0.15), 0 1px 4px rgba(0,0,0,0.1)',
                     }} />
                   ) : (
                     <div style={{
-                      width: '100%', height: '100%', borderRadius: '22%',
+                      width: '100%', height: '100%', borderRadius: isMobile ? 16 : '22%',
                       background: `linear-gradient(145deg, ${bgColor}aa, ${bgColor}55)`,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       boxShadow: '0 4px 14px rgba(0,0,0,0.15), 0 1px 4px rgba(0,0,0,0.1)',
                     }}>
-                      <Icon size={isMobile ? 36 : 48} color="rgba(255,255,255,0.9)" />
+                      <Icon size={isMobile ? 32 : 48} color="rgba(255,255,255,0.9)" />
                     </div>
                   )}
                   {(() => {

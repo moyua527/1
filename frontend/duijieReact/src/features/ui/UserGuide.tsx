@@ -1,13 +1,14 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { driver, type DriveStep, type Config } from 'driver.js'
 import 'driver.js/dist/driver.css'
+import useIsMobile from './useIsMobile'
 
 interface UserGuideProps {
   open: boolean
   onClose: () => void
 }
 
-const TOUR_STEPS: DriveStep[] = [
+const PC_STEPS: DriveStep[] = [
   {
     element: '[data-tour="logo"]',
     popover: {
@@ -60,6 +61,53 @@ const TOUR_STEPS: DriveStep[] = [
       title: '随时重新查看',
       description: '忘记操作？点击这里重新打开引导。进入项目后也有专属的项目功能引导。',
       side: 'right', align: 'end',
+    },
+  },
+]
+
+const MOBILE_STEPS: DriveStep[] = [
+  {
+    popover: {
+      title: '欢迎使用 DuiJie 👋',
+      description: '这是一个轻量级的项目协作平台，帮你管理项目、分配需求、追踪进度。',
+    },
+  },
+  {
+    element: '[data-tour="mobile-home"]',
+    popover: {
+      title: '首页',
+      description: '这是仪表盘，查看项目概览、数据统计和待办事项。',
+      side: 'top', align: 'start',
+    },
+  },
+  {
+    element: '[data-tour="mobile-services"]',
+    popover: {
+      title: '服务',
+      description: '所有功能入口：项目管理、需求看板、消息、日历、文件管理、通知中心等。',
+      side: 'top', align: 'center',
+    },
+  },
+  {
+    element: '[data-tour="mobile-my"]',
+    popover: {
+      title: '我的',
+      description: '个人中心：账号安全、外观设置、企业切换和新手引导。',
+      side: 'top', align: 'end',
+    },
+  },
+  {
+    element: '[data-tour="main-content"]',
+    popover: {
+      title: '开始使用',
+      description: '前往「服务」→「项目管理」→ 点击创建项目。\n创建后可以添加成员、创建需求、上传文件。',
+      side: 'bottom', align: 'center',
+    },
+  },
+  {
+    popover: {
+      title: '项目内的功能',
+      description: '进入项目后，你可以：\n• 创建需求 — 分配给成员\n• 上传附件 — 支持图片标注\n• 邀请成员 — 通过ID或链接\n• 管理角色 — 自定义权限',
     },
   },
 ]
@@ -138,6 +186,7 @@ const CUSTOM_CSS = `
 `
 
 export default function UserGuide({ open, onClose }: UserGuideProps) {
+  const isMobile = useIsMobile()
   const driverRef = useRef<ReturnType<typeof driver> | null>(null)
   const styleRef = useRef<HTMLStyleElement | null>(null)
 
@@ -163,6 +212,8 @@ export default function UserGuide({ open, onClose }: UserGuideProps) {
     document.head.appendChild(style)
     styleRef.current = style
 
+    const steps = isMobile ? MOBILE_STEPS : PC_STEPS
+
     const config: Config = {
       showProgress: true,
       animate: true,
@@ -176,7 +227,7 @@ export default function UserGuide({ open, onClose }: UserGuideProps) {
       nextBtnText: '下一步',
       prevBtnText: '上一步',
       doneBtnText: '开始使用 🎉',
-      steps: TOUR_STEPS,
+      steps,
       onDestroyStarted: () => {
         driverRef.current?.destroy()
         onClose()
@@ -193,7 +244,7 @@ export default function UserGuide({ open, onClose }: UserGuideProps) {
       clearTimeout(timer)
       cleanup()
     }
-  }, [open, onClose, cleanup])
+  }, [open, onClose, cleanup, isMobile])
 
   return null
 }

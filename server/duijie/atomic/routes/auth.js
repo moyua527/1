@@ -20,6 +20,7 @@ router.get('/auth/me', auth, require('../controllers/auth/meController'));
 router.put('/auth/profile', auth, V.profile, validate, require('../controllers/auth/profileController'));
 router.post('/auth/avatar', auth, avatarUpload.single('avatar'), require('../controllers/auth/avatarController'));
 router.put('/auth/change-password', auth, require('../controllers/auth/changePasswordController'));
+router.post('/auth/guide-done', auth, require('../controllers/auth/guideDoneController'));
 router.get('/auth/sessions', auth, require('../controllers/auth/sessionsListController'));
 router.delete('/auth/sessions/all', auth, require('../controllers/auth/sessionRevokeAllController'));
 router.delete('/auth/sessions/:id', auth, require('../controllers/auth/sessionRevokeController'));

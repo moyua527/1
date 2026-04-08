@@ -13,6 +13,7 @@ import useUserStore from '../../../stores/useUserStore'
 import useNicknameStore from '../../../stores/useNicknameStore'
 import ImageViewer from '../../ui/ImageViewer'
 import ImageEditor from '../../ui/ImageEditor'
+import useIsMobile from '../../ui/useIsMobile'
 
 const taskStatusMap: Record<string, { label: string; color: string }> = {
   todo: { label: '待办', color: 'gray' },
@@ -37,6 +38,7 @@ interface TaskTabProps {
 }
 
 export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTabProps) {
+  const isMobile = useIsMobile()
   const user = useUserStore(s => s.user)
   const currentUserId = user?.id
   const globalDn = useNicknameStore(s => s.getDisplayName)
@@ -430,16 +432,33 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
   }
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, maxWidth: '100%', overflow: 'hidden' }}>
       <div style={{ ...section, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, marginBottom: 0, overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>需求列表</h3>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-              style={{ padding: '7px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: statusFilter ? 'var(--text-heading)' : 'var(--text-tertiary)', cursor: 'pointer' }}>
-              <option value="">全部状态 ({tasks.length})</option>
-              {ALL_STATUSES.map(s => <option key={s} value={s}>{taskStatusMap[s].label} ({tasks.filter(t => t.status === s).length})</option>)}
-            </select>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            {isMobile ? (
+              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+                style={{ padding: '7px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: statusFilter ? 'var(--text-heading)' : 'var(--text-tertiary)', cursor: 'pointer' }}>
+                <option value="">全部状态 ({tasks.length})</option>
+                {ALL_STATUSES.map(s => <option key={s} value={s}>{taskStatusMap[s].label} ({tasks.filter(t => t.status === s).length})</option>)}
+              </select>
+            ) : (
+              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                <button onClick={() => setStatusFilter('')} style={{
+                  padding: '5px 12px', borderRadius: 16, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: !statusFilter ? 600 : 400,
+                  background: !statusFilter ? 'var(--brand)' : 'var(--bg-tertiary)', color: !statusFilter ? '#fff' : 'var(--text-secondary)',
+                  transition: 'all 0.15s',
+                }}>全部 ({tasks.length})</button>
+                {ALL_STATUSES.map(s => { const cnt = tasks.filter(t => t.status === s).length; return (
+                  <button key={s} onClick={() => setStatusFilter(statusFilter === s ? '' : s)} style={{
+                    padding: '5px 12px', borderRadius: 16, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: statusFilter === s ? 600 : 400,
+                    background: statusFilter === s ? 'var(--brand)' : 'var(--bg-tertiary)', color: statusFilter === s ? '#fff' : 'var(--text-secondary)',
+                    transition: 'all 0.15s', opacity: cnt === 0 ? 0.5 : 1,
+                  }}>{taskStatusMap[s].label} ({cnt})</button>
+                ) })}
+              </div>
+            )}
             {canEdit && <>
               <button onClick={() => setShowCreateTask(true)} style={{
                 display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8,
@@ -472,11 +491,11 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
         </div>
 
         {/* 工作流说明 */}
-        <div style={{ fontSize: 11, color: 'var(--text-disabled)', marginBottom: 10, lineHeight: 1.5, flexShrink: 0 }}>
+        <div style={{ fontSize: 11, color: 'var(--text-disabled)', marginBottom: 10, lineHeight: 1.5, flexShrink: 0, overflowX: 'auto', whiteSpace: 'nowrap' }}>
           流程: 已提出 → 负责人接受/提疑问 → 执行中 → 待验收 → 通过/驳回
         </div>
 
-        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
         {(() => {
           const filtered = statusFilter ? tasks.filter(t => t.status === statusFilter) : tasks
           return filtered.length === 0 ? <div style={{ color: 'var(--text-tertiary)', fontSize: 14 }}>暂无需求</div> : (
@@ -496,7 +515,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                     )}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{t.title}</span>
+                        <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '60vw' }}>{t.title}</span>
                         {hasPoints && !isExpanded && (
                           <span style={{ fontSize: 11, color: 'var(--text-tertiary)', cursor: 'pointer' }}
                             onClick={() => setExpandedTask(t.id)}>

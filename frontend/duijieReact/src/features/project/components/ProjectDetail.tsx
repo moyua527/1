@@ -232,12 +232,10 @@ export default function ProjectDetail() {
     }
     if (tab === 'messages') setHasNewMessages(false)
     if (tab === 'files') setHasNewFiles(false)
-    if (['tasks', 'todo', 'messages', 'files'].includes(tab)) {
-      fetchApi('/api/notifications/read-by-tab', {
-        method: 'PATCH',
-        body: JSON.stringify({ project_id: id, tab }),
-      }).then(() => invalidate('project-unread-summary')).catch(() => {})
-    }
+    fetchApi('/api/notifications/read-by-tab', {
+      method: 'PATCH',
+      body: JSON.stringify({ project_id: id, tab: 'all' }),
+    }).then(() => invalidate('project-unread-summary')).catch(() => {})
     const timer = window.setTimeout(() => {
       loadProject()
       loadTasks()
@@ -338,12 +336,19 @@ export default function ProjectDetail() {
                 <div key={pt.id}
                   onClick={() => { if (!isActive) nav(`/projects/${pt.id}`) }}
                   style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'pointer', whiteSpace: 'nowrap', fontSize: 14, fontWeight: isActive ? 600 : 400, flexShrink: 0,
-                    transition: 'all 0.2s ease',
+                    transition: 'all 0.2s ease', position: 'relative',
                     background: isActive ? 'rgba(59,130,246,0.12)' : 'transparent', color: isActive ? 'var(--brand)' : 'var(--text-secondary)',
                     borderRadius: isActive ? '10px 10px 0 0' : '6px 6px 0 0',
                     boxShadow: isActive ? '0 -2px 8px rgba(59,130,246,0.15), 0 -1px 3px rgba(0,0,0,0.06)' : 'none',
                     borderBottom: isActive ? '2px solid var(--brand)' : '2px solid transparent' }}>
-                  <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{pt.name}</span>
+                  {(() => { if (isActive) return null; const cnt = unreadSummary[String(pt.id)]?.total || 0; if (cnt <= 0) return null; return (
+                    <span style={{ position: 'absolute', top: 2, right: 2, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 8, background: '#ef4444', color: '#fff', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, zIndex: 1 }}>
+                      {cnt > 99 ? '99+' : cnt}
+                    </span>
+                  ) })()}
+                  <span style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {pt.name}
+                  </span>
                   <button
                     onClick={async e => { e.stopPropagation(); if (!(await confirm({ message: `关闭「${pt.name}」标签页？` }))) return; const nextId = closeTab(pt.id); if (isActive) { if (nextId) nav(`/projects/${nextId}`); else nav('/projects') } }}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, marginLeft: 16, display: 'flex', color: isActive ? 'rgba(59,130,246,0.5)' : 'var(--text-tertiary)', borderRadius: 4 }}

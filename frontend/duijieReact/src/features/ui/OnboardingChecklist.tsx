@@ -31,6 +31,7 @@ export default function OnboardingChecklist() {
 
   useEffect(() => {
     if (!user) return
+    if (user.guide_done) { setDismissed(true); return }
     const d = localStorage.getItem(DISMISSED_KEY(user.id))
     if (d) { setDismissed(true); return }
     const raw = localStorage.getItem(STORAGE_KEY(user.id))
@@ -90,6 +91,7 @@ export default function OnboardingChecklist() {
     if (!user) return
     setDismissed(true)
     localStorage.setItem(DISMISSED_KEY(user.id), '1')
+    fetchApi('/api/auth/guide-done', { method: 'POST' }).catch(() => {})
   }
 
   if (!visible || dismissed || !user) return null

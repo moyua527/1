@@ -11,13 +11,20 @@ module.exports = async (req, res) => {
   try {
     const { project_id, tab } = req.body;
     if (!project_id || !tab) return res.status(400).json({ success: false, message: 'project_id and tab required' });
-    const cond = TAB_CONDITIONS[tab];
-    if (!cond) return res.status(400).json({ success: false, message: 'invalid tab' });
 
-    await db.query(
-      `UPDATE duijie_notifications SET is_read = 1 WHERE user_id = ? AND project_id = ? AND is_read = 0 AND ${cond}`,
-      [req.userId, project_id]
-    );
+    if (tab === 'all') {
+      await db.query(
+        'UPDATE duijie_notifications SET is_read = 1 WHERE user_id = ? AND project_id = ? AND is_read = 0',
+        [req.userId, project_id]
+      );
+    } else {
+      const cond = TAB_CONDITIONS[tab];
+      if (!cond) return res.status(400).json({ success: false, message: 'invalid tab' });
+      await db.query(
+        `UPDATE duijie_notifications SET is_read = 1 WHERE user_id = ? AND project_id = ? AND is_read = 0 AND ${cond}`,
+        [req.userId, project_id]
+      );
+    }
     res.json({ success: true });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });
