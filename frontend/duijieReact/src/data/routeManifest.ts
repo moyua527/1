@@ -112,6 +112,11 @@ const ROUTES: RouteEntry[] = [
     importFn: () => import('../features/mobile/MyPage'),
     showInNav: false,
   },
+  {
+    path: '/about', label: '关于', icon: UserCircle, perm: null,
+    importFn: () => import('../features/mobile/AboutPage'),
+    showInNav: false,
+  },
 ]
 
 export default ROUTES

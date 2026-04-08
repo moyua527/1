@@ -4,7 +4,7 @@ import { LogOut, Palette, HelpCircle, ChevronRight, Shield, Info } from 'lucide-
 import useUserStore from '../../stores/useUserStore'
 import Avatar from '../ui/Avatar'
 import EnterpriseSwitcher from '../ui/EnterpriseSwitcher'
-import { APP_VERSION, APP_VERSION_CODE } from '../../utils/capacitor'
+import { APP_VERSION } from '../../utils/capacitor'
 
 interface LayoutContext {
   user: any
@@ -17,7 +17,6 @@ export default function MyPage() {
   const navigate = useNavigate()
   const { logout } = useUserStore()
   const [confirmGuide, setConfirmGuide] = useState(false)
-  const [showVersion, setShowVersion] = useState(false)
   const role = user?.role || 'member'
 
   if (!user) return null
@@ -65,7 +64,7 @@ export default function MyPage() {
         ))}
       </div>
 
-      <div onClick={() => setShowVersion(true)} style={{
+      <div onClick={() => navigate('/about')} style={{
         display: 'flex', alignItems: 'center', gap: 12, padding: '15px 16px', marginTop: 12,
         background: 'var(--bg-primary)', borderRadius: 16, cursor: 'pointer',
       }}>
@@ -84,32 +83,6 @@ export default function MyPage() {
         <LogOut size={16} />
         退出登录
       </div>
-
-      {showVersion && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          onClick={() => setShowVersion(false)}>
-          <div onClick={e => e.stopPropagation()}
-            style={{ width: 300, background: 'var(--bg-primary)', borderRadius: 16, padding: 24, textAlign: 'center' }}>
-            <Info size={36} style={{ color: 'var(--brand)', marginBottom: 12 }} />
-            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-heading)', marginBottom: 4 }}>DuiJie</div>
-            <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 16 }}>轻量级项目协作平台</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'left', padding: '12px 16px', background: 'var(--bg-secondary)', borderRadius: 12, marginBottom: 16 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-                <span style={{ color: 'var(--text-tertiary)' }}>版本号</span>
-                <span style={{ color: 'var(--text-heading)', fontWeight: 600 }}>v{APP_VERSION}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
-                <span style={{ color: 'var(--text-tertiary)' }}>构建号</span>
-                <span style={{ color: 'var(--text-heading)', fontWeight: 600 }}>{APP_VERSION_CODE}</span>
-              </div>
-            </div>
-            <button onClick={() => setShowVersion(false)}
-              style={{ width: '100%', padding: '10px 0', borderRadius: 10, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
-              确定
-            </button>
-          </div>
-        </div>
-      )}
 
       {confirmGuide && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
