@@ -1,7 +1,7 @@
 {
-  "version": "1.3.11",
-  "versionCode": 312,
+  "version": "1.3.13",
+  "versionCode": 314,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "Live Update热更新：本地嵌入+热更新推送，版本日志动态化"
+  "changelog": "移动端页面切换动画：进入子页面从右滑入，返回主页面从左滑入，主页面间淡入切换"
 }

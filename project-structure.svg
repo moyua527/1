@@ -1,0 +1,575 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 4200" font-family="Microsoft YaHei, Segoe UI, Arial, sans-serif">
+  <defs>
+    <style>
+      .title { font-size: 24px; font-weight: 700; fill: #1e293b; }
+      .sub { font-size: 13px; fill: #64748b; }
+      .folder { font-size: 12px; font-weight: 600; fill: #1e40af; }
+      .file { font-size: 10.5px; fill: #475569; font-family: Consolas, "Microsoft YaHei", monospace; }
+      .desc { font-size: 11px; fill: #64748b; }
+      .section { font-size: 14px; font-weight: 700; fill: #0f172a; }
+      .badge { font-size: 11px; fill: #fff; font-weight: 600; }
+      .count { font-size: 11px; fill: #f59e0b; font-weight: 700; }
+      .hdr { font-size: 13px; font-weight: 700; fill: #fff; }
+      .label { font-size: 11px; fill: #334155; }
+      .sep { stroke: #e2e8f0; stroke-width: 1; }
+    </style>
+  </defs>
+
+  <rect width="1500" height="4200" fill="#f8fafc" rx="12"/>
+
+  <text x="40" y="38" class="title">DuiJie &#x9879;&#x76EE;&#x5B8C;&#x6574;&#x7ED3;&#x6784;&#x56FE;</text>
+  <text x="40" y="58" class="sub">React 19 + Capacitor 8 Android + Node.js Express + MySQL 8 + Redis + Socket.IO + Nginx + PM2</text>
+  <line x1="40" y1="68" x2="1460" y2="68" class="sep"/>
+
+  <!-- ========== SECTION 1: FRONTEND features/ ========== -->
+  <rect x="20" y="80" width="720" height="1820" fill="#fff" rx="10" stroke="#e2e8f0"/>
+  <rect x="20" y="80" width="720" height="30" fill="#3b82f6" rx="10"/>
+  <rect x="20" y="98" width="720" height="12" fill="#3b82f6"/>
+  <text x="36" y="102" class="hdr">&#x524D;&#x7AEF; frontend/duijieReact/src/features/</text>
+
+  <g transform="translate(32,128)">
+    <!-- auth -->
+    <text class="folder">&#x25BC; auth/ <tspan class="count">(5&#x4E2A;&#x6587;&#x4EF6;)</tspan></text>
+    <text class="desc" x="240" y="0">&#x767B;&#x5F55; / &#x6CE8;&#x518C; / &#x5FD8;&#x8BB0;&#x5BC6;&#x7801; / &#x9A8C;&#x8BC1;&#x7801;</text>
+    <text class="file" x="14" y="16">LoginForm.tsx &#x2014; &#x767B;&#x5F55;&#x8868;&#x5355;</text>
+    <text class="file" x="14" y="29">RegisterForm.tsx &#x2014; &#x6CE8;&#x518C;&#x8868;&#x5355;</text>
+    <text class="file" x="14" y="42">ForgotPasswordForm.tsx &#x2014; &#x5FD8;&#x8BB0;&#x5BC6;&#x7801;(&#x90AE;&#x7BB1;&#x9A8C;&#x8BC1;)</text>
+    <text class="file" x="14" y="55">index.tsx &#x2014; &#x8DEF;&#x7531;&#x5165;&#x53E3;</text>
+    <text class="file" x="14" y="68">services/api.ts &#x2014; &#x8BA4;&#x8BC1;API&#x8C03;&#x7528;</text>
+
+    <!-- dashboard -->
+    <g transform="translate(0,92)">
+      <text class="folder">&#x25BC; dashboard/ <tspan class="count">(5)</tspan></text>
+      <text class="desc" x="240" y="0">&#x4EEA;&#x8868;&#x76D8; / &#x6570;&#x636E;&#x7EDF;&#x8BA1; / &#x62A5;&#x8868;</text>
+      <text class="file" x="14" y="16">DashboardCharts.tsx &#x2014; &#x56FE;&#x8868;&#x7EC4;&#x4EF6;</text>
+      <text class="file" x="14" y="29">Report.tsx &#x2014; &#x62A5;&#x8868;</text>
+      <text class="file" x="14" y="42">WorkspaceSection.tsx &#x2014; &#x5DE5;&#x4F5C;&#x533A;</text>
+      <text class="file" x="14" y="55">ClientDashboard.tsx &#x2014; &#x5BA2;&#x6237;&#x7AEF;&#x4EEA;&#x8868;&#x76D8;</text>
+    </g>
+
+    <!-- project -->
+    <g transform="translate(0,170)">
+      <text class="folder">&#x25BC; project/ <tspan class="count">(20)</tspan></text>
+      <text class="desc" x="240" y="0">&#x9879;&#x76EE;&#x7BA1;&#x7406;(&#x6700;&#x5927;&#x6A21;&#x5757;)</text>
+      <text class="file" x="14" y="16">index.tsx &#x2014; &#x9879;&#x76EE;&#x5217;&#x8868;&#x9875;</text>
+      <text class="file" x="14" y="29">JoinProjectPage.tsx &#x2014; &#x52A0;&#x5165;&#x9879;&#x76EE;</text>
+      <text class="file" x="14" y="42">ProjectOnboarding.tsx &#x2014; &#x65B0;&#x9879;&#x76EE;&#x5F15;&#x5BFC;</text>
+      <text class="file" x="14" y="55">components/ProjectDetail.tsx &#x2014; &#x9879;&#x76EE;&#x8BE6;&#x60C5;&#x5BB9;&#x5668;</text>
+      <text class="file" x="14" y="68">components/ProjectHomeTab.tsx &#x2014; &#x9879;&#x76EE;&#x9996;&#x9875;Tab</text>
+      <text class="file" x="14" y="81">components/TaskTab.tsx &#x2014; &#x4EFB;&#x52A1;Tab</text>
+      <text class="file" x="14" y="94">components/TodoTab.tsx &#x2014; &#x5F85;&#x529E;Tab</text>
+      <text class="file" x="14" y="107">components/MembersSection.tsx &#x2014; &#x6210;&#x5458;&#x7BA1;&#x7406;</text>
+      <text class="file" x="14" y="120">components/ProjectSettingsTab.tsx &#x2014; &#x9879;&#x76EE;&#x8BBE;&#x7F6E;</text>
+      <text class="file" x="14" y="133">components/ProjectFileTab.tsx &#x2014; &#x9879;&#x76EE;&#x6587;&#x4EF6;</text>
+      <text class="file" x="14" y="146">components/InviteMemberModal.tsx &#x2014; &#x9080;&#x8BF7;&#x6210;&#x5458;</text>
+      <text class="file" x="14" y="159">components/TodoDetailModal.tsx, EditProjectModal, AppTab, JoinRequestsTab &#x7B49;</text>
+    </g>
+
+    <!-- client -->
+    <g transform="translate(0,350)">
+      <text class="folder">&#x25BC; client/ <tspan class="count">(13)</tspan></text>
+      <text class="desc" x="240" y="0">&#x5BA2;&#x6237;&#x7BA1;&#x7406; / CRM / &#x8DDF;&#x8FDB;</text>
+      <text class="file" x="14" y="16">components/ClientDetail.tsx &#x2014; &#x5BA2;&#x6237;&#x8BE6;&#x60C5;</text>
+      <text class="file" x="14" y="29">components/ClientCreateModal.tsx &#x2014; &#x65B0;&#x5EFA;&#x5BA2;&#x6237;</text>
+      <text class="file" x="14" y="42">components/ClientEditModal.tsx &#x2014; &#x7F16;&#x8F91;&#x5BA2;&#x6237;</text>
+      <text class="file" x="14" y="55">components/ClientImportModal.tsx &#x2014; &#x5BFC;&#x5165;&#x5BA2;&#x6237;</text>
+      <text class="file" x="14" y="68">components/ContactSection.tsx &#x2014; &#x8054;&#x7CFB;&#x4EBA;</text>
+      <text class="file" x="14" y="81">components/ContractSection.tsx &#x2014; &#x5408;&#x540C;</text>
+      <text class="file" x="14" y="94">components/FollowUpSection.tsx &#x2014; &#x8DDF;&#x8FDB;&#x8BB0;&#x5F55;</text>
+      <text class="file" x="14" y="107">components/ScoreSection.tsx, TagManageModal, EnterpriseMemberSection &#x7B49;</text>
+    </g>
+
+    <!-- task -->
+    <g transform="translate(0,478)">
+      <text class="folder">&#x25BC; task/ <tspan class="count">(5)</tspan></text>
+      <text class="desc" x="240" y="0">&#x4EFB;&#x52A1;&#x770B;&#x677F; / &#x5BA1;&#x6838;&#x8981;&#x70B9;</text>
+      <text class="file" x="14" y="16">index.tsx &#x2014; &#x4EFB;&#x52A1;&#x5217;&#x8868;&#x9875;</text>
+      <text class="file" x="14" y="29">TaskCreateModal.tsx &#x2014; &#x521B;&#x5EFA;&#x4EFB;&#x52A1;</text>
+      <text class="file" x="14" y="42">TaskDetailModal.tsx &#x2014; &#x4EFB;&#x52A1;&#x8BE6;&#x60C5;</text>
+      <text class="file" x="14" y="55">TaskTitleSelector.tsx &#x2014; &#x4EFB;&#x52A1;&#x6807;&#x9898;&#x9009;&#x62E9;&#x5668;</text>
+    </g>
+
+    <!-- file -->
+    <g transform="translate(0,553)">
+      <text class="folder">&#x25BC; file/ <tspan class="count">(4)</tspan></text>
+      <text class="desc" x="240" y="0">&#x6587;&#x4EF6;&#x7BA1;&#x7406; / &#x9884;&#x89C8; / &#x4E0A;&#x4F20;</text>
+      <text class="file" x="14" y="16">index.tsx, FilePreviewModal.tsx, FileTable.tsx, services/api.ts</text>
+    </g>
+
+    <!-- enterprise -->
+    <g transform="translate(0,589)">
+      <text class="folder">&#x25BC; enterprise/ <tspan class="count">(18)</tspan></text>
+      <text class="desc" x="240" y="0">&#x4F01;&#x4E1A;&#x7BA1;&#x7406; / &#x90E8;&#x95E8; / &#x89D2;&#x8272;</text>
+      <text class="file" x="14" y="16">DepartmentList.tsx &#x2014; &#x90E8;&#x95E8;&#x5217;&#x8868;</text>
+      <text class="file" x="14" y="29">MemberList.tsx &#x2014; &#x6210;&#x5458;&#x5217;&#x8868;</text>
+      <text class="file" x="14" y="42">RoleList.tsx &#x2014; &#x89D2;&#x8272;&#x5217;&#x8868;</text>
+      <text class="file" x="14" y="55">OrgTree.tsx &#x2014; &#x7EC4;&#x7EC7;&#x67B6;&#x6784;&#x6811;</text>
+      <text class="file" x="14" y="68">EnterpriseCard.tsx &#x2014; &#x4F01;&#x4E1A;&#x5361;&#x7247;</text>
+      <text class="file" x="14" y="81">EnterpriseModals.tsx &#x2014; &#x4F01;&#x4E1A;&#x5F39;&#x7A97;</text>
+      <text class="file" x="14" y="94">EnterpriseOnboarding, EnterpriseProjects, EnterpriseRoleTab, JoinCreateModals &#x7B49;</text>
+    </g>
+
+    <!-- smaller modules -->
+    <g transform="translate(0,703)">
+      <text class="folder">&#x25BC; ticket/ <tspan class="count">(3)</tspan></text>
+      <text class="desc" x="240" y="0">&#x5DE5;&#x5355;&#x7CFB;&#x7EDF;</text>
+      <text class="file" x="14" y="16">index.tsx, TicketCreateModal.tsx, TicketDetail.tsx</text>
+    </g>
+
+    <g transform="translate(0,739)">
+      <text class="folder">&#x25BC; opportunity/ <tspan class="count">(2)</tspan></text>
+      <text class="desc" x="240" y="0">&#x5546;&#x673A;&#x7BA1;&#x7406;</text>
+      <text class="file" x="14" y="16">index.tsx, OpportunityFormModal.tsx</text>
+    </g>
+
+    <g transform="translate(0,775)">
+      <text class="folder">&#x25BC; partner/ <tspan class="count">(5)</tspan></text>
+      <text class="desc" x="240" y="0">&#x5408;&#x4F5C;&#x65B9;&#x96C6;&#x6210;</text>
+      <text class="file" x="14" y="16">index.tsx, AppViewer.tsx, PartnerCard.tsx, PartnerFormModal.tsx, constants.ts</text>
+    </g>
+
+    <g transform="translate(0,811)">
+      <text class="folder">&#x25BC; audit/ <tspan class="count">(5)</tspan></text>
+      <text class="desc" x="240" y="0">&#x5BA1;&#x8BA1;&#x65E5;&#x5FD7;</text>
+      <text class="file" x="14" y="16">index.tsx, AuditTable.tsx, AuditTimeline.tsx, AuditFilterPanel.tsx, constants.ts</text>
+    </g>
+
+    <g transform="translate(0,847)">
+      <text class="folder">&#x25BC; user/ <tspan class="count">(5)</tspan></text>
+      <text class="desc" x="240" y="0">&#x7528;&#x6237;&#x7BA1;&#x7406;(&#x7BA1;&#x7406;&#x5458;)</text>
+      <text class="file" x="14" y="16">index.tsx, components/: UserFormModal, UserDetailModal, UserDetailSheet, InviteLinkSection</text>
+    </g>
+
+    <g transform="translate(0,883)">
+      <text class="folder">&#x25BC; mobile/ <tspan class="count">(3)</tspan></text>
+      <text class="desc" x="240" y="0">&#x79FB;&#x52A8;&#x7AEF;&#x4E13;&#x5C5E;&#x9875;&#x9762;</text>
+      <text class="file" x="14" y="16">MyPage.tsx &#x2014; &#x201C;&#x6211;&#x7684;&#x201D;&#x9875;&#x9762;(&#x5E95;&#x90E8;&#x5BFC;&#x822A;&#x7B2C;3&#x9879;)</text>
+      <text class="file" x="14" y="29">AboutPage.tsx &#x2014; &#x5173;&#x4E8E;&#x9875;/&#x7248;&#x672C;&#x66F4;&#x65B0;/APK&#x4E0B;&#x8F7D;</text>
+      <text class="file" x="14" y="42">ServicesPage.tsx &#x2014; &#x201C;&#x670D;&#x52A1;&#x201D;&#x5BFC;&#x822A;&#x9875;(&#x5E95;&#x90E8;&#x5BFC;&#x822A;&#x7B2C;2&#x9879;)</text>
+    </g>
+
+    <!-- single-file modules -->
+    <g transform="translate(0,945)">
+      <text class="folder">&#x5355;&#x6587;&#x4EF6;&#x6A21;&#x5757;:</text>
+      <text class="file" x="14" y="16">messaging/index.tsx &#x2014; &#x5373;&#x65F6;&#x901A;&#x8BAF;/&#x7FA4;&#x804A;/&#x79C1;&#x4FE1;</text>
+      <text class="file" x="14" y="29">notification/index.tsx &#x2014; &#x901A;&#x77E5;&#x4E2D;&#x5FC3;</text>
+      <text class="file" x="14" y="42">settings/index.tsx &#x2014; &#x7CFB;&#x7EDF;&#x914D;&#x7F6E;</text>
+      <text class="file" x="14" y="55">calendar/index.tsx &#x2014; &#x65E5;&#x5386;&#x65E5;&#x7A0B;</text>
+      <text class="file" x="14" y="68">contact/index.tsx &#x2014; &#x901A;&#x8BAF;&#x5F55;/&#x597D;&#x53CB;</text>
+      <text class="file" x="14" y="81">user-settings/index.tsx &#x2014; &#x4E2A;&#x4EBA;&#x8BBE;&#x7F6E;</text>
+    </g>
+  </g>
+
+  <!-- ========== UI Components ========== -->
+  <g transform="translate(32,1148)">
+    <line x1="0" y1="-10" x2="690" y2="-10" class="sep"/>
+    <text class="section">ui/ &#x901A;&#x7528;&#x7EC4;&#x4EF6;&#x5E93; <tspan class="count">(42&#x4E2A;&#x6587;&#x4EF6;)</tspan></text>
+
+    <g transform="translate(0,20)">
+      <text class="label" y="0">&#x6838;&#x5FC3;&#x5F39;&#x7A97;:</text>
+      <text class="file" x="80" y="0">Modal.tsx  Drawer.tsx  ConfirmDialog.tsx  ProfileModal.tsx  SettingsPanel.tsx</text>
+
+      <text class="label" y="18">&#x8868;&#x5355;&#x7EC4;&#x4EF6;:</text>
+      <text class="file" x="80" y="18">Input.tsx  Select.tsx  Button.tsx  Form.tsx  FilterBar.tsx</text>
+
+      <text class="label" y="36">&#x6570;&#x636E;&#x5C55;&#x793A;:</text>
+      <text class="file" x="80" y="36">DataTable.tsx  Pagination.tsx  GanttChart.tsx  StatsCards.tsx  InfoGrid.tsx</text>
+
+      <text class="label" y="54">&#x53CD;&#x9988;&#x72B6;&#x6001;:</text>
+      <text class="file" x="80" y="54">Toast.tsx  ProgressBar.tsx  EmptyState.tsx  ErrorBoundary.tsx  Skeleton.tsx  Badge.tsx</text>
+
+      <text class="label" y="72">&#x5E03;&#x5C40;&#x5BFC;&#x822A;:</text>
+      <text class="file" x="80" y="72">Layout.tsx  PageHeader.tsx  SectionCard.tsx  Avatar.tsx  BatchActionBar.tsx</text>
+
+      <text class="label" y="90">&#x4E1A;&#x52A1;&#x7EC4;&#x4EF6;:</text>
+      <text class="file" x="80" y="90">NotificationBell.tsx  CommandPalette.tsx  EnterpriseSwitcher.tsx  ImageViewer.tsx  ImageEditor.tsx</text>
+
+      <text class="label" y="108">&#x5F15;&#x5BFC;&#x6559;&#x7A0B;:</text>
+      <text class="file" x="80" y="108">UserGuide.tsx  ProjectGuide.tsx  OnboardingChecklist.tsx</text>
+
+      <text class="label" y="126">&#x79FB;&#x52A8;&#x7AEF;:</text>
+      <text class="file" x="80" y="126">PullToRefresh.tsx  GestureLockScreen.tsx  MobilePushBridge.tsx  AppUpdateChecker.tsx</text>
+
+      <text class="label" y="144">&#x5176;&#x4ED6;:</text>
+      <text class="file" x="80" y="144">ThemeToggle.tsx  tokens.ts  smartSocket.ts  useIsMobile.ts</text>
+    </g>
+  </g>
+
+  <!-- ========== Stores/Hooks/Utils ========== -->
+  <g transform="translate(32,1330)">
+    <line x1="0" y1="-10" x2="690" y2="-10" class="sep"/>
+    <text class="section">stores/ &#x5168;&#x5C40;&#x72B6;&#x6001;&#x7BA1;&#x7406; (Zustand) <tspan class="count">(7)</tspan></text>
+    <text class="file" x="14" y="18">useUserStore.ts &#x2014; &#x7528;&#x6237;&#x4FE1;&#x606F;/&#x767B;&#x5F55;&#x72B6;&#x6001;</text>
+    <text class="file" x="14" y="31">useThemeStore.ts &#x2014; &#x4E3B;&#x9898;&#x5207;&#x6362;(&#x4EAE;/&#x6697;)</text>
+    <text class="file" x="14" y="44">useI18nStore.ts &#x2014; &#x591A;&#x8BED;&#x8A00;</text>
+    <text class="file" x="14" y="57">useProjectTabStore.ts &#x2014; &#x9879;&#x76EE;Tab&#x72B6;&#x6001;/&#x7EA2;&#x6807;</text>
+    <text class="file" x="14" y="70">useEnterpriseStore.ts &#x2014; &#x5F53;&#x524D;&#x4F01;&#x4E1A;</text>
+    <text class="file" x="14" y="83">useNicknameStore.ts &#x2014; &#x6635;&#x79F0;&#x7F13;&#x5B58;</text>
+    <text class="file" x="14" y="96">permissions.tsx &#x2014; &#x6743;&#x9650;Context</text>
+  </g>
+
+  <g transform="translate(32,1448)">
+    <text class="section">hooks/ &#x81EA;&#x5B9A;&#x4E49;Hooks <tspan class="count">(6)</tspan></text>
+    <text class="file" x="14" y="18">useApi.ts &#x2014; API&#x8BF7;&#x6C42;Hook</text>
+    <text class="file" x="14" y="31">useI18n.ts &#x2014; &#x591A;&#x8BED;&#x8A00;Hook</text>
+    <text class="file" x="14" y="44">useLiveData.ts &#x2014; &#x5B9E;&#x65F6;&#x6570;&#x636E;&#x8BA2;&#x9605;</text>
+    <text class="file" x="14" y="57">useLiveQuery.ts &#x2014; &#x5B9E;&#x65F6;&#x67E5;&#x8BE2;</text>
+    <text class="file" x="14" y="70">useProjectPerms.ts &#x2014; &#x9879;&#x76EE;&#x6743;&#x9650;</text>
+    <text class="file" x="14" y="83">useTheme.ts &#x2014; &#x4E3B;&#x9898;Hook</text>
+  </g>
+
+  <g transform="translate(32,1553)">
+    <text class="section">utils/ &#x5DE5;&#x5177;&#x51FD;&#x6570; <tspan class="count">(5)</tspan></text>
+    <text class="file" x="14" y="18">capacitor.ts &#x2014; SERVER_URL / APP_VERSION / isCapacitor &#x5E38;&#x91CF;</text>
+    <text class="file" x="14" y="31">liveUpdate.ts &#x2014; OTA&#x70ED;&#x66F4;&#x65B0;&#xFF1A;&#x68C0;&#x67E5;+&#x4E0B;&#x8F7D;+&#x5E94;&#x7528;dist.zip</text>
+    <text class="file" x="14" y="44">datetime.ts &#x2014; &#x65E5;&#x671F;&#x65F6;&#x95F4;&#x683C;&#x5F0F;&#x5316;</text>
+    <text class="file" x="14" y="57">notificationSound.ts &#x2014; &#x901A;&#x77E5;&#x63D0;&#x793A;&#x97F3;</text>
+    <text class="file" x="14" y="70">projectIcons.ts &#x2014; &#x9879;&#x76EE;&#x56FE;&#x6807;&#x6620;&#x5C04;</text>
+  </g>
+
+  <g transform="translate(32,1645)">
+    <text class="section">data/ &#x9759;&#x6001;&#x6570;&#x636E; <tspan class="count">(3)</tspan></text>
+    <text class="file" x="14" y="18">routeManifest.ts &#x2014; &#x8DEF;&#x7531;&#x6E05;&#x5355;/&#x83DC;&#x5355;&#x914D;&#x7F6E;</text>
+    <text class="file" x="14" y="31">locales/zh-CN.ts &#x2014; &#x4E2D;&#x6587;&#x7FFB;&#x8BD1;</text>
+    <text class="file" x="14" y="44">locales/en-US.ts &#x2014; &#x82F1;&#x6587;&#x7FFB;&#x8BD1;</text>
+  </g>
+
+  <g transform="translate(32,1711)">
+    <text class="section">types/ &#x7C7B;&#x578B;&#x5B9A;&#x4E49; <tspan class="count">(1)</tspan></text>
+    <text class="file" x="14" y="18">index.ts &#x2014; TypeScript &#x5168;&#x5C40;&#x7C7B;&#x578B;</text>
+  </g>
+
+  <g transform="translate(32,1751)">
+    <text class="section">&#x524D;&#x7AEF;&#x6839;&#x76EE;&#x5F55;</text>
+    <text class="file" x="14" y="18">main.tsx &#x2014; &#x5E94;&#x7528;&#x5165;&#x53E3;(&#x542F;&#x52A8;LiveUpdate)</text>
+    <text class="file" x="14" y="31">bootstrap.ts &#x2014; BACKEND_URL / fetchApi</text>
+    <text class="file" x="14" y="44">App.tsx &#x2014; &#x8DEF;&#x7531;&#x914D;&#x7F6E;</text>
+    <text class="file" x="14" y="57">capacitor.config.ts &#x2014; Capacitor&#x914D;&#x7F6E;(CapacitorHttp/Updater)</text>
+    <text class="file" x="14" y="70">vite.config.ts &#x2014; Vite&#x6784;&#x5EFA;&#x914D;&#x7F6E;</text>
+  </g>
+
+  <!-- ========== RIGHT COLUMN: BACKEND ========== -->
+  <rect x="760" y="80" width="720" height="1820" fill="#fff" rx="10" stroke="#e2e8f0"/>
+  <rect x="760" y="80" width="720" height="30" fill="#8b5cf6" rx="10"/>
+  <rect x="760" y="98" width="720" height="12" fill="#8b5cf6"/>
+  <text x="776" y="102" class="hdr">&#x540E;&#x7AEF; server/duijie/</text>
+
+  <g transform="translate(772,128)">
+    <text class="section">atomic/controllers/ &#x63A7;&#x5236;&#x5668; <tspan class="count">(184&#x4E2A;&#x6587;&#x4EF6;)</tspan></text>
+
+    <!-- auth controllers -->
+    <g transform="translate(0,20)">
+      <text class="folder">&#x25BC; auth/ <tspan class="count">(18)</tspan></text>
+      <text class="desc" x="180" y="0">&#x8BA4;&#x8BC1;/&#x5B89;&#x5168;/&#x4F1A;&#x8BDD;</text>
+      <text class="file" x="14" y="16">loginController &#x2014; &#x767B;&#x5F55;</text>
+      <text class="file" x="14" y="29">registerController &#x2014; &#x6CE8;&#x518C;</text>
+      <text class="file" x="14" y="42">logoutController &#x2014; &#x767B;&#x51FA;</text>
+      <text class="file" x="14" y="55">changePasswordController &#x2014; &#x4FEE;&#x6539;&#x5BC6;&#x7801;</text>
+      <text class="file" x="14" y="68">forgotPasswordController &#x2014; &#x5FD8;&#x8BB0;&#x5BC6;&#x7801;</text>
+      <text class="file" x="14" y="81">sendCodeController &#x2014; &#x53D1;&#x9001;&#x9A8C;&#x8BC1;&#x7801;</text>
+      <text class="file" x="14" y="94">sessionsListController &#x2014; &#x767B;&#x5F55;&#x8BBE;&#x5907;&#x5217;&#x8868;</text>
+      <text class="file" x="14" y="107">meController, refreshController, profileController, avatarController &#x7B49;</text>
+    </g>
+
+    <!-- project controllers -->
+    <g transform="translate(0,148)">
+      <text class="folder">&#x25BC; project/ <tspan class="count">(41)</tspan></text>
+      <text class="desc" x="180" y="0">&#x9879;&#x76EE;&#x7BA1;&#x7406;(&#x6700;&#x5927;)</text>
+      <text class="file" x="14" y="16">createController, deleteController, updateController &#x2014; &#x57FA;&#x672C;CRUD</text>
+      <text class="file" x="14" y="29">detailController, listController &#x2014; &#x67E5;&#x8BE2;</text>
+      <text class="file" x="14" y="42">addMemberController, removeMemberController &#x2014; &#x6210;&#x5458;&#x7BA1;&#x7406;</text>
+      <text class="file" x="14" y="55">inviteMemberController, generateInviteTokenController &#x2014; &#x9080;&#x8BF7;</text>
+      <text class="file" x="14" y="68">joinRequestController, joinRequestListController &#x2014; &#x52A0;&#x5165;&#x7533;&#x8BF7;</text>
+      <text class="file" x="14" y="81">projectRoleController, myPermsController &#x2014; &#x89D2;&#x8272;&#x6743;&#x9650;</text>
+      <text class="file" x="14" y="94">trashController, restoreController &#x2014; &#x56DE;&#x6536;&#x7AD9;</text>
+      <text class="file" x="14" y="107">exportController, importController &#x2014; &#x5BFC;&#x5165;&#x5BFC;&#x51FA;</text>
+      <text class="file" x="14" y="120">activityController, setCoverController, setNicknameController &#x7B49;</text>
+    </g>
+
+    <!-- client controllers -->
+    <g transform="translate(0,290)">
+      <text class="folder">&#x25BC; client/ <tspan class="count">(12)</tspan></text>
+      <text class="desc" x="180" y="0">&#x5BA2;&#x6237;&#x7BA1;&#x7406;</text>
+      <text class="file" x="14" y="16">createController, deleteController, updateController, detailController, listController</text>
+      <text class="file" x="14" y="29">logsController, scoreController, importController, clientMembersController &#x7B49;</text>
+    </g>
+
+    <!-- task controllers -->
+    <g transform="translate(0,339)">
+      <text class="folder">&#x25BC; task/ <tspan class="count">(13)</tspan></text>
+      <text class="desc" x="180" y="0">&#x4EFB;&#x52A1;&#x7BA1;&#x7406;</text>
+      <text class="file" x="14" y="16">create, delete, update, list, move, draft, export &#x2014; &#x57FA;&#x672C;&#x64CD;&#x4F5C;</text>
+      <text class="file" x="14" y="29">trashController, restoreController &#x2014; &#x56DE;&#x6536;&#x7AD9;</text>
+      <text class="file" x="14" y="42">uploadAttachment, downloadAttachment, deleteAttachment &#x2014; &#x9644;&#x4EF6;</text>
+      <text class="file" x="14" y="55">reviewPointsController &#x2014; &#x5BA1;&#x6838;&#x8981;&#x70B9;</text>
+    </g>
+
+    <!-- enterprise -->
+    <g transform="translate(0,414)">
+      <text class="folder">&#x25BC; enterprise/ <tspan class="count">(8)</tspan></text>
+      <text class="desc" x="180" y="0">&#x4F01;&#x4E1A;&#x7BA1;&#x7406;</text>
+      <text class="file" x="14" y="16">enterpriseCrudController &#x2014; &#x4F01;&#x4E1A;CRUD</text>
+      <text class="file" x="14" y="29">enterpriseDeptController &#x2014; &#x90E8;&#x95E8;&#x7BA1;&#x7406;</text>
+      <text class="file" x="14" y="42">enterpriseMemberController &#x2014; &#x6210;&#x5458;&#x7BA1;&#x7406;</text>
+      <text class="file" x="14" y="55">enterpriseRoleController &#x2014; &#x89D2;&#x8272;&#x7BA1;&#x7406;</text>
+      <text class="file" x="14" y="68">enterpriseJoinController, myEnterpriseController, enterpriseProfileController</text>
+    </g>
+
+    <!-- notification -->
+    <g transform="translate(0,502)">
+      <text class="folder">&#x25BC; notification/ <tspan class="count">(9)</tspan></text>
+      <text class="desc" x="180" y="0">&#x901A;&#x77E5;&#x7CFB;&#x7EDF;</text>
+      <text class="file" x="14" y="16">listController, markReadController, markReadByTabController &#x2014; &#x67E5;&#x770B;/&#x5DF2;&#x8BFB;</text>
+      <text class="file" x="14" y="29">sseController &#x2014; &#x670D;&#x52A1;&#x5668;&#x63A8;&#x9001;(SSE)</text>
+      <text class="file" x="14" y="42">unreadSummaryController &#x2014; &#x672A;&#x8BFB;&#x6C47;&#x603B;</text>
+      <text class="file" x="14" y="55">registerDeviceController, unregisterDeviceController &#x2014; &#x8BBE;&#x5907;&#x6CE8;&#x518C;</text>
+    </g>
+
+    <!-- milestone -->
+    <g transform="translate(0,577)">
+      <text class="folder">&#x25BC; milestone/ <tspan class="count">(15)</tspan></text>
+      <text class="desc" x="180" y="0">&#x91CC;&#x7A0B;&#x7891;</text>
+      <text class="file" x="14" y="16">create, delete, update, detail, list, toggle &#x2014; &#x57FA;&#x672C;CRUD</text>
+      <text class="file" x="14" y="29">addProgress, updateProgress, deleteProgress &#x2014; &#x8FDB;&#x5EA6;&#x7BA1;&#x7406;</text>
+      <text class="file" x="14" y="42">participants, setParticipants &#x2014; &#x53C2;&#x4E0E;&#x4EBA;</text>
+      <text class="file" x="14" y="55">reminders, addReminder, deleteReminder &#x2014; &#x63D0;&#x9192;</text>
+    </g>
+
+    <!-- other controllers -->
+    <g transform="translate(0,652)">
+      <text class="folder">&#x25BC; dm/ <tspan class="count">(5)</tspan> &#x2014; &#x79C1;&#x4FE1;</text>
+      <text class="file" x="14" y="16">conversations, history, send, recall, users</text>
+    </g>
+
+    <g transform="translate(0,688)">
+      <text class="folder">&#x25BC; file/ <tspan class="count">(8)</tspan> &#x2014; &#x6587;&#x4EF6;</text>
+      <text class="file" x="14" y="16">upload, download, delete, list, listAll, preview, addNote, addUrl</text>
+    </g>
+
+    <g transform="translate(0,724)">
+      <text class="folder">&#x25BC; ticket/ <tspan class="count">(6)</tspan> &#x2014; &#x5DE5;&#x5355;</text>
+      <text class="file" x="14" y="16">create, update, list, detail, reply, rate</text>
+    </g>
+
+    <g transform="translate(0,756)">
+      <text class="folder">&#x25BC; system/ <tspan class="count">(3)</tspan> &#x2014; &#x7CFB;&#x7EDF;</text>
+      <text class="file" x="14" y="16">appVersionController &#x2014; &#x7248;&#x672C;&#x4FE1;&#x606F;+CHANGELOG&#x89E3;&#x6790;</text>
+      <text class="file" x="14" y="29">bundleController &#x2014; &#x70ED;&#x66F4;&#x65B0;&#x5305;&#x4FE1;&#x606F;(dist.zip)</text>
+      <text class="file" x="14" y="42">configController &#x2014; &#x7CFB;&#x7EDF;&#x914D;&#x7F6E;(JWT/&#x9080;&#x8BF7;&#x7801;)</text>
+    </g>
+
+    <g transform="translate(0,818)">
+      <text class="folder" style="fill:#475569">&#x5176;&#x4ED6;&#x63A7;&#x5236;&#x5668;: dashboard(4)  contact(5)  contract(4)  followUp(5)  invite(3)</text>
+      <text class="folder" x="0" y="16" style="fill:#475569">message(2)  opportunity(4)  resource(8)  search(1)  tag(4)  user(4)  ai(1)  audit(1)</text>
+    </g>
+  </g>
+
+  <!-- Routes -->
+  <g transform="translate(772,982)">
+    <line x1="0" y1="-10" x2="700" y2="-10" class="sep"/>
+    <text class="section">atomic/routes/ &#x8DEF;&#x7531; <tspan class="count">(12)</tspan></text>
+    <text class="file" x="14" y="18">auth.js &#x2014; &#x767B;&#x5F55;/&#x6CE8;&#x518C;/&#x5BC6;&#x7801;/&#x4F1A;&#x8BDD;</text>
+    <text class="file" x="14" y="31">admin.js &#x2014; &#x7528;&#x6237;&#x7BA1;&#x7406;/&#x7248;&#x672C;/&#x914D;&#x7F6E;/&#x5BA1;&#x8BA1;</text>
+    <text class="file" x="14" y="44">project.js &#x2014; &#x9879;&#x76EE;/&#x4EFB;&#x52A1;/&#x6587;&#x4EF6;/&#x6D88;&#x606F;/&#x91CC;&#x7A0B;&#x7891;</text>
+    <text class="file" x="14" y="57">client.js &#x2014; &#x5BA2;&#x6237;/&#x8054;&#x7CFB;&#x4EBA;/&#x5408;&#x540C;/&#x8DDF;&#x8FDB;</text>
+    <text class="file" x="14" y="70">enterprise.js &#x2014; &#x4F01;&#x4E1A;/&#x90E8;&#x95E8;/&#x89D2;&#x8272;/&#x52A0;&#x5165;</text>
+    <text class="file" x="14" y="83">task.js, communication.js, crm.js, opportunity.js, partner.js, upload.js, index.js</text>
+  </g>
+
+  <!-- Middleware -->
+  <g transform="translate(772,1088)">
+    <text class="section">atomic/middleware/ &#x4E2D;&#x95F4;&#x4EF6; <tspan class="count">(16)</tspan></text>
+    <text class="file" x="14" y="18">auth.js &#x2014; JWT&#x8BA4;&#x8BC1;</text>
+    <text class="file" x="14" y="31">csrf.js &#x2014; &#x8DE8;&#x7AD9;&#x8BF7;&#x6C42;&#x9632;&#x62A4;(Double Submit Cookie)</text>
+    <text class="file" x="14" y="44">roleGuard.js &#x2014; &#x89D2;&#x8272;&#x5B88;&#x536B;(admin/user)</text>
+    <text class="file" x="14" y="57">errorHandler.js &#x2014; &#x5168;&#x5C40;&#x9519;&#x8BEF;&#x5904;&#x7406;</text>
+    <text class="file" x="14" y="70">validate.js / validators.js &#x2014; &#x53C2;&#x6570;&#x6821;&#x9A8C;</text>
+    <text class="file" x="14" y="83">auditMiddleware.js &#x2014; &#x5BA1;&#x8BA1;&#x65E5;&#x5FD7;&#x8BB0;&#x5F55;</text>
+    <text class="file" x="14" y="96">projectAccessGuard.js / projectPermGuard.js &#x2014; &#x9879;&#x76EE;&#x6743;&#x9650;</text>
+    <text class="file" x="14" y="109">taskPermGuard.js &#x2014; &#x4EFB;&#x52A1;&#x6743;&#x9650;</text>
+    <text class="file" x="14" y="122">enterprisePermGuard.js &#x2014; &#x4F01;&#x4E1A;&#x6743;&#x9650;</text>
+    <text class="file" x="14" y="135">clientAccessGuard.js &#x2014; &#x5BA2;&#x6237;&#x8BBF;&#x95EE;&#x63A7;&#x5236;</text>
+    <text class="file" x="14" y="148">antiBot.js &#x2014; &#x9632;&#x673A;&#x5668;&#x4EBA;</text>
+    <text class="file" x="14" y="161">xssMiddleware.js &#x2014; XSS&#x9632;&#x62A4;</text>
+    <text class="file" x="14" y="174">partnerAuth.js, reviewPointPermGuard.js</text>
+  </g>
+
+  <!-- Utils -->
+  <g transform="translate(772,1286)">
+    <line x1="0" y1="-10" x2="700" y2="-10" class="sep"/>
+    <text class="section">atomic/utils/ &#x5DE5;&#x5177; <tspan class="count">(17)</tspan></text>
+    <text class="file" x="14" y="18">authToken.js &#x2014; JWT&#x751F;&#x6210;/&#x9A8C;&#x8BC1;/&#x7528;&#x6237;Payload&#x6784;&#x5EFA;</text>
+    <text class="file" x="14" y="31">notify.js &#x2014; &#x901A;&#x77E5;&#x53D1;&#x9001;(&#x5355;&#x4EBA;/&#x591A;&#x4EBA;)</text>
+    <text class="file" x="14" y="44">broadcast.js &#x2014; WebSocket&#x5E7F;&#x64AD;</text>
+    <text class="file" x="14" y="57">auditLog.js &#x2014; &#x5BA1;&#x8BA1;&#x65E5;&#x5FD7;&#x5DE5;&#x5177;</text>
+    <text class="file" x="14" y="70">AppError.js &#x2014; &#x81EA;&#x5B9A;&#x4E49;&#x9519;&#x8BEF;&#x7C7B;</text>
+    <text class="file" x="14" y="83">transaction.js &#x2014; &#x6570;&#x636E;&#x5E93;&#x4E8B;&#x52A1;&#x5C01;&#x88C5;</text>
+    <text class="file" x="14" y="96">projectPerms.js / projectRoles.js &#x2014; &#x9879;&#x76EE;&#x6743;&#x9650;&#x5DE5;&#x5177;</text>
+    <text class="file" x="14" y="109">memoryCache.js / cacheInvalidation.js &#x2014; &#x5185;&#x5B58;&#x7F13;&#x5B58;</text>
+    <text class="file" x="14" y="122">mobilePush.js &#x2014; &#x79FB;&#x52A8;&#x63A8;&#x9001;</text>
+    <text class="file" x="14" y="135">fileAccess.js, optimisticLock.js, generateDisplayId.js, generateInviteCode.js</text>
+    <text class="file" x="14" y="148">taskTitlePresets.js, MySQLRateLimitStore.js</text>
+  </g>
+
+  <!-- Services summary -->
+  <g transform="translate(772,1458)">
+    <line x1="0" y1="-10" x2="700" y2="-10" class="sep"/>
+    <text class="section">atomic/services/ &#x4E1A;&#x52A1;&#x903B;&#x8F91;&#x5C42; <tspan class="count">(71)</tspan></text>
+    <text class="file" x="14" y="18">auth(1): loginService</text>
+    <text class="file" x="14" y="31">project(5): createProject, deleteProject, getProjectDetail, listProjects, updateProject</text>
+    <text class="file" x="14" y="44">client(7): createClient, deleteClient, getClientDetail, getClientLogs, listClients, scoreClient, updateClient</text>
+    <text class="file" x="14" y="57">task(4): createTask, listTasks, moveTask, updateTask</text>
+    <text class="file" x="14" y="70">dm(6): sendMessage, recallMessage, getHistory, listConversations, listUsers, contactScope</text>
+    <text class="file" x="14" y="83">file(4): uploadFile, deleteFile, getFileById, listFiles</text>
+    <text class="file" x="14" y="96">ticket(6): createTicket, getTicketDetail, listTickets, rateTicket, replyTicket, updateTicket</text>
+    <text class="file" x="14" y="109">milestone(3)  notification(2)  opportunity(4)  contact(5)  contract(4)</text>
+    <text class="file" x="14" y="122">followUp(2)  invite(3)  message(2)  dashboard(1)  search(1)  tag(3)  user(4)  ai(2)  audit(1)</text>
+  </g>
+
+  <!-- Repositories summary -->
+  <g transform="translate(772,1604)">
+    <text class="section">atomic/repositories/ &#x6570;&#x636E;&#x5E93;&#x67E5;&#x8BE2;&#x5C42; <tspan class="count">(77)</tspan></text>
+    <text class="file" x="14" y="18">auth(3)  project(5)  client(7)  task(4)  dm(7)  file(4)  notification(2)</text>
+    <text class="file" x="14" y="31">milestone(3)  ticket(11)  opportunity(4)  contact(5)  contract(4)  followUp(2)</text>
+    <text class="file" x="14" y="44">invite(3)  message(2)  tag(4)  user(5)  audit(1)</text>
+  </g>
+
+  <!-- Config/Socket/Events/Jobs -->
+  <g transform="translate(772,1672)">
+    <line x1="0" y1="-10" x2="700" y2="-10" class="sep"/>
+    <text class="section">config/ &#x914D;&#x7F6E; <tspan class="count">(4)</tspan></text>
+    <text class="file" x="14" y="18">db.js &#x2014; MySQL&#x6570;&#x636E;&#x5E93;&#x8FDE;&#x63A5;&#x6C60;</text>
+    <text class="file" x="14" y="31">logger.js &#x2014; &#x65E5;&#x5FD7;(Winston)</text>
+    <text class="file" x="14" y="44">redis.js &#x2014; Redis&#x8FDE;&#x63A5;</text>
+    <text class="file" x="14" y="57">mailer.js &#x2014; &#x90AE;&#x4EF6;&#x53D1;&#x9001;</text>
+  </g>
+
+  <g transform="translate(772,1751)">
+    <text class="section">socket/ + events/ + jobs/ + listeners/</text>
+    <text class="file" x="14" y="18">socket/index.js &#x2014; Socket.IO&#x5B9E;&#x65F6;&#x901A;&#x4FE1;(&#x7FA4;&#x804A;/&#x79C1;&#x4FE1;/&#x901A;&#x77E5;)</text>
+    <text class="file" x="14" y="31">events/eventTypes.js, events/index.js &#x2014; &#x4E8B;&#x4EF6;&#x7C7B;&#x578B;&#x5B9A;&#x4E49;</text>
+    <text class="file" x="14" y="44">jobs/milestoneReminder.js &#x2014; &#x91CC;&#x7A0B;&#x7891;&#x63D0;&#x9192;&#x5B9A;&#x65F6;&#x4EFB;&#x52A1;</text>
+    <text class="file" x="14" y="57">listeners/messageListener.js &#x2014; &#x6D88;&#x606F;&#x4E8B;&#x4EF6;&#x76D1;&#x542C;</text>
+    <text class="file" x="14" y="70">listeners/projectListener.js &#x2014; &#x9879;&#x76EE;&#x4E8B;&#x4EF6;&#x76D1;&#x542C;</text>
+    <text class="file" x="14" y="83">listeners/taskListener.js &#x2014; &#x4EFB;&#x52A1;&#x4E8B;&#x4EF6;&#x76D1;&#x542C;</text>
+  </g>
+
+  <!-- Migrations + Scripts -->
+  <g transform="translate(772,1857)">
+    <text class="section">migrations/ <tspan class="count">(53&#x4E2A;SQL + 1&#x4E2A;JS)</tspan></text>
+    <text class="file" x="14" y="18">001_init.sql ~ 053_xxx.sql &#x2014; &#x6570;&#x636E;&#x5E93;&#x7ED3;&#x6784;&#x8FC1;&#x79FB;</text>
+  </g>
+
+  <!-- ========== MOBILE SECTION ========== -->
+  <rect x="20" y="1920" width="1460" height="260" fill="#fff" rx="10" stroke="#e2e8f0"/>
+  <rect x="20" y="1920" width="1460" height="30" fill="#10b981" rx="10"/>
+  <rect x="20" y="1938" width="1460" height="12" fill="#10b981"/>
+  <text x="36" y="1944" class="hdr">&#x79FB;&#x52A8;&#x7AEF; Capacitor 8 Android &#x8BE6;&#x7EC6;&#x7ED3;&#x6784;</text>
+
+  <g transform="translate(36,1970)">
+    <text class="section">android/app/src/main/</text>
+    <text class="file" x="14" y="18">assets/public/ &#x2014; &#x524D;&#x7AEF;dist/&#x6784;&#x5EFA;&#x4EA7;&#x7269;&#xFF0C;&#x5D4C;&#x5165;&#x5230;APK&#x5185;&#xFF0C;&#x901A;&#x8FC7;Live Update&#x66F4;&#x65B0;</text>
+    <text class="file" x="14" y="34">java/com/duijie/app/MainActivity.java &#x2014; Android&#x539F;&#x751F;&#x5165;&#x53E3;&#xFF0C;&#x52A0;&#x8F7D;Capacitor WebView</text>
+    <text class="file" x="14" y="50">res/drawable/ &#x2014; &#x542F;&#x52A8;&#x753B;&#x9762;(splash)</text>
+    <text class="file" x="14" y="66">res/mipmap-*/ &#x2014; &#x5E94;&#x7528;&#x56FE;&#x6807;(&#x5404;&#x5206;&#x8FA8;&#x7387;)</text>
+    <text class="file" x="14" y="82">AndroidManifest.xml &#x2014; &#x6743;&#x9650;&#x58F0;&#x660E;(&#x7F51;&#x7EDC;/&#x5B58;&#x50A8;/&#x76F8;&#x673A;)&#xFF0C;usesCleartextTraffic=true</text>
+  </g>
+
+  <g transform="translate(550,1970)">
+    <text class="section">&#x79FB;&#x52A8;&#x7AEF;&#x4E13;&#x5C5E;&#x524D;&#x7AEF;&#x6587;&#x4EF6;</text>
+    <text class="file" x="14" y="18">features/mobile/MyPage.tsx &#x2014; &#x201C;&#x6211;&#x7684;&#x201D;&#x9875;&#x9762;: &#x4E2A;&#x4EBA;&#x4FE1;&#x606F;/&#x8BBE;&#x7F6E;&#x5165;&#x53E3;/&#x65B0;&#x624B;&#x5F15;&#x5BFC;/&#x7248;&#x672C;&#x4FE1;&#x606F;</text>
+    <text class="file" x="14" y="34">features/mobile/AboutPage.tsx &#x2014; &#x5173;&#x4E8E;&#x9875;: &#x7248;&#x672C;&#x5386;&#x53F2;/&#x68C0;&#x67E5;&#x66F4;&#x65B0;/APK&#x4E0B;&#x8F7D;</text>
+    <text class="file" x="14" y="50">features/mobile/ServicesPage.tsx &#x2014; &#x670D;&#x52A1;&#x5BFC;&#x822A;: &#x5305;&#x542B;&#x6240;&#x6709;&#x529F;&#x80FD;&#x6A21;&#x5757;&#x5165;&#x53E3;</text>
+    <text class="file" x="14" y="66">utils/liveUpdate.ts &#x2014; OTA&#x70ED;&#x66F4;&#x65B0;: &#x68C0;&#x67E5;&#x670D;&#x52A1;&#x5668;&#x2192;&#x4E0B;&#x8F7D;dist.zip&#x2192;&#x5E94;&#x7528;&#x5230;&#x4E0B;&#x6B21;&#x542F;&#x52A8;</text>
+    <text class="file" x="14" y="82">utils/capacitor.ts &#x2014; SERVER_URL(160.202.253.143:8080) / APP_VERSION / isCapacitor&#x5224;&#x65AD;</text>
+    <text class="file" x="14" y="98">capacitor.config.ts &#x2014; CapacitorHttp(&#x539F;&#x751F;HTTP&#x7ED5;&#x8FC7;CORS) / CapacitorUpdater(&#x70ED;&#x66F4;&#x65B0;)</text>
+    <text class="file" x="14" y="114">ui/useIsMobile.ts &#x2014; &#x79FB;&#x52A8;&#x7AEF;&#x68C0;&#x6D4B;Hook(&#x5C4F;&#x5E55;&#x5BBD;&#x5EA6;&lt;768px)</text>
+  </g>
+
+  <!-- ========== DEPLOY ========== -->
+  <rect x="20" y="2200" width="1460" height="200" fill="#fff" rx="10" stroke="#e2e8f0"/>
+  <rect x="20" y="2200" width="1460" height="30" fill="#f59e0b" rx="10"/>
+  <rect x="20" y="2218" width="1460" height="12" fill="#f59e0b"/>
+  <text x="36" y="2224" class="hdr">&#x90E8;&#x7F72; / &#x914D;&#x7F6E; / &#x6587;&#x6863;</text>
+
+  <g transform="translate(36,2250)">
+    <text class="file" y="0">deploy_update.py &#x2014; &#x5168;&#x6808;&#x90E8;&#x7F72;&#x811A;&#x672C;: SFTP&#x4E0A;&#x4F20;&#x524D;&#x540E;&#x7AEF;&#x6587;&#x4EF6; &#x2192; PM2&#x91CD;&#x542F; &#x2192; &#x5065;&#x5EB7;&#x68C0;&#x67E5; &#x2192; &#x6253;&#x5305;dist.zip&#x4E0A;&#x4F20;</text>
+    <text class="file" y="18">version.json &#x2014; &#x7248;&#x672C;&#x53F7;(v1.3.12) / versionCode(313) / minVersion / &#x66F4;&#x65B0;&#x65E5;&#x5FD7;</text>
+    <text class="file" y="36">CHANGELOG.md &#x2014; &#x5B8C;&#x6574;&#x7248;&#x672C;&#x5386;&#x53F2;&#xFF0C;&#x540E;&#x7AEF;&#x89E3;&#x6790;&#x540E;&#x63A8;&#x9001;&#x5230;&#x5173;&#x4E8E;&#x9875;</text>
+    <text class="file" y="54">PROJECT.md &#x2014; &#x9879;&#x76EE;&#x8BE6;&#x7EC6;&#x6587;&#x6863;(&#x529F;&#x80FD;/API/&#x6570;&#x636E;&#x5E93;/&#x89D2;&#x8272;&#x6743;&#x9650;)</text>
+    <text class="file" y="72">server/nginx/duijie.conf &#x2014; Nginx&#x53CD;&#x5411;&#x4EE3;&#x7406;/&#x9650;&#x901F;/&#x5B89;&#x5168;&#x5934;/&#x4E0B;&#x8F7D;&#x670D;&#x52A1;(.apk/.zip)</text>
+    <text class="file" y="90">docker-compose.yml &#x2014; Docker&#x7F16;&#x6392;</text>
+    <text class="file" y="108">Dockerfile &#x2014; &#x5BB9;&#x5668;&#x955C;&#x50CF;</text>
+  </g>
+
+  <g transform="translate(770,2250)">
+    <text class="section">scripts/ &#x8FD0;&#x7EF4;&#x811A;&#x672C; <tspan class="count">(9)</tspan></text>
+    <text class="file" x="14" y="18">migrate.js &#x2014; &#x6570;&#x636E;&#x5E93;&#x8FC1;&#x79FB;&#x8FD0;&#x884C;&#x5668;</text>
+    <text class="file" x="14" y="34">migrate-passwords.js &#x2014; &#x5BC6;&#x7801;&#x54C8;&#x5E0C;&#x8FC1;&#x79FB;</text>
+    <text class="file" x="14" y="50">migrate-rbac.js &#x2014; RBAC&#x6743;&#x9650;&#x8FC1;&#x79FB;</text>
+    <text class="file" x="14" y="66">seed-enterprise-roles.js &#x2014; &#x4F01;&#x4E1A;&#x89D2;&#x8272;&#x79CD;&#x5B50;&#x6570;&#x636E;</text>
+    <text class="file" x="14" y="82">seed-members.js &#x2014; &#x6210;&#x5458;&#x79CD;&#x5B50;&#x6570;&#x636E;</text>
+    <text class="file" x="14" y="98">backup-db.js &#x2014; &#x6570;&#x636E;&#x5E93;&#x5907;&#x4EFD;</text>
+    <text class="file" x="14" y="114">archive-audit-logs.js &#x2014; &#x5BA1;&#x8BA1;&#x65E5;&#x5FD7;&#x5F52;&#x6863;</text>
+  </g>
+
+  <!-- ========== TECH STACK ========== -->
+  <rect x="20" y="2420" width="1460" height="100" fill="#fff" rx="10" stroke="#e2e8f0"/>
+  <g transform="translate(36,2444)">
+    <text class="section" font-size="15">&#x6280;&#x672F;&#x6808;</text>
+    <g transform="translate(0,22)">
+      <rect width="76" height="22" rx="4" fill="#3b82f6"/>
+      <text x="6" y="15" class="badge" font-size="10">React 19</text>
+      <rect x="84" width="86" height="22" rx="4" fill="#3178c6"/>
+      <text x="90" y="15" class="badge" font-size="10">TypeScript</text>
+      <rect x="178" width="56" height="22" rx="4" fill="#646cff"/>
+      <text x="184" y="15" class="badge" font-size="10">Vite 6</text>
+      <rect x="242" width="96" height="22" rx="4" fill="#10b981"/>
+      <text x="248" y="15" class="badge" font-size="10">Capacitor 8</text>
+      <rect x="346" width="66" height="22" rx="4" fill="#68a063"/>
+      <text x="352" y="15" class="badge" font-size="10">Node.js</text>
+      <rect x="420" width="66" height="22" rx="4" fill="#333"/>
+      <text x="426" y="15" class="badge" font-size="10">Express</text>
+      <rect x="494" width="70" height="22" rx="4" fill="#4479a1"/>
+      <text x="500" y="15" class="badge" font-size="10">MySQL 8</text>
+      <rect x="572" width="50" height="22" rx="4" fill="#dc382d"/>
+      <text x="578" y="15" class="badge" font-size="10">Redis</text>
+      <rect x="630" width="56" height="22" rx="4" fill="#009639"/>
+      <text x="636" y="15" class="badge" font-size="10">Nginx</text>
+      <rect x="694" width="76" height="22" rx="4" fill="#8b5cf6"/>
+      <text x="700" y="15" class="badge" font-size="10">Socket.IO</text>
+      <rect x="778" width="40" height="22" rx="4" fill="#ea580c"/>
+      <text x="784" y="15" class="badge" font-size="10">PM2</text>
+      <rect x="826" width="40" height="22" rx="4" fill="#0ea5e9"/>
+      <text x="832" y="15" class="badge" font-size="10">SSE</text>
+      <rect x="874" width="56" height="22" rx="4" fill="#e11d48"/>
+      <text x="880" y="15" class="badge" font-size="10">Zustand</text>
+      <rect x="938" width="46" height="22" rx="4" fill="#06b6d4"/>
+      <text x="944" y="15" class="badge" font-size="10">bcrypt</text>
+      <rect x="992" width="40" height="22" rx="4" fill="#7c3aed"/>
+      <text x="998" y="15" class="badge" font-size="10">JWT</text>
+    </g>
+  </g>
+
+  <!-- ========== STATS ========== -->
+  <rect x="20" y="2540" width="1460" height="60" fill="#fff" rx="10" stroke="#e2e8f0"/>
+  <g transform="translate(36,2560)">
+    <rect width="180" height="28" rx="6" fill="#eff6ff" stroke="#bfdbfe"/>
+    <text x="10" y="19" class="folder" font-size="11">&#x524D;&#x7AEF;&#x6587;&#x4EF6;: ~120&#x4E2A;</text>
+    <rect x="200" width="200" height="28" rx="6" fill="#f5f3ff" stroke="#ddd6fe"/>
+    <text x="210" y="19" class="folder" font-size="11">&#x540E;&#x7AEF;&#x6587;&#x4EF6;: ~400&#x4E2A;</text>
+    <rect x="420" width="200" height="28" rx="6" fill="#fef3c7" stroke="#fde68a"/>
+    <text x="430" y="19" class="folder" font-size="11">&#x6570;&#x636E;&#x5E93;&#x8FC1;&#x79FB;: 53&#x4E2A;</text>
+    <rect x="640" width="200" height="28" rx="6" fill="#fce7f3" stroke="#fbcfe8"/>
+    <text x="650" y="19" class="folder" font-size="11">API&#x63A7;&#x5236;&#x5668;: 184&#x4E2A;</text>
+    <rect x="860" width="200" height="28" rx="6" fill="#ecfdf5" stroke="#a7f3d0"/>
+    <text x="870" y="19" class="folder" font-size="11">&#x4E2D;&#x95F4;&#x4EF6;: 16&#x4E2A;</text>
+    <rect x="1080" width="200" height="28" rx="6" fill="#fff7ed" stroke="#fed7aa"/>
+    <text x="1090" y="19" class="folder" font-size="11">&#x8DEF;&#x7531;&#x6587;&#x4EF6;: 12&#x4E2A;</text>
+  </g>
+
+  <!-- Server Info -->
+  <text x="36" y="2630" class="desc" font-size="12">&#x670D;&#x52A1;&#x5668;: 160.202.253.143 | Nginx: 8080 &#x2192; Node.js: 1800 | DB: MySQL duijie_db | Redis | PM2 | &#x7248;&#x672C;: v1.3.12 (versionCode: 313)</text>
+
+</svg>

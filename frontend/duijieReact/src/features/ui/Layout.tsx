@@ -38,6 +38,8 @@ export default function Layout() {
   const ptrRefreshingRef = useRef(false)
   const navigate = useNavigate()
   const location = useLocation()
+  const [pageAnim, setPageAnim] = useState('')
+  const prevPathRef = useRef(location.pathname)
   const role = user?.role || 'member'
   const NAV_ITEMS = navItems().filter(n => !n.perm || can(role, n.perm))
   
@@ -46,6 +48,25 @@ export default function Layout() {
   
 
   
+
+  useEffect(() => {
+    if (!isMobile) { prevPathRef.current = location.pathname; return }
+    const prev = prevPathRef.current
+    const cur = location.pathname
+    prevPathRef.current = cur
+    if (prev === cur) return
+
+    const mainPages = ['/', '/services', '/my']
+    const wasMain = mainPages.includes(prev)
+    const isMain = mainPages.includes(cur)
+
+    if (isMain && wasMain) setPageAnim('page-fade')
+    else if (isMain && !wasMain) setPageAnim('page-slide-left')
+    else setPageAnim('page-slide-right')
+
+    const t = setTimeout(() => setPageAnim(''), 280)
+    return () => clearTimeout(t)
+  }, [location.pathname, isMobile])
 
   useEffect(() => {
     if (!user?.id) return
@@ -374,13 +395,23 @@ export default function Layout() {
               }} />
             </div>
           )}
-          <Outlet context={{
-            user, isMobile, dmUnread,
-            openSettings: (tab: string) => setSettingsTab(tab as any),
-            openProfile: () => setProfileOpen(true),
-            openGuide: () => setGuideOpen(true),
-          }} />
-          {isMobile && <style>{`@keyframes ptr-spin{to{transform:rotate(360deg)}}`}</style>}
+          <div className={isMobile ? pageAnim : ''} style={isMobile && pageAnim ? { willChange: 'transform, opacity' } : undefined}>
+            <Outlet context={{
+              user, isMobile, dmUnread,
+              openSettings: (tab: string) => setSettingsTab(tab as any),
+              openProfile: () => setProfileOpen(true),
+              openGuide: () => setGuideOpen(true),
+            }} />
+          </div>
+          {isMobile && <style>{`
+            @keyframes ptr-spin{to{transform:rotate(360deg)}}
+            @keyframes pageSlideRight{from{transform:translateX(28%);opacity:.4}to{transform:translateX(0);opacity:1}}
+            @keyframes pageSlideLeft{from{transform:translateX(-28%);opacity:.4}to{transform:translateX(0);opacity:1}}
+            @keyframes pageFade{from{opacity:.5}to{opacity:1}}
+            .page-slide-right{animation:pageSlideRight .26s cubic-bezier(.25,.46,.45,.94)}
+            .page-slide-left{animation:pageSlideLeft .26s cubic-bezier(.25,.46,.45,.94)}
+            .page-fade{animation:pageFade .2s ease}
+          `}</style>}
         </main>
       </div>
 

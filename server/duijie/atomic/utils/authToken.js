@@ -11,6 +11,7 @@ function buildUserPayload(user) {
     avatar: user.avatar,
     role: user.role,
     client_id: user.client_id || null,
+    guide_done: user.guide_done || 0,
   };
 }
 

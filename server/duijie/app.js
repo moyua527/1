@@ -21,6 +21,8 @@ const DEFAULT_ORIGINS = [
   'http://127.0.0.1:1300',
   'http://160.202.253.143:8080',
   'http://160.202.253.143:1800',
+  'http://localhost',
+  'capacitor://localhost',
 ];
 const ALLOWED_ORIGINS = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(',').map(s => s.trim()).concat(DEFAULT_ORIGINS)
