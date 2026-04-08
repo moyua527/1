@@ -6,7 +6,10 @@ import { fetchApi } from '../../bootstrap'
 import { toast } from '../ui/Toast'
 
 const VERSION_LOG: { ver: string; date: string; desc: string }[] = [
-  { ver: '1.3.5', date: '2026-04-08', desc: '基础设施升级：Redis缓存、SSE推送、移动端账号与安全重构、通知带项目名、版本信息页' },
+  { ver: '1.3.8', date: '2026-04-08', desc: '版本号规范化、关于页从服务器实时获取版本号' },
+  { ver: '1.3.7', date: '2026-04-08', desc: '移动端账号与安全重构、通知带项目名、版本信息页' },
+  { ver: '1.3.6', date: '2026-04-08', desc: '修复移动端需求列表溢出、代办进度条、角标实时刷新' },
+  { ver: '1.3.5', date: '2026-04-08', desc: '基础设施升级：Redis缓存、SSE推送、Nginx优化' },
   { ver: '1.3.4', date: '2026-04-08', desc: 'APP更新修复：Service Worker缓存刷新、WebView缓存清理' },
   { ver: '1.3.3', date: '2026-04-08', desc: '移动端适配：项目图标自适应、需求看板响应式、客户详情单列化' },
   { ver: '1.3.2', date: '2026-04-07', desc: '任务权限补齐：细粒度权限校验覆盖任务编辑、状态流转、附件、审核要点' },

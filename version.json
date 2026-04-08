@@ -1,7 +1,7 @@
 {
-  "version": "1.3.5",
-  "versionCode": 306,
+  "version": "1.3.8",
+  "versionCode": 309,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "基础设施升级：Redis缓存、SSE推送、Nginx优化"
+  "changelog": "关于页版本号实时同步，版本号规范化"
 }
