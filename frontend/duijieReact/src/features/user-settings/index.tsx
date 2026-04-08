@@ -661,24 +661,49 @@ function BindContactBlock({ type, currentValue, userId, onUpdated }: {
   onUpdated: (value: string) => void
 }) {
   const [value, setValue] = useState(currentValue)
+  const [code, setCode] = useState('')
+  const [sending, setSending] = useState(false)
+  const [cooldown, setCooldown] = useState(0)
   const [saving, setSaving] = useState(false)
+  const [devCode, setDevCode] = useState('')
   const isPhone = type === 'phone'
   const label = isPhone ? '手机号' : '邮箱'
   const placeholder = isPhone ? '请输入手机号' : '请输入邮箱地址'
   const icon = isPhone ? <Phone size={18} style={{ color: 'var(--brand)' }} /> : <Mail size={18} style={{ color: 'var(--brand)' }} />
 
-  const handleSave = async () => {
+  const validateValue = () => {
     const trimmed = value.trim()
-    if (!trimmed) { toast(`请输入${label}`, 'error'); return }
-    if (isPhone && !/^1\d{10}$/.test(trimmed)) { toast('请输入正确的手机号', 'error'); return }
-    if (!isPhone && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) { toast('请输入正确的邮箱地址', 'error'); return }
+    if (!trimmed) { toast(`请输入${label}`, 'error'); return '' }
+    if (isPhone && !/^1\d{10}$/.test(trimmed)) { toast('请输入正确的手机号', 'error'); return '' }
+    if (!isPhone && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) { toast('请输入正确的邮箱地址', 'error'); return '' }
+    return trimmed
+  }
+
+  const handleSendCode = async () => {
+    const trimmed = validateValue()
+    if (!trimmed) return
+    setSending(true)
+    const r = await fetchApi('/api/auth/send-code', { method: 'POST', body: JSON.stringify({ type, target: trimmed }) })
+    setSending(false)
+    if (r.success) {
+      toast('验证码已发送', 'success')
+      if (r._dev_code) setDevCode(r._dev_code)
+      setCooldown(60)
+      const t = setInterval(() => setCooldown(c => { if (c <= 1) { clearInterval(t); return 0 } return c - 1 }), 1000)
+    } else toast(r.message || '发送失败', 'error')
+  }
+
+  const handleSave = async () => {
+    const trimmed = validateValue()
+    if (!trimmed) return
+    if (!code) { toast('请输入验证码', 'error'); return }
     if (trimmed === currentValue) { toast('没有变化', 'error'); return }
     setSaving(true)
-    const body: any = {}
+    const body: any = { code }
     body[type] = trimmed
     const r = await fetchApi('/api/auth/profile', { method: 'PUT', body: JSON.stringify(body) })
     setSaving(false)
-    if (r.success) onUpdated(trimmed)
+    if (r.success) { toast(`${label}${currentValue ? '修改' : '绑定'}成功`, 'success'); onUpdated(trimmed) }
     else toast(r.message || '更新失败', 'error')
   }
 
@@ -693,16 +718,38 @@ function BindContactBlock({ type, currentValue, userId, onUpdated }: {
           </div>
         </div>
       </div>
-      <Input label={`${currentValue ? '修改' : '绑定'}${label}`} placeholder={placeholder} value={value}
+      <Input label={`${currentValue ? '新' : ''}${label}`} placeholder={placeholder} value={value}
         onChange={e => setValue(e.target.value)} />
-      <button onClick={handleSave} disabled={saving} style={{
+      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+        <div style={{ flex: 1 }}>
+          <Input label="验证码" placeholder="输入6位验证码" value={code} onChange={e => setCode(e.target.value)} />
+        </div>
+        <button onClick={handleSendCode} disabled={sending || cooldown > 0}
+          style={{
+            padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border-primary)',
+            background: cooldown > 0 ? 'var(--bg-tertiary)' : 'var(--brand)',
+            color: cooldown > 0 ? 'var(--text-tertiary)' : '#fff',
+            fontSize: 13, fontWeight: 500, cursor: cooldown > 0 ? 'default' : 'pointer',
+            whiteSpace: 'nowrap', height: 38, flexShrink: 0,
+          }}>
+          {sending ? '发送中...' : cooldown > 0 ? `${cooldown}s` : '发送验证码'}
+        </button>
+      </div>
+      {devCode && (
+        <div style={{ fontSize: 11, color: 'var(--color-warning)', background: 'var(--bg-selected)', padding: '4px 8px', borderRadius: 6 }}>
+          开发环境验证码: <strong>{devCode}</strong>
+        </div>
+      )}
+      <button onClick={handleSave} disabled={saving || !code} style={{
         padding: '12px 0', borderRadius: 10, border: 'none',
-        background: 'var(--brand)', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer',
+        background: (!code) ? 'var(--bg-tertiary)' : 'var(--brand)',
+        color: (!code) ? 'var(--text-tertiary)' : '#fff',
+        fontSize: 15, fontWeight: 600, cursor: (!code) ? 'default' : 'pointer',
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
         opacity: saving ? 0.6 : 1,
       }}>
         {saving ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={14} />}
-        {saving ? '保存中...' : '保存'}
+        {saving ? '保存中...' : `${currentValue ? '修改' : '绑定'}${label}`}
       </button>
     </div>
   )

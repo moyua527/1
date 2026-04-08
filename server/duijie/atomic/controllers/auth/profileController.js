@@ -1,11 +1,11 @@
-﻿const db = require('../../../config/db');
+const db = require('../../../config/db');
 const bcrypt = require('bcryptjs');
 const cache = require('../../utils/memoryCache');
 
 module.exports = async (req, res) => {
   try {
     const userId = req.userId;
-    const { nickname, email, phone, username } = req.body;
+    const { nickname, email, phone, username, code } = req.body;
     const fields = [];
     const values = [];
     if (username !== undefined) {
@@ -16,8 +16,32 @@ module.exports = async (req, res) => {
       fields.push('username = ?'); values.push(uname);
     }
     if (nickname !== undefined) { fields.push('nickname = ?'); values.push(nickname); }
-    if (email !== undefined) { fields.push('email = ?'); values.push(email || null); }
-    if (phone !== undefined) { fields.push('phone = ?'); values.push(phone || null); }
+
+    if (phone !== undefined && phone) {
+      if (!code) return res.status(400).json({ success: false, message: '修改手机号需要验证码' });
+      const [vc] = await db.query(
+        'SELECT id FROM verification_codes WHERE type = ? AND target = ? AND code = ? AND expires_at > NOW() AND used = 0 ORDER BY created_at DESC LIMIT 1',
+        ['phone', phone, code]
+      );
+      if (vc.length === 0) return res.status(400).json({ success: false, message: '验证码无效或已过期' });
+      await db.query('UPDATE verification_codes SET used = 1 WHERE id = ?', [vc[0].id]);
+      fields.push('phone = ?'); values.push(phone);
+    } else if (phone !== undefined) {
+      fields.push('phone = ?'); values.push(null);
+    }
+
+    if (email !== undefined && email) {
+      if (!code) return res.status(400).json({ success: false, message: '修改邮箱需要验证码' });
+      const [vc] = await db.query(
+        'SELECT id FROM verification_codes WHERE type = ? AND target = ? AND code = ? AND expires_at > NOW() AND used = 0 ORDER BY created_at DESC LIMIT 1',
+        ['email', email, code]
+      );
+      if (vc.length === 0) return res.status(400).json({ success: false, message: '验证码无效或已过期' });
+      await db.query('UPDATE verification_codes SET used = 1 WHERE id = ?', [vc[0].id]);
+      fields.push('email = ?'); values.push(email);
+    } else if (email !== undefined) {
+      fields.push('email = ?'); values.push(null);
+    }
     if (fields.length === 0) return res.status(400).json({ success: false, message: '无更新内容' });
     values.push(userId);
     await db.query(`UPDATE voice_users SET ${fields.join(', ')} WHERE id = ?`, values);
