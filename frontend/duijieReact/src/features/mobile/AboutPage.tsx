@@ -1,11 +1,21 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, ChevronRight, ChevronDown, Loader2 } from 'lucide-react'
-import { APP_VERSION } from '../../utils/capacitor'
+import { ArrowLeft, ChevronRight, ChevronDown, Loader2, Download } from 'lucide-react'
+import { APP_VERSION, SERVER_URL } from '../../utils/capacitor'
 import { fetchApi } from '../../bootstrap'
 import { toast } from '../ui/Toast'
 
 type VersionEntry = { ver: string; date: string; desc: string }
+
+function compareVer(a: string, b: string): number {
+  const pa = a.split('.').map(Number)
+  const pb = b.split('.').map(Number)
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    if ((pa[i] || 0) < (pb[i] || 0)) return -1
+    if ((pa[i] || 0) > (pb[i] || 0)) return 1
+  }
+  return 0
+}
 
 export default function AboutPage() {
   const navigate = useNavigate()
@@ -13,12 +23,15 @@ export default function AboutPage() {
   const [showLog, setShowLog] = useState(false)
   const [serverVersion, setServerVersion] = useState(APP_VERSION)
   const [versionLog, setVersionLog] = useState<VersionEntry[]>([])
+  const [updateAvailable, setUpdateAvailable] = useState(false)
+  const [downloadUrl, setDownloadUrl] = useState('')
 
   useEffect(() => {
     fetchApi('/api/app/version?changelog=1').then(r => {
       if (r.success && r.data) {
         if (r.data.version) setServerVersion(r.data.version)
         if (r.data.changelogList?.length) setVersionLog(r.data.changelogList)
+        if (r.data.downloadUrl) setDownloadUrl(r.data.downloadUrl)
       }
     }).catch(() => {})
   }, [])
@@ -29,8 +42,10 @@ export default function AboutPage() {
       const r = await fetchApi('/api/app/version')
       if (r.success && r.data) {
         setServerVersion(r.data.version)
-        if (r.data.version !== APP_VERSION) {
-          toast(`发现新版本 v${r.data.version}，刷新页面即可更新`, 'success')
+        if (r.data.downloadUrl) setDownloadUrl(r.data.downloadUrl)
+        if (compareVer(APP_VERSION, r.data.version) < 0) {
+          setUpdateAvailable(true)
+          toast(`发现新版本 v${r.data.version}`, 'success')
         } else {
           toast('已是最新版本', 'success')
         }
@@ -41,6 +56,16 @@ export default function AboutPage() {
       toast('检查更新失败', 'error')
     }
     setChecking(false)
+  }
+
+  const startDownload = async () => {
+    const url = downloadUrl || `${SERVER_URL}/downloads/duijie.apk`
+    try {
+      const { Browser } = await import('@capacitor/browser')
+      await Browser.open({ url })
+    } catch {
+      window.open(url, '_blank') || (window.location.href = url)
+    }
   }
 
   return (
@@ -74,13 +99,32 @@ export default function AboutPage() {
               ? <ChevronDown size={18} style={{ color: 'var(--text-tertiary)' }} />
               : <ChevronRight size={18} style={{ color: 'var(--text-tertiary)' }} />}
           </div>
-          <div onClick={checkUpdate} style={{
-            display: 'flex', alignItems: 'center', padding: '16px 18px', cursor: 'pointer',
+          <div onClick={!updateAvailable ? checkUpdate : undefined} style={{
+            padding: '16px 18px', cursor: updateAvailable ? 'default' : 'pointer',
           }}>
-            <span style={{ flex: 1, fontSize: 16, color: 'var(--text-primary)' }}>版本更新</span>
-            {checking
-              ? <Loader2 size={16} style={{ color: 'var(--text-tertiary)', animation: 'spin 1s linear infinite' }} />
-              : <ChevronRight size={18} style={{ color: 'var(--text-tertiary)' }} />}
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ flex: 1, fontSize: 16, color: 'var(--text-primary)' }}>版本更新</span>
+              {checking ? (
+                <Loader2 size={16} style={{ color: 'var(--text-tertiary)', animation: 'spin 1s linear infinite' }} />
+              ) : updateAvailable ? (
+                <span style={{ fontSize: 13, color: '#22c55e', fontWeight: 600 }}>v{serverVersion} 可用</span>
+              ) : (
+                <ChevronRight size={18} style={{ color: 'var(--text-tertiary)' }} />
+              )}
+            </div>
+
+            {updateAvailable && (
+              <div style={{ marginTop: 14 }}>
+                <button onClick={startDownload} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  width: '100%', padding: '12px 0', background: 'var(--brand)', color: '#fff',
+                  borderRadius: 10, border: 'none', fontSize: 15, fontWeight: 600, cursor: 'pointer',
+                }}>
+                  <Download size={18} />
+                  下载更新包 (v{serverVersion})
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
