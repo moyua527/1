@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useOutletContext, useNavigate } from 'react-router-dom'
-import { LogOut, Palette, HelpCircle, ChevronRight, Shield } from 'lucide-react'
+import { LogOut, Palette, HelpCircle, ChevronRight, Shield, Info } from 'lucide-react'
 import useUserStore from '../../stores/useUserStore'
 import Avatar from '../ui/Avatar'
 import EnterpriseSwitcher from '../ui/EnterpriseSwitcher'
+import { APP_VERSION } from '../../utils/capacitor'
 
 interface LayoutContext {
   user: any
@@ -63,9 +64,18 @@ export default function MyPage() {
         ))}
       </div>
 
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 12, padding: '15px 16px', marginTop: 12,
+        background: 'var(--bg-primary)', borderRadius: 16,
+      }}>
+        <Info size={20} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
+        <span style={{ flex: 1, fontSize: 15, color: 'var(--text-primary)' }}>版本信息</span>
+        <span style={{ fontSize: 14, color: 'var(--text-tertiary)' }}>v{APP_VERSION}</span>
+      </div>
+
       <div onClick={logout}
         style={{
-          marginTop: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           padding: 16, borderRadius: 16, background: 'var(--bg-primary)', cursor: 'pointer',
           color: 'var(--color-danger)', fontSize: 15, fontWeight: 500,
         }}>
