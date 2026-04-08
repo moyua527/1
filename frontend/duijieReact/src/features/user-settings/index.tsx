@@ -184,36 +184,43 @@ export default function UserSettings() {
               {isMobile ? (
                 accountSub === 'password' ? (
                   <MobileSubPage title="密码设置" onBack={() => navigate('/user-settings?tab=account')}>
-                    {user.phone ? (
-                      <ChangePasswordBlock
-                        phone={user.phone} form={pwForm} setForm={setPwForm}
-                        sending={pwSending} cooldown={pwCooldown} saving={pwSaving} devCode={pwDevCode}
-                        onSendCode={async () => {
-                          setPwSending(true)
-                          const r = await fetchApi('/api/auth/send-code', { method: 'POST', body: JSON.stringify({ type: 'phone', target: user.phone }) })
-                          setPwSending(false)
-                          if (r.success) {
-                            toast('验证码已发送', 'success')
-                            if (r._dev_code) setPwDevCode(r._dev_code)
-                            setPwCooldown(60)
-                            const t = setInterval(() => setPwCooldown(c => { if (c <= 1) { clearInterval(t); return 0 } return c - 1 }), 1000)
-                          } else toast(r.message || '发送失败', 'error')
-                        }}
-                        onSubmit={async () => {
-                          if (!pwForm.code) { toast('请输入验证码', 'error'); return }
-                          if (pwForm.newPwd.length < 8) { toast('密码至少8位', 'error'); return }
-                          if (!/[a-zA-Z]/.test(pwForm.newPwd) || !/[0-9]/.test(pwForm.newPwd)) { toast('密码必须包含字母和数字', 'error'); return }
-                          if (pwForm.newPwd !== pwForm.confirmPwd) { toast('两次密码不一致', 'error'); return }
-                          setPwSaving(true)
-                          const r = await fetchApi('/api/auth/change-password', { method: 'PUT', body: JSON.stringify({ code: pwForm.code, new_password: pwForm.newPwd }) })
-                          setPwSaving(false)
-                          if (r.success) { toast('密码修改成功', 'success'); setPwForm({ code: '', newPwd: '', confirmPwd: '' }); setPwDevCode('') }
-                          else toast(r.message || '修改失败', 'error')
-                        }}
-                      />
-                    ) : (
+                    {(user.phone || user.email) ? (() => {
+                      const usePhone = !!user.phone
+                      const verifyTarget = usePhone ? user.phone : user.email!
+                      const verifyType = usePhone ? 'phone' : 'email'
+                      return (
+                        <ChangePasswordBlock
+                          phone={usePhone ? user.phone : undefined}
+                          email={!usePhone ? user.email : undefined}
+                          form={pwForm} setForm={setPwForm}
+                          sending={pwSending} cooldown={pwCooldown} saving={pwSaving} devCode={pwDevCode}
+                          onSendCode={async () => {
+                            setPwSending(true)
+                            const r = await fetchApi('/api/auth/send-code', { method: 'POST', body: JSON.stringify({ type: verifyType, target: verifyTarget }) })
+                            setPwSending(false)
+                            if (r.success) {
+                              toast('验证码已发送', 'success')
+                              if (r._dev_code) setPwDevCode(r._dev_code)
+                              setPwCooldown(60)
+                              const t = setInterval(() => setPwCooldown(c => { if (c <= 1) { clearInterval(t); return 0 } return c - 1 }), 1000)
+                            } else toast(r.message || '发送失败', 'error')
+                          }}
+                          onSubmit={async () => {
+                            if (!pwForm.code) { toast('请输入验证码', 'error'); return }
+                            if (pwForm.newPwd.length < 8) { toast('密码至少8位', 'error'); return }
+                            if (!/[a-zA-Z]/.test(pwForm.newPwd) || !/[0-9]/.test(pwForm.newPwd)) { toast('密码必须包含字母和数字', 'error'); return }
+                            if (pwForm.newPwd !== pwForm.confirmPwd) { toast('两次密码不一致', 'error'); return }
+                            setPwSaving(true)
+                            const r = await fetchApi('/api/auth/change-password', { method: 'PUT', body: JSON.stringify({ code: pwForm.code, new_password: pwForm.newPwd }) })
+                            setPwSaving(false)
+                            if (r.success) { toast('密码修改成功', 'success'); setPwForm({ code: '', newPwd: '', confirmPwd: '' }); setPwDevCode('') }
+                            else toast(r.message || '修改失败', 'error')
+                          }}
+                        />
+                      )
+                    })() : (
                       <div style={{ fontSize: 14, color: 'var(--text-tertiary)', padding: 16, textAlign: 'center' }}>
-                        <Smartphone size={18} style={{ marginBottom: 8 }} /><br />请先绑定手机号后才能修改密码
+                        <Mail size={18} style={{ marginBottom: 8 }} /><br />请先绑定手机号或邮箱后才能修改密码
                       </div>
                     )}
                   </MobileSubPage>
@@ -406,37 +413,44 @@ export default function UserSettings() {
                       ]} />
 
                       <SectionTitle style={{ marginTop: 8 }}>修改密码</SectionTitle>
-                      {user.phone ? (
-                        <ChangePasswordBlock
-                          phone={user.phone} form={pwForm} setForm={setPwForm}
-                          sending={pwSending} cooldown={pwCooldown} saving={pwSaving} devCode={pwDevCode}
-                          onSendCode={async () => {
-                            setPwSending(true)
-                            const r = await fetchApi('/api/auth/send-code', { method: 'POST', body: JSON.stringify({ type: 'phone', target: user.phone }) })
-                            setPwSending(false)
-                            if (r.success) {
-                              toast('验证码已发送', 'success')
-                              if (r._dev_code) setPwDevCode(r._dev_code)
-                              setPwCooldown(60)
-                              const t = setInterval(() => setPwCooldown(c => { if (c <= 1) { clearInterval(t); return 0 } return c - 1 }), 1000)
-                            } else toast(r.message || '发送失败', 'error')
-                          }}
-                          onSubmit={async () => {
-                            if (!pwForm.code) { toast('请输入验证码', 'error'); return }
-                            if (pwForm.newPwd.length < 8) { toast('密码至少8位', 'error'); return }
-                            if (!/[a-zA-Z]/.test(pwForm.newPwd) || !/[0-9]/.test(pwForm.newPwd)) { toast('密码必须包含字母和数字', 'error'); return }
-                            if (pwForm.newPwd !== pwForm.confirmPwd) { toast('两次密码不一致', 'error'); return }
-                            setPwSaving(true)
-                            const r = await fetchApi('/api/auth/change-password', { method: 'PUT', body: JSON.stringify({ code: pwForm.code, new_password: pwForm.newPwd }) })
-                            setPwSaving(false)
-                            if (r.success) { toast('密码修改成功', 'success'); setPwForm({ code: '', newPwd: '', confirmPwd: '' }); setPwDevCode('') }
-                            else toast(r.message || '修改失败', 'error')
-                          }}
-                        />
-                      ) : (
+                      {(user.phone || user.email) ? (() => {
+                        const usePhone = !!user.phone
+                        const verifyTarget = usePhone ? user.phone : user.email!
+                        const verifyType = usePhone ? 'phone' : 'email'
+                        return (
+                          <ChangePasswordBlock
+                            phone={usePhone ? user.phone : undefined}
+                            email={!usePhone ? user.email : undefined}
+                            form={pwForm} setForm={setPwForm}
+                            sending={pwSending} cooldown={pwCooldown} saving={pwSaving} devCode={pwDevCode}
+                            onSendCode={async () => {
+                              setPwSending(true)
+                              const r = await fetchApi('/api/auth/send-code', { method: 'POST', body: JSON.stringify({ type: verifyType, target: verifyTarget }) })
+                              setPwSending(false)
+                              if (r.success) {
+                                toast('验证码已发送', 'success')
+                                if (r._dev_code) setPwDevCode(r._dev_code)
+                                setPwCooldown(60)
+                                const t = setInterval(() => setPwCooldown(c => { if (c <= 1) { clearInterval(t); return 0 } return c - 1 }), 1000)
+                              } else toast(r.message || '发送失败', 'error')
+                            }}
+                            onSubmit={async () => {
+                              if (!pwForm.code) { toast('请输入验证码', 'error'); return }
+                              if (pwForm.newPwd.length < 8) { toast('密码至少8位', 'error'); return }
+                              if (!/[a-zA-Z]/.test(pwForm.newPwd) || !/[0-9]/.test(pwForm.newPwd)) { toast('密码必须包含字母和数字', 'error'); return }
+                              if (pwForm.newPwd !== pwForm.confirmPwd) { toast('两次密码不一致', 'error'); return }
+                              setPwSaving(true)
+                              const r = await fetchApi('/api/auth/change-password', { method: 'PUT', body: JSON.stringify({ code: pwForm.code, new_password: pwForm.newPwd }) })
+                              setPwSaving(false)
+                              if (r.success) { toast('密码修改成功', 'success'); setPwForm({ code: '', newPwd: '', confirmPwd: '' }); setPwDevCode('') }
+                              else toast(r.message || '修改失败', 'error')
+                            }}
+                          />
+                        )
+                      })() : (
                         <div style={{ fontSize: 13, color: 'var(--text-tertiary)', padding: '12px 0' }}>
-                          <Smartphone size={14} style={{ marginRight: 4, verticalAlign: -2 }} />
-                          请先在上方编辑资料中绑定手机号，才能修改密码
+                          <Mail size={14} style={{ marginRight: 4, verticalAlign: -2 }} />
+                          请先绑定手机号或邮箱，才能修改密码
                         </div>
                       )}
 
@@ -694,8 +708,9 @@ function BindContactBlock({ type, currentValue, userId, onUpdated }: {
   )
 }
 
-function ChangePasswordBlock({ phone, form, setForm, sending, cooldown, saving, devCode, onSendCode, onSubmit }: {
-  phone: string
+function ChangePasswordBlock({ phone, email, form, setForm, sending, cooldown, saving, devCode, onSendCode, onSubmit }: {
+  phone?: string
+  email?: string
   form: { code: string; newPwd: string; confirmPwd: string }
   setForm: (f: { code: string; newPwd: string; confirmPwd: string }) => void
   sending: boolean
@@ -705,12 +720,18 @@ function ChangePasswordBlock({ phone, form, setForm, sending, cooldown, saving, 
   onSendCode: () => void
   onSubmit: () => void
 }) {
-  const masked = phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')
+  const usePhone = !!phone
+  const target = usePhone ? phone : email || ''
+  const masked = usePhone
+    ? target.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')
+    : target.replace(/^(.{2})(.*)(@.*)$/, (_, a, b, c) => a + '*'.repeat(Math.min(b.length, 4)) + c)
+  const Icon = usePhone ? Smartphone : Mail
+  const label = usePhone ? '手机号' : '邮箱'
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ fontSize: 13, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 6 }}>
-        <Smartphone size={14} style={{ color: 'var(--text-tertiary)' }} />
-        验证手机号 <strong style={{ color: 'var(--text-heading)' }}>{masked}</strong> 后修改密码
+        <Icon size={14} style={{ color: 'var(--text-tertiary)' }} />
+        验证{label} <strong style={{ color: 'var(--text-heading)' }}>{masked}</strong> 后修改密码
       </div>
 
       <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
