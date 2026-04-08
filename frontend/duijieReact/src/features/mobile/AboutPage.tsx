@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, ChevronRight, ChevronDown, Loader2 } from 'lucide-react'
 import { APP_VERSION } from '../../utils/capacitor'
@@ -26,14 +26,22 @@ export default function AboutPage() {
   const navigate = useNavigate()
   const [checking, setChecking] = useState(false)
   const [showLog, setShowLog] = useState(false)
+  const [serverVersion, setServerVersion] = useState(APP_VERSION)
+
+  useEffect(() => {
+    fetchApi('/api/version').then(r => {
+      if (r.success && r.data?.version) setServerVersion(r.data.version)
+    }).catch(() => {})
+  }, [])
 
   const checkUpdate = async () => {
     setChecking(true)
     try {
       const r = await fetchApi('/api/version')
       if (r.success && r.data) {
+        setServerVersion(r.data.version)
         if (r.data.version !== APP_VERSION) {
-          toast(`发现新版本 v${r.data.version}`, 'success')
+          toast(`发现新版本 v${r.data.version}，刷新页面即可更新`, 'success')
         } else {
           toast('已是最新版本', 'success')
         }
@@ -65,7 +73,7 @@ export default function AboutPage() {
           </div>
         </div>
         <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-heading)', marginBottom: 4 }}>DuiJie</div>
-        <div style={{ fontSize: 15, color: 'var(--text-tertiary)', marginBottom: 32 }}>Version {APP_VERSION}</div>
+        <div style={{ fontSize: 15, color: 'var(--text-tertiary)', marginBottom: 32 }}>Version {serverVersion}</div>
 
         <div style={{ width: '100%', background: 'var(--bg-primary)', borderRadius: 16, overflow: 'hidden', marginBottom: 16 }}>
           <div onClick={() => setShowLog(!showLog)} style={{
@@ -95,8 +103,8 @@ export default function AboutPage() {
                 borderBottom: i < VERSION_LOG.length - 1 ? '1px solid var(--border-secondary)' : 'none',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontSize: 15, fontWeight: 600, color: item.ver === APP_VERSION ? 'var(--brand)' : 'var(--text-heading)' }}>
-                    v{item.ver} {item.ver === APP_VERSION && '(当前)'}
+                  <span style={{ fontSize: 15, fontWeight: 600, color: serverVersion.startsWith(item.ver) ? 'var(--brand)' : 'var(--text-heading)' }}>
+                    v{item.ver} {serverVersion.startsWith(item.ver) && '(当前)'}
                   </span>
                   <span style={{ fontSize: 12, color: 'var(--text-disabled)' }}>{item.date}</span>
                 </div>
