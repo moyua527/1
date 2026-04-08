@@ -159,6 +159,23 @@ def main():
         sftp.put(local_version, f'{REMOTE_BASE}/version.json')
         print(f'    ↑ {REMOTE_BASE}/version.json')
 
+    # 4.6. Create and upload dist.zip for live update
+    print('\n[4.6/5] Creating dist.zip for live update...')
+    import zipfile
+    local_zip = os.path.join(LOCAL_BASE, 'frontend', 'duijieReact', 'dist.zip')
+    with zipfile.ZipFile(local_zip, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for root, dirs, files in os.walk(local_dist):
+            for f in files:
+                full = os.path.join(root, f)
+                arcname = os.path.relpath(full, local_dist)
+                zf.write(full, arcname)
+    zip_size_mb = os.path.getsize(local_zip) / 1048576
+    print(f'    ✓ dist.zip created ({zip_size_mb:.1f} MB)')
+    remote_downloads = f'{REMOTE_BASE}/downloads'
+    run_cmd(ssh, f'mkdir -p {remote_downloads}')
+    sftp.put(local_zip, f'{remote_downloads}/dist.zip')
+    print(f'    ↑ {remote_downloads}/dist.zip')
+
     # 5. Restart
     print('\n[5/7] Restarting backend...')
     run_cmd(ssh, 'pm2 restart duijie', 'PM2 restart')

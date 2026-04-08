@@ -41,6 +41,9 @@ router.get('/search', auth, require('../controllers/search/searchController'));
 // App version check
 router.get('/app/version', require('../controllers/system/appVersionController'));
 
+// App bundle (live update)
+router.get('/app/bundle', require('../controllers/system/bundleController'));
+
 // Dashboard
 router.get('/dashboard/stats', auth, require('../controllers/dashboard/statsController'));
 const enterprisePermGuard = require('../middleware/enterprisePermGuard');

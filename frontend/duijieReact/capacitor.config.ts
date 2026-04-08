@@ -13,8 +13,6 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'http',
     cleartext: true,
-    hostname: '160.202.253.143',
-    url: 'http://160.202.253.143:8080',
   },
   plugins: {
     StatusBar: {
@@ -25,6 +23,9 @@ const config: CapacitorConfig = {
     Keyboard: {
       resize: 'body',
       resizeOnFullScreen: true,
+    },
+    CapacitorUpdater: {
+      autoUpdate: false,
     },
   },
 };

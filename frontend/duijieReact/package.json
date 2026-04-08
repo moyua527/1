@@ -21,6 +21,7 @@
     "@capacitor/browser": "^8.0.3",
     "@capacitor/cli": "^8.2.0",
     "@capacitor/core": "^8.2.0",
+    "@capgo/capacitor-updater": "^8.45.3",
     "@tanstack/react-query": "^5.95.2",
     "@tanstack/react-virtual": "^3.13.23",
     "driver.js": "^1.4.0",
