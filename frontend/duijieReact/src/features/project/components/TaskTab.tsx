@@ -47,6 +47,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
     return globalDn(uid, fallback)
   }
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 })
   const [showCreateTask, setShowCreateTask] = useState(false)
   const [showDeleteTask, setShowDeleteTask] = useState(false)
   const [taskForm, setTaskForm] = useState({ title: '', description: '' })
@@ -469,12 +470,12 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                 background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)', cursor: 'pointer', fontSize: 13, fontWeight: 500,
               }}><Archive size={14} /> 草稿{drafts.length > 0 && <span style={{ position: 'absolute', top: -4, right: -4, width: 16, height: 16, borderRadius: '50%', background: 'var(--brand)', color: '#fff', fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{drafts.length}</span>}</button>
               <div ref={dropdownRef} style={{ position: 'relative' }}>
-                <button onClick={() => setDropdownOpen(!dropdownOpen)} style={{
+                <button onClick={(e) => { setDropdownOpen(!dropdownOpen); if (!dropdownOpen && dropdownRef.current) { const r = dropdownRef.current.getBoundingClientRect(); setDropdownPos({ top: r.bottom + 4, right: window.innerWidth - r.right }) } }} style={{
                   display: 'flex', alignItems: 'center', padding: '8px 10px', borderRadius: 8,
                   background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)', cursor: 'pointer',
                 }}><ChevronDown size={16} /></button>
                 {dropdownOpen && (
-                  <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 4, background: 'var(--bg-primary)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid var(--border-primary)', minWidth: 120, zIndex: 10, overflow: 'hidden' }}>
+                  <div style={{ position: 'fixed', top: dropdownPos.top, right: Math.max(dropdownPos.right, 8), background: 'var(--bg-primary)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid var(--border-primary)', minWidth: 120, zIndex: 1000, overflow: 'hidden' }}>
                     <button onClick={() => { setDropdownOpen(false); setDeleteSelected(new Set()); setShowDeleteTask(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--color-danger)' }}
                       onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
                       <Trash2 size={14} /> 删除

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { User, Bell, Palette, Globe, Save, Copy, ArrowLeft, Check, Loader2, Lock, Smartphone, Monitor, Trash2, LogOut } from 'lucide-react'
+import { User, Bell, Palette, Globe, Save, Copy, ArrowLeft, Check, Loader2, Lock, Smartphone, Monitor, Trash2, LogOut, ChevronRight, Mail, Phone, KeyRound } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
@@ -12,6 +12,7 @@ import useIsMobile from '../ui/useIsMobile'
 import PageHeader from '../ui/PageHeader'
 
 type Tab = 'account' | 'appearance' | 'notification'
+type AccountSub = 'password' | 'devices' | 'phone' | 'email' | null
 
 const TABS: { key: Tab; label: string; icon: typeof User }[] = [
   { key: 'account', label: '账号与安全', icon: User },
@@ -51,6 +52,7 @@ export default function UserSettings() {
 
   const initialTab = (searchParams.get('tab') as Tab) || 'account'
   const [tab, setTab] = useState<Tab>(initialTab)
+  const accountSub = (searchParams.get('sub') as AccountSub) || null
 
   // Account editing
   const [editing, setEditing] = useState(false)
@@ -178,184 +180,331 @@ export default function UserSettings() {
           {/* ===== 账号与安全 ===== */}
           {tab === 'account' && user && (
             <div>
-              <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-heading)', margin: '0 0 20px' }}>我的账号</h2>
-
-              {/* 头像区 */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 20, background: 'var(--bg-secondary)', borderRadius: 12, marginBottom: 24 }}>
-                <Avatar name={user.nickname || user.username} size={64} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-heading)' }}>{user.nickname || user.username}</div>
-                  <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2 }}>@{user.username}</div>
-                  <div style={{ display: 'inline-block', fontSize: 11, padding: '2px 8px', borderRadius: 10, background: 'var(--bg-selected)', color: 'var(--brand)', fontWeight: 500, marginTop: 4 }}>
-                    {roleLabel[user.role] || user.role}
-                  </div>
-                </div>
-                {!editing && <Button variant="secondary" onClick={startEditing} style={{ flexShrink: 0 }}>编辑资料</Button>}
-              </div>
-
-              {/* 编辑表单 */}
-              {editing ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <SectionTitle>基本信息</SectionTitle>
-                  <Input label="用户名" placeholder="英文、数字和下划线，3-20位" value={form.username} onChange={e => setForm({ ...form, username: e.target.value.replace(/[^a-zA-Z0-9_]/g, '') })} />
-                  <Input label="昵称" placeholder="输入昵称" value={form.nickname} onChange={e => setForm({ ...form, nickname: e.target.value })} />
-                  <Input label="邮箱" placeholder="your@email.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-                  <Input label="手机号" placeholder="输入手机号" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
-
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
-                    <Button variant="secondary" onClick={() => setEditing(false)}>取消</Button>
-                    <Button onClick={handleSave} disabled={saving}>
-                      {saving ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={14} />}
-                      {saving ? ' 保存中...' : ' 保存修改'}
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                  {/* 基本信息展示 */}
-                  <SectionTitle>基本信息</SectionTitle>
-                  <InfoGrid items={[
-                    { label: '昵称', value: user.nickname || '-' },
-                    { label: '邮箱', value: user.email || '-' },
-                    { label: '手机号', value: user.phone || '-' },
-                    { label: '性别', value: user.gender === 1 ? '男' : user.gender === 2 ? '女' : '-' },
-                  ]} />
-
-                  <SectionTitle>账号信息</SectionTitle>
-                  <InfoGrid items={[
-                    { label: '用户名', value: user.username },
-                    { label: '角色', value: roleLabel[user.role] || user.role },
-                    { label: '注册时间', value: user.created_at ? new Date(user.created_at).toLocaleDateString('zh-CN') : '-' },
-                    { label: '用户ID', value: user.display_id || `#${user.id}` },
-                  ]} />
-
-                  {/* 修改密码 */}
-                  <SectionTitle style={{ marginTop: 8 }}>修改密码</SectionTitle>
-                  {user.phone ? (
-                    <ChangePasswordBlock
-                      phone={user.phone}
-                      form={pwForm}
-                      setForm={setPwForm}
-                      sending={pwSending}
-                      cooldown={pwCooldown}
-                      saving={pwSaving}
-                      devCode={pwDevCode}
-                      onSendCode={async () => {
-                        setPwSending(true)
-                        const r = await fetchApi('/api/auth/send-code', { method: 'POST', body: JSON.stringify({ type: 'phone', target: user.phone }) })
-                        setPwSending(false)
-                        if (r.success) {
-                          toast('验证码已发送', 'success')
-                          if (r._dev_code) setPwDevCode(r._dev_code)
-                          setPwCooldown(60)
-                          const t = setInterval(() => setPwCooldown(c => { if (c <= 1) { clearInterval(t); return 0 } return c - 1 }), 1000)
-                        } else toast(r.message || '发送失败', 'error')
-                      }}
-                      onSubmit={async () => {
-                        if (!pwForm.code) { toast('请输入验证码', 'error'); return }
-                        if (pwForm.newPwd.length < 8) { toast('密码至少8位', 'error'); return }
-                        if (!/[a-zA-Z]/.test(pwForm.newPwd) || !/[0-9]/.test(pwForm.newPwd)) { toast('密码必须包含字母和数字', 'error'); return }
-                        if (pwForm.newPwd !== pwForm.confirmPwd) { toast('两次密码不一致', 'error'); return }
-                        setPwSaving(true)
-                        const r = await fetchApi('/api/auth/change-password', { method: 'PUT', body: JSON.stringify({ code: pwForm.code, new_password: pwForm.newPwd }) })
-                        setPwSaving(false)
-                        if (r.success) {
-                          toast('密码修改成功', 'success')
-                          setPwForm({ code: '', newPwd: '', confirmPwd: '' })
-                          setPwDevCode('')
-                        } else toast(r.message || '修改失败', 'error')
-                      }}
-                    />
-                  ) : (
-                    <div style={{ fontSize: 13, color: 'var(--text-tertiary)', padding: '12px 0' }}>
-                      <Smartphone size={14} style={{ marginRight: 4, verticalAlign: -2 }} />
-                      请先在上方编辑资料中绑定手机号，才能修改密码
-                    </div>
-                  )}
-
-                  {/* 邀请码 */}
-                  {user.personal_invite_code && (
-                    <>
-                      <SectionTitle>我的专属邀请码</SectionTitle>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: 'var(--bg-selected)', borderRadius: 10, border: '1px solid var(--border-secondary)' }}>
-                        <code style={{ fontSize: 20, fontWeight: 700, letterSpacing: 3, color: 'var(--brand)', flex: 1 }}>{user.personal_invite_code}</code>
-                        <button onClick={() => copyText(user.personal_invite_code || '', '邀请码已复制')}
-                          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--brand)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
-                          <Copy size={14} /> 复制
-                        </button>
+              {/* ── 移动端：子页面模式 ── */}
+              {isMobile ? (
+                accountSub === 'password' ? (
+                  <MobileSubPage title="密码设置" onBack={() => navigate('/user-settings?tab=account')}>
+                    {user.phone ? (
+                      <ChangePasswordBlock
+                        phone={user.phone} form={pwForm} setForm={setPwForm}
+                        sending={pwSending} cooldown={pwCooldown} saving={pwSaving} devCode={pwDevCode}
+                        onSendCode={async () => {
+                          setPwSending(true)
+                          const r = await fetchApi('/api/auth/send-code', { method: 'POST', body: JSON.stringify({ type: 'phone', target: user.phone }) })
+                          setPwSending(false)
+                          if (r.success) {
+                            toast('验证码已发送', 'success')
+                            if (r._dev_code) setPwDevCode(r._dev_code)
+                            setPwCooldown(60)
+                            const t = setInterval(() => setPwCooldown(c => { if (c <= 1) { clearInterval(t); return 0 } return c - 1 }), 1000)
+                          } else toast(r.message || '发送失败', 'error')
+                        }}
+                        onSubmit={async () => {
+                          if (!pwForm.code) { toast('请输入验证码', 'error'); return }
+                          if (pwForm.newPwd.length < 8) { toast('密码至少8位', 'error'); return }
+                          if (!/[a-zA-Z]/.test(pwForm.newPwd) || !/[0-9]/.test(pwForm.newPwd)) { toast('密码必须包含字母和数字', 'error'); return }
+                          if (pwForm.newPwd !== pwForm.confirmPwd) { toast('两次密码不一致', 'error'); return }
+                          setPwSaving(true)
+                          const r = await fetchApi('/api/auth/change-password', { method: 'PUT', body: JSON.stringify({ code: pwForm.code, new_password: pwForm.newPwd }) })
+                          setPwSaving(false)
+                          if (r.success) { toast('密码修改成功', 'success'); setPwForm({ code: '', newPwd: '', confirmPwd: '' }); setPwDevCode('') }
+                          else toast(r.message || '修改失败', 'error')
+                        }}
+                      />
+                    ) : (
+                      <div style={{ fontSize: 14, color: 'var(--text-tertiary)', padding: 16, textAlign: 'center' }}>
+                        <Smartphone size={18} style={{ marginBottom: 8 }} /><br />请先绑定手机号后才能修改密码
                       </div>
-                      <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: -12 }}>分享此邀请码给新用户，对方注册后将自动成为你的客户</div>
-                    </>
-                  )}
-
-                  {/* 登录设备管理 */}
-                  <SectionTitle style={{ marginTop: 8 }}>登录设备管理</SectionTitle>
-                  {sessionsLoading ? (
-                    <div style={{ fontSize: 13, color: 'var(--text-tertiary)', padding: 12, textAlign: 'center' }}>
-                      <Loader2 size={16} style={{ animation: 'spin 1s linear infinite', verticalAlign: -3 }} /> 加载中...
-                    </div>
-                  ) : sessions.length === 0 ? (
-                    <div style={{ fontSize: 13, color: 'var(--text-tertiary)', padding: 12 }}>暂无活跃会话</div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                      {sessions.map((s: any, idx: number) => (
-                        <div key={s.id} style={{
-                          display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0',
-                          borderBottom: idx < sessions.length - 1 ? '1px solid var(--border-secondary)' : 'none',
-                        }}>
-                          <Monitor size={20} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)' }}>
-                              {s.device_name} · {s.browser}
+                    )}
+                  </MobileSubPage>
+                ) : accountSub === 'devices' ? (
+                  <MobileSubPage title="登录设备管理" onBack={() => navigate('/user-settings?tab=account')}>
+                    {sessionsLoading ? (
+                      <div style={{ fontSize: 13, color: 'var(--text-tertiary)', padding: 24, textAlign: 'center' }}>
+                        <Loader2 size={16} style={{ animation: 'spin 1s linear infinite', verticalAlign: -3 }} /> 加载中...
+                      </div>
+                    ) : sessions.length === 0 ? (
+                      <div style={{ fontSize: 13, color: 'var(--text-tertiary)', padding: 24, textAlign: 'center' }}>暂无活跃会话</div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        {sessions.map((s: any, idx: number) => (
+                          <div key={s.id} style={{
+                            display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
+                            borderBottom: idx < sessions.length - 1 ? '1px solid var(--border-secondary)' : 'none',
+                          }}>
+                            <Monitor size={20} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{s.device_name} · {s.browser}</div>
+                              <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>IP: {s.ip_address} · {new Date(s.created_at).toLocaleString('zh-CN')}</div>
                             </div>
-                            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
-                              IP: {s.ip_address} · 登录于 {new Date(s.created_at).toLocaleString('zh-CN')}
-                            </div>
-                          </div>
-                          <button
-                            onClick={async () => {
+                            <button onClick={async () => {
                               setRevokingId(s.id)
                               const r = await fetchApi(`/api/auth/sessions/${s.id}`, { method: 'DELETE' })
                               setRevokingId(null)
-                              if (r.success) {
-                                toast('设备已注销', 'success')
-                                setSessions(prev => prev.filter(x => x.id !== s.id))
-                              } else toast(r.message || '操作失败', 'error')
-                            }}
-                            disabled={revokingId === s.id}
-                            style={{
-                              display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6,
+                              if (r.success) { toast('设备已注销', 'success'); setSessions(prev => prev.filter(x => x.id !== s.id)) }
+                              else toast(r.message || '操作失败', 'error')
+                            }} disabled={revokingId === s.id} style={{
+                              display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8,
                               border: '1px solid var(--border-primary)', background: 'transparent',
-                              color: '#ef4444', fontSize: 12, cursor: 'pointer', flexShrink: 0,
-                            }}
-                          >
-                            {revokingId === s.id ? <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <Trash2 size={12} />}
-                            注销
-                          </button>
-                        </div>
-                      ))}
-                      {sessions.length > 1 && (
-                        <div style={{ marginTop: 8 }}>
-                          <button
-                            onClick={async () => {
+                              color: '#ef4444', fontSize: 13, cursor: 'pointer', flexShrink: 0,
+                            }}>
+                              {revokingId === s.id ? <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <Trash2 size={12} />} 注销
+                            </button>
+                          </div>
+                        ))}
+                        {sessions.length > 1 && (
+                          <div style={{ padding: '12px 16px' }}>
+                            <button onClick={async () => {
                               setRevokingAll(true)
                               const r = await fetchApi('/api/auth/sessions/all', { method: 'DELETE' })
                               setRevokingAll(false)
-                              if (r.success) {
-                                toast(r.message || '已注销所有其他设备', 'success')
-                                loadSessions()
-                              } else toast(r.message || '操作失败', 'error')
-                            }}
-                            disabled={revokingAll}
-                            style={{
-                              display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8,
+                              if (r.success) { toast(r.message || '已注销所有其他设备', 'success'); loadSessions() }
+                              else toast(r.message || '操作失败', 'error')
+                            }} disabled={revokingAll} style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                              width: '100%', padding: '10px 0', borderRadius: 10,
                               border: '1px solid #ef4444', background: 'transparent',
-                              color: '#ef4444', fontSize: 13, fontWeight: 500, cursor: 'pointer',
-                            }}
-                          >
-                            {revokingAll ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <LogOut size={14} />}
-                            注销所有其他设备
+                              color: '#ef4444', fontSize: 14, fontWeight: 500, cursor: 'pointer',
+                            }}>
+                              {revokingAll ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <LogOut size={14} />} 注销所有其他设备
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </MobileSubPage>
+                ) : accountSub === 'phone' ? (
+                  <MobileSubPage title="绑定手机号" onBack={() => navigate('/user-settings?tab=account')}>
+                    <BindContactBlock type="phone" currentValue={user.phone || ''} userId={user.id}
+                      onUpdated={(val) => { updateProfile({ phone: val }); toast('手机号已更新', 'success') }} />
+                  </MobileSubPage>
+                ) : accountSub === 'email' ? (
+                  <MobileSubPage title="绑定邮箱" onBack={() => navigate('/user-settings?tab=account')}>
+                    <BindContactBlock type="email" currentValue={user.email || ''} userId={user.id}
+                      onUpdated={(val) => { updateProfile({ email: val }); toast('邮箱已更新', 'success') }} />
+                  </MobileSubPage>
+                ) : (
+                  /* 移动端主菜单 */
+                  <div>
+                    {/* 用户信息卡片 */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16, background: 'var(--bg-primary)', borderRadius: 16, marginBottom: 12 }}>
+                      <Avatar name={user.nickname || user.username} size={56} src={user.avatar || undefined} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-heading)' }}>{user.nickname || user.username}</div>
+                        <div style={{ fontSize: 13, color: 'var(--text-tertiary)', marginTop: 2 }}>@{user.username}</div>
+                        <div style={{ display: 'inline-block', fontSize: 11, padding: '2px 8px', borderRadius: 10, background: 'var(--bg-selected)', color: 'var(--brand)', fontWeight: 500, marginTop: 4 }}>
+                          {roleLabel[user.role] || user.role}
+                        </div>
+                      </div>
+                      <Button variant="secondary" onClick={startEditing} style={{ flexShrink: 0 }}>编辑</Button>
+                    </div>
+
+                    {/* 编辑表单（内嵌在卡片下方） */}
+                    {editing && (
+                      <div style={{ background: 'var(--bg-primary)', borderRadius: 16, padding: 16, marginBottom: 12 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                          <Input label="用户名" placeholder="英文、数字和下划线，3-20位" value={form.username} onChange={e => setForm({ ...form, username: e.target.value.replace(/[^a-zA-Z0-9_]/g, '') })} />
+                          <Input label="昵称" placeholder="输入昵称" value={form.nickname} onChange={e => setForm({ ...form, nickname: e.target.value })} />
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
+                            <Button variant="secondary" onClick={() => setEditing(false)}>取消</Button>
+                            <Button onClick={handleSave} disabled={saving}>
+                              {saving ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={14} />}
+                              {saving ? ' 保存中...' : ' 保存'}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 安全设置菜单 */}
+                    <div style={{ background: 'var(--bg-primary)', borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
+                      {([
+                        { key: 'password' as const, icon: KeyRound, label: '密码设置', desc: '修改登录密码' },
+                        { key: 'devices' as const, icon: Monitor, label: '登录设备管理', desc: `${sessions.length} 个活跃设备` },
+                        { key: 'phone' as const, icon: Phone, label: '绑定手机号', desc: user.phone ? user.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') : '未绑定' },
+                        { key: 'email' as const, icon: Mail, label: '绑定邮箱', desc: user.email || '未绑定' },
+                      ]).map((item, i, arr) => (
+                        <div key={item.key} onClick={() => navigate(`/user-settings?tab=account&sub=${item.key}`)}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 12, padding: '15px 16px', cursor: 'pointer',
+                            borderBottom: i < arr.length - 1 ? '1px solid var(--border-secondary)' : 'none',
+                          }}>
+                          <item.icon size={20} style={{ color: 'var(--brand)', flexShrink: 0, opacity: 0.8 }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-primary)' }}>{item.label}</div>
+                            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{item.desc}</div>
+                          </div>
+                          <ChevronRight size={16} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* 邀请码 */}
+                    {user.personal_invite_code && (
+                      <div style={{ background: 'var(--bg-primary)', borderRadius: 16, padding: 16 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-body)', marginBottom: 10 }}>我的专属邀请码</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: 'var(--bg-selected)', borderRadius: 10, border: '1px solid var(--border-secondary)' }}>
+                          <code style={{ fontSize: 20, fontWeight: 700, letterSpacing: 3, color: 'var(--brand)', flex: 1 }}>{user.personal_invite_code}</code>
+                          <button onClick={() => copyText(user.personal_invite_code || '', '邀请码已复制')}
+                            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--brand)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
+                            <Copy size={14} /> 复制
                           </button>
+                        </div>
+                        <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 8 }}>分享邀请码，对方注册后将自动成为你的客户</div>
+                      </div>
+                    )}
+                  </div>
+                )
+              ) : (
+                /* ── PC端：保持原有布局 ── */
+                <div>
+                  <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-heading)', margin: '0 0 20px' }}>我的账号</h2>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 20, background: 'var(--bg-secondary)', borderRadius: 12, marginBottom: 24 }}>
+                    <Avatar name={user.nickname || user.username} size={64} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-heading)' }}>{user.nickname || user.username}</div>
+                      <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2 }}>@{user.username}</div>
+                      <div style={{ display: 'inline-block', fontSize: 11, padding: '2px 8px', borderRadius: 10, background: 'var(--bg-selected)', color: 'var(--brand)', fontWeight: 500, marginTop: 4 }}>
+                        {roleLabel[user.role] || user.role}
+                      </div>
+                    </div>
+                    {!editing && <Button variant="secondary" onClick={startEditing} style={{ flexShrink: 0 }}>编辑资料</Button>}
+                  </div>
+
+                  {editing ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      <SectionTitle>基本信息</SectionTitle>
+                      <Input label="用户名" placeholder="英文、数字和下划线，3-20位" value={form.username} onChange={e => setForm({ ...form, username: e.target.value.replace(/[^a-zA-Z0-9_]/g, '') })} />
+                      <Input label="昵称" placeholder="输入昵称" value={form.nickname} onChange={e => setForm({ ...form, nickname: e.target.value })} />
+                      <Input label="邮箱" placeholder="your@email.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+                      <Input label="手机号" placeholder="输入手机号" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 8 }}>
+                        <Button variant="secondary" onClick={() => setEditing(false)}>取消</Button>
+                        <Button onClick={handleSave} disabled={saving}>
+                          {saving ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={14} />}
+                          {saving ? ' 保存中...' : ' 保存修改'}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                      <SectionTitle>基本信息</SectionTitle>
+                      <InfoGrid items={[
+                        { label: '昵称', value: user.nickname || '-' },
+                        { label: '邮箱', value: user.email || '-' },
+                        { label: '手机号', value: user.phone || '-' },
+                        { label: '性别', value: user.gender === 1 ? '男' : user.gender === 2 ? '女' : '-' },
+                      ]} />
+
+                      <SectionTitle>账号信息</SectionTitle>
+                      <InfoGrid items={[
+                        { label: '用户名', value: user.username },
+                        { label: '角色', value: roleLabel[user.role] || user.role },
+                        { label: '注册时间', value: user.created_at ? new Date(user.created_at).toLocaleDateString('zh-CN') : '-' },
+                        { label: '用户ID', value: user.display_id || `#${user.id}` },
+                      ]} />
+
+                      <SectionTitle style={{ marginTop: 8 }}>修改密码</SectionTitle>
+                      {user.phone ? (
+                        <ChangePasswordBlock
+                          phone={user.phone} form={pwForm} setForm={setPwForm}
+                          sending={pwSending} cooldown={pwCooldown} saving={pwSaving} devCode={pwDevCode}
+                          onSendCode={async () => {
+                            setPwSending(true)
+                            const r = await fetchApi('/api/auth/send-code', { method: 'POST', body: JSON.stringify({ type: 'phone', target: user.phone }) })
+                            setPwSending(false)
+                            if (r.success) {
+                              toast('验证码已发送', 'success')
+                              if (r._dev_code) setPwDevCode(r._dev_code)
+                              setPwCooldown(60)
+                              const t = setInterval(() => setPwCooldown(c => { if (c <= 1) { clearInterval(t); return 0 } return c - 1 }), 1000)
+                            } else toast(r.message || '发送失败', 'error')
+                          }}
+                          onSubmit={async () => {
+                            if (!pwForm.code) { toast('请输入验证码', 'error'); return }
+                            if (pwForm.newPwd.length < 8) { toast('密码至少8位', 'error'); return }
+                            if (!/[a-zA-Z]/.test(pwForm.newPwd) || !/[0-9]/.test(pwForm.newPwd)) { toast('密码必须包含字母和数字', 'error'); return }
+                            if (pwForm.newPwd !== pwForm.confirmPwd) { toast('两次密码不一致', 'error'); return }
+                            setPwSaving(true)
+                            const r = await fetchApi('/api/auth/change-password', { method: 'PUT', body: JSON.stringify({ code: pwForm.code, new_password: pwForm.newPwd }) })
+                            setPwSaving(false)
+                            if (r.success) { toast('密码修改成功', 'success'); setPwForm({ code: '', newPwd: '', confirmPwd: '' }); setPwDevCode('') }
+                            else toast(r.message || '修改失败', 'error')
+                          }}
+                        />
+                      ) : (
+                        <div style={{ fontSize: 13, color: 'var(--text-tertiary)', padding: '12px 0' }}>
+                          <Smartphone size={14} style={{ marginRight: 4, verticalAlign: -2 }} />
+                          请先在上方编辑资料中绑定手机号，才能修改密码
+                        </div>
+                      )}
+
+                      {user.personal_invite_code && (
+                        <>
+                          <SectionTitle>我的专属邀请码</SectionTitle>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 14, background: 'var(--bg-selected)', borderRadius: 10, border: '1px solid var(--border-secondary)' }}>
+                            <code style={{ fontSize: 20, fontWeight: 700, letterSpacing: 3, color: 'var(--brand)', flex: 1 }}>{user.personal_invite_code}</code>
+                            <button onClick={() => copyText(user.personal_invite_code || '', '邀请码已复制')}
+                              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--brand)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
+                              <Copy size={14} /> 复制
+                            </button>
+                          </div>
+                          <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: -12 }}>分享此邀请码给新用户，对方注册后将自动成为你的客户</div>
+                        </>
+                      )}
+
+                      <SectionTitle style={{ marginTop: 8 }}>登录设备管理</SectionTitle>
+                      {sessionsLoading ? (
+                        <div style={{ fontSize: 13, color: 'var(--text-tertiary)', padding: 12, textAlign: 'center' }}>
+                          <Loader2 size={16} style={{ animation: 'spin 1s linear infinite', verticalAlign: -3 }} /> 加载中...
+                        </div>
+                      ) : sessions.length === 0 ? (
+                        <div style={{ fontSize: 13, color: 'var(--text-tertiary)', padding: 12 }}>暂无活跃会话</div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                          {sessions.map((s: any, idx: number) => (
+                            <div key={s.id} style={{
+                              display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0',
+                              borderBottom: idx < sessions.length - 1 ? '1px solid var(--border-secondary)' : 'none',
+                            }}>
+                              <Monitor size={20} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-heading)' }}>{s.device_name} · {s.browser}</div>
+                                <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>IP: {s.ip_address} · 登录于 {new Date(s.created_at).toLocaleString('zh-CN')}</div>
+                              </div>
+                              <button onClick={async () => {
+                                setRevokingId(s.id)
+                                const r = await fetchApi(`/api/auth/sessions/${s.id}`, { method: 'DELETE' })
+                                setRevokingId(null)
+                                if (r.success) { toast('设备已注销', 'success'); setSessions(prev => prev.filter(x => x.id !== s.id)) }
+                                else toast(r.message || '操作失败', 'error')
+                              }} disabled={revokingId === s.id} style={{
+                                display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 6,
+                                border: '1px solid var(--border-primary)', background: 'transparent',
+                                color: '#ef4444', fontSize: 12, cursor: 'pointer', flexShrink: 0,
+                              }}>
+                                {revokingId === s.id ? <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <Trash2 size={12} />} 注销
+                              </button>
+                            </div>
+                          ))}
+                          {sessions.length > 1 && (
+                            <div style={{ marginTop: 8 }}>
+                              <button onClick={async () => {
+                                setRevokingAll(true)
+                                const r = await fetchApi('/api/auth/sessions/all', { method: 'DELETE' })
+                                setRevokingAll(false)
+                                if (r.success) { toast(r.message || '已注销所有其他设备', 'success'); loadSessions() }
+                                else toast(r.message || '操作失败', 'error')
+                              }} disabled={revokingAll} style={{
+                                display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8,
+                                border: '1px solid #ef4444', background: 'transparent',
+                                color: '#ef4444', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                              }}>
+                                {revokingAll ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <LogOut size={14} />} 注销所有其他设备
+                              </button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -475,6 +624,72 @@ function ToggleSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
         left: on ? 21 : 3, transition: 'left 0.2s',
         boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
       }} />
+    </div>
+  )
+}
+
+function MobileSubPage({ title, onBack, children }: { title: string; onBack: () => void; children: React.ReactNode }) {
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 4px', marginBottom: 8 }}>
+        <button onClick={onBack} style={{ display: 'flex', alignItems: 'center', padding: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+          <ArrowLeft size={20} />
+        </button>
+        <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-heading)' }}>{title}</div>
+      </div>
+      <div style={{ background: 'var(--bg-primary)', borderRadius: 16, padding: 16 }}>{children}</div>
+    </div>
+  )
+}
+
+function BindContactBlock({ type, currentValue, userId, onUpdated }: {
+  type: 'phone' | 'email'; currentValue: string; userId: number
+  onUpdated: (value: string) => void
+}) {
+  const [value, setValue] = useState(currentValue)
+  const [saving, setSaving] = useState(false)
+  const isPhone = type === 'phone'
+  const label = isPhone ? '手机号' : '邮箱'
+  const placeholder = isPhone ? '请输入手机号' : '请输入邮箱地址'
+  const icon = isPhone ? <Phone size={18} style={{ color: 'var(--brand)' }} /> : <Mail size={18} style={{ color: 'var(--brand)' }} />
+
+  const handleSave = async () => {
+    const trimmed = value.trim()
+    if (!trimmed) { toast(`请输入${label}`, 'error'); return }
+    if (isPhone && !/^1\d{10}$/.test(trimmed)) { toast('请输入正确的手机号', 'error'); return }
+    if (!isPhone && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) { toast('请输入正确的邮箱地址', 'error'); return }
+    if (trimmed === currentValue) { toast('没有变化', 'error'); return }
+    setSaving(true)
+    const body: any = {}
+    body[type] = trimmed
+    const r = await fetchApi('/api/auth/profile', { method: 'PUT', body: JSON.stringify(body) })
+    setSaving(false)
+    if (r.success) onUpdated(trimmed)
+    else toast(r.message || '更新失败', 'error')
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 14, background: 'var(--bg-selected)', borderRadius: 12 }}>
+        {icon}
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>当前{label}</div>
+          <div style={{ fontSize: 15, fontWeight: 500, color: currentValue ? 'var(--text-heading)' : 'var(--text-tertiary)', marginTop: 2 }}>
+            {currentValue || '未绑定'}
+          </div>
+        </div>
+      </div>
+      <Input label={`${currentValue ? '修改' : '绑定'}${label}`} placeholder={placeholder} value={value}
+        onChange={e => setValue(e.target.value)} />
+      <button onClick={handleSave} disabled={saving} style={{
+        padding: '12px 0', borderRadius: 10, border: 'none',
+        background: 'var(--brand)', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+        opacity: saving ? 0.6 : 1,
+      }}>
+        {saving ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={14} />}
+        {saving ? '保存中...' : '保存'}
+      </button>
     </div>
   )
 }

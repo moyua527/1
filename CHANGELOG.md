@@ -2,6 +2,7 @@
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.3.5.2 | 2026-04-08 | **移动端账号与安全重构**：拆分为密码设置、登录设备管理、绑定手机号、绑定邮箱四个独立子页面；新增 BindContactBlock 组件；移除英语语言选项 |
 | v1.3.5.1 | 2026-04-08 | **修复移动端需求列表溢出+代办详情修复**：TaskTab 外层容器限制宽度防止水平溢出；修复 milestone 控制器错误引用 duijie_users 表（应为 voice_users），修复消息/参与人/提醒全部 500；新增代办进度条；标签页角标实时刷新 |
 | v1.3.5 | 2026-04-08 | **基础设施升级**：Redis缓存（dashboard/projects热数据+写后失效）、SSE推送通道（与Socket.IO并存）、Nginx SSE反代配置 |
 | v1.3.4 | 2026-04-08 | **APP更新修复**：Capacitor环境启用Service Worker缓存刷新、WebView添加LOAD_NO_CACHE+clearCache、SW缓存版本v40 |
