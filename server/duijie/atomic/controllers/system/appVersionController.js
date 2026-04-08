@@ -12,7 +12,8 @@ function parseChangelog() {
   try {
     const md = fs.readFileSync(changelogFile, 'utf-8');
     const rows = [];
-    for (const line of md.split('\n')) {
+    for (const raw of md.split('\n')) {
+      const line = raw.replace(/\r$/, '');
       const m = line.match(/^\|\s*v?([\d.]+)\s*\|\s*([\d-]+)\s*\|\s*(.+?)\s*\|$/);
       if (m && m[1] !== '版本') {
         rows.push({ ver: m[1], date: m[2], desc: m[3].replace(/\*\*/g, '') });
