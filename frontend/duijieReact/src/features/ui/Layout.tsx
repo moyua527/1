@@ -38,8 +38,8 @@ export default function Layout() {
   const ptrRefreshingRef = useRef(false)
   const navigate = useNavigate()
   const location = useLocation()
-  const [pageAnim, setPageAnim] = useState('')
   const prevPathRef = useRef(location.pathname)
+  const pageAnimRef = useRef('')
   const role = user?.role || 'member'
   const NAV_ITEMS = navItems().filter(n => !n.perm || can(role, n.perm))
   
@@ -49,24 +49,16 @@ export default function Layout() {
 
   
 
-  useEffect(() => {
-    if (!isMobile) { prevPathRef.current = location.pathname; return }
+  if (isMobile && prevPathRef.current !== location.pathname) {
     const prev = prevPathRef.current
-    const cur = location.pathname
-    prevPathRef.current = cur
-    if (prev === cur) return
-
     const mainPages = ['/', '/services', '/my']
     const wasMain = mainPages.includes(prev)
-    const isMain = mainPages.includes(cur)
-
-    if (isMain && wasMain) setPageAnim('page-fade')
-    else if (isMain && !wasMain) setPageAnim('page-slide-left')
-    else setPageAnim('page-slide-right')
-
-    const t = setTimeout(() => setPageAnim(''), 280)
-    return () => clearTimeout(t)
-  }, [location.pathname, isMobile])
+    const isMain = mainPages.includes(location.pathname)
+    if (isMain && wasMain) pageAnimRef.current = 'page-fade'
+    else if (isMain && !wasMain) pageAnimRef.current = 'page-slide-left'
+    else pageAnimRef.current = 'page-slide-right'
+    prevPathRef.current = location.pathname
+  }
 
   useEffect(() => {
     if (!user?.id) return
@@ -395,7 +387,7 @@ export default function Layout() {
               }} />
             </div>
           )}
-          <div className={isMobile ? pageAnim : ''} style={isMobile && pageAnim ? { willChange: 'transform, opacity' } : undefined}>
+          <div key={isMobile ? location.pathname : undefined} className={isMobile ? pageAnimRef.current : ''} style={isMobile ? { willChange: 'transform, opacity' } : undefined}>
             <Outlet context={{
               user, isMobile, dmUnread,
               openSettings: (tab: string) => setSettingsTab(tab as any),

@@ -152,12 +152,16 @@ def main():
     run_cmd(ssh, f'rm -rf {remote_dist}')
     upload_dir(sftp, local_dist, remote_dist)
 
-    # 4.5. Upload version.json
-    print('\n[4.5/5] Uploading version.json...')
+    # 4.5. Upload version.json + CHANGELOG.md
+    print('\n[4.5/5] Uploading version.json + CHANGELOG.md...')
     local_version = os.path.join(LOCAL_BASE, 'version.json')
     if os.path.isfile(local_version):
         sftp.put(local_version, f'{REMOTE_BASE}/version.json')
         print(f'    ↑ {REMOTE_BASE}/version.json')
+    local_changelog = os.path.join(LOCAL_BASE, 'CHANGELOG.md')
+    if os.path.isfile(local_changelog):
+        sftp.put(local_changelog, f'{REMOTE_BASE}/CHANGELOG.md')
+        print(f'    ↑ {REMOTE_BASE}/CHANGELOG.md')
 
     # 4.6. Create and upload dist.zip for live update
     print('\n[4.6/5] Creating dist.zip for live update...')
