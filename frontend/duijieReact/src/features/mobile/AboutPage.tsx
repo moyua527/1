@@ -99,8 +99,8 @@ export default function AboutPage() {
               ? <ChevronDown size={18} style={{ color: 'var(--text-tertiary)' }} />
               : <ChevronRight size={18} style={{ color: 'var(--text-tertiary)' }} />}
           </div>
-          <div onClick={!updateAvailable ? checkUpdate : undefined} style={{
-            padding: '16px 18px', cursor: updateAvailable ? 'default' : 'pointer',
+          <div onClick={(!updateAvailable && !checking) ? checkUpdate : undefined} style={{
+            padding: '16px 18px', cursor: (updateAvailable || checking) ? 'default' : 'pointer',
           }}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <span style={{ flex: 1, fontSize: 16, color: 'var(--text-primary)' }}>版本更新</span>
