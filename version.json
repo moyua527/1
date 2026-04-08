@@ -1,7 +1,7 @@
 {
-  "version": "1.3.16",
-  "versionCode": 317,
+  "version": "1.3.17",
+  "versionCode": 318,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "绑定信息验证加固：修改手机号/邮箱需发送验证码到新号码/邮箱验证后才能保存；密码修改同时支持手机和邮箱验证"
+  "changelog": "移动端导航栏微信风格改版：去掉返回文字，改为左箭头+居中页面标题；PageHeader移动端只保留操作按钮；关于页移除重复返回按钮"
 }

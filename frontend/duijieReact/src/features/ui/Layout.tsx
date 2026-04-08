@@ -15,7 +15,7 @@ import SettingsPanel from './SettingsPanel'
 import EnterpriseSwitcher from './EnterpriseSwitcher'
 import UserGuide from './UserGuide'
 import OnboardingChecklist from './OnboardingChecklist'
-import { navItems, navItemsByGroup } from '../../data/routeManifest'
+import { navItems, navItemsByGroup, flatRoutes } from '../../data/routeManifest'
 
 const SIDEBAR_W = 228
 const SIDEBAR_COLLAPSED_W = 68
@@ -271,19 +271,25 @@ export default function Layout() {
         </div>
       </header>
 
-      {/* ===== Mobile 子页面返回按钮 ===== */}
-      {isMobile && !['/', '/services', '/my'].includes(location.pathname) && (
-        <div style={{
-          height: 44, display: 'flex', alignItems: 'center',
-          padding: '0 8px', flexShrink: 0,
-          background: 'var(--bg-primary)', borderBottom: '1px solid var(--border-primary)',
-        }}>
-          <div onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', padding: '4px 8px', borderRadius: 6, color: 'var(--text-secondary)', fontSize: 14 }}>
-            <ArrowLeft size={18} />
-            <span>返回</span>
+      {/* ===== Mobile 子页面导航栏（微信风格） ===== */}
+      {isMobile && !['/', '/services', '/my'].includes(location.pathname) && (() => {
+        const allRoutes = flatRoutes()
+        let title = ''
+        const exact = allRoutes.find(r => r.path === location.pathname)
+        if (exact) { title = exact.label }
+        else { for (const r of allRoutes) { if (r.path.includes(':')) { const base = r.path.split(':')[0]; if (location.pathname.startsWith(base)) { title = r.label; break } } } }
+        return (
+          <div style={{
+            height: 44, display: 'flex', alignItems: 'center', position: 'relative',
+            flexShrink: 0, background: 'var(--bg-primary)', borderBottom: '1px solid var(--border-primary)',
+          }}>
+            <div onClick={() => navigate(-1)} style={{ position: 'absolute', left: 4, top: 0, bottom: 0, display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '0 10px', color: 'var(--text-secondary)', zIndex: 1 }}>
+              <ArrowLeft size={20} />
+            </div>
+            <div style={{ flex: 1, textAlign: 'center', fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>{title}</div>
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* ===== 下方：Sidebar + Content ===== */}
       <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, ChevronRight, ChevronDown, Loader2, Download } from 'lucide-react'
+import { ChevronRight, ChevronDown, Loader2, Download } from 'lucide-react'
 import { APP_VERSION, SERVER_URL } from '../../utils/capacitor'
 import { fetchApi } from '../../bootstrap'
 import { toast } from '../ui/Toast'
@@ -18,7 +17,6 @@ function compareVer(a: string, b: string): number {
 }
 
 export default function AboutPage() {
-  const navigate = useNavigate()
   const [checking, setChecking] = useState(false)
   const [showLog, setShowLog] = useState(false)
   const [serverVersion, setServerVersion] = useState(APP_VERSION)
@@ -70,12 +68,6 @@ export default function AboutPage() {
 
   return (
     <div style={{ minHeight: '100dvh', background: 'var(--bg-secondary)', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ display: 'flex', alignItems: 'center', padding: '12px 8px' }}>
-        <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', padding: 8, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
-          <ArrowLeft size={22} />
-        </button>
-      </div>
-
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 20px' }}>
         <div style={{ marginTop: 32, marginBottom: 16 }}>
           <div style={{
