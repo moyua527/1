@@ -437,7 +437,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
       <div style={{ ...section, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, marginBottom: 0, overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>需求列表</h3>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {isMobile ? (
               <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
                 style={{ padding: '7px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: statusFilter ? 'var(--text-heading)' : 'var(--text-tertiary)', cursor: 'pointer' }}>
@@ -475,7 +475,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                   background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)', cursor: 'pointer',
                 }}><ChevronDown size={16} /></button>
                 {dropdownOpen && (
-                  <div style={{ position: 'fixed', top: dropdownPos.top, right: Math.max(dropdownPos.right, 8), background: 'var(--bg-primary)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid var(--border-primary)', minWidth: 120, zIndex: 1000, overflow: 'hidden' }}>
+                  <div style={{ position: 'fixed', top: dropdownPos.top, right: Math.max(Math.min(dropdownPos.right, window.innerWidth - 136), 8), background: 'var(--bg-primary)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid var(--border-primary)', minWidth: 120, zIndex: 1000, overflow: 'hidden' }}>
                     <button onClick={() => { setDropdownOpen(false); setDeleteSelected(new Set()); setShowDeleteTask(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--color-danger)' }}
                       onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
                       <Trash2 size={14} /> 删除
