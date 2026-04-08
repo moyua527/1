@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Loader2, Trash2, Download, Eye, FileText, Image, FileSpreadsheet, Film, File, CheckSquare, Square, Search, Pencil, Link2, Plus, ExternalLink, X, StickyNote, Paperclip, FolderOpen, Users, Lock, Globe } from 'lucide-react'
+import { Loader2, Trash2, Download, FileText, Image, FileSpreadsheet, Film, File, CheckSquare, Square, Search, Pencil, Link2, Plus, ExternalLink, X, StickyNote, Paperclip, FolderOpen, Users, Lock, Globe } from 'lucide-react'
 import { fetchApi, BACKEND_URL } from '../../../bootstrap'
 import { fileApi, resourceGroupApi } from '../../file/services/api'
 import Button from '../../ui/Button'
@@ -449,82 +449,61 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
           {!search && canEdit && <div style={{ fontSize: 12, marginTop: 4 }}>点击「添加」上传文件或添加网址</div>}
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 8 }}>
           {filtered.map(f => {
             const isUrl = f.mime_type === 'text/x-url'
             const isNote = f.mime_type === 'text/x-note'
-            const isSpecial = isUrl || isNote
             const isImg = f.mime_type?.startsWith('image/')
             const thumbUrl = isImg ? `${BACKEND_URL}/api/files/${f.id}/preview?token=${localStorage.getItem('token') || ''}` : ''
             return (
               <div key={f.id}
                 style={{
-                  position: 'relative', borderRadius: 12, border: selected.has(f.id) ? '2px solid var(--brand)' : '1px solid var(--border-primary)',
+                  position: 'relative', borderRadius: 10, border: selected.has(f.id) ? '2px solid var(--brand)' : '1px solid var(--border-primary)',
                   background: 'var(--bg-primary)', overflow: 'hidden', transition: 'all 0.15s', cursor: 'pointer',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-                onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none' }}
+                onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)' }}
+                onMouseLeave={e => { e.currentTarget.style.boxShadow = 'none' }}
                 onClick={() => {
                   if (isNote) setViewNote(f)
                   else if (isUrl) window.open(ensureUrlProtocol(f.path), '_blank')
                   else if (canPreview(f.mime_type)) setPreview(f)
                 }}>
-                {/* 缩略图 / 图标区域 */}
-                <div style={{
-                  height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: isImg ? '#000' : 'var(--bg-secondary)',
-                  overflow: 'hidden',
-                }}>
-                  {isImg ? (
-                    <img src={thumbUrl} alt="" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'cover', width: '100%', height: '100%' }} />
-                  ) : (
-                    <div style={{ transform: 'scale(1.8)', opacity: 0.6 }}>{iconByType(f.mime_type)}</div>
-                  )}
-                </div>
-                {/* 信息区 */}
-                <div style={{ padding: '10px 12px' }}>
-                  <div style={{
-                    fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    color: isUrl ? 'var(--brand)' : isNote ? '#f59e0b' : 'var(--text-heading)',
-                  }}>
-                    {f.original_name}
+                {isImg ? (
+                  <div style={{ height: 72, background: '#000', overflow: 'hidden' }}>
+                    <img src={thumbUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {isUrl ? (f.description || '') : isNote ? `${f.path?.substring(0, 40)}...` : `${formatSize(f.size || 0)} · ${new Date(f.created_at).toLocaleDateString('zh-CN')}`}
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 10px' }}>
+                    {iconByType(f.mime_type)}
+                    <span style={{
+                      fontSize: 13, fontWeight: 500, flex: 1, minWidth: 0,
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      color: isUrl ? 'var(--brand)' : isNote ? '#f59e0b' : 'var(--text-heading)',
+                    }}>
+                      {f.original_name}
+                    </span>
+                    {isUrl && <ExternalLink size={13} style={{ color: 'var(--text-disabled)', flexShrink: 0 }} />}
                   </div>
-                </div>
-                {/* 操作条 */}
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 2, padding: '0 8px 8px', flexWrap: 'wrap' }}>
-                  {isUrl && (
-                    <button onClick={e => { e.stopPropagation(); window.open(ensureUrlProtocol(f.path), '_blank') }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--brand)', display: 'flex', borderRadius: 4 }} title="打开链接">
-                      <ExternalLink size={14} />
-                    </button>
-                  )}
-                  {!isSpecial && canPreview(f.mime_type) && (
-                    <button onClick={e => { e.stopPropagation(); setPreview(f) }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--color-purple)', display: 'flex', borderRadius: 4 }} title="预览">
-                      <Eye size={14} />
-                    </button>
-                  )}
-                  {!isSpecial && (
-                    <button onClick={e => { e.stopPropagation(); handleDownload(f) }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--brand)', display: 'flex', borderRadius: 4 }} title="下载">
-                      <Download size={14} />
-                    </button>
-                  )}
-                  {editing && (
+                )}
+                {isImg && (
+                  <div style={{ padding: '6px 10px' }}>
+                    <div style={{ fontSize: 12, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--text-heading)' }}>
+                      {f.original_name}
+                    </div>
+                  </div>
+                )}
+                {editing && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 2, padding: '0 6px 6px' }}>
                     <button onClick={e => { e.stopPropagation(); handleDelete(f) }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--color-danger)', display: 'flex', borderRadius: 4 }} title="删除">
-                      <Trash2 size={14} />
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 3, color: 'var(--color-danger)', display: 'flex', borderRadius: 4 }}>
+                      <Trash2 size={13} />
                     </button>
-                  )}
-                </div>
-                {/* 选中复选框 */}
+                  </div>
+                )}
                 {editing && (
                   <button onClick={e => { e.stopPropagation(); setSelected(prev => { const s = new Set(prev); s.has(f.id) ? s.delete(f.id) : s.add(f.id); return s }) }}
-                    style={{ position: 'absolute', top: 6, left: 6, background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer', padding: 2, borderRadius: 4, color: selected.has(f.id) ? 'var(--brand)' : 'var(--text-tertiary)', display: 'flex', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
-                    {selected.has(f.id) ? <CheckSquare size={16} /> : <Square size={16} />}
+                    style={{ position: 'absolute', top: 4, left: 4, background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer', padding: 2, borderRadius: 4, color: selected.has(f.id) ? 'var(--brand)' : 'var(--text-tertiary)', display: 'flex', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
+                    {selected.has(f.id) ? <CheckSquare size={14} /> : <Square size={14} />}
                   </button>
                 )}
               </div>

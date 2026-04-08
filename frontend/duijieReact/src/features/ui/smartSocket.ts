@@ -128,3 +128,46 @@ export function getHeartbeatInfo() {
   const avgRtt = rttSamples.length ? Math.round(rttSamples.reduce((a, b) => a + b, 0) / rttSamples.length) : 0
   return { avgRtt, interval: currentInterval, connected: socket?.connected ?? false }
 }
+
+// ─── SSE fallback channel ───
+let sse: EventSource | null = null
+let sseRetryTimer: any = null
+let sseRetryDelay = 1000
+
+function connectSSE() {
+  const token = localStorage.getItem('token')
+  if (!token) return
+
+  const base = isCapacitor ? SERVER_URL : (BACKEND_URL || '')
+  const url = `${base}/api/sse?token=${encodeURIComponent(token)}`
+
+  try { sse?.close() } catch {}
+  sse = new EventSource(url)
+
+  sse.onopen = () => { sseRetryDelay = 1000 }
+
+  sse.addEventListener('data_changed', (e) => {
+    try { emit('data_changed', JSON.parse(e.data)) } catch {}
+  })
+  sse.addEventListener('new_notification', (e) => {
+    try { emit('new_notification', JSON.parse(e.data)) } catch {}
+  })
+  sse.addEventListener('new_dm', (e) => {
+    try { emit('new_dm', JSON.parse(e.data)) } catch {}
+  })
+
+  sse.onerror = () => {
+    sse?.close()
+    sse = null
+    sseRetryDelay = Math.min(sseRetryDelay * 2, 30000)
+    clearTimeout(sseRetryTimer)
+    sseRetryTimer = setTimeout(connectSSE, sseRetryDelay)
+  }
+}
+
+export function startSSE() { connectSSE() }
+export function stopSSE() {
+  clearTimeout(sseRetryTimer)
+  try { sse?.close() } catch {}
+  sse = null
+}

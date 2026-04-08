@@ -20,7 +20,9 @@ async function getCurrentUser(userId) {
 module.exports = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    const token = (authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null) || req.cookies?.token;
+    const token = (authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null)
+      || req.cookies?.token
+      || req.query?.token;
     if (!token) return res.status(401).json({ success: false, message: '未登录' });
     const secret = await getJwtSecret();
     const decoded = jwt.verify(token, secret);

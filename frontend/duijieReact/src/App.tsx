@@ -5,6 +5,7 @@ import Layout from './features/ui/Layout'
 import MobilePushBridge from './features/ui/MobilePushBridge'
 import ToastContainer from './features/ui/Toast'
 import AppUpdateChecker from './features/ui/AppUpdateChecker'
+import GestureLockScreen from './features/ui/GestureLockScreen'
 import ErrorBoundary from './features/ui/ErrorBoundary'
 import useUserStore from './stores/useUserStore'
 import useEnterpriseStore from './stores/useEnterpriseStore'
@@ -76,6 +77,7 @@ export default function App() {
       <ToastContainer />
       <MobilePushBridge />
       <AppUpdateChecker />
+      <ErrorBoundary fallback={<></>}><GestureLockScreen /></ErrorBoundary>
       <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-tertiary)', padding: 40 }}>加载中...</div>}>
         <Routes>
           <Route element={<Layout />}>

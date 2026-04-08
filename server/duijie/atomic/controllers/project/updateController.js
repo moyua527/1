@@ -1,8 +1,9 @@
-﻿const updateProject = require('../../services/project/updateProject');
+const updateProject = require('../../services/project/updateProject');
 const db = require('../../../config/db');
 const { broadcast } = require('../../utils/broadcast');
 const { normalizeProjectClientId } = require('../../services/accessScope');
 const logger = require('../../../config/logger');
+const { invalidateProjectCaches } = require('../../utils/cacheInvalidation');
 
 module.exports = async (req, res) => {
   try {
@@ -28,6 +29,7 @@ module.exports = async (req, res) => {
     }
 
     await updateProject(pid, body);
+    invalidateProjectCaches().catch(() => {});
     broadcast('project', 'updated', { id: pid, userId: req.userId });
     res.json({ success: true });
   } catch (e) {

@@ -3,6 +3,7 @@ const db = require('../../../config/db');
 const { broadcast } = require('../../utils/broadcast');
 const { withTransaction } = require('../../utils/transaction');
 const { ensureDefaultProjectRoles } = require('../../utils/projectRoles');
+const { invalidateProjectCaches } = require('../../utils/cacheInvalidation');
 
 module.exports = async (req, res) => {
   try {
@@ -20,6 +21,7 @@ module.exports = async (req, res) => {
 
     ensureDefaultProjectRoles(id, req.userId).catch(() => {});
 
+    invalidateProjectCaches().catch(() => {});
     broadcast('project', 'created', { id, userId: req.userId });
     res.json({ success: true, data: { id } });
   } catch (e) {

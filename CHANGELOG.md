@@ -2,6 +2,7 @@
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.3.5 | 2026-04-08 | **基础设施升级**：Redis缓存（dashboard/projects热数据+写后失效）、SSE推送通道（与Socket.IO并存）、Nginx SSE反代配置 |
 | v1.3.4 | 2026-04-08 | **APP更新修复**：Capacitor环境启用Service Worker缓存刷新、WebView添加LOAD_NO_CACHE+clearCache、SW缓存版本v40 |
 | v1.3.3 | 2026-04-08 | **移动端适配优化**：项目图标自适应屏幕宽度、需求看板筛选器/网格响应式、客户详情网格单列化、消息页按钮精简、ProjectHomeTab统计网格修正 |
 | v1.3.2 | 2026-04-07 | **任务权限补齐**：后端新增 taskPermGuard / reviewPointPermGuard 中间件，任务编辑、状态流转、附件上传删除、审核要点增改确认全部走项目角色细粒度权限校验 |

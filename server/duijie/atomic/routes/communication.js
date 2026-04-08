@@ -26,6 +26,9 @@ router.put('/tickets/:id', auth, require('../controllers/ticket/updateController
 router.post('/tickets/:id/reply', auth, upload.array('files', 10), require('../controllers/ticket/replyController'));
 router.post('/tickets/:id/rate', auth, require('../controllers/ticket/rateController'));
 
+// SSE (Server-Sent Events) real-time push
+router.get('/sse', auth, require('../controllers/notification/sseController'));
+
 // Notifications
 router.get('/notifications/unread-summary', auth, require('../controllers/notification/unreadSummaryController'));
 router.get('/notifications', auth, require('../controllers/notification/listController'));

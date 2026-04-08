@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { LogOut, User, Shield, ChevronRight, ChevronLeft, Palette, Bell, Settings, Search, HelpCircle, Volume2 } from 'lucide-react'
+import { LogOut, User, Shield, ChevronRight, ChevronLeft, Palette, Bell, Settings, Search, HelpCircle, Volume2, ArrowLeft } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
 import { can } from '../../stores/permissions'
-import { onSocket, setSocketUserId } from './smartSocket'
+import { onSocket, setSocketUserId, startSSE, stopSSE } from './smartSocket'
 import Avatar from './Avatar'
 import useIsMobile from './useIsMobile'
 import NotificationBell from './NotificationBell'
@@ -34,8 +34,8 @@ export default function Layout() {
   const mainRef = useRef<HTMLElement>(null)
   const [ptrY, setPtrY] = useState(0)
   const [ptrRefreshing, setPtrRefreshing] = useState(false)
-  const ptrStart = useRef(0)
-  const ptrActive = useRef(false)
+  const ptrYRef = useRef(0)
+  const ptrRefreshingRef = useRef(false)
   const navigate = useNavigate()
   const location = useLocation()
   const role = user?.role || 'member'
@@ -55,7 +55,11 @@ export default function Layout() {
     }
   }, [user])
 
-  useEffect(() => { setSocketUserId(user?.id ?? null) }, [user?.id])
+  useEffect(() => {
+    setSocketUserId(user?.id ?? null)
+    if (user?.id) startSSE(); else stopSSE()
+    return () => stopSSE()
+  }, [user?.id])
 
   const dmLastFetch = useRef(0)
   const loadDmUnread = () => {
@@ -88,6 +92,69 @@ export default function Layout() {
   }, [avatarMenuOpen])
 
   useEffect(() => { setAvatarMenuOpen(false); setSettingsTab(null) }, [location.pathname, location.search])
+
+  useEffect(() => {
+    const el = mainRef.current
+    if (!el || !isMobile) return
+
+    let startY = 0
+    let active = false
+
+    const isAllAtTop = (target: EventTarget | null): boolean => {
+      if (el.scrollTop > 0) return false
+      let node = target as HTMLElement | null
+      while (node && node !== el) {
+        if (node.scrollHeight > node.clientHeight + 1 && node.scrollTop > 1) return false
+        node = node.parentElement
+      }
+      return true
+    }
+
+    const onStart = (e: TouchEvent) => {
+      if (ptrRefreshingRef.current) return
+      if (!isAllAtTop(e.target)) return
+      startY = e.touches[0].clientY
+      active = false
+    }
+
+    const onMove = (e: TouchEvent) => {
+      if (ptrRefreshingRef.current || !startY) return
+      if (!isAllAtTop(e.target)) { startY = 0; active = false; ptrYRef.current = 0; setPtrY(0); return }
+      const diff = e.touches[0].clientY - startY
+      if (diff < 0) { active = false; ptrYRef.current = 0; setPtrY(0); return }
+      if (!active && diff < 20) return
+      if (!active) active = true
+      e.preventDefault()
+      const y = Math.min((diff - 20) * 0.4, 100)
+      ptrYRef.current = y
+      setPtrY(y)
+    }
+
+    const onEnd = () => {
+      if (!active) { startY = 0; return }
+      active = false; startY = 0
+      if (ptrYRef.current >= 55) {
+        ptrRefreshingRef.current = true
+        setPtrRefreshing(true)
+        ptrYRef.current = 55
+        setPtrY(55)
+        setTimeout(() => window.location.reload(), 300)
+      } else {
+        ptrYRef.current = 0
+        setPtrY(0)
+      }
+    }
+
+    el.addEventListener('touchstart', onStart, { passive: true })
+    el.addEventListener('touchmove', onMove, { passive: false })
+    el.addEventListener('touchend', onEnd)
+
+    return () => {
+      el.removeEventListener('touchstart', onStart)
+      el.removeEventListener('touchmove', onMove)
+      el.removeEventListener('touchend', onEnd)
+    }
+  }, [isMobile])
 
   const sidebarW = sidebarCollapsed ? SIDEBAR_COLLAPSED_W : SIDEBAR_W
 
@@ -184,21 +251,20 @@ export default function Layout() {
                 </div>
               )}
 
-              {/* 设置弹窗 600x600 */}
-              {settingsTab && (
+              {/* 设置弹窗 - PC:600x600居中 / 移动端:全屏单列 */}
+              {settingsTab && !isMobile && (
                 <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)' }}
                  onClick={() => setSettingsTab(null)}>
                   <div style={{ width: 600, height: 600, maxWidth: '95vw', maxHeight: '90vh', background: 'var(--bg-primary)', borderRadius: 16, boxShadow: '0 16px 48px rgba(0,0,0,0.2)', overflow: 'hidden', display: 'flex', flexDirection: 'row' }}
                     onClick={e => e.stopPropagation()}>
-                    {/* 左侧导航 */}
                     <div style={{ width: 160, flexShrink: 0, borderRight: '1px solid var(--border-secondary)', padding: '16px 0', display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      {[
+                      {([
                         { icon: User, label: '个人信息', tab: 'profile' as const },
                         { icon: Shield, label: '账号与安全', tab: 'account' as const },
                         { icon: Volume2, label: '声音设置', tab: 'sound' as const },
                         { icon: Palette, label: '外观与语言', tab: 'appearance' as const },
                         { icon: Bell, label: '通知偏好', tab: 'notification' as const },
-                      ].map(item => (
+                      ]).map(item => (
                         <div key={item.tab} onClick={() => setSettingsTab(item.tab)}
                           style={{
                             display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', cursor: 'pointer',
@@ -214,10 +280,39 @@ export default function Layout() {
                         </div>
                       ))}
                     </div>
-                    {/* 右侧内容 */}
                     <div style={{ flex: 1, overflow: 'hidden' }}>
                       <SettingsPanel tab={settingsTab} onBack={() => setSettingsTab(null)} isMobile={false} />
                     </div>
+                  </div>
+                </div>
+              )}
+              {settingsTab && isMobile && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'var(--bg-primary)', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', borderBottom: '1px solid var(--border-secondary)', flexShrink: 0 }}>
+                    <div onClick={() => setSettingsTab(null)} style={{ display: 'flex', cursor: 'pointer', padding: 4 }}><ArrowLeft size={20} /></div>
+                    <span style={{ fontSize: 16, fontWeight: 600 }}>设置</span>
+                  </div>
+                  <div style={{ display: 'flex', overflowX: 'auto', gap: 0, padding: '0 8px', borderBottom: '1px solid var(--border-secondary)', flexShrink: 0, WebkitOverflowScrolling: 'touch' } as any}>
+                    {([
+                      { icon: User, label: '个人信息', tab: 'profile' as const },
+                      { icon: Shield, label: '账号安全', tab: 'account' as const },
+                      { icon: Volume2, label: '声音', tab: 'sound' as const },
+                      { icon: Palette, label: '外观', tab: 'appearance' as const },
+                      { icon: Bell, label: '通知', tab: 'notification' as const },
+                    ]).map(item => (
+                      <div key={item.tab} onClick={() => setSettingsTab(item.tab)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 5, padding: '10px 12px', cursor: 'pointer',
+                          fontSize: 13, fontWeight: settingsTab === item.tab ? 600 : 400, whiteSpace: 'nowrap',
+                          color: settingsTab === item.tab ? 'var(--brand)' : 'var(--text-secondary)',
+                          borderBottom: settingsTab === item.tab ? '2px solid var(--brand)' : '2px solid transparent',
+                        }}>
+                        <item.icon size={14} /> {item.label}
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ flex: 1, overflow: 'auto' }}>
+                    <SettingsPanel tab={settingsTab} onBack={() => setSettingsTab(null)} isMobile={true} />
                   </div>
                 </div>
               )}
@@ -360,33 +455,6 @@ export default function Layout() {
 
         {/* ===== 主内容区 ===== */}
         <main ref={mainRef} data-tour="main-content"
-          onTouchStart={isMobile ? (e) => {
-            if (ptrRefreshing) return
-            const el = mainRef.current
-            if (!el || el.scrollTop > 0) return
-            ptrStart.current = e.touches[0].clientY
-            ptrActive.current = false
-          } : undefined}
-          onTouchMove={isMobile ? (e) => {
-            if (ptrRefreshing || !ptrStart.current) return
-            const el = mainRef.current
-            if (!el || el.scrollTop > 0) { ptrStart.current = 0; ptrActive.current = false; setPtrY(0); return }
-            const diff = e.touches[0].clientY - ptrStart.current
-            if (diff < 0) { ptrActive.current = false; setPtrY(0); return }
-            if (!ptrActive.current && diff < 30) return
-            if (!ptrActive.current) { ptrActive.current = true }
-            e.preventDefault()
-            setPtrY(Math.min((diff - 30) * 0.35, 90))
-          } : undefined}
-          onTouchEnd={isMobile ? async () => {
-            if (!ptrActive.current) { ptrStart.current = 0; return }
-            ptrActive.current = false; ptrStart.current = 0
-            if (ptrY >= 55) {
-              setPtrRefreshing(true); setPtrY(55)
-              await new Promise(r => setTimeout(r, 300))
-              window.location.reload()
-            } else { setPtrY(0) }
-          } : undefined}
           style={{ flex: 1, overflow: 'auto', minHeight: 0, padding: isMobile ? 12 : 24, WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain' }}>
           {isMobile && (ptrY > 0 || ptrRefreshing) && (
             <div style={{ display: 'flex', justifyContent: 'center', height: ptrY || 55, overflow: 'hidden', transition: ptrY > 0 ? 'none' : 'height 0.25s ease' }}>

@@ -63,12 +63,25 @@ export default function AppUpdateChecker() {
 
   const isForce = info.forceUpdate || compareVersions(nativeVer, info.minVersion) < 0
 
+  const [copied, setCopied] = useState(false)
+
   const handleDownload = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'DuiJie 更新 v' + info.version, url: info.downloadUrl })
+        return
+      } catch { /* user cancelled or not supported */ }
+    }
+    handleCopy()
+  }
+
+  const handleCopy = async () => {
     try {
-      const { Browser } = await import('@capacitor/browser')
-      await Browser.open({ url: info.downloadUrl })
+      await navigator.clipboard.writeText(info.downloadUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 3000)
     } catch {
-      window.location.href = info.downloadUrl
+      window.prompt('长按复制下载链接：', info.downloadUrl)
     }
   }
 
@@ -119,6 +132,18 @@ export default function AppUpdateChecker() {
           >
             <Download size={18} />
             立即下载安装
+          </button>
+
+          <button
+            onClick={handleCopy}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              width: '100%', padding: '10px 0', marginTop: 8,
+              background: 'var(--bg-secondary)', color: 'var(--text-body)', borderRadius: 10, border: 'none',
+              fontSize: 13, cursor: 'pointer',
+            }}
+          >
+            {copied ? '已复制！请在浏览器中粘贴打开' : '复制下载链接（在浏览器中打开）'}
           </button>
 
           {!isForce && (
