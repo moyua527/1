@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { X, Globe, Check, Volume2, Mail, Phone, Hash, Key, Lock, ChevronRight, ArrowLeft } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { X, Globe, Check, Volume2, Mail, Phone, Hash, Key, Lock, ChevronRight, ArrowLeft, Clock, Monitor, Smartphone } from 'lucide-react'
 import Avatar from './Avatar'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
@@ -43,6 +43,56 @@ function SettingRow({ icon, label, value, onClick, last }: { icon: React.ReactNo
       <span style={{ flex: 1, fontSize: 14, color: 'var(--text-heading)' }}>{label}</span>
       {value && <span style={{ fontSize: 13, color: 'var(--text-tertiary)', flexShrink: 0 }}>{value}</span>}
       {onClick && <ChevronRight size={16} style={{ color: 'var(--text-disabled)', flexShrink: 0 }} />}
+    </div>
+  )
+}
+
+function LoginLogsList() {
+  const [logs, setLogs] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  useEffect(() => {
+    fetchApi('/api/auth/login-logs?limit=10').then(r => {
+      if (r.success) setLogs(r.data?.rows || [])
+      setLoading(false)
+    })
+  }, [])
+
+  return (
+    <div>
+      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-heading)', marginBottom: 10 }}>登录日志</div>
+      {loading ? (
+        <div style={{ fontSize: 12, color: 'var(--text-tertiary)', padding: '8px 0' }}>加载中...</div>
+      ) : logs.length === 0 ? (
+        <div style={{ fontSize: 12, color: 'var(--text-tertiary)', padding: '8px 0' }}>暂无登录记录</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {logs.map(log => (
+            <div key={log.id} style={{
+              display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 8,
+              background: 'var(--bg-tertiary)', fontSize: 12,
+            }}>
+              {(log.device_name || '').toLowerCase().includes('mobile') || (log.device_name || '').toLowerCase().includes('android') || (log.device_name || '').toLowerCase().includes('iphone')
+                ? <Smartphone size={14} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
+                : <Monitor size={14} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ color: 'var(--text-heading)', fontWeight: 500 }}>
+                  {log.device_name || '未知设备'}
+                  {log.status === 'failed' && (
+                    <span style={{ color: 'var(--color-danger)', marginLeft: 6 }}>登录失败</span>
+                  )}
+                </div>
+                <div style={{ color: 'var(--text-tertiary)', marginTop: 2 }}>
+                  {log.login_type === 'code' ? '验证码登录' : '密码登录'} · {log.ip} · {new Date(log.created_at).toLocaleString()}
+                </div>
+              </div>
+              <span style={{
+                width: 6, height: 6, borderRadius: 3, flexShrink: 0,
+                background: log.status === 'success' ? '#22c55e' : '#ef4444',
+              }} />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -257,7 +307,7 @@ export default function SettingsPanel({ tab, onBack, isMobile }: Props) {
     try { return Number(localStorage.getItem('sound_volume') ?? 100) } catch { return 100 }
   })
 
-  const [accountSubView, setAccountSubView] = useState<'main' | 'password' | 'gesture'>('main')
+  const [accountSubView, setAccountSubView] = useState<'main' | 'password' | 'gesture' | 'login-logs'>('main')
 
   const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>(() => {
     try { const s = localStorage.getItem('notif_prefs'); if (s) return JSON.parse(s) } catch {}
@@ -361,8 +411,17 @@ export default function SettingsPanel({ tab, onBack, isMobile }: Props) {
                       value={localStorage.getItem('gesture_lock_hash') ? '已设置' : '未设置'}
                       onClick={() => setAccountSubView('gesture')} />
                   )}
+                  <SettingRow icon={<Clock size={18} />} label="登录日志" onClick={() => setAccountSubView('login-logs')} last />
                 </div>
               </div>
+            </div>
+          ) : accountSubView === 'login-logs' ? (
+            <div>
+              <div onClick={() => setAccountSubView('main')} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16, cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 13 }}>
+                <ArrowLeft size={16} /> 返回
+              </div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)', marginBottom: 16 }}>登录日志</div>
+              <LoginLogsList />
             </div>
           ) : accountSubView === 'password' ? (
             <div>
@@ -401,6 +460,7 @@ export default function SettingsPanel({ tab, onBack, isMobile }: Props) {
                 </button>
               </div>
             </div>
+            <LoginLogsList />
           </div>
         )}
 

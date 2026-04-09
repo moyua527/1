@@ -24,5 +24,6 @@ router.post('/auth/guide-done', auth, require('../controllers/auth/guideDoneCont
 router.get('/auth/sessions', auth, require('../controllers/auth/sessionsListController'));
 router.delete('/auth/sessions/all', auth, require('../controllers/auth/sessionRevokeAllController'));
 router.delete('/auth/sessions/:id', auth, require('../controllers/auth/sessionRevokeController'));
+router.get('/auth/login-logs', auth, require('../controllers/auth/loginLogsController'));
 
 module.exports = router;

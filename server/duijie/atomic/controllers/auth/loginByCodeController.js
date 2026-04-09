@@ -2,6 +2,7 @@ const db = require('../../../config/db');
 const logger = require('../../../config/logger');
 const { buildUserPayload, signAccessToken, createRefreshToken, parseDeviceName } = require('../../utils/authToken');
 const { notify } = require('../../utils/notify');
+const { recordLogin } = require('../../utils/loginLog');
 
 module.exports = async (req, res) => {
   try {
@@ -34,7 +35,7 @@ module.exports = async (req, res) => {
     db.query('UPDATE voice_users SET last_login_at = NOW() WHERE id = ?', [user.id]).catch((err) => {
       logger.error(`loginByCode.lastLogin: ${err.message}`);
     });
-    // 安全事件通知
+    recordLogin(user.id, { loginType: 'code', ip: req.ip, userAgent: req.headers['user-agent'], status: 'success' });
     const devName = parseDeviceName(req.headers['user-agent']);
     notify(user.id, 'security', '新设备登录提醒', `你的账号刚刚在 ${devName} 上通过验证码登录（IP: ${req.ip}）。如非本人操作，请立即修改密码。`).catch(() => {});
     res.cookie('token', token, { httpOnly: true, sameSite: 'lax', maxAge: 2 * 60 * 60 * 1000 });
