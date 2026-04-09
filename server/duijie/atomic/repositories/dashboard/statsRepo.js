@@ -22,7 +22,7 @@ module.exports = async (auth = {}) => {
   const showClientData = true;
 
   const [[projects]] = await db.query(
-    `SELECT COUNT(*) as total, SUM(status = 'in_progress') as active, SUM(status = 'completed') as completed
+    `SELECT COUNT(*) as total, SUM(status = 'planning') as planning, SUM(status = 'in_progress') as active, SUM(status = 'completed') as completed
      FROM duijie_projects p WHERE p.is_deleted = 0 ${pf.where}`, pf.params
   );
 
@@ -94,12 +94,13 @@ module.exports = async (auth = {}) => {
     taskParams = [auth.userId, auth.userId, auth.userId, ...entTaskParams];
   }
   const [[tasks]] = await db.query(
-    `SELECT COUNT(*) as total, SUM(t.status = 'todo') as pending, SUM(t.status = 'accepted') as done
+    `SELECT COUNT(*) as total, SUM(t.status IN ('submitted','todo')) as pending, SUM(t.status = 'accepted') as done
      FROM duijie_tasks t WHERE t.is_deleted = 0 ${taskWhere}`, taskParams
   );
 
   return {
     totalProjects: projects.total || 0,
+    planningProjects: Number(projects.planning) || 0,
     activeProjects: Number(projects.active) || 0,
     completedProjects: Number(projects.completed) || 0,
     totalClients: clientsTotal,

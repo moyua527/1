@@ -8,7 +8,7 @@ import ClientDashboard from './ClientDashboard'
 import WorkspaceSection from './WorkspaceSection'
 
 interface Stats {
-  totalProjects: number; activeProjects: number; completedProjects: number
+  totalProjects: number; planningProjects: number; activeProjects: number; completedProjects: number
   totalClients: number; totalTasks: number; pendingTasks: number; completedTasks: number
   clientStages?: { potential: number; intent: number; signed: number; active: number; lost: number }
   contracts?: { total: number; totalAmount: number; activeCount: number; activeAmount: number }
@@ -54,6 +54,7 @@ export default function Dashboard() {
 
   const items = stats ? [
     { label: '总项目', value: stats.totalProjects, icon: FolderKanban, bg: 'var(--brand-light-2)', color: 'var(--brand)', path: '/projects' },
+    { label: '规划中', value: stats.planningProjects, icon: FileSignature, bg: '#f3e8ff', color: 'var(--color-purple)', path: '/projects' },
     { label: '进行中', value: stats.activeProjects, icon: TrendingUp, bg: '#fef3c7', color: 'var(--color-warning)', path: '/projects' },
     { label: '已完成', value: stats.completedProjects, icon: CheckCircle, bg: '#dcfce7', color: 'var(--color-success)', path: '/projects' },
     ...(canClients ? [
