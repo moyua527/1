@@ -146,8 +146,9 @@ export default function TaskBoard() {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 4 }}>
                   {imgs.map((a: any, i: number) => {
                     const allImgs = imgs.map((x: any) => `${BACKEND_URL}/uploads/${x.filename}`)
-                    return <img key={a.id} src={`${BACKEND_URL}/uploads/${a.filename}`} alt={a.original_name}
+                    return <img key={a.id} src={`${BACKEND_URL}/uploads/${a.filename}`} alt=""
                       onClick={e => { e.stopPropagation(); setPreviewImg(`${BACKEND_URL}/uploads/${a.filename}`); setPreviewImages(allImgs); setPreviewStartIdx(i) }}
+                      onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
                       style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border-primary)', display: 'block', cursor: 'pointer' }} />
                   })}
                 </div>

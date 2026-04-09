@@ -542,8 +542,8 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                               const imgIdx = allImgs.indexOf(fileUrl)
                               return (
                                 <div key={a.id} onClick={() => { setPreviewImg(fileUrl); setPreviewImages(allImgs); setPreviewStartIdx(Math.max(0, imgIdx)) }} style={{ cursor: 'pointer', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border-primary)', width: 80, height: 80, flexShrink: 0, background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                  <img src={fileUrl} alt={a.original_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                    onError={e => { const el = e.currentTarget; el.style.display = 'none'; const p = el.parentElement; if (p) { const s = document.createElement('span'); s.textContent = '图片丢失'; s.style.cssText = 'font-size:10px;color:var(--text-tertiary)'; p.appendChild(s) } }} />
+                                  <img src={fileUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    onError={e => { const el = e.currentTarget; if (el.parentElement) el.parentElement.style.display = 'none' }} />
                                 </div>
                               )
                             }
