@@ -1,7 +1,7 @@
 {
-  "version": "1.3.29",
-  "versionCode": 330,
+  "version": "1.3.30",
+  "versionCode": 331,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "改进应用内更新错误提示：显示具体错误信息便于排查"
+  "changelog": "修复密码修改：增加当前密码前端校验，改进更新错误提示"
 }

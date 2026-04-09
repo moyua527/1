@@ -283,6 +283,7 @@ export default function SettingsPanel({ tab, onBack, isMobile }: Props) {
 
   const handleChangePw = async () => {
     setPwMsg('')
+    if (!pwForm.current) { setPwMsg('请输入当前密码'); return }
     if (!pwForm.newPw) { setPwMsg('请输入新密码'); return }
     if (pwForm.newPw.length < 8) { setPwMsg('密码至少 8 位'); return }
     if (!/[a-zA-Z]/.test(pwForm.newPw) || !/[0-9]/.test(pwForm.newPw)) { setPwMsg('密码需含字母和数字'); return }
