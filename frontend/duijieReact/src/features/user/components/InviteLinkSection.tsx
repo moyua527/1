@@ -49,7 +49,7 @@ export default function InviteLinkSection({ open, onClose }: InviteLinkSectionPr
             <Button onClick={async () => {
               const r2 = await fetchApi('/api/invite-links', { method: 'POST', body: JSON.stringify({ expires_hours: inviteForm.expires_hours ? Number(inviteForm.expires_hours) : null, note: inviteForm.note }) })
               if (r2.success) {
-                const url = `${window.location.origin}/?invite=${r2.data.token}`
+                const url = `${window.location.origin}/invite/${r2.data.token}`
                 navigator.clipboard.writeText(url).then(() => toast('链接已复制到剪贴板', 'success')).catch(() => toast('生成成功，请手动复制', 'success'))
                 loadLinks()
               } else toast(r2.message || '生成失败', 'error')
@@ -76,7 +76,7 @@ export default function InviteLinkSection({ open, onClose }: InviteLinkSectionPr
                       {used && <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>使用者: {link.used_by_name || link.used_by_username}</div>}
                     </div>
                     {!used && !expired && (
-                      <Button variant="ghost" size="sm" onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/?invite=${link.token}`); toast('已复制', 'success') }}><Copy size={14} /></Button>
+                      <Button variant="ghost" size="sm" onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/invite/${link.token}`); toast('已复制', 'success') }}><Copy size={14} /></Button>
                     )}
                     <Button variant="ghost" size="sm" onClick={async () => { const r2 = await fetchApi(`/api/invite-links/${link.id}`, { method: 'DELETE' }); if (r2.success) { toast('已删除', 'success'); loadLinks() } }} style={{ color: 'var(--color-danger)' }}><Trash2 size={14} /></Button>
                   </div>

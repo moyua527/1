@@ -8,7 +8,7 @@ const generateInviteCode = require('../../utils/generateInviteCode');
 
 module.exports = async (req, res) => {
   try {
-    const { invite_token, email: rawEmail } = req.body;
+    const { invite_token, email: rawEmail, nickname: rawNickname, password: rawPassword } = req.body;
     const email = rawEmail ? rawEmail.trim().toLowerCase() : null;
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ success: false, message: '请输入有效的邮箱地址' });
@@ -26,11 +26,11 @@ module.exports = async (req, res) => {
       username = usernameBase + suffix++;
     }
 
-    const nickname = email.split('@')[0].slice(0, 50);
+    const nickname = rawNickname ? rawNickname.trim().slice(0, 50) : email.split('@')[0].slice(0, 50);
     const displayId = await generateDisplayId('000000', 0);
     const personalCode = await generateInviteCode();
-    const randomPwd = crypto.randomBytes(32).toString('hex');
-    const hashedPwd = await bcrypt.hash(randomPwd, 10);
+    const plainPwd = rawPassword && rawPassword.length >= 8 ? rawPassword : crypto.randomBytes(32).toString('hex');
+    const hashedPwd = await bcrypt.hash(plainPwd, 10);
 
     let assignedRole = 'member';
     let isActive = 1;

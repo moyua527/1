@@ -12,6 +12,7 @@ import useEnterpriseStore from './stores/useEnterpriseStore'
 import { can } from './stores/permissions'
 import ProjectOnboarding from './features/project/ProjectOnboarding'
 import JoinProjectPage from './features/project/JoinProjectPage'
+import InviteLandingPage from './features/auth/InviteLandingPage'
 import { flatRoutes, prefetchPages } from './data/routeManifest'
 
 function lazyLoad(importFn: () => Promise<{ default: ComponentType<any> }>) {
@@ -58,6 +59,9 @@ export default function App() {
   }, [user])
 
   if (checking) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: 0, color: 'var(--text-tertiary)' }}>加载中...</div>
+  if (location.pathname.startsWith('/invite/')) {
+    return <><ToastContainer /><Routes><Route path="/invite/:token" element={<InviteLandingPage />} /></Routes></>
+  }
   if (!user) {
     if (location.pathname.startsWith('/join/')) {
       localStorage.setItem('redirect_after_login', location.pathname)

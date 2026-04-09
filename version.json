@@ -1,7 +1,7 @@
 {
-  "version": "1.3.34",
-  "versionCode": 335,
+  "version": "1.3.35",
+  "versionCode": 336,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "帐号设置分区优化：通知按模块分组管理，新增偏好设置（声音/时区）"
+  "changelog": "完善邀请注册流程：品牌化欢迎页+分步注册（邮箱验证/姓名/密码），邀请链接新格式/invite/:token"
 }
