@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { LogOut, User, Shield, ChevronRight, ChevronLeft, Palette, Bell, Settings, Search, HelpCircle, Volume2, LayoutGrid, UserCircle, Home } from 'lucide-react'
+import { LogOut, User, Shield, ChevronRight, ChevronLeft, ChevronDown, Palette, Bell, Settings, Search, HelpCircle, Volume2, LayoutGrid, UserCircle, Home, Star } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
 import { can } from '../../stores/permissions'
@@ -20,6 +20,63 @@ import { navItems, navItemsByGroup } from '../../data/routeManifest'
 
 const SIDEBAR_W = 228
 const SIDEBAR_COLLAPSED_W = 68
+
+function SidebarItem({ item, isActive, sidebarCollapsed, dmUnread, isFav, onToggleFav, onClick }: {
+  item: { path: string; label: string; icon: React.ComponentType<any> }
+  isActive: boolean; sidebarCollapsed: boolean; dmUnread: number
+  isFav: boolean; onToggleFav: () => void; onClick: () => void
+}) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <div
+      onClick={onClick}
+      title={sidebarCollapsed ? item.label : undefined}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        padding: sidebarCollapsed ? '10px 0' : '8px 10px',
+        justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
+        borderRadius: 8, cursor: 'pointer', marginBottom: 2,
+        color: isActive ? 'var(--brand)' : 'var(--text-secondary)',
+        background: isActive ? 'var(--bg-selected)' : hovered ? 'var(--bg-hover)' : 'transparent',
+        fontWeight: isActive ? 600 : 500, fontSize: 13,
+        transition: 'background 0.12s, color 0.12s',
+        position: 'relative',
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <item.icon size={18} style={{ flexShrink: 0 }} />
+      {!sidebarCollapsed && (
+        <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
+      )}
+      {item.path === '/messaging' && dmUnread > 0 && (
+        <span style={{
+          minWidth: 18, height: 18, borderRadius: 9, background: 'var(--color-danger)', color: '#fff',
+          fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '0 4px', position: sidebarCollapsed ? 'absolute' : 'static',
+          top: sidebarCollapsed ? 4 : undefined, right: sidebarCollapsed ? 8 : undefined,
+        }}>{dmUnread > 99 ? '99+' : dmUnread}</span>
+      )}
+      {!sidebarCollapsed && hovered && (
+        <span
+          onClick={e => { e.stopPropagation(); onToggleFav() }}
+          title={isFav ? '取消收藏' : '添加收藏'}
+          style={{
+            display: 'flex', alignItems: 'center', padding: 2, borderRadius: 4, cursor: 'pointer',
+            color: isFav ? '#f59e0b' : 'var(--text-tertiary)',
+            transition: 'color 0.15s',
+          }}>
+          <Star size={13} style={isFav ? { fill: '#f59e0b' } : undefined} />
+        </span>
+      )}
+      {!sidebarCollapsed && !hovered && isFav && (
+        <span style={{ display: 'flex', alignItems: 'center', padding: 2, color: '#f59e0b' }}>
+          <Star size={13} style={{ fill: '#f59e0b' }} />
+        </span>
+      )}
+    </div>
+  )
+}
 
 export default function Layout() {
   const isMobile = useIsMobile()
@@ -43,8 +100,39 @@ export default function Layout() {
   const pageAnimRef = useRef('')
   const role = user?.role || 'member'
   const NAV_ITEMS = navItems().filter(n => !n.perm || can(role, n.perm))
-  
+
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem('sidebar_collapsed_groups')
+      return saved ? new Set(JSON.parse(saved)) : new Set()
+    } catch { return new Set() }
+  })
+  const [favPaths, setFavPaths] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('sidebar_favorites')
+      return saved ? JSON.parse(saved) : []
+    } catch { return [] }
+  })
+
+  const toggleGroup = (key: string) => {
+    setCollapsedGroups(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key); else next.add(key)
+      localStorage.setItem('sidebar_collapsed_groups', JSON.stringify([...next]))
+      return next
+    })
+  }
+
+  const toggleFav = (path: string) => {
+    setFavPaths(prev => {
+      const next = prev.includes(path) ? prev.filter(p => p !== path) : [...prev, path]
+      localStorage.setItem('sidebar_favorites', JSON.stringify(next))
+      return next
+    })
+  }
+
   const groups = navItemsByGroup(NAV_ITEMS)
+  const favItems = NAV_ITEMS.filter(n => favPaths.includes(n.path))
   const currentNav = NAV_ITEMS.find(n => n.path === '/' ? location.pathname === '/' : location.pathname.startsWith(n.path))
   
 
@@ -330,53 +418,72 @@ export default function Layout() {
             transition: 'width 0.2s ease', overflow: 'hidden',
           }}>
             <nav style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '8px', scrollbarWidth: 'thin' }}>
-              {groups.map((g, gi) => (
-                <div key={g.key} style={{ marginTop: gi === 0 ? 0 : 12 }}>
+              {/* Favorites section */}
+              {favItems.length > 0 && (
+                <div style={{ marginBottom: 12 }}>
                   {!sidebarCollapsed && (
-                    <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', padding: '4px 10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      {g.label}
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600,
+                      color: 'var(--text-tertiary)', padding: '4px 10px', letterSpacing: '0.05em',
+                    }}>
+                      <Star size={11} style={{ fill: 'var(--text-tertiary)' }} />
+                      <span>收藏</span>
                     </div>
                   )}
-                  {g.items.map(item => {
+                  {favItems.map(item => {
                     const isActive = item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)
                     return (
-                    <div
-                      key={item.path}
-                      onClick={() => navigate(item.path)}
-                      title={sidebarCollapsed ? item.label : undefined}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 10,
-                        padding: sidebarCollapsed ? '10px 0' : '8px 10px',
-                        justifyContent: sidebarCollapsed ? 'center' : 'flex-start',
-                        borderRadius: 8, cursor: 'pointer', marginBottom: 2,
-                        color: isActive ? 'var(--brand)' : 'var(--text-secondary)',
-                        background: isActive ? 'var(--bg-selected)' : 'transparent',
-                        fontWeight: isActive ? 600 : 500, fontSize: 13,
-                        transition: 'background 0.12s, color 0.12s',
-                        position: 'relative' as const,
-                      }}
-                      onMouseEnter={e => {
-                        if (!isActive) e.currentTarget.style.background = 'var(--bg-hover)'
-                      }}
-                      onMouseLeave={e => {
-                        if (!isActive) e.currentTarget.style.background = 'transparent'
-                      }}
-                    >
-                      <item.icon size={18} style={{ flexShrink: 0 }} />
-                      {!sidebarCollapsed && <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>}
-                      {item.path === '/messaging' && dmUnread > 0 && (
-                        <span style={{
-                          minWidth: 18, height: 18, borderRadius: 9, background: 'var(--color-danger)', color: '#fff',
-                          fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          padding: '0 4px', position: sidebarCollapsed ? 'absolute' as const : 'static' as const,
-                          top: sidebarCollapsed ? 4 : undefined, right: sidebarCollapsed ? 8 : undefined,
-                        }}>{dmUnread > 99 ? '99+' : dmUnread}</span>
-                      )}
-                    </div>
+                      <SidebarItem key={`fav-${item.path}`} item={item} isActive={isActive}
+                        sidebarCollapsed={sidebarCollapsed} dmUnread={dmUnread}
+                        isFav onToggleFav={() => toggleFav(item.path)}
+                        onClick={() => navigate(item.path)} />
                     )
                   })}
                 </div>
-              ))}
+              )}
+              {groups.map((g, gi) => {
+                const isGroupCollapsed = collapsedGroups.has(g.key)
+                return (
+                <div key={g.key} style={{ marginTop: (gi === 0 && favItems.length === 0) ? 0 : gi === 0 ? 0 : 12 }}>
+                  {!sidebarCollapsed && (
+                    <div onClick={() => toggleGroup(g.key)}
+                      style={{
+                        display: 'flex', alignItems: 'center', fontSize: 11, fontWeight: 600,
+                        color: 'var(--text-tertiary)', padding: '4px 10px', letterSpacing: '0.05em',
+                        cursor: 'pointer', userSelect: 'none', borderRadius: 4,
+                        transition: 'color 0.15s',
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-secondary)')}
+                      onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-tertiary)')}>
+                      <span style={{ flex: 1 }}>{g.label}</span>
+                      <span style={{
+                        display: 'flex', alignItems: 'center',
+                        transform: isGroupCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.2s ease',
+                      }}>
+                        <ChevronDown size={12} />
+                      </span>
+                    </div>
+                  )}
+                  <div style={{
+                    overflow: 'hidden',
+                    maxHeight: (sidebarCollapsed || !isGroupCollapsed) ? 500 : 0,
+                    opacity: (sidebarCollapsed || !isGroupCollapsed) ? 1 : 0,
+                    transition: 'max-height 0.25s ease, opacity 0.2s ease',
+                  }}>
+                    {g.items.map(item => {
+                      const isActive = item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)
+                      return (
+                        <SidebarItem key={item.path} item={item} isActive={isActive}
+                          sidebarCollapsed={sidebarCollapsed} dmUnread={dmUnread}
+                          isFav={favPaths.includes(item.path)} onToggleFav={() => toggleFav(item.path)}
+                          onClick={() => navigate(item.path)} />
+                      )
+                    })}
+                  </div>
+                </div>
+                )
+              })}
             </nav>
 
             <div style={{ padding: '4px 8px 0', flexShrink: 0 }}>
