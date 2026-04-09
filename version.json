@@ -1,7 +1,7 @@
 {
-  "version": "1.3.19",
-  "versionCode": 320,
+  "version": "1.3.20",
+  "versionCode": 321,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "版本识别修复：关于页显示本地APP_VERSION而非服务器版本；更新区域增加重启应用按钮和版本对比；图片CORP跨域修复"
+  "changelog": "应用内更新：集成CapacitorUpdater在应用内下载并应用更新包，增加下载进度提示"
 }

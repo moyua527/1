@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { ChevronRight, ChevronDown, Loader2, Download } from 'lucide-react'
-import { APP_VERSION, SERVER_URL } from '../../utils/capacitor'
+import { ChevronRight, ChevronDown, Loader2, Download, RefreshCw } from 'lucide-react'
+import { isCapacitor, APP_VERSION, SERVER_URL } from '../../utils/capacitor'
 import { fetchApi } from '../../bootstrap'
 import { toast } from '../ui/Toast'
 
@@ -23,6 +23,8 @@ export default function AboutPage() {
   const [versionLog, setVersionLog] = useState<VersionEntry[]>([])
   const [updateAvailable, setUpdateAvailable] = useState(false)
   const [downloadUrl, setDownloadUrl] = useState('')
+  const [updating, setUpdating] = useState(false)
+  const [updateProgress, setUpdateProgress] = useState('')
 
   useEffect(() => {
     fetchApi('/api/app/version?changelog=1').then(r => {
@@ -54,6 +56,39 @@ export default function AboutPage() {
       toast('检查更新失败', 'error')
     }
     setChecking(false)
+  }
+
+  const handleInAppUpdate = async () => {
+    if (updating) return
+    setUpdating(true)
+
+    if (isCapacitor) {
+      try {
+        setUpdateProgress('正在获取更新信息...')
+        const res = await fetchApi('/api/app/bundle')
+        if (!res.success || !res.data?.url || !res.data?.version) {
+          toast('没有可用的更新包', 'error')
+          setUpdating(false); setUpdateProgress('')
+          return
+        }
+
+        const { CapacitorUpdater } = await import('@capgo/capacitor-updater')
+        setUpdateProgress('正在下载更新包...')
+        const bundle = await CapacitorUpdater.download({
+          url: res.data.url,
+          version: res.data.version,
+        })
+
+        setUpdateProgress('正在应用更新，即将重启...')
+        await CapacitorUpdater.set(bundle)
+      } catch (e) {
+        console.warn('[Update] Error:', e)
+        toast('应用内更新失败，请尝试下载安装包', 'error')
+        setUpdating(false); setUpdateProgress('')
+      }
+    } else {
+      window.location.reload()
+    }
   }
 
   const startDownload = async () => {
@@ -110,17 +145,33 @@ export default function AboutPage() {
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)', textAlign: 'center' }}>
                   当前 v{APP_VERSION} → 最新 v{serverVersion}
                 </div>
-                <button onClick={() => window.location.reload()} style={{
+                {updateProgress && (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                    padding: '10px 16px', background: 'var(--bg-selected)', borderRadius: 10,
+                    fontSize: 13, color: 'var(--brand)', fontWeight: 500,
+                  }}>
+                    <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
+                    {updateProgress}
+                  </div>
+                )}
+                <button onClick={handleInAppUpdate} disabled={updating} style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  width: '100%', padding: '12px 0', background: 'var(--brand)', color: '#fff',
-                  borderRadius: 10, border: 'none', fontSize: 15, fontWeight: 600, cursor: 'pointer',
+                  width: '100%', padding: '12px 0',
+                  background: updating ? 'var(--bg-tertiary)' : 'var(--brand)',
+                  color: updating ? 'var(--text-tertiary)' : '#fff',
+                  borderRadius: 10, border: 'none', fontSize: 15, fontWeight: 600,
+                  cursor: updating ? 'default' : 'pointer', opacity: updating ? 0.7 : 1,
                 }}>
-                  重启应用更新
+                  <RefreshCw size={16} />
+                  {updating ? '更新中...' : '应用内更新'}
                 </button>
-                <button onClick={startDownload} style={{
+                <button onClick={startDownload} disabled={updating} style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  width: '100%', padding: '10px 0', background: 'transparent', color: 'var(--text-secondary)',
-                  borderRadius: 10, border: '1px solid var(--border-primary)', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                  width: '100%', padding: '10px 0', background: 'transparent',
+                  color: updating ? 'var(--text-disabled)' : 'var(--text-secondary)',
+                  borderRadius: 10, border: '1px solid var(--border-primary)', fontSize: 13, fontWeight: 500,
+                  cursor: updating ? 'default' : 'pointer',
                 }}>
                   <Download size={14} />
                   下载完整安装包
