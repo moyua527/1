@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
-import { Bell, CheckCheck, Loader2, ExternalLink, Filter, Trash2 } from 'lucide-react'
+import { useOutletContext, useNavigate } from 'react-router-dom'
+import { Bell, CheckCheck, Loader2, ExternalLink, Trash2 } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { useNotifications, useInvalidate } from '../../hooks/useApi'
-import { useNavigate } from 'react-router-dom'
+import PageHeader from '../ui/PageHeader'
 
 const typeIcon: Record<string, string> = {
   task_assigned: '📋', task_status: '🔄', task_comment: '💬',
@@ -12,33 +12,15 @@ const typeIcon: Record<string, string> = {
   follow_reminder: '⏰',
 }
 
-const CATEGORIES = [
-  { key: 'all', label: '全部', icon: '📮' },
-  { key: 'project', label: '项目', icon: '📁' },
-  { key: 'system', label: '系统', icon: '⚙️' },
-]
-
-const SUB_CATEGORY_MAP: Record<string, { label: string; icon: string }> = {
-  task: { label: '需求', icon: '📋' },
-  project: { label: '项目动态', icon: '📂' },
-  approval: { label: '审批', icon: '✅' },
-  system: { label: '系统', icon: '⚙️' },
-  security: { label: '安全', icon: '🔒' },
-}
-
 export default function NotificationCenter() {
-  const [activeTab, setActiveTab] = useState('all')
-  const { data, isLoading: loading } = useNotifications(activeTab)
+  const { data, isLoading: loading } = useNotifications('all')
   const invalidate = useInvalidate()
   const notifications = data?.notifications || []
   const unread = data?.unreadCount || 0
-  const unreadByCat = data?.unreadByCategory || {}
   const [selected, setSelected] = useState<any>(null)
   const [filter, setFilter] = useState<'all' | 'unread'>('all')
   const nav = useNavigate()
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
-
-  const switchTab = (cat: string) => { setActiveTab(cat); setSelected(null) }
 
   const markRead = async (id: number | 'all') => {
     await fetchApi(`/api/notifications/${id}/read`, { method: 'PATCH' })
@@ -59,184 +41,109 @@ export default function NotificationCenter() {
 
   const displayed = filter === 'unread' ? notifications.filter(n => !n.is_read) : notifications
 
+  const actionBtns = (
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 4, background: 'var(--bg-secondary)', borderRadius: 8, padding: 2 }}>
+        {(['all', 'unread'] as const).map(f => (
+          <button key={f} onClick={() => setFilter(f)}
+            style={{
+              padding: '5px 12px', borderRadius: 6, border: 'none', fontSize: 12, cursor: 'pointer',
+              background: filter === f ? 'var(--bg-primary)' : 'transparent',
+              color: filter === f ? 'var(--brand)' : 'var(--text-tertiary)',
+              fontWeight: filter === f ? 600 : 400, boxShadow: filter === f ? '0 1px 3px rgba(0,0,0,.08)' : 'none',
+            }}>
+            {f === 'all' ? '全部' : `未读${unread > 0 ? ` (${unread})` : ''}`}
+          </button>
+        ))}
+      </div>
+      {unread > 0 && (
+        <button onClick={() => markRead('all')}
+          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--brand)', fontSize: 12, cursor: 'pointer', fontWeight: 500 }}>
+          <CheckCheck size={14} /> 全部已读
+        </button>
+      )}
+      {notifications.length > 0 && (
+        <button onClick={() => deleteNotif('all')}
+          style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--color-danger, #ef4444)', fontSize: 12, cursor: 'pointer', fontWeight: 500 }}>
+          <Trash2 size={14} /> 清空
+        </button>
+      )}
+    </div>
+  )
+
+  const renderItem = (n: any, isLast: boolean) => (
+    <div key={n.id} onClick={() => handleClick(n)}
+      style={{
+        display: 'flex', gap: isMobile ? 10 : 12, padding: isMobile ? '12px 14px' : '14px 16px', cursor: 'pointer',
+        background: n.is_read ? 'transparent' : 'var(--bg-selected)',
+        borderBottom: isLast ? 'none' : '1px solid var(--border-secondary)',
+        transition: 'background 0.15s',
+      }}
+      onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
+      onMouseLeave={e => (e.currentTarget.style.background = n.is_read ? 'transparent' : 'var(--bg-selected)')}>
+      <span style={{ fontSize: isMobile ? 20 : 24, lineHeight: 1.2, flexShrink: 0 }}>{typeIcon[n.type] || '🔔'}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: isMobile ? 13 : 14, fontWeight: n.is_read ? 400 : 600, color: 'var(--text-heading)', marginBottom: 3 }}>{n.title}</div>
+        <div style={{ fontSize: isMobile ? 12 : 13, color: 'var(--text-secondary)', lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.content}</div>
+        <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 3 }}>{new Date(n.created_at).toLocaleString('zh-CN')}</div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+        {!n.is_read && <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--brand)' }} />}
+        <button onClick={(e) => deleteNotif(n.id, e)} title="删除"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', padding: 2, opacity: 0.5, transition: 'opacity 0.15s' }}
+          onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+          onMouseLeave={e => (e.currentTarget.style.opacity = '0.5')}>
+          <Trash2 size={14} />
+        </button>
+      </div>
+    </div>
+  )
+
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-        <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>通知中心</h1>
-          <p style={{ color: 'var(--text-secondary)', margin: '4px 0 0', fontSize: 14 }}>
-            共 {notifications.length} 条通知 {unread > 0 && <span style={{ color: 'var(--color-danger)', fontWeight: 600 }}>· {unread} 条未读</span>}
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {unread > 0 && (
-            <button onClick={() => markRead('all')}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--brand)', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
-              <CheckCheck size={16} /> 全部已读
-            </button>
-          )}
-          {notifications.length > 0 && (
-            <button onClick={() => deleteNotif('all')}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--color-danger, #ef4444)', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
-              <Trash2 size={16} /> 清空全部
-            </button>
-          )}
-        </div>
-      </div>
+      <PageHeader title="通知中心" subtitle={`共 ${notifications.length} 条通知${unread > 0 ? ` · ${unread} 条未读` : ''}`} actions={actionBtns} />
 
-      <div style={{ display: 'flex', gap: 16, flexDirection: isMobile ? 'column' : 'row' }}>
-        {/* 左侧分类 */}
-        <div style={{ width: isMobile ? '100%' : 200, flexShrink: 0 }}>
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
+      ) : !selected ? (
+        displayed.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: isMobile ? 60 : 80, color: 'var(--text-tertiary)', background: 'var(--bg-primary)', borderRadius: 12, border: '1px solid var(--border-primary)' }}>
+            <Bell size={40} style={{ marginBottom: 12, opacity: 0.4 }} />
+            <div style={{ fontSize: 14 }}>{filter === 'unread' ? '没有未读通知' : '暂无通知'}</div>
+          </div>
+        ) : (
           <div style={{ background: 'var(--bg-primary)', borderRadius: 12, border: '1px solid var(--border-primary)', overflow: 'hidden' }}>
-            {CATEGORIES.map(c => {
-              const cnt = c.key === 'all' ? unread : (unreadByCat[c.key] || 0)
-              return (
-                <div key={c.key} onClick={() => switchTab(c.key)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', cursor: 'pointer',
-                    background: activeTab === c.key ? 'var(--bg-selected)' : 'transparent',
-                    color: activeTab === c.key ? 'var(--brand)' : 'var(--text-body)',
-                    fontWeight: activeTab === c.key ? 600 : 400, fontSize: 13,
-                    borderLeft: activeTab === c.key ? '3px solid var(--brand)' : '3px solid transparent',
-                    transition: 'all 0.15s',
-                  }}
-                  onMouseEnter={e => { if (activeTab !== c.key) e.currentTarget.style.background = 'var(--bg-hover)' }}
-                  onMouseLeave={e => { if (activeTab !== c.key) e.currentTarget.style.background = 'transparent' }}>
-                  <span>{c.icon}</span>
-                  <span style={{ flex: 1 }}>{c.label}</span>
-                  {cnt > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: 'var(--color-danger)', color: '#fff', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px' }}>{cnt > 99 ? '99+' : cnt}</span>}
-                </div>
-              )
-            })}
+            {displayed.map((n, i) => renderItem(n, i === displayed.length - 1))}
           </div>
-
-          {/* 过滤选项 */}
-          <div style={{ marginTop: 12, background: 'var(--bg-primary)', borderRadius: 12, border: '1px solid var(--border-primary)', padding: '8px' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', padding: '4px 8px', marginBottom: 4 }}>
-              <Filter size={11} style={{ verticalAlign: 'middle', marginRight: 4 }} />筛选
+        )
+      ) : (
+        <div style={{ background: 'var(--bg-primary)', borderRadius: 12, border: '1px solid var(--border-primary)', padding: isMobile ? 16 : 24 }}>
+          <button onClick={() => setSelected(null)}
+            style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0', marginBottom: 16 }}>
+            ← 返回列表
+          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+            <span style={{ fontSize: 28 }}>{typeIcon[selected.type] || '🔔'}</span>
+            <div>
+              <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, color: 'var(--text-heading)' }}>{selected.title}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>{new Date(selected.created_at).toLocaleString('zh-CN')}</div>
             </div>
-            {['all', 'unread'].map(f => (
-              <div key={f} onClick={() => setFilter(f as any)}
-                style={{
-                  padding: '6px 8px', borderRadius: 6, cursor: 'pointer', fontSize: 12,
-                  background: filter === f ? 'var(--bg-selected)' : 'transparent',
-                  color: filter === f ? 'var(--brand)' : 'var(--text-secondary)',
-                  fontWeight: filter === f ? 600 : 400,
-                }}>
-                {f === 'all' ? '全部通知' : '仅未读'}
-              </div>
-            ))}
           </div>
-        </div>
-
-        {/* 通知列表 */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
-          ) : !selected ? (
-            displayed.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)', background: 'var(--bg-primary)', borderRadius: 12, border: '1px solid var(--border-primary)' }}>
-                <Bell size={48} style={{ marginBottom: 12, opacity: 0.4 }} />
-                <div>{filter === 'unread' ? '没有未读通知' : '暂无通知'}</div>
-              </div>
-            ) : (
-              <div style={{ background: 'var(--bg-primary)', borderRadius: 12, border: '1px solid var(--border-primary)', overflow: 'hidden' }}>
-                {(() => {
-                  const renderItem = (n: any, isLast: boolean) => (
-                    <div key={n.id} onClick={() => handleClick(n)}
-                      style={{
-                        display: 'flex', gap: 12, padding: '14px 16px', cursor: 'pointer',
-                        background: n.is_read ? 'transparent' : 'var(--bg-selected)',
-                        borderBottom: isLast ? 'none' : '1px solid var(--border-secondary)',
-                        transition: 'background 0.15s',
-                      }}
-                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
-                      onMouseLeave={e => (e.currentTarget.style.background = n.is_read ? 'transparent' : 'var(--bg-selected)')}>
-                      <span style={{ fontSize: 24, lineHeight: 1.2, flexShrink: 0 }}>{typeIcon[n.type] || '🔔'}</span>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: n.is_read ? 400 : 600, color: 'var(--text-heading)', marginBottom: 4 }}>{n.title}</div>
-                        <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.content}</div>
-                        <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>{new Date(n.created_at).toLocaleString('zh-CN')}</div>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-                        {!n.is_read && <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--brand)' }} />}
-                        <button onClick={(e) => deleteNotif(n.id, e)} title="删除"
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)', padding: 2, opacity: 0.5, transition: 'opacity 0.15s' }}
-                          onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
-                          onMouseLeave={e => (e.currentTarget.style.opacity = '0.5')}>
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  )
-                  if (activeTab !== 'project') {
-                    return displayed.map((n, i) => renderItem(n, i === displayed.length - 1))
-                  }
-                  const projects: Record<string, { label: string; subCats: Record<string, any[]> }> = {}
-                  for (const n of displayed) {
-                    const pKey = n.project_id ? String(n.project_id) : '_none'
-                    if (!projects[pKey]) projects[pKey] = { label: n.project_name || '未关联项目', subCats: {} }
-                    const cat = n.category || 'system'
-                    if (!projects[pKey].subCats[cat]) projects[pKey].subCats[cat] = []
-                    projects[pKey].subCats[cat].push(n)
-                  }
-                  return Object.entries(projects).map(([pKey, proj]) => (
-                    <div key={pKey}>
-                      <div style={{ padding: '10px 16px', fontSize: 14, fontWeight: 700, color: 'var(--brand)', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-secondary)', display: 'flex', alignItems: 'center', gap: 6, position: 'sticky', top: 0, zIndex: 2 }}>
-                        📁 {proj.label}
-                        <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontWeight: 400 }}>({Object.values(proj.subCats).flat().length})</span>
-                      </div>
-                      {Object.entries(proj.subCats).map(([cat, items]) => {
-                        const sub = SUB_CATEGORY_MAP[cat] || { label: cat, icon: '🔔' }
-                        return (
-                          <div key={cat}>
-                            <div style={{ padding: '6px 16px 6px 28px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', background: '#fafbfc', borderBottom: '1px solid var(--border-secondary)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                              {sub.icon} {sub.label}
-                              <span style={{ fontSize: 10, color: 'var(--text-tertiary)', fontWeight: 400 }}>({items.length})</span>
-                            </div>
-                            {items.map((n: any, i: number) => renderItem(n, i === items.length - 1))}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  ))
-                })()}
-              </div>
-            )
-          ) : (
-            /* 详情视图 */
-            <div style={{ background: 'var(--bg-primary)', borderRadius: 12, border: '1px solid var(--border-primary)', padding: 24 }}>
-              <button onClick={() => setSelected(null)}
-                style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0', marginBottom: 16 }}>
-                ← 返回列表
+          <div style={{ fontSize: 14, color: 'var(--text-body)', lineHeight: 1.8, marginBottom: 20, whiteSpace: 'pre-wrap' }}>{selected.content}</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {selected.link && (
+              <button onClick={() => nav(selected.link)}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 8, background: 'var(--brand)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
+                <ExternalLink size={14} /> 查看详情
               </button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                <span style={{ fontSize: 32 }}>{typeIcon[selected.type] || '🔔'}</span>
-                <div>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-heading)' }}>{selected.title}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4 }}>
-                    {new Date(selected.created_at).toLocaleString('zh-CN')}
-                    {selected.category && <span style={{ marginLeft: 8, padding: '1px 6px', borderRadius: 4, background: 'var(--bg-secondary)', fontSize: 11 }}>{selected.category}</span>}
-                  </div>
-                </div>
-              </div>
-              <div style={{ fontSize: 14, color: 'var(--text-body)', lineHeight: 1.8, marginBottom: 20, whiteSpace: 'pre-wrap' }}>{selected.content}</div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {selected.link && (
-                  <button onClick={() => nav(selected.link)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 8, background: 'var(--brand)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
-                    <ExternalLink size={14} /> 查看详情
-                  </button>
-                )}
-                <button onClick={() => deleteNotif(selected.id)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 8, background: 'var(--bg-tertiary)', color: 'var(--color-danger, #ef4444)', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>
-                  <Trash2 size={14} /> 删除
-                </button>
-              </div>
-            </div>
-          )}
+            )}
+            <button onClick={() => deleteNotif(selected.id)}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', borderRadius: 8, background: 'var(--bg-tertiary)', color: 'var(--color-danger, #ef4444)', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>
+              <Trash2 size={14} /> 删除
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
