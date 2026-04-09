@@ -31,6 +31,7 @@ const NAV_DEFS = [
   { path: '/report', label: '数据报表', icon: BarChart3, perm: 'report:view', keywords: 'report chart 报表 图表 统计' },
   { path: '/files', label: '文件管理', icon: FileText, perm: 'file:view', keywords: 'file upload 文件 上传 下载' },
   { path: '/users', label: '用户管理', icon: Shield, perm: 'user:manage', keywords: 'user account 用户 账号' },
+  { path: '/knowledge', label: '知识库', icon: FileText, perm: 'dashboard:view', keywords: 'knowledge base wiki 知识 文档 文章' },
   { path: '/audit', label: '审计日志', icon: ScrollText, perm: 'audit:view', keywords: 'audit log 审计 日志 操作记录' },
   { path: '/partners', label: '合作方管理', icon: Plug2, perm: 'partner:manage', keywords: 'partner 合作方' },
   { path: '/settings', label: '系统配置', icon: Settings, perm: 'settings:manage', keywords: 'settings config 设置 配置' },

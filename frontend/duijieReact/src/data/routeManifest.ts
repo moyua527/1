@@ -2,7 +2,7 @@ import { type ComponentType } from 'react'
 import {
   LayoutDashboard, FolderKanban, Users, ListTodo, Building2,
   MessageSquare, CalendarDays, FileText, BellRing,
-  Shield, ScrollText, Plug2, Settings, LayoutGrid, UserCircle,
+  Shield, ScrollText, Plug2, Settings, LayoutGrid, UserCircle, BookOpen,
 } from 'lucide-react'
 
 export interface RouteEntry {
@@ -75,6 +75,11 @@ const ROUTES: RouteEntry[] = [
   {
     path: '/notifications', label: '通知中心', icon: BellRing, perm: 'dashboard:view',
     importFn: () => import('../features/notification/index'),
+    showInNav: true, group: 'workspace',
+  },
+  {
+    path: '/knowledge', label: '知识库', icon: BookOpen, perm: 'dashboard:view',
+    importFn: () => import('../features/knowledge/index'),
     showInNav: true, group: 'workspace',
   },
   {

@@ -1,7 +1,7 @@
 {
-  "version": "1.3.37",
-  "versionCode": 338,
+  "version": "1.3.38",
+  "versionCode": 339,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "高级搜索：Ctrl+K跨项目/客户/需求/文件全文检索，类型筛选+搜索历史+关键词高亮"
+  "changelog": "知识库模块：文章管理+分类+全文搜索+标签+阅读统计"
 }
