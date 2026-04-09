@@ -1,4 +1,5 @@
 const db = require('../../../config/db');
+const { cacheGet, cacheSet, cacheDel } = require('../../../config/redis');
 
 module.exports = async (userId, limit, category, offset = 0) => {
   let sql = `SELECT n.*, p.name AS project_name
@@ -23,10 +24,17 @@ module.exports = async (userId, limit, category, offset = 0) => {
   const [rows] = await db.query(sql, params);
   const [[{ total }]] = await db.query(countSql, countParams);
 
-  const [[{ count }]] = await db.query(
-    'SELECT COUNT(*) as count FROM duijie_notifications WHERE user_id = ? AND is_read = 0',
-    [userId]
-  );
+  const cacheKey = `notif_unread:${userId}`;
+  let count = await cacheGet(cacheKey);
+  if (count === null) {
+    const [[{ c }]] = await db.query(
+      'SELECT COUNT(*) as c FROM duijie_notifications WHERE user_id = ? AND is_read = 0',
+      [userId]
+    );
+    count = c;
+    await cacheSet(cacheKey, count, 30);
+  }
+
   const [catCounts] = await db.query(
     "SELECT COALESCE(category, 'system') as category, COUNT(*) as count FROM duijie_notifications WHERE user_id = ? AND is_read = 0 GROUP BY COALESCE(category, 'system')",
     [userId]
@@ -41,4 +49,8 @@ module.exports = async (userId, limit, category, offset = 0) => {
   unreadByCategory.project = projectUnread.count;
 
   return { notifications: rows, unreadCount: count, unreadByCategory, total, page: Math.floor(offset / limit) + 1, pageSize: limit };
+};
+
+module.exports.invalidateUnreadCache = async (userId) => {
+  await cacheDel(`notif_unread:${userId}`);
 };

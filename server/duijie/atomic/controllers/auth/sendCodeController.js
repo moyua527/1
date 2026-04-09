@@ -1,10 +1,10 @@
-﻿const db = require('../../../config/db');
 const logger = require('../../../config/logger');
 const { sendVerificationCode } = require('../../../config/mailer');
+const { storeVerificationCode, checkCooldown } = require('../../../config/redis');
 
 module.exports = async (req, res) => {
   try {
-    const { type, target } = req.body; // type: 'phone' | 'email', target: phone number or email
+    const { type, target } = req.body;
     if (!type || !target) return res.status(400).json({ success: false, message: '参数缺失' });
     if (type !== 'phone' && type !== 'email') return res.status(400).json({ success: false, message: '无效的验证码类型' });
 
@@ -15,31 +15,18 @@ module.exports = async (req, res) => {
       return res.status(400).json({ success: false, message: '手机号格式无效' });
     }
 
-    // Rate limit: 60s per target
-    const [recent] = await db.query(
-      'SELECT created_at FROM verification_codes WHERE target = ? AND type = ? ORDER BY created_at DESC LIMIT 1',
-      [target, type]
-    );
-    if (recent.length > 0) {
-      const diff = Date.now() - new Date(recent[0].created_at).getTime();
-      if (diff < 60000) {
-        return res.status(429).json({ success: false, message: `请${Math.ceil((60000 - diff) / 1000)}秒后再试` });
-      }
+    const cooldown = await checkCooldown(type, target);
+    if (cooldown > 0) {
+      return res.status(429).json({ success: false, message: `请${cooldown}秒后再试` });
     }
 
-    // Generate 6-digit code
     const code = String(Math.floor(100000 + Math.random() * 900000));
 
-    // Store in DB (expires in 5 min)
-    await db.query(
-      'INSERT INTO verification_codes (type, target, code, expires_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 5 MINUTE))',
-      [type, target, code]
-    );
+    await storeVerificationCode(type, target, code, 300);
 
-    // Send via email (SMTP) or log for phone (SMS not yet integrated)
     if (type === 'email') {
       const sent = await sendVerificationCode(target, code, '登录');
-      if (!sent) logger.warn(`邮件发送失败，验证码仍已入库: ${target}`);
+      if (!sent) logger.warn(`邮件发送失败，验证码仍已存储: ${target}`);
     } else {
       logger.info(`短信验证码（SMS 未集成）: ${target} -> ${code}`);
     }

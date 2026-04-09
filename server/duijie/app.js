@@ -1,10 +1,11 @@
 require('dotenv').config();
+require('./config/sentry');
 const express = require('express');
 const logger = require('./config/logger');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const MySQLRateLimitStore = require('./atomic/utils/MySQLRateLimitStore');
+const RedisRateLimitStore = require('./atomic/utils/RedisRateLimitStore');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const routes = require('./atomic/routes');
@@ -44,9 +45,9 @@ const { csrfTokenProvider, csrfProtection } = require('./atomic/middleware/csrf'
 app.use('/api', csrfTokenProvider);
 app.use('/api', csrfProtection);
 
-// 全局 API 速率限制：每 IP 每 15 分钟最多 600 次（MySQL 持久化存储）
+// 全局 API 速率限制：每 IP 每 15 分钟最多 600 次（Redis 持久化存储）
 const rlOpts = { validate: { xForwardedForHeader: false } };
-app.use('/api', rateLimit({ ...rlOpts, windowMs: 15 * 60 * 1000, max: 600, standardHeaders: true, legacyHeaders: false, store: new MySQLRateLimitStore(15 * 60 * 1000), message: { success: false, message: '请求过于频繁，请稍后再试' } }));
+app.use('/api', rateLimit({ ...rlOpts, windowMs: 15 * 60 * 1000, max: 600, standardHeaders: true, legacyHeaders: false, store: new RedisRateLimitStore(15 * 60 * 1000), message: { success: false, message: '请求过于频繁，请稍后再试' } }));
 
 
 // Bot/爬虫检测

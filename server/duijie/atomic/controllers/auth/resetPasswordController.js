@@ -1,4 +1,4 @@
-﻿const db = require('../../../config/db');
+const db = require('../../../config/db');
 const bcrypt = require('bcryptjs');
 const logger = require('../../../config/logger');
 const { revokeAllUserTokens } = require('../../utils/authToken');
@@ -13,13 +13,9 @@ module.exports = async (req, res) => {
       return res.status(400).json({ success: false, message: '密码必须包含字母和数字' });
     }
 
-    const [vcRows] = await db.query(
-      'SELECT id FROM verification_codes WHERE type = ? AND target = ? AND code = ? AND expires_at > NOW() AND used = 0 ORDER BY created_at DESC LIMIT 1',
-      [type, target, code]
-    );
-    if (vcRows.length === 0) return res.status(400).json({ success: false, message: '验证码无效或已过期' });
-
-    await db.query('UPDATE verification_codes SET used = 1 WHERE id = ?', [vcRows[0].id]);
+    const { verifyCode } = require('../../../config/redis');
+    const valid = await verifyCode(type, target, code);
+    if (!valid) return res.status(400).json({ success: false, message: '验证码无效或已过期' });
 
     const col = type === 'phone' ? 'phone' : 'email';
     const hashed = await bcrypt.hash(new_password, 10);

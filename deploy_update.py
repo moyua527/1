@@ -145,12 +145,15 @@ def main():
     sftp.put(local_migrate, remote_migrate)
     run_cmd(ssh, f'cd {remote_server} && node scripts/migrate-passwords.js', 'Hashing passwords')
 
-    # 4. Upload frontend dist
+    # 4. Upload frontend dist (atomic swap to avoid downtime)
     print('\n[4/5] Uploading frontend dist...')
     local_dist = os.path.join(LOCAL_BASE, 'frontend', 'duijieReact', 'dist')
     remote_dist = f'{REMOTE_BASE}/frontend/duijieReact/dist'
-    run_cmd(ssh, f'rm -rf {remote_dist}')
-    upload_dir(sftp, local_dist, remote_dist)
+    remote_dist_new = f'{REMOTE_BASE}/frontend/duijieReact/dist_new'
+    remote_dist_old = f'{REMOTE_BASE}/frontend/duijieReact/dist_old'
+    run_cmd(ssh, f'rm -rf {remote_dist_new} {remote_dist_old}')
+    upload_dir(sftp, local_dist, remote_dist_new)
+    run_cmd(ssh, f'mv {remote_dist} {remote_dist_old} 2>/dev/null; mv {remote_dist_new} {remote_dist}; rm -rf {remote_dist_old}')
 
     # 4.5. Upload version.json + CHANGELOG.md
     print('\n[4.5/5] Uploading version.json + CHANGELOG.md...')

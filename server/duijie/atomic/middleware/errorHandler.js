@@ -1,4 +1,5 @@
 const logger = require('../../config/logger');
+const Sentry = require('../../config/sentry');
 
 module.exports = (err, req, res, _next) => {
   if (err.isOperational) {
@@ -9,6 +10,7 @@ module.exports = (err, req, res, _next) => {
     });
   }
 
+  Sentry.captureException(err, { extra: { path: req.originalUrl, method: req.method, userId: req.userId } });
   logger.error(`Unhandled error: ${err.message}`, { stack: err.stack, path: req.originalUrl, method: req.method });
 
   const statusCode = err.statusCode || 500;

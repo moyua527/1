@@ -8,17 +8,11 @@ module.exports = async (req, res) => {
     const { type, target, code } = req.body;
     if (!type || !target || !code) return res.status(400).json({ success: false, message: '参数缺失' });
 
-    // Verify code
-    const [codes] = await db.query(
-      'SELECT id FROM verification_codes WHERE type = ? AND target = ? AND code = ? AND expires_at > NOW() AND used = 0 ORDER BY created_at DESC LIMIT 1',
-      [type, target, code]
-    );
-    if (codes.length === 0) {
+    const { verifyCode } = require('../../../config/redis');
+    const valid = await verifyCode(type, target, code);
+    if (!valid) {
       return res.status(400).json({ success: false, message: '验证码错误或已过期' });
     }
-
-    // Mark code as used
-    await db.query('UPDATE verification_codes SET used = 1 WHERE id = ?', [codes[0].id]);
 
     // Find user by phone or email
     const field = type === 'phone' ? 'phone' : 'email';

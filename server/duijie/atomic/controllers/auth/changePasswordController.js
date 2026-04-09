@@ -21,13 +21,9 @@ module.exports = async (req, res) => {
 
     const verifyType = phone ? 'phone' : 'email';
     const verifyTarget = phone || email;
-    const [vcRows] = await db.query(
-      'SELECT id FROM verification_codes WHERE type = ? AND target = ? AND code = ? AND expires_at > NOW() AND used = 0 ORDER BY created_at DESC LIMIT 1',
-      [verifyType, verifyTarget, code]
-    );
-    if (vcRows.length === 0) return res.status(400).json({ success: false, message: '验证码无效或已过期' });
-
-    await db.query('UPDATE verification_codes SET used = 1 WHERE id = ?', [vcRows[0].id]);
+    const { verifyCode } = require('../../../config/redis');
+    const valid = await verifyCode(verifyType, verifyTarget, code);
+    if (!valid) return res.status(400).json({ success: false, message: '验证码无效或已过期' });
 
     const hashed = await bcrypt.hash(new_password, 10);
     await db.query('UPDATE voice_users SET password = ? WHERE id = ?', [hashed, userId]);
