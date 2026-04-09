@@ -79,7 +79,7 @@ export default function AboutPage() {
           </div>
         </div>
         <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-heading)', marginBottom: 4 }}>DuiJie</div>
-        <div style={{ fontSize: 15, color: 'var(--text-tertiary)', marginBottom: 32 }}>Version {serverVersion}</div>
+        <div style={{ fontSize: 15, color: 'var(--text-tertiary)', marginBottom: 32 }}>Version {APP_VERSION}</div>
 
         <div style={{ width: '100%', background: 'var(--bg-primary)', borderRadius: 16, overflow: 'hidden', marginBottom: 16 }}>
           <div onClick={() => setShowLog(!showLog)} style={{
@@ -106,14 +106,24 @@ export default function AboutPage() {
             </div>
 
             {updateAvailable && (
-              <div style={{ marginTop: 14 }}>
-                <button onClick={startDownload} style={{
+              <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', textAlign: 'center' }}>
+                  当前 v{APP_VERSION} → 最新 v{serverVersion}
+                </div>
+                <button onClick={() => window.location.reload()} style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                   width: '100%', padding: '12px 0', background: 'var(--brand)', color: '#fff',
                   borderRadius: 10, border: 'none', fontSize: 15, fontWeight: 600, cursor: 'pointer',
                 }}>
-                  <Download size={18} />
-                  下载更新包 (v{serverVersion})
+                  重启应用更新
+                </button>
+                <button onClick={startDownload} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  width: '100%', padding: '10px 0', background: 'transparent', color: 'var(--text-secondary)',
+                  borderRadius: 10, border: '1px solid var(--border-primary)', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                }}>
+                  <Download size={14} />
+                  下载完整安装包
                 </button>
               </div>
             )}
