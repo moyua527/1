@@ -36,7 +36,11 @@ module.exports = async (req, res) => {
       }
     }
 
-    const nickname = rawNickname ? rawNickname.trim().slice(0, 6) : email.split('@')[0].slice(0, 6);
+    const randomSuffix = () => {
+      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+      return Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    };
+    const nickname = rawNickname && rawNickname.trim() ? rawNickname.trim().slice(0, 6) : `用户${randomSuffix()}`;
     const displayId = await generateDisplayId('000000', 0);
     const personalCode = await generateInviteCode();
     if (rawPassword && !/^[a-zA-Z0-9]+$/.test(rawPassword)) {
