@@ -43,6 +43,12 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
     return () => clearTimeout(t)
   }, [countdown])
 
+  useEffect(() => {
+    if (emailCode.length === 6 && email && !emailVerified) {
+      handleVerifyEmail()
+    }
+  }, [emailCode])  // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleSendEmailCode = async () => {
     setError(''); setSuccess('')
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('请输入正确的邮箱地址'); return }
@@ -191,12 +197,6 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
                     style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: (countdown > 0 || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ? 'var(--border-primary)' : 'var(--brand)', color: (countdown > 0 || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ? 'var(--text-tertiary)' : 'var(--bg-primary)', fontSize: 12, fontWeight: 500, cursor: (countdown > 0 || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
                     {countdown > 0 ? `${countdown}s` : '发送'}
                   </button>
-                  {emailCode.length >= 4 && (
-                    <button type="button" onClick={handleVerifyEmail}
-                      style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: 'var(--color-success, #22c55e)', color: '#fff', fontSize: 12, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                      验证
-                    </button>
-                  )}
                 </div>
               </>
             )}

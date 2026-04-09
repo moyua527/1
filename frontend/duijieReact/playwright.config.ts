@@ -25,5 +25,17 @@ export default defineConfig({
       grep: /登录后/,
       dependencies: ['setup'],
     },
+    {
+      name: 'knowledge',
+      testMatch: /knowledge\.spec\.ts/,
+      use: { browserName: 'chromium' },
+      dependencies: ['setup'],
+    },
+    {
+      name: 'search',
+      testMatch: /search\.spec\.ts/,
+      use: { browserName: 'chromium' },
+      dependencies: ['setup'],
+    },
   ],
 })

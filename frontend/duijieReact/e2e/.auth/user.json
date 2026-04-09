@@ -1,21 +1,31 @@
 {
   "cookies": [
     {
+      "name": "refresh_token",
+      "value": "ed7aab907654b6d0f31f3982a5f40749633ff8b49b628b950aa59c86ea6e31be58fbf7d064008719",
+      "domain": "160.202.253.143",
+      "path": "/api/auth/refresh",
+      "expires": 1778368085.377634,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
       "name": "csrf_token",
-      "value": "67a326a03cbf1265338329a3a1d1b5574107f99af38413353ef18ded1f862cd5",
+      "value": "713bc42595a230403f80c2d2bc5134b093a34412ac65b2303be12bbd94e6e418",
       "domain": "160.202.253.143",
       "path": "/",
-      "expires": 1775205427.398502,
+      "expires": 1775862484.708464,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Strict"
     },
     {
       "name": "token",
-      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwLCJyb2xlIjoibWVtYmVyIiwiY2xpZW50SWQiOm51bGwsImlhdCI6MTc3NTExOTAyNywiZXhwIjoxNzc1NzIzODI3fQ.03IifUuoRs_XVfReGfloi7fkF8qcG_T_bGw7oSJliX8",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwLCJyb2xlIjoibWVtYmVyIiwiY2xpZW50SWQiOm51bGwsImlhdCI6MTc3NTc3NjA4MSwiZXhwIjoxNzc1NzgzMjgxfQ.OyR0QDo1mpT4x1QP7_O7OjdIHif_3Jii9QOfQAF_VKw",
       "domain": "160.202.253.143",
       "path": "/",
-      "expires": 1775723828.001428,
+      "expires": 1775783285.377534,
       "httpOnly": true,
       "secure": false,
       "sameSite": "Lax"
@@ -27,7 +37,15 @@
       "localStorage": [
         {
           "name": "cached_user",
-          "value": "{\"id\":10,\"username\":\"15911111111\",\"nickname\":\"迪迦\",\"avatar\":null,\"role\":\"member\",\"client_id\":null}"
+          "value": "{\"id\":10,\"username\":\"15911111111\",\"nickname\":\"迪迦\",\"avatar\":null,\"role\":\"member\",\"client_id\":null,\"guide_done\":1}"
+        },
+        {
+          "name": "token",
+          "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEwLCJyb2xlIjoibWVtYmVyIiwiY2xpZW50SWQiOm51bGwsImlhdCI6MTc3NTc3NjA4MSwiZXhwIjoxNzc1NzgzMjgxfQ.OyR0QDo1mpT4x1QP7_O7OjdIHif_3Jii9QOfQAF_VKw"
+        },
+        {
+          "name": "refresh_token",
+          "value": "ed7aab907654b6d0f31f3982a5f40749633ff8b49b628b950aa59c86ea6e31be58fbf7d064008719"
         }
       ]
     }
