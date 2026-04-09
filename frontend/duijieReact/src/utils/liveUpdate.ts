@@ -37,7 +37,7 @@ export async function initLiveUpdate() {
 
     console.log(`[LiveUpdate] Bundle downloaded, applying and reloading...`)
     await CapacitorUpdater.set(bundle)
-  } catch (e) {
-    console.warn('[LiveUpdate] Error:', e)
+  } catch (e: any) {
+    console.warn('[LiveUpdate] Error:', e?.message || e?.errorMessage || String(e), e)
   }
 }

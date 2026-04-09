@@ -2,6 +2,7 @@
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.3.29 | 2026-04-09 | **改进更新错误提示**：AboutPage和liveUpdate显示CapacitorUpdater的具体错误信息，便于排查应用内更新失败原因 |
 | v1.3.28 | 2026-04-09 | **密码修改支持旧密码验证**：changePasswordController同时支持currentPassword(旧密码)和code(验证码)两种验证方式；修复前端发送currentPassword/newPassword与后端字段不匹配的问题 |
 | v1.3.27 | 2026-04-09 | **修复移动端主页面滚动**：移除ServicesPage和MyPage的minHeight: calc(100dvh-68px)，该值加上Layout内边距超出容器导致内容未溢出也可滚动 |
 | v1.3.26 | 2026-04-09 | **APK禁用下拉刷新**：Capacitor原生环境跳过Layout下拉刷新逻辑；Android WebView overscroll改为NEVER；手机浏览器端下拉刷新不受影响 |

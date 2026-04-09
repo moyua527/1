@@ -88,9 +88,10 @@ export default function AboutPage() {
 
         setUpdateProgress('正在应用更新，即将重启...')
         await CapacitorUpdater.set(bundle)
-      } catch (e) {
-        console.warn('[Update] Error:', e)
-        toast('应用内更新失败，请尝试下载安装包', 'error')
+      } catch (e: any) {
+        const msg = e?.message || e?.errorMessage || String(e)
+        console.warn('[Update] Error:', msg, e)
+        toast(`更新失败: ${msg}`, 'error')
         setUpdating(false); setUpdateProgress('')
       }
     } else {
