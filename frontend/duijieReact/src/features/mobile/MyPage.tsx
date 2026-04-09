@@ -29,7 +29,7 @@ export default function MyPage() {
 
   return (
     <div>
-      <div onClick={() => navigate('/user-settings?tab=account')}
+      <div onClick={() => navigate('/user-settings?tab=account&sub=profile')}
         style={{
           display: 'flex', alignItems: 'center', gap: 14, padding: 16, marginBottom: 12,
           background: 'var(--bg-primary)', borderRadius: 16, cursor: 'pointer',

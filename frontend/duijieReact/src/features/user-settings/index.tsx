@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { User, Bell, Palette, Globe, Save, Copy, ArrowLeft, Check, Loader2, Lock, Smartphone, Monitor, Trash2, LogOut, ChevronRight, Mail, Phone, KeyRound } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { User, Bell, Palette, Globe, Save, Copy, ArrowLeft, Check, Loader2, Lock, Smartphone, Monitor, Trash2, LogOut, ChevronRight, Mail, Phone, KeyRound, Camera } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
@@ -12,7 +12,7 @@ import useIsMobile from '../ui/useIsMobile'
 import PageHeader from '../ui/PageHeader'
 
 type Tab = 'account' | 'appearance' | 'notification'
-type AccountSub = 'password' | 'devices' | 'phone' | 'email' | null
+type AccountSub = 'profile' | 'password' | 'devices' | 'phone' | 'email' | null
 
 const TABS: { key: Tab; label: string; icon: typeof User }[] = [
   { key: 'account', label: '账号与安全', icon: User },
@@ -68,6 +68,13 @@ export default function UserSettings() {
 
   // Notification prefs
   const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>(getNotifPrefs)
+
+  // Profile editing (WeChat-style)
+  const avatarFileRef = useRef<HTMLInputElement>(null)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [profileEdit, setProfileEdit] = useState<'nickname' | 'gender' | null>(null)
+  const [profileNickname, setProfileNickname] = useState('')
+  const [profileSaving, setProfileSaving] = useState(false)
 
   // Session management
   const [sessions, setSessions] = useState<any[]>([])
@@ -126,6 +133,43 @@ export default function UserSettings() {
     localStorage.setItem('notif_prefs', JSON.stringify(next))
   }
 
+  const handleProfileAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) { toast('头像不能超过 2MB', 'error'); return }
+    if (!/^image\/(jpeg|jpg|png|gif|webp)$/.test(file.type)) { toast('只支持 JPG/PNG/GIF/WebP 格式', 'error'); return }
+    setAvatarUploading(true)
+    const fd = new FormData()
+    fd.append('avatar', file)
+    const token = localStorage.getItem('token')
+    try {
+      const res = await fetch('/api/auth/avatar', { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd })
+      const r = await res.json()
+      if (r.success) { toast('头像已更新', 'success'); updateProfile(r.data) }
+      else toast(r.message || '上传失败', 'error')
+    } catch { toast('上传失败', 'error') }
+    setAvatarUploading(false)
+    if (avatarFileRef.current) avatarFileRef.current.value = ''
+  }
+
+  const handleProfileSaveNickname = async () => {
+    const val = profileNickname.trim()
+    if (!val) { toast('昵称不能为空', 'error'); return }
+    setProfileSaving(true)
+    const r = await fetchApi('/api/auth/profile', { method: 'PUT', body: JSON.stringify({ nickname: val }) })
+    setProfileSaving(false)
+    if (r.success) { updateProfile(r.data); setProfileEdit(null); toast('昵称已更新', 'success') }
+    else toast(r.message || '修改失败', 'error')
+  }
+
+  const handleProfileSaveGender = async (val: number) => {
+    setProfileSaving(true)
+    const r = await fetchApi('/api/auth/profile', { method: 'PUT', body: JSON.stringify({ gender: val }) })
+    setProfileSaving(false)
+    if (r.success) { updateProfile(r.data); setProfileEdit(null); toast('已更新', 'success') }
+    else toast(r.message || '修改失败', 'error')
+  }
+
   const sidebarStyle: React.CSSProperties = {
     width: isMobile ? '100%' : 180, flexShrink: 0,
     background: 'var(--bg-primary)', borderRight: isMobile ? 'none' : '1px solid var(--border-primary)',
@@ -182,7 +226,101 @@ export default function UserSettings() {
             <div>
               {/* ── 移动端：子页面模式 ── */}
               {isMobile ? (
-                accountSub === 'password' ? (
+                accountSub === 'profile' ? (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 4px', marginBottom: 8 }}>
+                      <button onClick={() => navigate('/my')} style={{ display: 'flex', alignItems: 'center', padding: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+                        <ArrowLeft size={20} />
+                      </button>
+                      <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-heading)' }}>个人资料</div>
+                    </div>
+
+                    <input ref={avatarFileRef} type="file" accept="image/jpeg,image/png,image/gif,image/webp" style={{ display: 'none' }} onChange={handleProfileAvatarUpload} />
+
+                    <div style={{ background: 'var(--bg-primary)', borderRadius: 16, marginBottom: 12, overflow: 'hidden' }}>
+                      <div onClick={() => avatarFileRef.current?.click()} style={{
+                        display: 'flex', alignItems: 'center', padding: '12px 16px', cursor: 'pointer',
+                      }}>
+                        <span style={{ fontSize: 15, color: 'var(--text-heading)', flexShrink: 0, width: 72 }}>头像</span>
+                        <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 10 }}>
+                          <div style={{ position: 'relative' }}>
+                            <Avatar name={user.nickname || user.username} size={56} src={user.avatar || undefined} />
+                            <div style={{ position: 'absolute', bottom: -1, right: -1, width: 20, height: 20, borderRadius: '50%', background: 'var(--brand)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--bg-primary)' }}>
+                              <Camera size={10} color="#fff" />
+                            </div>
+                            {avatarUploading && <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Loader2 size={16} color="#fff" style={{ animation: 'spin 1s linear infinite' }} /></div>}
+                          </div>
+                          <ChevronRight size={16} style={{ color: 'var(--text-disabled)' }} />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ background: 'var(--bg-primary)', borderRadius: 16, marginBottom: 12, overflow: 'hidden' }}>
+                      <ProfileInfoRow label="昵称" value={user.nickname || '未设置'} onClick={() => { setProfileNickname(user.nickname || ''); setProfileEdit('nickname') }} />
+                      <ProfileInfoRow label="用户名" value={user.username} />
+                      <ProfileInfoRow label="性别" value={user.gender === 1 ? '男' : user.gender === 2 ? '女' : '未设置'} onClick={() => setProfileEdit('gender')} last />
+                    </div>
+
+                    <div style={{ background: 'var(--bg-primary)', borderRadius: 16, marginBottom: 12, overflow: 'hidden' }}>
+                      <ProfileInfoRow label="手机号" value={user.phone ? user.phone.replace(/(\d{3})\d{4}(\d+)/, '$1****$2') : '未绑定'} onClick={() => navigate('/user-settings?tab=account&sub=phone')} />
+                      <ProfileInfoRow label="邮箱" value={user.email || '未绑定'} onClick={() => navigate('/user-settings?tab=account&sub=email')} last />
+                    </div>
+
+                    <div style={{ background: 'var(--bg-primary)', borderRadius: 16, overflow: 'hidden' }}>
+                      <ProfileInfoRow label="个人ID" value={user.display_id || `#${user.id}`} />
+                      {user.personal_invite_code && <ProfileInfoRow label="邀请码" value={user.personal_invite_code} onClick={() => copyText(user.personal_invite_code || '', '邀请码已复制')} />}
+                      <ProfileInfoRow label="角色" value={roleLabel[user.role] || user.role} />
+                      <ProfileInfoRow label="注册时间" value={user.created_at ? new Date(user.created_at).toLocaleDateString('zh-CN') : '-'} last />
+                    </div>
+
+                    {profileEdit === 'nickname' && (
+                      <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+                        onClick={() => setProfileEdit(null)}>
+                        <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 320, background: 'var(--bg-primary)', borderRadius: 16, padding: 24 }}>
+                          <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-heading)', marginBottom: 20, textAlign: 'center' }}>修改昵称</div>
+                          <Input placeholder="输入昵称" value={profileNickname} onChange={e => setProfileNickname(e.target.value)} />
+                          <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+                            <button onClick={() => setProfileEdit(null)}
+                              style={{ flex: 1, padding: '11px 0', borderRadius: 10, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', fontSize: 15, fontWeight: 500, cursor: 'pointer' }}>
+                              取消
+                            </button>
+                            <button onClick={handleProfileSaveNickname} disabled={profileSaving}
+                              style={{ flex: 1, padding: '11px 0', borderRadius: 10, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 15, fontWeight: 500, cursor: 'pointer', opacity: profileSaving ? 0.6 : 1 }}>
+                              {profileSaving ? '保存中...' : '保存'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {profileEdit === 'gender' && (
+                      <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'flex-end' }}
+                        onClick={() => setProfileEdit(null)}>
+                        <div onClick={e => e.stopPropagation()} style={{
+                          width: '100%', background: 'var(--bg-primary)', borderRadius: '16px 16px 0 0',
+                          padding: '20px 16px', paddingBottom: 'calc(20px + env(safe-area-inset-bottom, 0px))',
+                        }}>
+                          <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-heading)', textAlign: 'center', marginBottom: 16 }}>选择性别</div>
+                          {[{ val: 1, label: '男' }, { val: 2, label: '女' }].map((opt, i) => (
+                            <div key={opt.val} onClick={() => handleProfileSaveGender(opt.val)} style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                              padding: '15px 16px', cursor: 'pointer',
+                              borderBottom: i === 0 ? '1px solid var(--border-secondary)' : 'none',
+                            }}>
+                              <span style={{ fontSize: 16, color: 'var(--text-heading)' }}>{opt.label}</span>
+                              {user.gender === opt.val && <Check size={18} style={{ color: 'var(--brand)' }} />}
+                            </div>
+                          ))}
+                          <button onClick={() => setProfileEdit(null)} style={{
+                            width: '100%', marginTop: 12, padding: '13px 0', borderRadius: 12,
+                            border: 'none', background: 'var(--bg-secondary)', color: 'var(--text-secondary)',
+                            fontSize: 16, fontWeight: 500, cursor: 'pointer',
+                          }}>取消</button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : accountSub === 'password' ? (
                   <MobileSubPage title="密码设置" onBack={() => navigate('/user-settings?tab=account')}>
                     {(user.phone || user.email) ? (() => {
                       const usePhone = !!user.phone
@@ -638,6 +776,22 @@ function ToggleSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
         left: on ? 21 : 3, transition: 'left 0.2s',
         boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
       }} />
+    </div>
+  )
+}
+
+function ProfileInfoRow({ label, value, onClick, last }: { label: string; value?: string; onClick?: () => void; last?: boolean }) {
+  const dimmed = value === '未设置' || value === '未绑定'
+  return (
+    <div onClick={onClick} style={{
+      display: 'flex', alignItems: 'center', padding: '16px', cursor: onClick ? 'pointer' : 'default',
+      borderBottom: last ? 'none' : '1px solid var(--border-secondary)',
+    }}>
+      <span style={{ fontSize: 15, color: 'var(--text-heading)', flexShrink: 0, width: 72 }}>{label}</span>
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: 15, color: dimmed ? 'var(--text-disabled)' : 'var(--text-tertiary)' }}>{value}</span>
+      </div>
+      {onClick && <ChevronRight size={16} style={{ color: 'var(--text-disabled)', flexShrink: 0, marginLeft: 4 }} />}
     </div>
   )
 }

@@ -22,7 +22,7 @@ module.exports = async (req, res) => {
     cache.del(`user:${req.userId}`);
 
     const [rows] = await db.query(
-      'SELECT id, username, nickname, email, phone, avatar, role, client_id, created_at FROM voice_users WHERE id = ?',
+      'SELECT id, username, nickname, email, phone, avatar, role, gender, display_id, personal_invite_code, client_id, guide_done, created_at FROM voice_users WHERE id = ?',
       [req.userId]
     );
 

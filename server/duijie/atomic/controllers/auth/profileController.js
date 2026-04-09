@@ -5,9 +5,14 @@ const cache = require('../../utils/memoryCache');
 module.exports = async (req, res) => {
   try {
     const userId = req.userId;
-    const { nickname, email, phone, username, code } = req.body;
+    const { nickname, email, phone, username, gender, code } = req.body;
     const fields = [];
     const values = [];
+    if (gender !== undefined) {
+      const g = gender === null ? null : Number(gender);
+      if (g !== null && g !== 1 && g !== 2) return res.status(400).json({ success: false, message: '性别值无效' });
+      fields.push('gender = ?'); values.push(g);
+    }
     if (username !== undefined) {
       const uname = username.trim();
       if (!/^[a-zA-Z0-9_]{3,20}$/.test(uname)) return res.status(400).json({ success: false, message: '用户名只能包含英文、数字和下划线，3-20位' });
@@ -53,7 +58,7 @@ module.exports = async (req, res) => {
       broadcast('enterprise', 'member_profile_updated', { user_id: userId });
     }
     cache.del(`user:${userId}`);
-    const [rows] = await db.query('SELECT id, username, nickname, email, phone, avatar, role, client_id, created_at FROM voice_users WHERE id = ?', [userId]);
+    const [rows] = await db.query('SELECT id, username, nickname, email, phone, avatar, role, gender, display_id, personal_invite_code, client_id, guide_done, created_at FROM voice_users WHERE id = ?', [userId]);
     res.json({ success: true, data: rows[0] });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });
