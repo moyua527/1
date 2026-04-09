@@ -1,7 +1,7 @@
 {
-  "version": "1.3.35",
-  "versionCode": 336,
+  "version": "1.3.36",
+  "versionCode": 337,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "完善邀请注册流程：品牌化欢迎页+分步注册（邮箱验证/姓名/密码），邀请链接新格式/invite/:token"
+  "changelog": "侧栏分组折叠+收藏功能：分组可折叠展开，导航项可收藏固定到顶部"
 }
