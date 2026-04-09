@@ -15,6 +15,9 @@ interface User {
   client_id?: number | null
   display_id?: string
   gender?: number
+  position?: string
+  department?: string
+  employee_no?: string
   created_at?: string
   personal_invite_code?: string
   guide_done?: number

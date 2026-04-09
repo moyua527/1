@@ -62,6 +62,9 @@ export interface User {
   avatar: string | null
   role: 'admin' | 'member'
   gender: number | null
+  position: string | null
+  department: string | null
+  employee_no: string | null
   is_active: number
   manager_id: number | null
   client_id: number | null

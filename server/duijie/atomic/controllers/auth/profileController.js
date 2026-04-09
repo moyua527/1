@@ -5,9 +5,12 @@ const cache = require('../../utils/memoryCache');
 module.exports = async (req, res) => {
   try {
     const userId = req.userId;
-    const { nickname, email, phone, username, gender, code } = req.body;
+    const { nickname, email, phone, username, gender, position, department, employee_no, code } = req.body;
     const fields = [];
     const values = [];
+    if (position !== undefined) { fields.push('position = ?'); values.push(position || null); }
+    if (department !== undefined) { fields.push('department = ?'); values.push(department || null); }
+    if (employee_no !== undefined) { fields.push('employee_no = ?'); values.push(employee_no || null); }
     if (gender !== undefined) {
       const g = gender === null ? null : Number(gender);
       if (g !== null && g !== 1 && g !== 2) return res.status(400).json({ success: false, message: '性别值无效' });
@@ -58,7 +61,7 @@ module.exports = async (req, res) => {
       broadcast('enterprise', 'member_profile_updated', { user_id: userId });
     }
     cache.del(`user:${userId}`);
-    const [rows] = await db.query('SELECT id, username, nickname, email, phone, avatar, role, gender, display_id, personal_invite_code, client_id, guide_done, created_at FROM voice_users WHERE id = ?', [userId]);
+    const [rows] = await db.query('SELECT id, username, nickname, email, phone, avatar, role, gender, position, department, employee_no, display_id, personal_invite_code, client_id, guide_done, created_at FROM voice_users WHERE id = ?', [userId]);
     res.json({ success: true, data: rows[0] });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });

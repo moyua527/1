@@ -72,8 +72,8 @@ export default function UserSettings() {
   // Profile editing (WeChat-style)
   const avatarFileRef = useRef<HTMLInputElement>(null)
   const [avatarUploading, setAvatarUploading] = useState(false)
-  const [profileEdit, setProfileEdit] = useState<'nickname' | 'gender' | null>(null)
-  const [profileNickname, setProfileNickname] = useState('')
+  const [profileEdit, setProfileEdit] = useState<'nickname' | 'gender' | 'position' | 'department' | 'employee_no' | null>(null)
+  const [profileFieldValue, setProfileFieldValue] = useState('')
   const [profileSaving, setProfileSaving] = useState(false)
 
   // Session management
@@ -152,13 +152,12 @@ export default function UserSettings() {
     if (avatarFileRef.current) avatarFileRef.current.value = ''
   }
 
-  const handleProfileSaveNickname = async () => {
-    const val = profileNickname.trim()
-    if (!val) { toast('昵称不能为空', 'error'); return }
+  const handleProfileSaveField = async (field: string, val: string, label: string) => {
+    if (field === 'nickname' && !val.trim()) { toast('昵称不能为空', 'error'); return }
     setProfileSaving(true)
-    const r = await fetchApi('/api/auth/profile', { method: 'PUT', body: JSON.stringify({ nickname: val }) })
+    const r = await fetchApi('/api/auth/profile', { method: 'PUT', body: JSON.stringify({ [field]: val.trim() || null }) })
     setProfileSaving(false)
-    if (r.success) { updateProfile(r.data); setProfileEdit(null); toast('昵称已更新', 'success') }
+    if (r.success) { updateProfile(r.data); setProfileEdit(null); toast(`${label}已更新`, 'success') }
     else toast(r.message || '修改失败', 'error')
   }
 
@@ -256,9 +255,15 @@ export default function UserSettings() {
                     </div>
 
                     <div style={{ background: 'var(--bg-primary)', borderRadius: 16, marginBottom: 12, overflow: 'hidden' }}>
-                      <ProfileInfoRow label="昵称" value={user.nickname || '未设置'} onClick={() => { setProfileNickname(user.nickname || ''); setProfileEdit('nickname') }} />
+                      <ProfileInfoRow label="昵称" value={user.nickname || '未设置'} onClick={() => { setProfileFieldValue(user.nickname || ''); setProfileEdit('nickname') }} />
                       <ProfileInfoRow label="用户名" value={user.username} />
                       <ProfileInfoRow label="性别" value={user.gender === 1 ? '男' : user.gender === 2 ? '女' : '未设置'} onClick={() => setProfileEdit('gender')} last />
+                    </div>
+
+                    <div style={{ background: 'var(--bg-primary)', borderRadius: 16, marginBottom: 12, overflow: 'hidden' }}>
+                      <ProfileInfoRow label="职位" value={user.position || '未填写'} onClick={() => { setProfileFieldValue(user.position || ''); setProfileEdit('position') }} />
+                      <ProfileInfoRow label="部门" value={user.department || '未填写'} onClick={() => { setProfileFieldValue(user.department || ''); setProfileEdit('department') }} />
+                      <ProfileInfoRow label="工号" value={user.employee_no || '未填写'} onClick={() => { setProfileFieldValue(user.employee_no || ''); setProfileEdit('employee_no') }} last />
                     </div>
 
                     <div style={{ background: 'var(--bg-primary)', borderRadius: 16, marginBottom: 12, overflow: 'hidden' }}>
@@ -273,25 +278,35 @@ export default function UserSettings() {
                       <ProfileInfoRow label="注册时间" value={user.created_at ? new Date(user.created_at).toLocaleDateString('zh-CN') : '-'} last />
                     </div>
 
-                    {profileEdit === 'nickname' && (
-                      <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
-                        onClick={() => setProfileEdit(null)}>
-                        <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 320, background: 'var(--bg-primary)', borderRadius: 16, padding: 24 }}>
-                          <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-heading)', marginBottom: 20, textAlign: 'center' }}>修改昵称</div>
-                          <Input placeholder="输入昵称" value={profileNickname} onChange={e => setProfileNickname(e.target.value)} />
-                          <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-                            <button onClick={() => setProfileEdit(null)}
-                              style={{ flex: 1, padding: '11px 0', borderRadius: 10, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', fontSize: 15, fontWeight: 500, cursor: 'pointer' }}>
-                              取消
-                            </button>
-                            <button onClick={handleProfileSaveNickname} disabled={profileSaving}
-                              style={{ flex: 1, padding: '11px 0', borderRadius: 10, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 15, fontWeight: 500, cursor: 'pointer', opacity: profileSaving ? 0.6 : 1 }}>
-                              {profileSaving ? '保存中...' : '保存'}
-                            </button>
+                    {profileEdit && profileEdit !== 'gender' && (() => {
+                      const fieldMeta: Record<string, { label: string; placeholder: string }> = {
+                        nickname: { label: '修改昵称', placeholder: '输入昵称' },
+                        position: { label: '修改职位', placeholder: '如：产品经理、前端工程师' },
+                        department: { label: '修改部门', placeholder: '如：技术部、产品部' },
+                        employee_no: { label: '修改工号', placeholder: '输入工号' },
+                      }
+                      const meta = fieldMeta[profileEdit]
+                      if (!meta) return null
+                      return (
+                        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+                          onClick={() => setProfileEdit(null)}>
+                          <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 320, background: 'var(--bg-primary)', borderRadius: 16, padding: 24 }}>
+                            <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-heading)', marginBottom: 20, textAlign: 'center' }}>{meta.label}</div>
+                            <Input placeholder={meta.placeholder} value={profileFieldValue} onChange={e => setProfileFieldValue(e.target.value)} />
+                            <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+                              <button onClick={() => setProfileEdit(null)}
+                                style={{ flex: 1, padding: '11px 0', borderRadius: 10, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', fontSize: 15, fontWeight: 500, cursor: 'pointer' }}>
+                                取消
+                              </button>
+                              <button onClick={() => handleProfileSaveField(profileEdit, profileFieldValue, meta.label.replace('修改', ''))} disabled={profileSaving}
+                                style={{ flex: 1, padding: '11px 0', borderRadius: 10, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 15, fontWeight: 500, cursor: 'pointer', opacity: profileSaving ? 0.6 : 1 }}>
+                                {profileSaving ? '保存中...' : '保存'}
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      )
+                    })()}
 
                     {profileEdit === 'gender' && (
                       <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'flex-end' }}

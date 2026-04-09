@@ -1,0 +1,2 @@
+ALTER TABLE voice_users ADD COLUMN department VARCHAR(100) DEFAULT NULL COMMENT '部门' AFTER position;
+ALTER TABLE voice_users ADD COLUMN employee_no VARCHAR(50) DEFAULT NULL COMMENT '工号' AFTER department;
