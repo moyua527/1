@@ -28,7 +28,7 @@ export default function MyPage() {
   ]
 
   return (
-    <div style={{ minHeight: 'calc(100dvh - 68px)' }}>
+    <div>
       <div onClick={() => navigate('/user-settings?tab=account')}
         style={{
           display: 'flex', alignItems: 'center', gap: 14, padding: 16, marginBottom: 12,

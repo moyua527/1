@@ -10,7 +10,7 @@ export default function ServicesPage() {
   const groups = navItemsByGroup(items)
 
   return (
-    <div style={{ minHeight: 'calc(100dvh - 68px)' }}>
+    <div>
       {groups.map(g => (
         <div key={g.key} style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-tertiary)', padding: '0 4px 8px' }}>
