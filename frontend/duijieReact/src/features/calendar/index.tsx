@@ -146,7 +146,7 @@ export default function CalendarPage() {
                   return (
                     <div key={i} onClick={() => setSelectedDate(d.dateStr === selectedDate ? null : d.dateStr)}
                       style={{
-                        minHeight: isMobile ? 48 : 72, padding: 4, cursor: 'pointer',
+                        minHeight: isMobile ? 56 : 72, padding: 4, cursor: 'pointer',
                         borderBottom: '1px solid var(--border-secondary)', borderRight: (i + 1) % 7 !== 0 ? '1px solid var(--border-secondary)' : 'none',
                         background: isSelected ? 'var(--bg-selected)' : 'transparent',
                         transition: 'background 0.1s',
@@ -189,7 +189,7 @@ export default function CalendarPage() {
         </div>
 
         {/* 右侧事件详情 */}
-        <div style={{ width: isMobile ? '100%' : 300, background: 'var(--bg-primary)', borderRadius: 12, border: '1px solid var(--border-primary)', padding: 16, flexShrink: 0 }}>
+        <div style={{ width: isMobile ? '100%' : 300, minHeight: isMobile ? 120 : undefined, background: 'var(--bg-primary)', borderRadius: 12, border: '1px solid var(--border-primary)', padding: 16, flexShrink: 0 }}>
           <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)', margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: 6 }}>
             <CalendarIcon size={16} />
             {selectedDate ? `${selectedDate.slice(5).replace('-', '月')}日` : '选择日期查看'}

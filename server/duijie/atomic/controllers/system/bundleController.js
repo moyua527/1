@@ -4,23 +4,20 @@ const fs = require('fs');
 const versionFile = path.resolve(__dirname, '../../../../../version.json');
 const bundlePath = path.resolve(__dirname, '../../../../../downloads/dist.zip');
 
-module.exports = (req, res) => {
+function info(req, res) {
   try {
     const versionInfo = JSON.parse(fs.readFileSync(versionFile, 'utf-8'));
-    const bundleExists = fs.existsSync(bundlePath);
-
-    if (!bundleExists) {
+    if (!fs.existsSync(bundlePath)) {
       return res.json({ success: false, message: 'No bundle available' });
     }
 
     const stat = fs.statSync(bundlePath);
-    const downloadUrl = `${req.protocol}://${req.get('host')}/downloads/dist.zip`;
 
     res.json({
       success: true,
       data: {
         version: versionInfo.version,
-        url: downloadUrl,
+        url: '/api/app/bundle/download',
         size: stat.size,
         updatedAt: stat.mtime.toISOString(),
       },
@@ -28,4 +25,20 @@ module.exports = (req, res) => {
   } catch (e) {
     res.json({ success: false, message: 'Bundle info unavailable' });
   }
-};
+}
+
+function download(req, res) {
+  if (!fs.existsSync(bundlePath)) {
+    return res.status(404).json({ success: false, message: 'Bundle not found' });
+  }
+  const stat = fs.statSync(bundlePath);
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Length', stat.size);
+  res.setHeader('Content-Disposition', 'attachment; filename="dist.zip"');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  const stream = fs.createReadStream(bundlePath);
+  stream.pipe(res);
+}
+
+module.exports = { info, download };

@@ -1,7 +1,7 @@
 {
-  "version": "1.4.0",
-  "versionCode": 400,
+  "version": "1.3.26",
+  "versionCode": 327,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "Redis缓存+Sentry错误监控+MySQL自动备份：验证码/限速/通知缓存迁移Redis；后端Sentry集成；MySQL每日凌晨自动备份保留7天"
+  "changelog": "APK禁用下拉刷新：Capacitor原生环境跳过下拉刷新逻辑，Android WebView关闭overscroll"
 }

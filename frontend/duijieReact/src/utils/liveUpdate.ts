@@ -2,6 +2,16 @@ import { isCapacitor, SERVER_URL } from './capacitor'
 
 let initialized = false
 
+function toAbsoluteUrl(url: string): string {
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    if (isCapacitor) {
+      return url.replace(/https?:\/\/[^/]+/, SERVER_URL)
+    }
+    return url
+  }
+  return `${SERVER_URL}${url.startsWith('/') ? '' : '/'}${url}`
+}
+
 export async function initLiveUpdate() {
   if (!isCapacitor || initialized) return
   initialized = true
@@ -18,13 +28,14 @@ export async function initLiveUpdate() {
     const currentVer = current.bundle?.version || 'builtin'
     if (currentVer === res.data.version) return
 
-    console.log(`[LiveUpdate] Downloading new bundle: ${res.data.version} (current: ${currentVer})`)
+    const downloadUrl = toAbsoluteUrl(res.data.url)
+    console.log(`[LiveUpdate] Downloading ${res.data.version} from ${downloadUrl} (current: ${currentVer})`)
     const bundle = await CapacitorUpdater.download({
-      url: res.data.url,
+      url: downloadUrl,
       version: res.data.version,
     })
 
-    console.log(`[LiveUpdate] Bundle downloaded, setting for next launch`)
+    console.log(`[LiveUpdate] Bundle downloaded, applying and reloading...`)
     await CapacitorUpdater.set(bundle)
   } catch (e) {
     console.warn('[LiveUpdate] Error:', e)

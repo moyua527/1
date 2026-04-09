@@ -46,7 +46,7 @@ export default function MyPage() {
         <ChevronRight size={18} style={{ color: 'var(--text-tertiary)' }} />
       </div>
 
-      <div style={{ background: 'var(--bg-primary)', borderRadius: 16, marginBottom: 12, overflow: 'hidden' }}>
+      <div style={{ background: 'var(--bg-primary)', borderRadius: 16, marginBottom: 12, position: 'relative', zIndex: 5 }}>
         <EnterpriseSwitcher />
       </div>
 

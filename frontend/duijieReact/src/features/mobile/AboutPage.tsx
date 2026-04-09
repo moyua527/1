@@ -72,10 +72,17 @@ export default function AboutPage() {
           return
         }
 
+        let bundleUrl = res.data.url
+        if (!bundleUrl.startsWith('http')) {
+          bundleUrl = `${SERVER_URL}${bundleUrl.startsWith('/') ? '' : '/'}${bundleUrl}`
+        } else if (isCapacitor) {
+          bundleUrl = bundleUrl.replace(/https?:\/\/[^/]+/, SERVER_URL)
+        }
+
         const { CapacitorUpdater } = await import('@capgo/capacitor-updater')
         setUpdateProgress('正在下载更新包...')
         const bundle = await CapacitorUpdater.download({
-          url: res.data.url,
+          url: bundleUrl,
           version: res.data.version,
         })
 

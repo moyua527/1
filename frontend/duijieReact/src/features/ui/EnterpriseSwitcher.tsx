@@ -59,8 +59,8 @@ export default function EnterpriseSwitcher() {
           <div style={{
             position: 'absolute', left: 0, right: 0, top: 'calc(100% + 4px)',
             background: 'var(--bg-primary)', border: '1px solid var(--border-primary)',
-            borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-            zIndex: 10, maxHeight: 200, overflowY: 'auto',
+            borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+            zIndex: 100, maxHeight: 240, overflowY: 'auto',
           }}>
             {myEnterprises.map((ent: any) => {
               const isActive = ent.id === activeEnterpriseId

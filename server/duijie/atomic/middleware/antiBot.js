@@ -1,7 +1,9 @@
 const BLOCKED_UA = /scrapy|python-requests|java\/|httpclient|libwww|nikto|sqlmap|nmap|masscan|zgrab|go-http|fasthttp/i;
 const SUSPICIOUS_PATHS = /\.(env|git|svn|bak|sql|log|conf|ini)$|wp-|phpmyadmin|cgi-bin|xmlrpc/i;
+const EXEMPT_PATHS = /^\/app\/bundle/;
 
 module.exports = (req, res, next) => {
+  if (EXEMPT_PATHS.test(req.path)) return next();
   const ua = req.headers['user-agent'] || '';
   if (!ua || BLOCKED_UA.test(ua)) {
     return res.status(403).json({ success: false, message: '请求被拒绝' });

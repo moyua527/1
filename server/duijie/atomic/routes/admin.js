@@ -42,7 +42,9 @@ router.get('/search', auth, require('../controllers/search/searchController'));
 router.get('/app/version', require('../controllers/system/appVersionController'));
 
 // App bundle (live update)
-router.get('/app/bundle', require('../controllers/system/bundleController'));
+const bundleCtrl = require('../controllers/system/bundleController');
+router.get('/app/bundle', bundleCtrl.info);
+router.get('/app/bundle/download', bundleCtrl.download);
 
 // Dashboard
 router.get('/dashboard/stats', auth, require('../controllers/dashboard/statsController'));

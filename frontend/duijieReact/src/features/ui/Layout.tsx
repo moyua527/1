@@ -13,6 +13,7 @@ import ProfileModal from './ProfileModal'
 import ThemeToggle from './ThemeToggle'
 import SettingsPanel from './SettingsPanel'
 import EnterpriseSwitcher from './EnterpriseSwitcher'
+import { isCapacitor } from '../../utils/capacitor'
 import UserGuide from './UserGuide'
 import OnboardingChecklist from './OnboardingChecklist'
 import { navItems, navItemsByGroup } from '../../data/routeManifest'
@@ -171,6 +172,7 @@ export default function Layout() {
     }
 
     const onStart = (e: TouchEvent) => {
+      if (isCapacitor) return
       if (ptrRefreshingRef.current) return
       if (!isAllAtTop(e.target)) return
       startY = e.touches[0].clientY
@@ -409,7 +411,12 @@ export default function Layout() {
 
         {/* ===== 主内容区 ===== */}
         <main ref={mainRef} data-tour="main-content"
-          style={{ flex: 1, overflow: 'auto', minHeight: 0, padding: isMobile ? '12px 12px 0' : 24, WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain' }}>
+          style={{
+            flex: 1, overflow: 'auto', minHeight: 0,
+            padding: isMobile ? '20px 16px' : 24,
+            paddingBottom: isMobile ? (['/', '/services', '/my'].includes(location.pathname) ? 20 : 'max(32px, env(safe-area-inset-bottom, 32px))') : 24,
+            WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain',
+          }}>
           {isMobile && (ptrY > 0 || ptrRefreshing) && (
             <div style={{ display: 'flex', justifyContent: 'center', height: ptrY || 55, overflow: 'hidden', transition: ptrY > 0 ? 'none' : 'height 0.25s ease' }}>
               <div style={{ width: 24, height: 24, borderRadius: '50%', border: '2.5px solid #e5e7eb', borderTopColor: 'var(--brand)', margin: 'auto',
