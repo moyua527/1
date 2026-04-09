@@ -1,7 +1,7 @@
 {
-  "version": "1.3.39.2",
-  "versionCode": 341,
+  "version": "1.3.40",
+  "versionCode": 342,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "注册优化：移除验证按钮，验证码输满6位自动验证"
+  "changelog": "账号体系规范化：昵称上限6字符、用户名可手动设置（英文+数字）、密码规则优化"
 }

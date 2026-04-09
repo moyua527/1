@@ -18,12 +18,16 @@ module.exports = async (req, res) => {
     }
     if (username !== undefined) {
       const uname = username.trim();
-      if (!/^[a-zA-Z0-9_]{3,20}$/.test(uname)) return res.status(400).json({ success: false, message: '用户名只能包含英文、数字和下划线，3-20位' });
+      if (!/^[a-zA-Z0-9]{3,20}$/.test(uname)) return res.status(400).json({ success: false, message: '用户名只能包含英文和数字，3~20个字符' });
       const [dup] = await db.query('SELECT id FROM voice_users WHERE username = ? AND id != ? AND is_deleted = 0', [uname, userId]);
       if (dup.length > 0) return res.status(400).json({ success: false, message: '该用户名已被占用' });
       fields.push('username = ?'); values.push(uname);
     }
-    if (nickname !== undefined) { fields.push('nickname = ?'); values.push(nickname); }
+    if (nickname !== undefined) {
+      const nn = (nickname || '').trim().slice(0, 6);
+      if (nn.length > 0 && nn.length < 2) return res.status(400).json({ success: false, message: '昵称需要2~6个字符' });
+      fields.push('nickname = ?'); values.push(nn || null);
+    }
 
     if (phone !== undefined && phone) {
       if (!code) return res.status(400).json({ success: false, message: '修改手机号需要验证码' });

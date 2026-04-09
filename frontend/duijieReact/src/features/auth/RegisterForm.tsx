@@ -18,6 +18,7 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
   const [emailCode, setEmailCode] = useState('')
   const [emailVerified, setEmailVerified] = useState(false)
   const [nickname, setNickname] = useState('')
+  const [regUsername, setRegUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPw, setConfirmPw] = useState('')
   const [showPw, setShowPw] = useState(false)
@@ -89,17 +90,20 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(''); setSuccess('')
-    if (!nickname.trim()) { setError('请输入用户名'); return }
-    if (nickname.trim().length < 2) { setError('用户名至少2个字符'); return }
+    if (!nickname.trim()) { setError('请输入昵称'); return }
+    if (nickname.trim().length < 2 || nickname.trim().length > 6) { setError('昵称需要2~6个字符'); return }
+    if (!regUsername.trim()) { setError('请输入用户名'); return }
+    if (!/^[a-zA-Z0-9]{3,20}$/.test(regUsername.trim())) { setError('用户名只能包含英文和数字，3~20个字符'); return }
     if (!password) { setError('请输入密码'); return }
     if (password.length < 8) { setError('密码至少8位'); return }
-    if (!/[a-zA-Z]/.test(password) || !/\d/.test(password)) { setError('密码需包含字母和数字'); return }
+    if (!/^[a-zA-Z0-9]+$/.test(password)) { setError('密码只能包含英文和数字'); return }
     if (password !== confirmPw) { setError('两次输入的密码不一致'); return }
     setLoading(true)
     try {
       const res = await authApi.register({
         email: email.trim(),
         nickname: nickname.trim(),
+        username: regUsername.trim(),
         password,
         invite_token: inviteToken || undefined,
       })
@@ -132,9 +136,17 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
 
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>
-              用户名（昵称）
+              昵称
             </label>
-            <Input placeholder="输入用户名，至少2个字符" value={nickname} onChange={e => setNickname(e.target.value)} maxLength={50} autoFocus />
+            <Input placeholder="显示给其他用户，2~6个字符" value={nickname} onChange={e => setNickname(e.target.value)} maxLength={6} autoFocus />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>
+              用户名
+            </label>
+            <Input placeholder="登录用，英文和数字，3~20个字符" value={regUsername}
+              onChange={e => setRegUsername(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))} maxLength={20} />
           </div>
 
           <div>
@@ -142,7 +154,8 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
               设置密码
             </label>
             <div style={{ position: 'relative' }}>
-              <Input type={showPw ? 'text' : 'password'} placeholder="至少8位，含字母和数字" value={password} onChange={e => setPassword(e.target.value)} />
+              <Input type={showPw ? 'text' : 'password'} placeholder="至少8位，英文和数字" value={password}
+                onChange={e => setPassword(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))} />
               <span onClick={() => setShowPw(!showPw)}
                 style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: 'var(--text-tertiary)', display: 'flex' }}>
                 {showPw ? <EyeOff size={16} /> : <Eye size={16} />}

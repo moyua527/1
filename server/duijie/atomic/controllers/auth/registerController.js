@@ -8,7 +8,7 @@ const generateInviteCode = require('../../utils/generateInviteCode');
 
 module.exports = async (req, res) => {
   try {
-    const { invite_token, email: rawEmail, nickname: rawNickname, password: rawPassword } = req.body;
+    const { invite_token, email: rawEmail, nickname: rawNickname, password: rawPassword, username: rawUsername } = req.body;
     const email = rawEmail ? rawEmail.trim().toLowerCase() : null;
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ success: false, message: '请输入有效的邮箱地址' });
@@ -17,18 +17,31 @@ module.exports = async (req, res) => {
     const [emailExists] = await db.query('SELECT id FROM voice_users WHERE email = ? AND is_deleted = 0', [email]);
     if (emailExists.length > 0) return res.status(400).json({ success: false, message: '该邮箱已被注册' });
 
-    const usernameBase = email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '').slice(0, 20) || 'user';
-    let username = usernameBase;
-    let suffix = 1;
-    while (true) {
+    let username;
+    if (rawUsername && rawUsername.trim()) {
+      username = rawUsername.trim();
+      if (!/^[a-zA-Z0-9]{3,20}$/.test(username)) {
+        return res.status(400).json({ success: false, message: '用户名只能包含英文和数字，3~20个字符' });
+      }
       const [dup] = await db.query('SELECT id FROM voice_users WHERE username = ? AND is_deleted = 0', [username]);
-      if (dup.length === 0) break;
-      username = usernameBase + suffix++;
+      if (dup.length > 0) return res.status(400).json({ success: false, message: '该用户名已被使用' });
+    } else {
+      const usernameBase = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '').slice(0, 20) || 'user';
+      username = usernameBase;
+      let suffix = 1;
+      while (true) {
+        const [dup] = await db.query('SELECT id FROM voice_users WHERE username = ? AND is_deleted = 0', [username]);
+        if (dup.length === 0) break;
+        username = usernameBase + suffix++;
+      }
     }
 
-    const nickname = rawNickname ? rawNickname.trim().slice(0, 50) : email.split('@')[0].slice(0, 50);
+    const nickname = rawNickname ? rawNickname.trim().slice(0, 6) : email.split('@')[0].slice(0, 6);
     const displayId = await generateDisplayId('000000', 0);
     const personalCode = await generateInviteCode();
+    if (rawPassword && !/^[a-zA-Z0-9]+$/.test(rawPassword)) {
+      return res.status(400).json({ success: false, message: '密码只能包含英文和数字' });
+    }
     const plainPwd = rawPassword && rawPassword.length >= 8 ? rawPassword : crypto.randomBytes(32).toString('hex');
     const hashedPwd = await bcrypt.hash(plainPwd, 10);
 
