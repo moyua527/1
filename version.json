@@ -1,7 +1,7 @@
 {
-  "version": "1.3.36",
-  "versionCode": 337,
+  "version": "1.3.37",
+  "versionCode": 338,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "侧栏分组折叠+收藏功能：分组可折叠展开，导航项可收藏固定到顶部"
+  "changelog": "高级搜索：Ctrl+K跨项目/客户/需求/文件全文检索，类型筛选+搜索历史+关键词高亮"
 }
