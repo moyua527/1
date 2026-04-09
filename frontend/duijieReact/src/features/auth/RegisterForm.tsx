@@ -4,7 +4,7 @@ import { setToken, setRefreshToken, fetchApi } from '../../bootstrap'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
 import { confirm } from '../ui/ConfirmDialog'
-import { CheckCircle } from 'lucide-react'
+import { CheckCircle, ArrowLeft, Eye, EyeOff } from 'lucide-react'
 
 interface RegisterFormProps {
   onRegistered: (user: any) => void
@@ -13,9 +13,14 @@ interface RegisterFormProps {
 }
 
 export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToken: inviteTokenProp }: RegisterFormProps) {
+  const [step, setStep] = useState<1 | 2>(1)
   const [email, setEmail] = useState('')
   const [emailCode, setEmailCode] = useState('')
   const [emailVerified, setEmailVerified] = useState(false)
+  const [nickname, setNickname] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPw, setConfirmPw] = useState('')
+  const [showPw, setShowPw] = useState(false)
   const [countdown, setCountdown] = useState(0)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -64,21 +69,32 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
     } catch { setError('网络错误') }
   }
 
+  const goToStep2 = () => {
+    if (!emailVerified) { setError('请先验证邮箱'); return }
+    if (!agreed) {
+      confirm({ title: '服务协议', message: '注册前需同意《用户服务协议》和《隐私保护政策》，是否同意并继续？', confirmText: '同意并继续', cancelText: '取消' }).then(ok => {
+        if (ok) { setAgreed(true); setError(''); setSuccess(''); setStep(2) }
+      })
+      return
+    }
+    setError(''); setSuccess(''); setStep(2)
+  }
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!agreed) {
-      const ok = await confirm({ title: '服务协议', message: '注册前需同意《用户服务协议》和《隐私保护政策》，是否同意并继续？', confirmText: '同意并注册', cancelText: '取消' })
-      if (!ok) return
-      setAgreed(true)
-    }
     setError(''); setSuccess('')
-    if (!email.trim()) { setError('请输入邮箱地址'); return }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('请输入正确的邮箱地址'); return }
-    if (!emailVerified) { setError('请先验证邮箱'); return }
+    if (!nickname.trim()) { setError('请输入用户名'); return }
+    if (nickname.trim().length < 2) { setError('用户名至少2个字符'); return }
+    if (!password) { setError('请输入密码'); return }
+    if (password.length < 8) { setError('密码至少8位'); return }
+    if (!/[a-zA-Z]/.test(password) || !/\d/.test(password)) { setError('密码需包含字母和数字'); return }
+    if (password !== confirmPw) { setError('两次输入的密码不一致'); return }
     setLoading(true)
     try {
       const res = await authApi.register({
         email: email.trim(),
+        nickname: nickname.trim(),
+        password,
         invite_token: inviteToken || undefined,
       })
       if (res.success) {
@@ -89,9 +105,67 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
     setLoading(false)
   }
 
+  // Step 2: Set username & password
+  if (step === 2) {
+    return (
+      <form onSubmit={handleRegister}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div onClick={() => { setStep(1); setError(''); setSuccess('') }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', color: 'var(--text-tertiary)', fontSize: 13 }}>
+            <ArrowLeft size={16} /> 返回上一步
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, background: 'var(--bg-success, #f0fdf4)', border: '1px solid var(--color-success, #22c55e)' }}>
+            <CheckCircle size={16} color="var(--color-success, #22c55e)" />
+            <span style={{ fontSize: 13, color: 'var(--color-success, #22c55e)', fontWeight: 500 }}>{email} 已验证</span>
+          </div>
+
+          <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)', textAlign: 'center' }}>
+            设置用户名和密码
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>
+              用户名（昵称）
+            </label>
+            <Input placeholder="输入用户名，至少2个字符" value={nickname} onChange={e => setNickname(e.target.value)} maxLength={50} autoFocus />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>
+              设置密码
+            </label>
+            <div style={{ position: 'relative' }}>
+              <Input type={showPw ? 'text' : 'password'} placeholder="至少8位，含字母和数字" value={password} onChange={e => setPassword(e.target.value)} />
+              <span onClick={() => setShowPw(!showPw)}
+                style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: 'var(--text-tertiary)', display: 'flex' }}>
+                {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>
+              确认密码
+            </label>
+            <Input type={showPw ? 'text' : 'password'} placeholder="再次输入密码" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} />
+          </div>
+
+          {error && <div style={{ color: 'var(--color-danger)', fontSize: 13, textAlign: 'center' }}>{error}</div>}
+          {success && <div style={{ color: 'var(--color-success)', fontSize: 13, textAlign: 'center' }}>{success}</div>}
+
+          <Button type="submit" style={{ width: '100%', justifyContent: 'center', padding: '12px 0', marginTop: 4 }} disabled={loading}>
+            {loading ? '注册中...' : '完成注册'}
+          </Button>
+        </div>
+      </form>
+    )
+  }
+
+  // Step 1: Email verification
   return (
     <>
-      <form onSubmit={handleRegister}>
+      <form onSubmit={e => { e.preventDefault(); goToStep2() }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>
@@ -142,8 +216,8 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
             </span>
           </label>
 
-          <Button type="submit" style={{ width: '100%', justifyContent: 'center', padding: '12px 0', marginTop: 4 }} disabled={loading}>
-            {loading ? '注册中...' : '注 册'}
+          <Button type="submit" style={{ width: '100%', justifyContent: 'center', padding: '12px 0', marginTop: 4 }} disabled={!emailVerified}>
+            注 册
           </Button>
         </div>
       </form>
