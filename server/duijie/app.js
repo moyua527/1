@@ -55,7 +55,10 @@ app.use('/api', require('./atomic/middleware/antiBot'));
 // XSS 输入过滤
 app.use('/api', require('./atomic/middleware/xssMiddleware'));
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+}, express.static(path.join(__dirname, 'uploads')));
 
 // 请求ID + 响应计时
 const crypto = require('crypto');
