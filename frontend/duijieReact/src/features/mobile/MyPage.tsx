@@ -23,7 +23,7 @@ export default function MyPage() {
 
   const menuItems = [
     { icon: Shield, label: '账号与安全', action: () => navigate('/user-settings?tab=account') },
-    { icon: Palette, label: '外观与语言', action: () => navigate('/user-settings?tab=appearance') },
+    { icon: Palette, label: '偏好设置', action: () => navigate('/user-settings?tab=preference') },
     { icon: HelpCircle, label: '新手引导', action: () => setConfirmGuide(true) },
   ]
 

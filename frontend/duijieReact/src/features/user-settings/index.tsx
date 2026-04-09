@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { User, Bell, Palette, Globe, Save, Copy, ArrowLeft, Check, Loader2, Lock, Smartphone, Monitor, Trash2, LogOut, ChevronRight, Mail, Phone, KeyRound, Camera } from 'lucide-react'
+import { User, Bell, Settings2, Globe, Save, Copy, ArrowLeft, Check, Loader2, Lock, Smartphone, Monitor, Trash2, LogOut, ChevronRight, Mail, Phone, KeyRound, Camera, Volume2 } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
@@ -11,26 +11,57 @@ import { toast } from '../ui/Toast'
 import useIsMobile from '../ui/useIsMobile'
 import PageHeader from '../ui/PageHeader'
 
-type Tab = 'account' | 'appearance' | 'notification'
+type Tab = 'account' | 'preference' | 'notification'
 type AccountSub = 'profile' | 'password' | 'devices' | 'phone' | 'email' | null
 
 const TABS: { key: Tab; label: string; icon: typeof User }[] = [
   { key: 'account', label: '账号与安全', icon: User },
-  { key: 'appearance', label: '外观与语言', icon: Palette },
-  { key: 'notification', label: '通知偏好', icon: Bell },
+  { key: 'preference', label: '偏好设置', icon: Settings2 },
+  { key: 'notification', label: '通知设置', icon: Bell },
 ]
 
 const roleLabel: Record<string, string> = { admin: '管理员', manager: '经理', member: '成员' }
 
-/* 通知开关项（localStorage 存储） */
-const NOTIF_PREFS = [
-  { key: 'notif_task_assign', label: '需求分配', desc: '当有人给你分配新需求时通知' },
-  { key: 'notif_task_status', label: '需求状态变更', desc: '你参与的需求状态发生变化时通知' },
-  { key: 'notif_task_comment', label: '需求评论', desc: '你参与的需求有新评论时通知' },
-  { key: 'notif_project_update', label: '项目更新', desc: '你参与的项目信息更新时通知' },
-  { key: 'notif_follow_reminder', label: '跟进提醒', desc: '客户跟进到期提醒' },
-  { key: 'notif_ticket_reply', label: '工单回复', desc: '你提交的工单有新回复时通知' },
-  { key: 'notif_system', label: '系统通知', desc: '系统维护、版本更新等通知' },
+const NOTIF_GROUPS = [
+  {
+    key: 'task', label: '需求管理',
+    items: [
+      { key: 'notif_task_assign', label: '需求分配', desc: '当有人给你分配新需求时通知' },
+      { key: 'notif_task_status', label: '需求状态变更', desc: '你参与的需求状态发生变化时通知' },
+      { key: 'notif_task_comment', label: '需求评论', desc: '你参与的需求有新评论时通知' },
+    ],
+  },
+  {
+    key: 'project', label: '项目管理',
+    items: [
+      { key: 'notif_project_update', label: '项目更新', desc: '你参与的项目信息更新时通知' },
+      { key: 'notif_project_member', label: '成员变动', desc: '你参与的项目有新成员加入或离开' },
+      { key: 'notif_milestone', label: '里程碑', desc: '里程碑状态变更或到期提醒' },
+    ],
+  },
+  {
+    key: 'client', label: '客户管理',
+    items: [
+      { key: 'notif_follow_reminder', label: '跟进提醒', desc: '客户跟进到期提醒' },
+      { key: 'notif_ticket_reply', label: '工单回复', desc: '你提交的工单有新回复时通知' },
+    ],
+  },
+  {
+    key: 'system', label: '系统与安全',
+    items: [
+      { key: 'notif_system', label: '系统通知', desc: '系统维护、版本更新等通知' },
+      { key: 'notif_security', label: '安全提醒', desc: '账号在新设备登录等安全事件' },
+    ],
+  },
+]
+
+const ALL_NOTIF_KEYS = NOTIF_GROUPS.flatMap(g => g.items.map(i => i.key))
+
+const SOUND_ITEMS = [
+  { key: 'sound_message', label: '项目消息', desc: '项目频道中的新消息' },
+  { key: 'sound_dm', label: '私信', desc: '新的私信消息' },
+  { key: 'sound_notification', label: '系统通知', desc: '系统通知提示音' },
+  { key: 'sound_task', label: '新需求', desc: '新需求分配提示音' },
 ]
 
 function getNotifPrefs(): Record<string, boolean> {
@@ -39,8 +70,15 @@ function getNotifPrefs(): Record<string, boolean> {
     if (stored) return JSON.parse(stored)
   } catch {}
   const defaults: Record<string, boolean> = {}
-  NOTIF_PREFS.forEach(p => (defaults[p.key] = true))
+  ALL_NOTIF_KEYS.forEach(k => (defaults[k] = true))
   return defaults
+}
+
+function getSoundPrefs(): Record<string, boolean> {
+  try { const s = localStorage.getItem('sound_prefs'); if (s) return JSON.parse(s) } catch {}
+  const d: Record<string, boolean> = {}
+  SOUND_ITEMS.forEach(p => (d[p.key] = true))
+  return d
 }
 
 export default function UserSettings() {
@@ -68,6 +106,12 @@ export default function UserSettings() {
 
   // Notification prefs
   const [notifPrefs, setNotifPrefs] = useState<Record<string, boolean>>(getNotifPrefs)
+
+  // Sound prefs
+  const [soundPrefs, setSoundPrefs] = useState<Record<string, boolean>>(getSoundPrefs)
+  const [soundVolume, setSoundVolume] = useState(() => {
+    try { return Number(localStorage.getItem('sound_volume') ?? 100) } catch { return 100 }
+  })
 
   // Profile editing (WeChat-style)
   const avatarFileRef = useRef<HTMLInputElement>(null)
@@ -131,6 +175,27 @@ export default function UserSettings() {
     const next = { ...notifPrefs, [key]: !notifPrefs[key] }
     setNotifPrefs(next)
     localStorage.setItem('notif_prefs', JSON.stringify(next))
+  }
+
+  const toggleGroupNotif = (groupKey: string) => {
+    const group = NOTIF_GROUPS.find(g => g.key === groupKey)
+    if (!group) return
+    const allOn = group.items.every(i => notifPrefs[i.key] !== false)
+    const next = { ...notifPrefs }
+    group.items.forEach(i => { next[i.key] = !allOn })
+    setNotifPrefs(next)
+    localStorage.setItem('notif_prefs', JSON.stringify(next))
+  }
+
+  const toggleSound = (key: string) => {
+    const next = { ...soundPrefs, [key]: !soundPrefs[key] }
+    setSoundPrefs(next)
+    localStorage.setItem('sound_prefs', JSON.stringify(next))
+  }
+
+  const handleVolumeChange = (v: number) => {
+    setSoundVolume(v)
+    localStorage.setItem('sound_volume', String(v))
   }
 
   const handleProfileAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -681,13 +746,12 @@ export default function UserSettings() {
             </div>
           )}
 
-          {/* ===== 外观与语言 ===== */}
-          {tab === 'appearance' && (
+          {/* ===== 偏好设置 ===== */}
+          {tab === 'preference' && (
             <div>
-              <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-heading)', margin: '0 0 20px' }}>外观与语言</h2>
+              <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-heading)', margin: '0 0 20px' }}>偏好设置</h2>
 
-              {/* 主题 */}
-              <SectionTitle>主题模式</SectionTitle>
+              <SectionTitle>外观主题</SectionTitle>
               <div style={{ display: 'flex', gap: 12, marginBottom: 28, flexWrap: 'wrap' }}>
                 {([
                   { value: 'light' as const, label: '浅色', emoji: '☀️' },
@@ -708,9 +772,31 @@ export default function UserSettings() {
                 ))}
               </div>
 
-              {/* 语言 - 暂时仅支持中文 */}
-              <SectionTitle>显示语言</SectionTitle>
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <SectionTitle>声音提示</SectionTitle>
+              <div style={{ marginBottom: 28 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, padding: '0 4px' }}>
+                  <Volume2 size={16} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
+                  <input type="range" min={0} max={100} value={soundVolume}
+                    onChange={e => handleVolumeChange(Number(e.target.value))}
+                    style={{ flex: 1, accentColor: 'var(--brand)' }} />
+                  <span style={{ fontSize: 12, color: 'var(--text-secondary)', minWidth: 36, textAlign: 'right' }}>{soundVolume}%</span>
+                </div>
+                {SOUND_ITEMS.map((item, idx) => (
+                  <div key={item.key} style={{
+                    display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0',
+                    borderBottom: idx < SOUND_ITEMS.length - 1 ? '1px solid var(--border-secondary)' : 'none',
+                  }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{item.label}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{item.desc}</div>
+                    </div>
+                    <ToggleSwitch on={soundPrefs[item.key] !== false} onToggle={() => toggleSound(item.key)} />
+                  </div>
+                ))}
+              </div>
+
+              <SectionTitle>语言与时区</SectionTitle>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 16 }}>
                 <div style={{
                   flex: '1 1 140px', padding: '14px 16px', borderRadius: 10,
                   border: '2px solid var(--brand)', background: 'var(--bg-selected)',
@@ -724,28 +810,54 @@ export default function UserSettings() {
                   <Check size={14} style={{ color: 'var(--brand)', marginLeft: 'auto' }} />
                 </div>
               </div>
+              <div style={{ display: 'flex', alignItems: 'center', padding: '12px 0' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>时区</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>影响日期时间的显示</div>
+                </div>
+                <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Asia/Shanghai (UTC+8)</span>
+              </div>
             </div>
           )}
 
-          {/* ===== 通知偏好 ===== */}
+          {/* ===== 通知设置 ===== */}
           {tab === 'notification' && (
             <div>
-              <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-heading)', margin: '0 0 4px' }}>通知偏好</h2>
-              <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: '0 0 20px' }}>选择你希望接收的通知类型</p>
+              <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-heading)', margin: '0 0 4px' }}>通知设置</h2>
+              <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: '0 0 24px' }}>按模块管理你希望接收的通知类型</p>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-                {NOTIF_PREFS.map((pref, idx) => (
-                  <div key={pref.key} style={{
-                    display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0',
-                    borderBottom: idx < NOTIF_PREFS.length - 1 ? '1px solid var(--border-secondary)' : 'none',
-                  }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{pref.label}</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{pref.desc}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {NOTIF_GROUPS.map(group => {
+                  const allOn = group.items.every(i => notifPrefs[i.key] !== false)
+                  const someOn = group.items.some(i => notifPrefs[i.key] !== false)
+                  return (
+                    <div key={group.key} style={{ borderRadius: 12, border: '1px solid var(--border-secondary)', overflow: 'hidden' }}>
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px',
+                        background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-secondary)',
+                      }}>
+                        <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: allOn ? 'var(--brand)' : someOn ? '#f59e0b' : 'var(--border-primary)' }} />
+                        <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)', flex: 1 }}>{group.label}</span>
+                        <span style={{ fontSize: 12, color: 'var(--text-tertiary)', marginRight: 8 }}>{group.items.filter(i => notifPrefs[i.key] !== false).length}/{group.items.length}</span>
+                        <ToggleSwitch on={allOn} onToggle={() => toggleGroupNotif(group.key)} />
+                      </div>
+                      <div style={{ background: 'var(--bg-primary)' }}>
+                        {group.items.map((item, idx) => (
+                          <div key={item.key} style={{
+                            display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
+                            borderBottom: idx < group.items.length - 1 ? '1px solid var(--border-secondary)' : 'none',
+                          }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{item.label}</div>
+                              <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{item.desc}</div>
+                            </div>
+                            <ToggleSwitch on={notifPrefs[item.key] !== false} onToggle={() => toggleNotif(item.key)} />
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <ToggleSwitch on={notifPrefs[pref.key] !== false} onToggle={() => toggleNotif(pref.key)} />
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}
@@ -796,7 +908,7 @@ function ToggleSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 }
 
 function ProfileInfoRow({ label, value, onClick, last }: { label: string; value?: string; onClick?: () => void; last?: boolean }) {
-  const dimmed = value === '未设置' || value === '未绑定'
+  const dimmed = value === '未设置' || value === '未绑定' || value === '未填写'
   return (
     <div onClick={onClick} style={{
       display: 'flex', alignItems: 'center', padding: '16px', cursor: onClick ? 'pointer' : 'default',

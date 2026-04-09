@@ -1,7 +1,7 @@
 {
-  "version": "1.3.33",
-  "versionCode": 334,
+  "version": "1.3.34",
+  "versionCode": 335,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "个人资料页增加职位、部门、工号字段，支持编辑"
+  "changelog": "帐号设置分区优化：通知按模块分组管理，新增偏好设置（声音/时区）"
 }
