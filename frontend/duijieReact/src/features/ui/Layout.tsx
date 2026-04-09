@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { LogOut, User, Shield, ChevronRight, ChevronLeft, Palette, Bell, Settings, Search, HelpCircle, Volume2, ArrowLeft, LayoutGrid, UserCircle, Home } from 'lucide-react'
+import { LogOut, User, Shield, ChevronRight, ChevronLeft, Palette, Bell, Settings, Search, HelpCircle, Volume2, LayoutGrid, UserCircle, Home } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
 import { can } from '../../stores/permissions'
@@ -15,7 +15,7 @@ import SettingsPanel from './SettingsPanel'
 import EnterpriseSwitcher from './EnterpriseSwitcher'
 import UserGuide from './UserGuide'
 import OnboardingChecklist from './OnboardingChecklist'
-import { navItems, navItemsByGroup, flatRoutes } from '../../data/routeManifest'
+import { navItems, navItemsByGroup } from '../../data/routeManifest'
 
 const SIDEBAR_W = 228
 const SIDEBAR_COLLAPSED_W = 68
@@ -106,6 +106,52 @@ export default function Layout() {
   }, [avatarMenuOpen])
 
   useEffect(() => { setAvatarMenuOpen(false); setSettingsTab(null) }, [location.pathname, location.search])
+
+  // 左边缘右滑返回手势（微信风格）
+  const swipeOverlayRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!isMobile) return
+    const mainPages = ['/', '/services', '/my']
+    let startX = 0, startY = 0, tracking = false, confirmed = false
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (mainPages.includes(location.pathname)) return
+      const t = e.touches[0]
+      if (t.clientX > 28) return
+      startX = t.clientX; startY = t.clientY; tracking = true; confirmed = false
+    }
+    const onTouchMove = (e: TouchEvent) => {
+      if (!tracking) return
+      const t = e.touches[0]
+      const dx = t.clientX - startX, dy = t.clientY - startY
+      if (!confirmed && Math.abs(dy) > Math.abs(dx)) { tracking = false; return }
+      if (dx > 12) confirmed = true
+      if (confirmed) {
+        e.preventDefault()
+        const pct = Math.min(dx / window.innerWidth, 1)
+        if (swipeOverlayRef.current) {
+          swipeOverlayRef.current.style.opacity = String(Math.min(pct * 1.5, 0.35))
+          swipeOverlayRef.current.style.display = 'block'
+        }
+      }
+    }
+    const onTouchEnd = (e: TouchEvent) => {
+      if (!tracking || !confirmed) { tracking = false; if (swipeOverlayRef.current) swipeOverlayRef.current.style.display = 'none'; return }
+      const dx = (e.changedTouches[0]?.clientX || 0) - startX
+      tracking = false; confirmed = false
+      if (swipeOverlayRef.current) swipeOverlayRef.current.style.display = 'none'
+      if (dx > 80) navigate(-1)
+    }
+
+    document.addEventListener('touchstart', onTouchStart, { passive: true })
+    document.addEventListener('touchmove', onTouchMove, { passive: false })
+    document.addEventListener('touchend', onTouchEnd)
+    return () => {
+      document.removeEventListener('touchstart', onTouchStart)
+      document.removeEventListener('touchmove', onTouchMove)
+      document.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [isMobile, location.pathname, navigate])
 
   useEffect(() => {
     const el = mainRef.current
@@ -270,26 +316,6 @@ export default function Layout() {
           )}
         </div>
       </header>
-
-      {/* ===== Mobile 子页面导航栏（微信风格） ===== */}
-      {isMobile && !['/', '/services', '/my'].includes(location.pathname) && (() => {
-        const allRoutes = flatRoutes()
-        let title = ''
-        const exact = allRoutes.find(r => r.path === location.pathname)
-        if (exact) { title = exact.label }
-        else { for (const r of allRoutes) { if (r.path.includes(':')) { const base = r.path.split(':')[0]; if (location.pathname.startsWith(base)) { title = r.label; break } } } }
-        return (
-          <div style={{
-            height: 44, display: 'flex', alignItems: 'center', position: 'relative',
-            flexShrink: 0, background: 'var(--bg-primary)', borderBottom: '1px solid var(--border-primary)',
-          }}>
-            <div onClick={() => navigate(-1)} style={{ position: 'absolute', left: 4, top: 0, bottom: 0, display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '0 10px', color: 'var(--text-secondary)', zIndex: 1 }}>
-              <ArrowLeft size={20} />
-            </div>
-            <div style={{ flex: 1, textAlign: 'center', fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>{title}</div>
-          </div>
-        )
-      })()}
 
       {/* ===== 下方：Sidebar + Content ===== */}
       <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
@@ -497,6 +523,9 @@ export default function Layout() {
           </div>
         </div>
       )}
+      {/* 滑动返回视觉遮罩 */}
+      {isMobile && <div ref={swipeOverlayRef} style={{ display: 'none', position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 999, pointerEvents: 'none', transition: 'opacity 0.05s' }} />}
+
       <UserGuide open={guideOpen} onClose={() => {
         setGuideOpen(false)
         if (user) {

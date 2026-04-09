@@ -1,7 +1,7 @@
 {
-  "version": "1.3.20",
-  "versionCode": 321,
+  "version": "1.3.21",
+  "versionCode": 322,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "应用内更新：集成CapacitorUpdater在应用内下载并应用更新包，增加下载进度提示"
+  "changelog": "微信风格手势返回：移除子页面顶部返回栏，改为左边缘右滑手势返回"
 }
