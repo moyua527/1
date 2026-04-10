@@ -16,7 +16,6 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
   const [step, setStep] = useState<1 | 2>(1)
   const [email, setEmail] = useState('')
   const [emailCode, setEmailCode] = useState('')
-  const [emailVerified, setEmailVerified] = useState(false)
   const [nickname, setNickname] = useState('')
   const [regUsername, setRegUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -43,12 +42,6 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
     return () => clearTimeout(t)
   }, [countdown])
 
-  useEffect(() => {
-    if (emailCode.length === 6 && email && !emailVerified) {
-      handleVerifyEmail()
-    }
-  }, [emailCode])  // eslint-disable-line react-hooks/exhaustive-deps
-
   const handleSendEmailCode = async () => {
     setError(''); setSuccess('')
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('请输入正确的邮箱地址'); return }
@@ -59,19 +52,6 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
         setSuccess('验证码已发送到邮箱')
         setTimeout(() => setSuccess(''), 5000)
       } else setError(res.message || '发送失败')
-    } catch { setError('网络错误') }
-  }
-
-  const handleVerifyEmail = async () => {
-    setError(''); setSuccess('')
-    if (!emailCode || emailCode.length < 4) { setError('请输入验证码'); return }
-    try {
-      const res = await authApi.verifyCode('email', email, emailCode)
-      if (res.success) {
-        setEmailVerified(true)
-        setSuccess('邮箱验证成功')
-        setTimeout(() => setSuccess(''), 3000)
-      } else setError(res.message || '验证码无效或已过期')
     } catch { setError('网络错误') }
   }
 
@@ -174,6 +154,17 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
     )
   }
 
+  const handleNextStep = async () => {
+    setError(''); setSuccess('')
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('请输入正确的邮箱地址'); return }
+    if (!emailCode || emailCode.length < 6) { setError('请输入6位验证码'); return }
+    try {
+      const res = await authApi.verifyCode('email', email, emailCode)
+      if (res.success) { setStep(2) }
+      else setError(res.message || '验证码错误')
+    } catch { setError('网络错误') }
+  }
+
   // Step 1: Email verification
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -181,39 +172,30 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
         <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>
           邮箱账号
         </label>
-        {emailVerified ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', borderRadius: 8, background: 'var(--bg-success, #f0fdf4)', border: '1px solid var(--color-success, #22c55e)' }}>
-            <CheckCircle size={16} color="var(--color-success, #22c55e)" />
-            <span style={{ fontSize: 13, color: 'var(--color-success, #22c55e)', fontWeight: 500 }}>{email} 已验证</span>
-            <span onClick={() => { setEmailVerified(false); setEmailCode('') }} style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--text-tertiary)', cursor: 'pointer' }}>更换</span>
-          </div>
-        ) : (
-          <Input placeholder="输入邮箱地址" value={email} onChange={e => { setEmail(e.target.value); setEmailVerified(false) }} />
-        )}
+        <Input placeholder="输入邮箱地址" value={email} onChange={e => setEmail(e.target.value)} />
       </div>
 
-      {!emailVerified && (
-        <div>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>
-            邮箱验证码
-          </label>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input placeholder="输入6位验证码" value={emailCode} onChange={e => setEmailCode(e.target.value)} maxLength={6}
-              style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
-              onFocus={e => (e.currentTarget.style.borderColor = 'var(--brand)')} onBlur={e => (e.currentTarget.style.borderColor = 'var(--border-primary)')} />
-            <button type="button" disabled={countdown > 0 || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)} onClick={handleSendEmailCode}
-              style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: (countdown > 0 || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ? 'var(--border-primary)' : 'var(--brand)', color: (countdown > 0 || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ? 'var(--text-tertiary)' : 'var(--bg-primary)', fontSize: 12, fontWeight: 500, cursor: (countdown > 0 || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
-              {countdown > 0 ? `${countdown}s` : '发送'}
-            </button>
-          </div>
+      <div>
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>
+          邮箱验证码
+        </label>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input placeholder="输入6位验证码" value={emailCode} onChange={e => setEmailCode(e.target.value)} maxLength={6}
+            style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+            onFocus={e => (e.currentTarget.style.borderColor = 'var(--brand)')} onBlur={e => (e.currentTarget.style.borderColor = 'var(--border-primary)')} />
+          <button type="button" disabled={countdown > 0 || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)} onClick={handleSendEmailCode}
+            style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: (countdown > 0 || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ? 'var(--border-primary)' : 'var(--brand)', color: (countdown > 0 || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ? 'var(--text-tertiary)' : 'var(--bg-primary)', fontSize: 12, fontWeight: 500, cursor: (countdown > 0 || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
+            {countdown > 0 ? `${countdown}s` : '发送'}
+          </button>
         </div>
-      )}
+      </div>
 
       {error && <div style={{ color: 'var(--color-danger)', fontSize: 13, textAlign: 'center' }}>{error}</div>}
       {success && <div style={{ color: 'var(--color-success)', fontSize: 13, textAlign: 'center' }}>{success}</div>}
 
-      <Button onClick={() => { if (!emailVerified) { setError('请先验证邮箱'); return } setError(''); setSuccess(''); setStep(2) }}
-        style={{ width: '100%', justifyContent: 'center', padding: '12px 0', marginTop: 4 }} disabled={!emailVerified}>
+      <Button onClick={handleNextStep}
+        style={{ width: '100%', justifyContent: 'center', padding: '12px 0', marginTop: 4 }}
+        disabled={!email || !emailCode || emailCode.length < 6}>
         下一步
       </Button>
     </div>
