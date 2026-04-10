@@ -135,7 +135,7 @@ export default function ClientDetail() {
           <Avatar name={client.name} size={56} />
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 12, color: 'var(--text-tertiary)', fontFamily: 'monospace', background: 'var(--bg-tertiary)', padding: '1px 6px', borderRadius: 4 }}>#{client.id}</span>
+              <span style={{ fontSize: 12, color: 'var(--text-tertiary)', fontFamily: 'monospace', background: 'var(--bg-tertiary)', padding: '1px 6px', borderRadius: 4 }}>{client.display_id || `#${client.id}`}</span>
               <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-heading)' }}>{client.name}</span>
               <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: client.client_type === 'individual' ? '#fef3c7' : 'var(--brand-light-2)', color: client.client_type === 'individual' ? '#92400e' : 'var(--brand)', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 3 }}>{client.client_type === 'individual' ? <><UserCircle size={12} /> 个人</> : <><Building2 size={12} /> 企业</>}</span>
               {(() => { const s = stageMap[client.stage || 'potential'] || stageMap.potential; return <span style={{ fontSize: 12, padding: '2px 10px', borderRadius: 10, background: s.bg, color: s.color, fontWeight: 500 }}>{s.label}</span> })()}
@@ -308,7 +308,7 @@ export default function ClientDetail() {
                           <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{p.name}</span>
                           <Badge color={st.color}>{st.label}</Badge>
                         </div>
-                        <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>#{p.id}</span>
+                        <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{p.display_id || `#${p.id}`}</span>
                       </div>
                       {p.description && <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 6, lineHeight: 1.5 }}>{p.description.length > 100 ? p.description.slice(0, 100) + '...' : p.description}</div>}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 16, fontSize: 12, color: 'var(--text-tertiary)', flexWrap: 'wrap' }}>

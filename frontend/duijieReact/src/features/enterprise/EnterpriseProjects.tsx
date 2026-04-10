@@ -52,7 +52,7 @@ export default function EnterpriseProjects() {
                       <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-heading)' }}>{p.name}</span>
                       <Badge color={st.color}>{st.label}</Badge>
                     </div>
-                    <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>#{p.id}</span>
+                    <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{p.display_id || `#${p.id}`}</span>
                   </div>
                   {p.description && <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8, lineHeight: 1.5 }}>{p.description.length > 100 ? p.description.slice(0, 100) + '...' : p.description}</div>}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: 'var(--text-tertiary)', flexWrap: 'wrap' }}>

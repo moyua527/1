@@ -370,7 +370,7 @@ export default function ProjectList() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)', wordBreak: 'break-word' }}>{p.name}</div>
                     {p.description && <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.description}</div>}
-                    <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>ID {p.id}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{p.display_id || `ID ${p.id}`}</div>
                   </div>
                   <button disabled={restoringId === p.id} onClick={async () => {
                     setRestoringId(p.id)

@@ -23,6 +23,7 @@ export interface Client {
 
 export interface Project {
   id: number
+  display_id?: string
   name: string
   description: string | null
   status: 'planning' | 'in_progress' | 'review' | 'completed' | 'on_hold'

@@ -133,8 +133,8 @@ exports.assignRole = async (req, res) => {
 exports.createDefaultRoles = async (enterpriseId, createdBy) => {
   await db.query(
     `INSERT INTO enterprise_roles (enterprise_id, name, color, can_manage_members, can_approve_join, can_manage_roles, can_create_project, can_delete_project, can_view_report, can_manage_app, can_manage_department, can_edit_enterprise, is_default, sort_order, created_by)
-     VALUES (?, '管理员', '#2563eb', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, ?),
-            (?, '普通成员', '#64748b', 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, ?)`,
+     VALUES (?, '企业创建者', '#2563eb', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, ?),
+            (?, '企业成员', '#64748b', 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, ?)`,
     [enterpriseId, createdBy, enterpriseId, createdBy]
   );
 };

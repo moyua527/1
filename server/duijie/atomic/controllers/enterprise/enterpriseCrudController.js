@@ -4,6 +4,7 @@ const { findMyEnterprises, findActiveEnterprise, isCreator, getEnterprisePerms, 
 const { createDefaultRoles } = require('./enterpriseRoleController');
 const { auditLog } = require('../../utils/auditLog');
 const cache = require('../../utils/memoryCache');
+const { generateEnterpriseDisplayId } = require('../../utils/generateBusinessId');
 
 exports.getAll = async (req, res) => {
   try {
@@ -36,9 +37,10 @@ exports.create = async (req, res) => {
     const { name, company, email, phone, notes, industry, scale, address, credit_code, legal_person, registered_capital, established_date, business_scope, company_type, website } = req.body;
     if (!name || !name.trim()) return res.status(400).json({ success: false, message: '请输入企业名称' });
     const joinCode = await generateJoinCode();
+    const displayId = await generateEnterpriseDisplayId();
     const [result] = await db.query(
-      `INSERT INTO duijie_clients (user_id, client_type, name, company, email, phone, notes, industry, scale, address, credit_code, legal_person, registered_capital, established_date, business_scope, company_type, website, created_by, stage, join_code) VALUES (?, 'company', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'signed', ?)`,
-      [req.userId, name.trim(), company || null, email || null, phone || null, notes || null, industry || null, scale || null, address || null, credit_code || null, legal_person || null, registered_capital || null, established_date || null, business_scope || null, company_type || null, website || null, req.userId, joinCode]
+      `INSERT INTO duijie_clients (user_id, client_type, name, company, email, phone, notes, industry, scale, address, credit_code, legal_person, registered_capital, established_date, business_scope, company_type, website, created_by, stage, join_code, display_id) VALUES (?, 'company', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'signed', ?, ?)`,
+      [req.userId, name.trim(), company || null, email || null, phone || null, notes || null, industry || null, scale || null, address || null, credit_code || null, legal_person || null, registered_capital || null, established_date || null, business_scope || null, company_type || null, website || null, req.userId, joinCode, displayId]
     );
     const [user] = await db.query('SELECT nickname, username, phone, email FROM voice_users WHERE id = ?', [req.userId]);
     const u = user[0] || {};
@@ -49,7 +51,7 @@ exports.create = async (req, res) => {
     await db.query('UPDATE voice_users SET active_enterprise_id = ? WHERE id = ?', [result.insertId, req.userId]);
     cache.del(`user:${req.userId}`);
     await createDefaultRoles(result.insertId, req.userId);
-    res.json({ success: true, data: { id: result.insertId } });
+    res.json({ success: true, data: { id: result.insertId, display_id: displayId } });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });
   }

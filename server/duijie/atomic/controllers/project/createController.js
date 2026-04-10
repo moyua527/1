@@ -11,7 +11,7 @@ module.exports = async (req, res) => {
     const clientId = req.body.client_id || null;
 
     const id = await withTransaction(async (conn) => {
-      const projectId = await createProject({ ...req.body, client_id: clientId, internal_client_id: null, created_by: req.userId }, conn);
+      const projectId = await createProject({ ...req.body, client_id: clientId, internal_client_id: null, created_by: req.userId, enterprise_id: req.activeEnterpriseId || null }, conn);
       await conn.query(
         "INSERT IGNORE INTO duijie_project_members (project_id, user_id, role, source) VALUES (?, ?, 'owner', 'internal')",
         [projectId, req.userId]
