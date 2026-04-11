@@ -548,7 +548,7 @@ export default function Layout() {
             </div>
           )}
           {isMobile && pageAnimRef.current ? (
-            <div key={location.pathname} className={pageAnimRef.current} style={{ willChange: 'transform, opacity' }}>
+            <div key={location.pathname} className={pageAnimRef.current} style={{ willChange: 'transform, opacity', flex: 1, display: 'flex', flexDirection: 'column' as const, minHeight: 0 }}>
               <Outlet context={{
                 user, isMobile, dmUnread,
                 openSettings: (tab: string) => setSettingsTab(tab as any),
