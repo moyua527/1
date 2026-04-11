@@ -59,7 +59,7 @@ export default function Dashboard() {
     if (!menuOpen) return
     const main = document.querySelector('[data-tour="main-content"]') as HTMLElement | null
     if (main) main.style.overflow = 'hidden'
-    return () => { if (main) main.style.overflow = '' }
+    return () => { if (main) main.style.overflow = 'auto' }
   }, [menuOpen])
 
   const isClient = r === 'client'

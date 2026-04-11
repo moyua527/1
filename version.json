@@ -1,7 +1,7 @@
 {
-  "version": "1.3.77",
-  "versionCode": 379,
+  "version": "1.3.78",
+  "versionCode": 380,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "功能介绍只显示当前版本及更早的版本历史"
+  "changelog": "修复首页菜单关闭后页面无法滚动"
 }
