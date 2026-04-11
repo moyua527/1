@@ -1,7 +1,7 @@
 {
-  "version": "1.3.94",
-  "versionCode": 396,
+  "version": "1.3.95",
+  "versionCode": 397,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "移动端文件管理搜索、筛选、上传放同一行"
+  "changelog": "移动端文件管理分类改为横向标签条"
 }

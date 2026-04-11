@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { FileText, Upload, Loader2, Trash2 } from 'lucide-react'
+import { FileText, Upload, Loader2, Trash2, Search } from 'lucide-react'
 import { fetchApi, uploadFile, BACKEND_URL } from '../../bootstrap'
 import { useFiles, useInvalidate } from '../../hooks/useApi'
 import useLiveData from '../../hooks/useLiveData'
@@ -119,30 +119,61 @@ export default function FileManager() {
         </>} />
       <input ref={fileInputRef} type="file" multiple onChange={handleUpload} style={{ display: 'none' }} />
 
-      <FilterBar
-        search={search} onSearchChange={setSearch} searchPlaceholder="搜索文件..."
-        filters={[{
-          value: category, onChange: (v: string) => { setCategory(v); setSelected(new Set()) },
-          options: categoryTabs.map(t => ({ value: t.key, label: `${t.label}${t.key ? ` (${files.filter(f => getCategory(f.mime_type) === t.key).length})` : ''}` })),
-          placeholder: `全部 (${files.length})`,
-        }]}
-        resultCount={filtered.length}
-        hasFilters={!!(search.trim() || category)} activeFilterCount={(search.trim() ? 1 : 0) + (category ? 1 : 0)}
-        onClearFilters={() => { setSearch(''); setCategory(''); setSelected(new Set()) }}
-        extra={<>
+      {isMobile ? (
+        <>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '0 0 10px' }}>
+            <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+              <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索文件..."
+                style={{ width: '100%', padding: '7px 10px 7px 32px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-body)' }} />
+            </div>
+            <button disabled={uploading} onClick={() => fileInputRef.current?.click()}
+              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '7px 12px', borderRadius: 8, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 13, cursor: 'pointer', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }}>
+              <Upload size={14} /> {uploading ? '上传中...' : '上传'}
+            </button>
+          </div>
+          <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 10, WebkitOverflowScrolling: 'touch' as any }}>
+            {categoryTabs.map(t => {
+              const count = t.key ? files.filter(f => getCategory(f.mime_type) === t.key).length : files.length
+              const active = category === t.key
+              return (
+                <button key={t.key} onClick={() => { setCategory(t.key); setSelected(new Set()) }}
+                  style={{
+                    padding: '5px 12px', borderRadius: 16, border: active ? '1px solid var(--brand)' : '1px solid var(--border-primary)',
+                    background: active ? 'var(--brand-light-2)' : 'var(--bg-primary)', color: active ? 'var(--brand)' : 'var(--text-secondary)',
+                    fontSize: 12, fontWeight: active ? 600 : 400, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+                  }}>
+                  {t.label} ({count})
+                </button>
+              )
+            })}
+          </div>
           {selected.size > 0 && (
+            <div style={{ paddingBottom: 8 }}>
+              <button onClick={handleBatchDelete} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 8, border: 'none', background: 'var(--bg-danger-hover)', color: 'var(--color-danger)', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
+                <Trash2 size={14} /> 删除选中 ({selected.size})
+              </button>
+            </div>
+          )}
+        </>
+      ) : (
+        <FilterBar
+          search={search} onSearchChange={setSearch} searchPlaceholder="搜索文件..."
+          filters={[{
+            value: category, onChange: (v: string) => { setCategory(v); setSelected(new Set()) },
+            options: categoryTabs.map(t => ({ value: t.key, label: `${t.label}${t.key ? ` (${files.filter(f => getCategory(f.mime_type) === t.key).length})` : ''}` })),
+            placeholder: `全部 (${files.length})`,
+          }]}
+          resultCount={filtered.length}
+          hasFilters={!!(search.trim() || category)} activeFilterCount={(search.trim() ? 1 : 0) + (category ? 1 : 0)}
+          onClearFilters={() => { setSearch(''); setCategory(''); setSelected(new Set()) }}
+          extra={selected.size > 0 ? (
             <button onClick={handleBatchDelete} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 8, border: 'none', background: 'var(--bg-danger-hover)', color: 'var(--color-danger)', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
               <Trash2 size={14} /> 删除选中 ({selected.size})
             </button>
-          )}
-          {isMobile && (
-            <button disabled={uploading} onClick={() => fileInputRef.current?.click()}
-              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '7px 12px', borderRadius: 8, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 13, cursor: 'pointer', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }}>
-              <Upload size={14} /> {uploading ? '上传中...' : '上传文件'}
-            </button>
-          )}
-        </>}
-      />
+          ) : undefined}
+        />
+      )}
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
