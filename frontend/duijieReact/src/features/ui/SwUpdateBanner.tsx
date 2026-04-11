@@ -10,11 +10,11 @@ export default function SwUpdateBanner() {
 
   useEffect(() => {
     const justUpdated = sessionStorage.getItem('sw-just-updated')
-    if (justUpdated && Date.now() - Number(justUpdated) < 60000) return
+    if (justUpdated && Date.now() - Number(justUpdated) < 120000) return
 
     const handler = () => {
       const ts = sessionStorage.getItem('sw-just-updated')
-      if (ts && Date.now() - Number(ts) < 60000) return
+      if (ts && Date.now() - Number(ts) < 120000) return
       setShow(true)
     }
     window.addEventListener('sw-update-available', handler)
@@ -27,11 +27,9 @@ export default function SwUpdateBanner() {
   const handleUpdate = () => {
     sessionStorage.setItem('sw-just-updated', String(Date.now()))
     const w = window.__swWaiting
-    if (w) {
-      w.postMessage({ type: 'SKIP_WAITING' })
-    } else {
-      window.location.reload()
-    }
+    if (w) w.postMessage({ type: 'SKIP_WAITING' })
+    setShow(false)
+    setTimeout(() => window.location.reload(), 300)
   }
 
   return (
@@ -44,13 +42,13 @@ export default function SwUpdateBanner() {
       animation: 'fadeIn 0.3s ease',
     }}>
       <RefreshCw size={15} />
-      <span>有新版本可用</span>
+      <span>新版本已就绪</span>
       <button onClick={handleUpdate} style={{
         background: 'rgba(255,255,255,0.25)', border: 'none', color: '#fff',
         padding: '4px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
         cursor: 'pointer',
       }}>
-        更新
+        立即更新
       </button>
       <button onClick={() => setShow(false)} style={{
         background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)',

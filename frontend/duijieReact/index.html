@@ -221,27 +221,26 @@
     <script type="module" src="/src/main.tsx"></script>
     <script>
       if ('serviceWorker' in navigator) {
-        var refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', function() {
-          if (!refreshing) { refreshing = true; window.location.reload(); }
-        });
         window.addEventListener('load', function() {
           navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).then(function(reg) {
+            function onNewWaiting(w) {
+              window.__swWaiting = w;
+              window.dispatchEvent(new Event('sw-update-available'));
+            }
             reg.addEventListener('updatefound', function() {
               var w = reg.installing;
               if (w) w.addEventListener('statechange', function() {
-                if (w.state === 'installed' && navigator.serviceWorker.controller) {
-                  window.__swWaiting = w;
-                  window.dispatchEvent(new Event('sw-update-available'));
-                }
+                if (w.state === 'installed' && navigator.serviceWorker.controller) onNewWaiting(w);
               });
             });
-            if (reg.waiting) {
-              window.__swWaiting = reg.waiting;
-              window.dispatchEvent(new Event('sw-update-available'));
-            }
+            if (reg.waiting) onNewWaiting(reg.waiting);
             reg.update();
-            setInterval(function() { reg.update(); }, 60000);
+            setInterval(function() { reg.update(); }, 120000);
+            document.addEventListener('visibilitychange', function() {
+              if (document.visibilityState === 'hidden' && window.__swWaiting) {
+                window.__swWaiting.postMessage({ type: 'SKIP_WAITING' });
+              }
+            });
           }).catch(function(){});
         });
       }

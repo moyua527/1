@@ -1,4 +1,4 @@
-const CACHE_NAME = 'duijie-v89';
+const CACHE_NAME = 'duijie-v90';
 const MAX_CACHE_ITEMS = 100;
 
 async function trimCache(cacheName, maxItems) {
@@ -11,7 +11,8 @@ async function trimCache(cacheName, maxItems) {
 }
 
 self.addEventListener('install', (e) => {
-  self.skipWaiting();
+  // Don't skipWaiting here - wait for SKIP_WAITING message from client
+  // so updates don't interrupt active users
 });
 
 self.addEventListener('message', (e) => {
