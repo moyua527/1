@@ -168,18 +168,18 @@ export default function Dashboard() {
               <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 10 }}>业务概况</div>
               <div style={{ display: 'grid', gridTemplateColumns: `repeat(${(canClients ? 1 : 0) + (canTasks ? 2 : 0)}, 1fr)`, gap: 8 }}>
                 {canClients && (
-                  <div onClick={() => nav('/clients')} style={{ textAlign: 'center', cursor: 'pointer' }}>
+                  <div onClick={() => nav('/clients')} style={{ textAlign: 'center', cursor: 'pointer', padding: '6px 0', borderRadius: 8 }}>
                     <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-purple)' }}>{stats.totalClients}</div>
                     <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>客户总数</div>
                   </div>
                 )}
                 {canTasks && (
                   <>
-                    <div onClick={() => nav('/tasks')} style={{ textAlign: 'center', cursor: 'pointer' }}>
+                    <div onClick={() => nav('/tasks')} style={{ textAlign: 'center', cursor: 'pointer', padding: '6px 0', borderRadius: 8 }}>
                       <div style={{ fontSize: 22, fontWeight: 700, color: '#0284c7' }}>{stats.totalTasks}</div>
                       <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>总需求</div>
                     </div>
-                    <div onClick={() => nav('/tasks')} style={{ textAlign: 'center', cursor: 'pointer' }}>
+                    <div onClick={() => nav('/tasks?status=submitted')} style={{ textAlign: 'center', cursor: 'pointer', padding: '6px 0', borderRadius: 8 }}>
                       <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-danger)' }}>{stats.pendingTasks}</div>
                       <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>待办需求</div>
                     </div>

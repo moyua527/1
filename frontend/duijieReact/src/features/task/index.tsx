@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useOutletContext, useSearchParams } from 'react-router-dom'
 import { BACKEND_URL } from '../../bootstrap'
 import { useTasks, useProjects, useInvalidate } from '../../hooks/useApi'
 import useLiveData from '../../hooks/useLiveData'
@@ -35,7 +35,8 @@ export default function TaskBoard() {
   const [filterProject, setFilterProject] = useState<string>('')
   const [searchText, setSearchText] = useState('')
   const [filterPriority, setFilterPriority] = useState<string>('')
-  const [filterStatus, setFilterStatus] = useState<string>('')
+  const [taskSearchParams] = useSearchParams()
+  const [filterStatus, setFilterStatus] = useState<string>(taskSearchParams.get('status') || '')
   const [selectedTask, setSelectedTask] = useState<any>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [previewImg, setPreviewImg] = useState<string | null>(null)
