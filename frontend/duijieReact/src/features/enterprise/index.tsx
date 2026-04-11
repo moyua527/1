@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Users, Building, FolderTree, LogIn, KeyRound, FolderKanban, UserPlus } from 'lucide-react'
+import { Users, Building, FolderTree, LogIn, KeyRound, FolderKanban, UserPlus, MoreHorizontal } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { useEnterprise } from './useEnterprise'
 import { section } from './constants'
@@ -21,6 +21,7 @@ export default function Enterprise() {
   const h = useEnterprise()
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
   const [pendingRequestCount, setPendingRequestCount] = useState(0)
+  const [moreOpen, setMoreOpen] = useState(false)
 
   useEffect(() => {
     if (!h.data) return
@@ -75,18 +76,52 @@ export default function Enterprise() {
       </div>
 
       {/* Tab 栏 */}
-      <div style={{ display: 'flex', gap: 0, borderBottom: '2px solid var(--border-primary)', marginBottom: 16, overflowX: 'auto', WebkitOverflowScrolling: 'touch' as any, scrollbarWidth: 'none' }}>
-        {tabItems.map(t => (
-          <button key={t.key} onClick={() => h.setTab(t.key)}
-            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: isMobile ? '8px 12px' : '10px 20px', border: 'none', cursor: 'pointer', fontSize: isMobile ? 13 : 14, fontWeight: 600,
-              color: h.tab === t.key ? 'var(--brand)' : 'var(--text-secondary)', background: 'transparent',
-              borderBottom: h.tab === t.key ? '2px solid #2563eb' : '2px solid transparent', marginBottom: -2, transition: 'all 0.15s',
-              whiteSpace: 'nowrap', flexShrink: 0 }}>
-            {!isMobile && t.icon} {t.label} {'count' in t && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>({t.count})</span>}
-            {'badge' in t && (t as any).badge > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px', lineHeight: 1 }}>{(t as any).badge}</span>}
-          </button>
-        ))}
-      </div>
+      {(() => {
+        const mainTabs = isMobile ? tabItems.filter(t => t.key === 'members' || t.key === 'projects') : tabItems
+        const moreTabs = isMobile ? tabItems.filter(t => t.key !== 'members' && t.key !== 'projects') : []
+        const isMoreActive = isMobile && moreTabs.some(t => t.key === h.tab)
+        const moreLabel = isMoreActive ? (moreTabs.find(t => t.key === h.tab)?.label || '更多') : '更多'
+        return (
+          <div style={{ display: 'flex', gap: 0, borderBottom: '2px solid var(--border-primary)', marginBottom: 16, position: 'relative' }}>
+            {mainTabs.map(t => (
+              <button key={t.key} onClick={() => { h.setTab(t.key); setMoreOpen(false) }}
+                style={{ display: 'flex', alignItems: 'center', gap: 4, padding: isMobile ? '8px 14px' : '10px 20px', border: 'none', cursor: 'pointer', fontSize: isMobile ? 13 : 14, fontWeight: 600,
+                  color: h.tab === t.key ? 'var(--brand)' : 'var(--text-secondary)', background: 'transparent',
+                  borderBottom: h.tab === t.key ? '2px solid #2563eb' : '2px solid transparent', marginBottom: -2, transition: 'all 0.15s',
+                  whiteSpace: 'nowrap', flexShrink: 0 }}>
+                {!isMobile && t.icon} {t.label} {'count' in t && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>({t.count})</span>}
+                {'badge' in t && (t as any).badge > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px', lineHeight: 1 }}>{(t as any).badge}</span>}
+              </button>
+            ))}
+            {isMobile && moreTabs.length > 0 && (
+              <>
+                <button onClick={() => setMoreOpen(v => !v)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 14px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                    color: isMoreActive ? 'var(--brand)' : 'var(--text-secondary)', background: 'transparent',
+                    borderBottom: isMoreActive ? '2px solid #2563eb' : '2px solid transparent', marginBottom: -2, whiteSpace: 'nowrap', flexShrink: 0, marginLeft: 'auto' }}>
+                  {moreLabel} <MoreHorizontal size={14} />
+                </button>
+                {moreOpen && (
+                  <>
+                    <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 199 }} />
+                    <div style={{ position: 'absolute', top: '100%', right: 0, zIndex: 200, background: 'var(--bg-primary)', borderRadius: 12, padding: 6, boxShadow: '0 8px 24px rgba(0,0,0,0.14)', border: '1px solid var(--border-primary)', minWidth: 140, marginTop: 4 }}>
+                      {moreTabs.map(t => (
+                        <button key={t.key} onClick={() => { h.setTab(t.key); setMoreOpen(false) }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 12px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: h.tab === t.key ? 600 : 400,
+                            color: h.tab === t.key ? 'var(--brand)' : 'var(--text-body)', background: h.tab === t.key ? 'var(--bg-selected)' : 'transparent', borderRadius: 8 }}>
+                          {t.icon} {t.label}
+                          {'count' in t && <span style={{ fontSize: 11, color: 'var(--text-tertiary)', marginLeft: 'auto' }}>({t.count})</span>}
+                          {'badge' in t && (t as any).badge > 0 && <span style={{ minWidth: 16, height: 16, borderRadius: 8, background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', marginLeft: 'auto' }}>{(t as any).badge}</span>}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        )
+      })()}
 
       <EnterpriseCard
         ent={h.ent} myRole={h.myRole} isOwner={h.isOwner} canAdmin={h.canAdmin} canEditEnterprise={h.canEditEnterprise}
