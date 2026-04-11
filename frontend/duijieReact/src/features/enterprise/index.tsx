@@ -67,10 +67,10 @@ export default function Enterprise() {
   ]
 
   return (
-    <div>
+    <div style={isMobile ? { display: 'flex', flexDirection: 'column' as const, height: '100%', margin: '-20px -16px', padding: 0 } : undefined}>
       <div style={{
-        textAlign: isMobile ? 'center' : undefined, marginBottom: isMobile ? 12 : 0,
-        ...(isMobile ? { position: 'sticky', top: -20, zIndex: 10, background: 'var(--bg-secondary)', margin: '-20px -16px 12px', padding: '16px 16px 10px' } : {}),
+        textAlign: isMobile ? 'center' : undefined, marginBottom: isMobile ? 0 : 0,
+        ...(isMobile ? { flexShrink: 0, background: 'var(--bg-secondary)', padding: '16px 16px 10px' } : {}),
       }}>
         <h1 style={{ fontSize: isMobile ? 20 : 22, fontWeight: 700, color: 'var(--text-heading)', marginBottom: 4 }}>企业管理</h1>
         {!isMobile && <p style={{ fontSize: 14, color: 'var(--text-tertiary)', marginBottom: 20, marginTop: 0 }}>管理企业信息、部门与组织成员</p>}
@@ -84,7 +84,7 @@ export default function Enterprise() {
         const isMoreActive = isMobile && moreTabs.some(t => t.key === h.tab)
         const moreLabel = isMoreActive ? (moreTabs.find(t => t.key === h.tab)?.label || '更多') : '更多'
         return (
-          <div style={{ display: 'flex', gap: 0, borderBottom: '2px solid var(--border-primary)', marginBottom: 16, position: 'relative' }}>
+          <div style={{ display: 'flex', gap: 0, borderBottom: '2px solid var(--border-primary)', marginBottom: isMobile ? 0 : 16, position: 'relative', flexShrink: 0, ...(isMobile ? { padding: '0 16px' } : {}) }}>
             {mainTabs.map(t => (
               <button key={t.key} onClick={() => { h.setTab(t.key); setMoreOpen(false) }}
                 style={{ display: 'flex', alignItems: 'center', gap: 4, padding: isMobile ? '8px 14px' : '10px 20px', border: 'none', cursor: 'pointer', fontSize: isMobile ? 13 : 14, fontWeight: 600,
@@ -125,6 +125,7 @@ export default function Enterprise() {
         )
       })()}
 
+      <div style={isMobile ? { flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 16px 16px', WebkitOverflowScrolling: 'touch' as any } : undefined}>
       <EnterpriseCard
         ent={h.ent} myRole={h.myRole} isOwner={h.isOwner} canAdmin={h.canAdmin} canEditEnterprise={h.canEditEnterprise}
         entMenuOpen={h.entMenuOpen} setEntMenuOpen={h.setEntMenuOpen}
@@ -214,6 +215,7 @@ export default function Enterprise() {
       )}
 
       {h.isSysAdmin && <AdminAllEnterprises allEnterprises={h.allEnterprises} expandedEntId={h.expandedEntId} setExpandedEntId={h.setExpandedEntId} />}
+      </div>
 
       <JoinCreateModals
         joinModalOpen={h.joinModalOpen} setJoinModalOpen={h.setJoinModalOpen}

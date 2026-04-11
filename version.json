@@ -1,7 +1,7 @@
 {
-  "version": "1.3.99",
-  "versionCode": 401,
+  "version": "1.4.0",
+  "versionCode": 402,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "PWA更新改为后台静默，不打断用户"
+  "changelog": "移动端企业管理标题和Tab固定，内容区域独立滚动"
 }
