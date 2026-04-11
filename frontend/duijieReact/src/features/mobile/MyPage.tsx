@@ -29,6 +29,12 @@ export default function MyPage() {
 
   return (
     <div>
+      <div style={{
+        position: 'sticky', top: -20, zIndex: 10, background: 'var(--bg-secondary)',
+        margin: '-20px -16px 12px', padding: '16px 16px 10px', textAlign: 'center',
+      }}>
+        <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>我的</h1>
+      </div>
       <div onClick={() => navigate('/user-settings?tab=account&sub=profile')}
         style={{
           display: 'flex', alignItems: 'center', gap: 14, padding: 16, marginBottom: 12,
