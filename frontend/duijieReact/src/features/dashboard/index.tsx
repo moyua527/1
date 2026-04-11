@@ -145,19 +145,66 @@ export default function Dashboard() {
         )}
       </div>
       <div style={isMobile ? { flex: 1, overflowY: 'auto', minHeight: 0, padding: '12px 16px 20px', WebkitOverflowScrolling: 'touch' as any } : undefined}>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
-        {items.map(item => (
-          <div key={item.label} style={card} onClick={() => nav(item.path)}
-            onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)')}
-            onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)')}>
-            <div style={iconBox(item.bg)}><item.icon size={22} color={item.color} /></div>
-            <div>
-              <div style={{ fontSize: typeof item.value === 'string' ? 20 : 28, fontWeight: 700, color: 'var(--text-heading)' }}>{item.value}</div>
-              <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{item.label}</div>
+      {isMobile && stats ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ background: 'var(--bg-primary)', borderRadius: 14, padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
+            onClick={() => nav('/projects')}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 10 }}>项目概况</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+              {[
+                { label: '总项目', value: stats.totalProjects, color: 'var(--brand)' },
+                { label: '规划中', value: stats.planningProjects, color: 'var(--color-purple)' },
+                { label: '进行中', value: stats.activeProjects, color: 'var(--color-warning)' },
+                { label: '已完成', value: stats.completedProjects, color: 'var(--color-success)' },
+              ].map(s => (
+                <div key={s.label} style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: s.color }}>{s.value}</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>{s.label}</div>
+                </div>
+              ))}
             </div>
           </div>
-        ))}
-      </div>
+          {(canClients || canTasks) && (
+            <div style={{ background: 'var(--bg-primary)', borderRadius: 14, padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 10 }}>业务概况</div>
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${(canClients ? 1 : 0) + (canTasks ? 2 : 0)}, 1fr)`, gap: 8 }}>
+                {canClients && (
+                  <div onClick={() => nav('/clients')} style={{ textAlign: 'center', cursor: 'pointer' }}>
+                    <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-purple)' }}>{stats.totalClients}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>客户总数</div>
+                  </div>
+                )}
+                {canTasks && (
+                  <>
+                    <div onClick={() => nav('/tasks')} style={{ textAlign: 'center', cursor: 'pointer' }}>
+                      <div style={{ fontSize: 22, fontWeight: 700, color: '#0284c7' }}>{stats.totalTasks}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>总需求</div>
+                    </div>
+                    <div onClick={() => nav('/tasks')} style={{ textAlign: 'center', cursor: 'pointer' }}>
+                      <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-danger)' }}>{stats.pendingTasks}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>待办需求</div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
+          {items.map(item => (
+            <div key={item.label} style={card} onClick={() => nav(item.path)}
+              onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)')}
+              onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)')}>
+              <div style={iconBox(item.bg)}><item.icon size={22} color={item.color} /></div>
+              <div>
+                <div style={{ fontSize: typeof item.value === 'string' ? 20 : 28, fontWeight: 700, color: 'var(--text-heading)' }}>{item.value}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{item.label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       <WorkspaceSection isMobile={!!isMobile} />
       {chartData && <DashboardCharts chartData={chartData} days={chartDays} onDaysChange={setChartDays} canClients={canClients} isMobile={!!isMobile} />}
       {canClients && stats?.clientStages && (() => {
