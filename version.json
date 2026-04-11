@@ -1,7 +1,7 @@
 {
-  "version": "1.3.87",
-  "versionCode": 389,
+  "version": "1.3.88",
+  "versionCode": 390,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "移动端首页统计卡片改为紧凑数据面板"
+  "changelog": "修复首页统计数据与项目列表数量不一致"
 }

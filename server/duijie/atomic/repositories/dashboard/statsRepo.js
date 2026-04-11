@@ -3,15 +3,9 @@ const db = require('../../../config/db');
 function buildProjectFilter(auth) {
   const isMember = '(p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?))';
   if (auth.role === 'admin') {
-    if (auth.activeEnterpriseId) {
-      return { where: 'AND (p.internal_client_id = ? OR p.client_id = ?)', params: [auth.activeEnterpriseId, auth.activeEnterpriseId] };
-    }
     return { where: '', params: [] };
   }
   if (auth.userId) {
-    if (auth.activeEnterpriseId) {
-      return { where: `AND ${isMember} AND (p.internal_client_id = ? OR p.client_id = ?)`, params: [auth.userId, auth.userId, auth.activeEnterpriseId, auth.activeEnterpriseId] };
-    }
     return { where: `AND ${isMember}`, params: [auth.userId, auth.userId] };
   }
   return { where: '', params: [] };
