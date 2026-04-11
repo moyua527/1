@@ -95,7 +95,26 @@ export default function AboutPage() {
         setUpdating(false); setUpdateProgress('')
       }
     } else {
-      window.location.reload()
+      const sw = (window as any).__swWaiting
+      if (sw) {
+        sw.postMessage({ type: 'SKIP_WAITING' })
+        sessionStorage.setItem('sw-just-updated', String(Date.now()))
+        setTimeout(() => window.location.reload(), 400)
+      } else {
+        const reg = await navigator.serviceWorker?.getRegistration()
+        if (reg) {
+          await reg.update()
+          if (reg.waiting) {
+            reg.waiting.postMessage({ type: 'SKIP_WAITING' })
+            sessionStorage.setItem('sw-just-updated', String(Date.now()))
+            setTimeout(() => window.location.reload(), 400)
+          } else {
+            window.location.reload()
+          }
+        } else {
+          window.location.reload()
+        }
+      }
     }
   }
 

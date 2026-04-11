@@ -1,7 +1,7 @@
 {
-  "version": "1.3.82",
-  "versionCode": 384,
+  "version": "1.3.83",
+  "versionCode": 385,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "移动端三大页面改为flex布局：顶部固定、中间独立滚动、底部固定"
+  "changelog": "修复PWA应用内更新按钮不能正确激活新版本"
 }
