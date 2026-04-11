@@ -146,7 +146,7 @@ export default function ProjectList() {
   }
 
   return (
-    <div>
+    <div style={isMobile ? { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 } : undefined}>
       {!isMobile && projectTabs.length > 0 && (
         <div style={{ display: 'flex', gap: 0, marginBottom: 0, alignItems: 'stretch', background: 'linear-gradient(180deg, rgba(59,130,246,0.10) 0%, rgba(59,130,246,0.04) 100%)', borderRadius: '10px 10px 0 0', padding: '0 4px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 600, flexShrink: 0,
@@ -217,7 +217,7 @@ export default function ProjectList() {
 
       {isMobile && (
         <div style={{
-          position: 'sticky', top: -20, zIndex: 10, background: 'var(--bg-secondary)', margin: '-20px -16px 12px', padding: '16px 16px 10px',
+          flexShrink: 0, zIndex: 10, background: 'var(--bg-secondary)', padding: '16px 16px 10px',
         }}>
           <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-heading)', margin: '0 0 10px', textAlign: 'center' }}>项目</h1>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -238,6 +238,7 @@ export default function ProjectList() {
         </div>
       )}
 
+      <div style={isMobile ? { flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 16px 20px', WebkitOverflowScrolling: 'touch' as any } : undefined}>
       {!isMobile && projects.length > 3 && <div style={{ marginBottom: 16 }}>
         <div style={{ position: 'relative', maxWidth: 320 }}>
           <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
@@ -424,6 +425,7 @@ export default function ProjectList() {
           </div>
         </div>
       </Modal>
+      </div>
     </div>
   )
 }

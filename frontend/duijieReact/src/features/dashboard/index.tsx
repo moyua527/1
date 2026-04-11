@@ -57,9 +57,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!menuOpen) return
-    const main = document.querySelector('[data-tour="main-content"]') as HTMLElement | null
-    if (main) main.style.overflow = 'hidden'
-    return () => { if (main) main.style.overflow = 'auto' }
+    return () => {}
   }, [menuOpen])
 
   const isClient = r === 'client'
@@ -88,10 +86,10 @@ export default function Dashboard() {
   ] : []
 
   return (
-    <div>
+    <div style={isMobile ? { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 } : undefined}>
       <div style={{
-        marginBottom: isMobile ? 12 : 24, textAlign: isMobile ? 'center' : undefined, position: isMobile ? 'sticky' : 'relative',
-        ...(isMobile ? { top: -20, zIndex: 10, background: 'var(--bg-secondary)', margin: '-20px -16px 12px', padding: '16px 16px 10px' } : {}),
+        marginBottom: isMobile ? 0 : 24, textAlign: isMobile ? 'center' : undefined,
+        ...(isMobile ? { flexShrink: 0, zIndex: 10, background: 'var(--bg-secondary)', padding: '16px 16px 10px' } : {}),
       }}>
         {isMobile ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
@@ -146,6 +144,7 @@ export default function Dashboard() {
           </>
         )}
       </div>
+      <div style={isMobile ? { flex: 1, overflowY: 'auto', minHeight: 0, padding: '12px 16px 20px', WebkitOverflowScrolling: 'touch' as any } : undefined}>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
         {items.map(item => (
           <div key={item.label} style={card} onClick={() => nav(item.path)}
@@ -266,6 +265,7 @@ export default function Dashboard() {
         </div>
       )}
       {!stats && <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>}
+      </div>
     </div>
   )
 }

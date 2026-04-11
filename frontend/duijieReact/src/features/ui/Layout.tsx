@@ -519,10 +519,11 @@ export default function Layout() {
         {/* ===== 主内容区 ===== */}
         <main ref={mainRef} data-tour="main-content"
           style={{
-            flex: 1, overflow: 'auto', minHeight: 0, position: 'relative',
-            padding: isMobile ? '20px 16px' : 24,
-            paddingBottom: isMobile ? (['/', '/projects', '/my'].includes(location.pathname) ? 20 : 'max(32px, env(safe-area-inset-bottom, 32px))') : 24,
-            WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain',
+            flex: 1, minHeight: 0, position: 'relative',
+            ...(isMobile && ['/', '/projects', '/my'].includes(location.pathname)
+              ? { overflow: 'hidden', padding: 0, display: 'flex', flexDirection: 'column' as const }
+              : { overflow: 'auto', padding: isMobile ? '20px 16px' : 24, paddingBottom: isMobile ? 'max(32px, env(safe-area-inset-bottom, 32px))' : 24, WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain' }
+            ),
           }}>
           {isMobile && (ptrY > 0 || ptrRefreshing) && (
             <div style={{

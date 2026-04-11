@@ -28,13 +28,14 @@ export default function MyPage() {
   ]
 
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
       <div style={{
-        position: 'sticky', top: -20, zIndex: 10, background: 'var(--bg-secondary)',
-        margin: '-20px -16px 12px', padding: '16px 16px 10px', textAlign: 'center',
+        flexShrink: 0, zIndex: 10, background: 'var(--bg-secondary)',
+        padding: '16px 16px 10px', textAlign: 'center',
       }}>
         <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>我的</h1>
       </div>
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '12px 16px 20px', WebkitOverflowScrolling: 'touch' as any }}>
       <div onClick={() => navigate('/user-settings?tab=account&sub=profile')}
         style={{
           display: 'flex', alignItems: 'center', gap: 14, padding: 16, marginBottom: 12,
@@ -111,6 +112,7 @@ export default function MyPage() {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }
