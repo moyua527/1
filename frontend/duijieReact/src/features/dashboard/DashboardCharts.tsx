@@ -134,6 +134,7 @@ export default function DashboardCharts({ chartData, days, onDaysChange, canClie
                   label={({ name, count }: any) => `${name}: ${count}`}
                   labelLine={{ stroke: 'var(--text-tertiary)', strokeWidth: 1 }}
                   animationBegin={0} animationDuration={800}
+                  cursor="pointer"
                 >
                   {chartData.taskDist.map((_: any, i: number) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="none" />)}
                 </Pie>

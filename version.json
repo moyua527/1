@@ -1,7 +1,7 @@
 {
-  "version": "1.3.90",
-  "versionCode": 392,
+  "version": "1.3.91",
+  "versionCode": 393,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "业务概况点击也跳转对应筛选页面"
+  "changelog": "优化饼图选中效果，去除突兀高亮框"
 }
