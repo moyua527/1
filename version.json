@@ -1,7 +1,7 @@
 {
-  "version": "1.3.93",
-  "versionCode": 395,
+  "version": "1.3.94",
+  "versionCode": 396,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "修复返回首页后页面不能滚动"
+  "changelog": "移动端文件管理搜索、筛选、上传放同一行"
 }

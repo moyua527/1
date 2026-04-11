@@ -3,6 +3,7 @@ import { FileText, Upload, Loader2, Trash2 } from 'lucide-react'
 import { fetchApi, uploadFile, BACKEND_URL } from '../../bootstrap'
 import { useFiles, useInvalidate } from '../../hooks/useApi'
 import useLiveData from '../../hooks/useLiveData'
+import useIsMobile from '../ui/useIsMobile'
 import Button from '../ui/Button'
 import PageHeader from '../ui/PageHeader'
 import FilterBar from '../ui/FilterBar'
@@ -37,6 +38,7 @@ const categoryTabs = [
 export default function FileManager() {
   const { data: files = [], isLoading: loading } = useFiles()
   const invalidate = useInvalidate()
+  const isMobile = useIsMobile()
   const [search, setSearch] = useState('')
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState<any>(null)
@@ -112,10 +114,10 @@ export default function FileManager() {
   return (
     <div>
       <PageHeader title="文件管理" subtitle={`共 ${files.length} 个文件 · ${formatSize(totalSize)}`}
-        actions={<>
+        actions={isMobile ? undefined : <>
           <Button disabled={uploading} onClick={() => fileInputRef.current?.click()}><Upload size={14} /> {uploading ? '上传中...' : '上传文件'}</Button>
-          <input ref={fileInputRef} type="file" multiple onChange={handleUpload} style={{ display: 'none' }} />
         </>} />
+      <input ref={fileInputRef} type="file" multiple onChange={handleUpload} style={{ display: 'none' }} />
 
       <FilterBar
         search={search} onSearchChange={setSearch} searchPlaceholder="搜索文件..."
@@ -127,11 +129,19 @@ export default function FileManager() {
         resultCount={filtered.length}
         hasFilters={!!(search.trim() || category)} activeFilterCount={(search.trim() ? 1 : 0) + (category ? 1 : 0)}
         onClearFilters={() => { setSearch(''); setCategory(''); setSelected(new Set()) }}
-        extra={selected.size > 0 ? (
-          <button onClick={handleBatchDelete} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 8, border: 'none', background: 'var(--bg-danger-hover)', color: 'var(--color-danger)', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
-            <Trash2 size={14} /> 删除选中 ({selected.size})
-          </button>
-        ) : undefined}
+        extra={<>
+          {selected.size > 0 && (
+            <button onClick={handleBatchDelete} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 8, border: 'none', background: 'var(--bg-danger-hover)', color: 'var(--color-danger)', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
+              <Trash2 size={14} /> 删除选中 ({selected.size})
+            </button>
+          )}
+          {isMobile && (
+            <button disabled={uploading} onClick={() => fileInputRef.current?.click()}
+              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '7px 12px', borderRadius: 8, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 13, cursor: 'pointer', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }}>
+              <Upload size={14} /> {uploading ? '上传中...' : '上传文件'}
+            </button>
+          )}
+        </>}
       />
 
       {loading ? (
