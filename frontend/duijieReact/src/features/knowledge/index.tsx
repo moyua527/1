@@ -183,10 +183,13 @@ export default function KnowledgeBase() {
   }
 
   // Main list view
+  const catTabs = [{ id: null as number | null, label: '全部' }, ...categories.map(c => ({ id: c.id as number | null, label: c.name }))]
+  const statusTabs = [{ key: '', label: '全部' }, { key: 'published', label: '已发布' }, { key: 'draft', label: '草稿' }]
+
   return (
     <div>
       <PageHeader title="知识库"
-        actions={
+        actions={isMobile ? undefined :
           <button onClick={() => setEditing({ title: '', content: '', status: 'draft', category_id: selectedCat })}
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 10, background: 'var(--brand)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
             <Plus size={16} /> 新建文章
@@ -194,7 +197,7 @@ export default function KnowledgeBase() {
         }
       />
 
-      <div style={{ display: 'flex', gap: 20, marginTop: 16 }}>
+      <div style={{ display: 'flex', gap: 20, marginTop: isMobile ? 0 : 16 }}>
         {/* Sidebar: categories */}
         {!isMobile && (
           <div style={{ width: 200, flexShrink: 0 }}>
@@ -262,32 +265,64 @@ export default function KnowledgeBase() {
         {/* Main content */}
         <div style={{ flex: 1, minWidth: 0 }}>
           {/* Search & filters */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-            {isMobile && (
-              <select value={selectedCat || ''} onChange={e => { setSelectedCat(e.target.value ? Number(e.target.value) : null); setPage(1) }}
-                style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 13 }}>
-                <option value="">全部分类</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            )}
-            <div style={{ flex: 1, display: 'flex', gap: 8, minWidth: 180 }}>
-              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', borderRadius: 10, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)' }}>
-                <Search size={14} style={{ color: 'var(--text-tertiary)' }} />
-                <input value={searchInput} onChange={e => setSearchInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                  placeholder="搜索文章..." style={{ flex: 1, border: 'none', outline: 'none', fontSize: 13, padding: '8px 0', background: 'transparent', color: 'var(--text-primary)' }} />
+          {isMobile ? (
+            <>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', paddingBottom: 10 }}>
+                <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+                  <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
+                  <input value={searchInput} onChange={e => setSearchInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                    placeholder="搜索文章..." style={{ width: '100%', padding: '8px 10px 8px 32px', borderRadius: 10, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', boxSizing: 'border-box', background: 'var(--bg-primary)', color: 'var(--text-primary)' }} />
+                </div>
+                <button onClick={() => setEditing({ title: '', content: '', status: 'draft', category_id: selectedCat })}
+                  style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '7px 12px', borderRadius: 8, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 13, cursor: 'pointer', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                  <Plus size={14} /> 新建
+                </button>
               </div>
-              <button onClick={handleSearch} style={{ padding: '8px 14px', borderRadius: 10, background: 'var(--brand)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13 }}>
-                搜索
-              </button>
+              <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8, WebkitOverflowScrolling: 'touch' as any }}>
+                {catTabs.map(t => {
+                  const active = selectedCat === t.id
+                  return (
+                    <button key={String(t.id)} onClick={() => { setSelectedCat(t.id); setPage(1) }}
+                      style={{ padding: '5px 12px', borderRadius: 20, border: active ? '1px solid var(--brand)' : '1px solid var(--border-primary)', background: active ? 'var(--brand)' : 'var(--bg-primary)', color: active ? '#fff' : 'var(--text-secondary)', fontSize: 12, fontWeight: active ? 600 : 400, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                      {t.label}
+                    </button>
+                  )
+                })}
+              </div>
+              <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 10, WebkitOverflowScrolling: 'touch' as any }}>
+                {statusTabs.map(t => {
+                  const active = statusFilter === t.key
+                  return (
+                    <button key={t.key} onClick={() => { setStatusFilter(t.key); setPage(1) }}
+                      style={{ padding: '5px 12px', borderRadius: 20, border: active ? '1px solid var(--brand)' : '1px solid var(--border-primary)', background: active ? 'var(--brand)' : 'var(--bg-primary)', color: active ? '#fff' : 'var(--text-secondary)', fontSize: 12, fontWeight: active ? 600 : 400, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                      {t.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </>
+          ) : (
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, display: 'flex', gap: 8, minWidth: 180 }}>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px', borderRadius: 10, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)' }}>
+                  <Search size={14} style={{ color: 'var(--text-tertiary)' }} />
+                  <input value={searchInput} onChange={e => setSearchInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                    placeholder="搜索文章..." style={{ flex: 1, border: 'none', outline: 'none', fontSize: 13, padding: '8px 0', background: 'transparent', color: 'var(--text-primary)' }} />
+                </div>
+                <button onClick={handleSearch} style={{ padding: '8px 14px', borderRadius: 10, background: 'var(--brand)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13 }}>
+                  搜索
+                </button>
+              </div>
+              <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1) }}
+                style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 13 }}>
+                <option value="">全部状态</option>
+                <option value="published">已发布</option>
+                <option value="draft">草稿</option>
+              </select>
             </div>
-            <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1) }}
-              style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: 13 }}>
-              <option value="">全部状态</option>
-              <option value="published">已发布</option>
-              <option value="draft">草稿</option>
-            </select>
-          </div>
+          )}
 
           {/* Article list */}
           {loading ? (

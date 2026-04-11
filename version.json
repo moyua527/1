@@ -1,7 +1,7 @@
 {
-  "version": "1.4.0",
-  "versionCode": 402,
+  "version": "1.4.1",
+  "versionCode": 403,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "移动端企业管理标题和Tab固定，内容区域独立滚动"
+  "changelog": "移动端知识库搜索+分类+状态改为紧凑横向标签"
 }
