@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Users, Building, FolderTree, LogIn, KeyRound, FolderKanban, UserPlus, MoreHorizontal } from 'lucide-react'
+import { Users, Building, FolderTree, LogIn, KeyRound, FolderKanban, UserPlus, MoreHorizontal, Copy, RotateCw } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { useEnterprise } from './useEnterprise'
 import { section } from './constants'
@@ -60,6 +60,7 @@ export default function Enterprise() {
     { key: 'departments' as const, label: '部门管理', icon: <Building size={15} />, count: h.departments.length },
     { key: 'tree' as const, label: '组织架构', icon: <FolderTree size={15} /> },
     { key: 'projects' as const, label: '企业项目', icon: <FolderKanban size={15} /> },
+    ...(h.canAdmin && h.ent?.join_code ? [{ key: 'join-code' as const, label: '推荐码', icon: <KeyRound size={15} /> }] : []),
     ...((h.isOwner || h.canManageRoles) ? [{ key: 'roles' as const, label: '角色管理', icon: <KeyRound size={15} />, count: h.roles.length }] : []),
     { key: 'client-requests' as const, label: '客户请求', icon: <UserPlus size={15} />, badge: pendingRequestCount },
     ...(h.canAdmin && h.joinRequests.length > 0 ? [{ key: 'requests' as const, label: '加入申请', icon: <LogIn size={15} />, count: h.joinRequests.length }] : []),
@@ -77,8 +78,9 @@ export default function Enterprise() {
 
       {/* Tab 栏 */}
       {(() => {
-        const mainTabs = isMobile ? tabItems.filter(t => t.key === 'members' || t.key === 'projects') : tabItems
-        const moreTabs = isMobile ? tabItems.filter(t => t.key !== 'members' && t.key !== 'projects') : []
+        const mobileMainKeys = ['members', 'projects', 'join-code']
+        const mainTabs = isMobile ? tabItems.filter(t => mobileMainKeys.includes(t.key)) : tabItems
+        const moreTabs = isMobile ? tabItems.filter(t => !mobileMainKeys.includes(t.key)) : []
         const isMoreActive = isMobile && moreTabs.some(t => t.key === h.tab)
         const moreLabel = isMoreActive ? (moreTabs.find(t => t.key === h.tab)?.label || '更多') : '更多'
         return (
@@ -142,6 +144,36 @@ export default function Enterprise() {
       )}
 
       {h.tab === 'projects' && <EnterpriseProjects />}
+
+      {h.tab === 'join-code' && h.canAdmin && h.ent?.join_code && (
+        <div style={{ ...section }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+            <KeyRound size={18} color="var(--brand)" />
+            <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-heading)' }}>企业推荐码</span>
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16, lineHeight: 1.6 }}>
+            分享给待加入成员，填写后可直接加入企业并触发后台通知。
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
+            <div style={{ padding: '12px 20px', borderRadius: 12, background: 'var(--bg-selected)', border: '1px solid #dbeafe', fontSize: 24, fontWeight: 800, letterSpacing: 3, color: 'var(--text-heading)', fontFamily: 'monospace' }}>{h.ent.join_code}</div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={async () => {
+              try {
+                if (window.isSecureContext && navigator.clipboard?.writeText) await navigator.clipboard.writeText(h.ent.join_code)
+                else { const ta = document.createElement('textarea'); ta.value = h.ent.join_code; ta.style.cssText = 'position:fixed;opacity:0'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta) }
+                (await import('../ui/Toast')).toast('推荐码已复制', 'success')
+              } catch { (await import('../ui/Toast')).toast('复制失败', 'error') }
+            }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 10, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', cursor: 'pointer', color: 'var(--text-body)', fontSize: 14, fontWeight: 600 }}>
+              <Copy size={15} /> 复制推荐码
+            </button>
+            <button onClick={h.handleRegenerateJoinCode} disabled={h.joinCodeRefreshing}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', borderRadius: 10, border: 'none', background: 'var(--brand)', cursor: 'pointer', color: '#fff', fontSize: 14, fontWeight: 600, opacity: h.joinCodeRefreshing ? 0.6 : 1 }}>
+              <RotateCw size={15} /> {h.joinCodeRefreshing ? '重置中...' : '重置推荐码'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {h.tab === 'roles' && (
         <EnterpriseRoleTab

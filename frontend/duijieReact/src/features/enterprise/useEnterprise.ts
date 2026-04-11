@@ -25,7 +25,7 @@ export function useEnterprise() {
 
   // --- UI state ---
   const [searchParams, setSearchParams] = useSearchParams()
-  const validTabs = ['members', 'departments', 'tree', 'projects', 'roles', 'requests', 'client-requests'] as const
+  const validTabs = ['members', 'departments', 'tree', 'projects', 'join-code', 'roles', 'requests', 'client-requests'] as const
   type TabType = typeof validTabs[number]
   const urlTab = searchParams.get('tab') as TabType
   const [tab, setTabState] = useState<TabType>(validTabs.includes(urlTab as any) ? urlTab! : 'members')
