@@ -8,3 +8,5 @@ logs/
 .DS_Store
 Thumbs.db
 gradle-8.5-bin.zip
+firebase-admin-key.json
+google-services.json

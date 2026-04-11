@@ -1,7 +1,7 @@
 {
-  "version": "1.4.1",
-  "versionCode": 403,
+  "version": "1.4.2",
+  "versionCode": 404,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "移动端知识库搜索+分类+状态改为紧凑横向标签"
+  "changelog": "后端推送改用Firebase Admin SDK V1 API，安装Capacitor推送插件"
 }
