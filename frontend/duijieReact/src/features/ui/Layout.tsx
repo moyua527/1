@@ -229,7 +229,11 @@ export default function Layout() {
       const dx = (e.changedTouches[0]?.clientX || 0) - startX
       tracking = false; confirmed = false
       if (swipeOverlayRef.current) swipeOverlayRef.current.style.display = 'none'
-      if (dx > 80) navigate(-1)
+      if (dx > 80) {
+        const path = location.pathname
+        const parent = path.replace(/\/[^/]+\/?$/, '') || '/'
+        navigate(parent)
+      }
     }
 
     document.addEventListener('touchstart', onTouchStart, { passive: true })
