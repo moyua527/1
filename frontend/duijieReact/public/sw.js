@@ -1,4 +1,4 @@
-const CACHE_NAME = 'duijie-v82';
+const CACHE_NAME = 'duijie-v83';
 const MAX_CACHE_ITEMS = 100;
 
 async function trimCache(cacheName, maxItems) {
@@ -24,7 +24,6 @@ self.addEventListener('activate', (e) => {
       Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
     )
   );
-  self.clients.claim();
   trimCache(CACHE_NAME, MAX_CACHE_ITEMS);
 });
 
