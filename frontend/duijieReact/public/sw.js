@@ -1,7 +1,6 @@
-const CACHE_NAME = 'duijie-v74';
+const CACHE_NAME = 'duijie-v75';
 const MAX_CACHE_ITEMS = 100;
 
-// 缓存清理：限制缓存条目数
 async function trimCache(cacheName, maxItems) {
   const cache = await caches.open(cacheName);
   const keys = await cache.keys();
@@ -12,7 +11,7 @@ async function trimCache(cacheName, maxItems) {
 }
 
 self.addEventListener('install', (e) => {
-  // 不再自动 skipWaiting，由前端用户主动触发更新
+  self.skipWaiting();
 });
 
 self.addEventListener('message', (e) => {
