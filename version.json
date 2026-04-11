@@ -1,7 +1,7 @@
 {
-  "version": "1.3.95",
-  "versionCode": 397,
+  "version": "1.3.96",
+  "versionCode": 398,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "移动端文件管理分类改为横向标签条"
+  "changelog": "修复移动端企业管理Tab栏溢出屏幕"
 }

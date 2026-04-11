@@ -75,13 +75,14 @@ export default function Enterprise() {
       </div>
 
       {/* Tab 栏 */}
-      <div style={{ display: 'flex', gap: 0, borderBottom: '2px solid var(--border-primary)', marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 0, borderBottom: '2px solid var(--border-primary)', marginBottom: 16, overflowX: 'auto', WebkitOverflowScrolling: 'touch' as any, scrollbarWidth: 'none' }}>
         {tabItems.map(t => (
           <button key={t.key} onClick={() => h.setTab(t.key)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 20px', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600,
+            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: isMobile ? '8px 12px' : '10px 20px', border: 'none', cursor: 'pointer', fontSize: isMobile ? 13 : 14, fontWeight: 600,
               color: h.tab === t.key ? 'var(--brand)' : 'var(--text-secondary)', background: 'transparent',
-              borderBottom: h.tab === t.key ? '2px solid #2563eb' : '2px solid transparent', marginBottom: -2, transition: 'all 0.15s' }}>
-            {t.icon} {t.label} {'count' in t && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>({t.count})</span>}
+              borderBottom: h.tab === t.key ? '2px solid #2563eb' : '2px solid transparent', marginBottom: -2, transition: 'all 0.15s',
+              whiteSpace: 'nowrap', flexShrink: 0 }}>
+            {!isMobile && t.icon} {t.label} {'count' in t && <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>({t.count})</span>}
             {'badge' in t && (t as any).badge > 0 && <span style={{ minWidth: 18, height: 18, borderRadius: 9, background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '0 5px', lineHeight: 1 }}>{(t as any).badge}</span>}
           </button>
         ))}
