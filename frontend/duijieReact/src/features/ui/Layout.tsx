@@ -539,7 +539,7 @@ export default function Layout() {
               }} />
             </div>
           )}
-          <div key={isMobile ? location.pathname : undefined} className={isMobile ? pageAnimRef.current : ''} style={isMobile ? { willChange: 'transform, opacity' } : undefined}>
+          <div key={isMobile ? location.pathname : undefined} className={isMobile ? pageAnimRef.current : ''} style={isMobile && pageAnimRef.current ? { willChange: 'transform, opacity' } : undefined}>
             <Outlet context={{
               user, isMobile, dmUnread,
               openSettings: (tab: string) => setSettingsTab(tab as any),
