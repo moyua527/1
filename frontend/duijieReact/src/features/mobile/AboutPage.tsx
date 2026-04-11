@@ -189,16 +189,18 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {showLog && versionLog.length > 0 && (
+        {showLog && versionLog.length > 0 && (() => {
+          const filtered = versionLog.filter(item => compareVer(item.ver, APP_VERSION) <= 0)
+          return filtered.length > 0 && (
           <div style={{ width: '100%', background: 'var(--bg-primary)', borderRadius: 16, padding: '4px 0', marginBottom: 16, maxHeight: '50vh', overflowY: 'auto' }}>
-            {versionLog.map((item, i) => (
+            {filtered.map((item, i) => (
               <div key={item.ver} style={{
                 padding: '14px 18px',
-                borderBottom: i < versionLog.length - 1 ? '1px solid var(--border-secondary)' : 'none',
+                borderBottom: i < filtered.length - 1 ? '1px solid var(--border-secondary)' : 'none',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontSize: 15, fontWeight: 600, color: item.ver === serverVersion ? 'var(--brand)' : 'var(--text-heading)' }}>
-                    v{item.ver} {item.ver === serverVersion && '(当前)'}
+                  <span style={{ fontSize: 15, fontWeight: 600, color: item.ver === APP_VERSION ? 'var(--brand)' : 'var(--text-heading)' }}>
+                    v{item.ver} {item.ver === APP_VERSION && '(当前)'}
                   </span>
                   <span style={{ fontSize: 12, color: 'var(--text-disabled)' }}>{item.date}</span>
                 </div>
@@ -219,7 +221,8 @@ export default function AboutPage() {
               </div>
             ))}
           </div>
-        )}
+          )
+        })()}
 
         <div style={{ flex: 1 }} />
 

@@ -1,7 +1,7 @@
 {
-  "version": "1.3.76",
-  "versionCode": 378,
+  "version": "1.3.77",
+  "versionCode": 379,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "修复移动端资料组列表未铺满屏幕"
+  "changelog": "功能介绍只显示当前版本及更早的版本历史"
 }
