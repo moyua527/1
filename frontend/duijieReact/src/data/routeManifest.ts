@@ -22,7 +22,7 @@ export interface RouteEntry {
 
 const ROUTES: RouteEntry[] = [
   {
-    path: '/', label: '仪表盘', mobileLabel: '首页', icon: LayoutDashboard, perm: 'dashboard:view',
+    path: '/', label: '首页', mobileLabel: '首页', icon: LayoutDashboard, perm: 'dashboard:view',
     importFn: () => import('../features/dashboard/index'),
     showInNav: true, mobileNav: true, exact: true, prefetch: true, group: 'workspace',
   },

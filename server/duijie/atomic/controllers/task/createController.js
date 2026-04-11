@@ -2,6 +2,7 @@ const createTask = require('../../services/task/createTask');
 const db = require('../../../config/db');
 const { broadcast } = require('../../utils/broadcast');
 const { notify, notifyMany } = require('../../utils/notify');
+const { logActivity } = require('../../utils/activityLogger');
 
 module.exports = async (req, res) => {
   try {
@@ -62,6 +63,9 @@ module.exports = async (req, res) => {
       }
     }
 
+    if (req.body.project_id) {
+      logActivity(req.body.project_id, req.userId, 'task_created', { entityType: 'task', entityId: id, title: req.body.title });
+    }
     broadcast('task', 'created', { id, project_id: req.body.project_id, userId: req.userId });
     res.json({ success: true, data: { id } });
   } catch (e) {

@@ -7,7 +7,7 @@ import { toast } from '../ui/Toast'
 const CONFIG_GROUPS = [
   { title: '基础设置', icon: '⚙️', items: [
     { key: 'SITE_NAME', label: '系统名称', desc: '显示在登录页和侧边栏的系统名称', placeholder: '对接平台' },
-    { key: 'WELCOME_MSG', label: '欢迎消息', desc: '登录后仪表盘显示的欢迎消息', placeholder: '欢迎使用对接平台' },
+    { key: 'WELCOME_MSG', label: '欢迎消息', desc: '登录后首页显示的欢迎消息', placeholder: '欢迎使用对接平台' },
     { key: 'COMPANY_NAME', label: '公司名称', desc: '页面底部/导出文件中显示的公司名', placeholder: '公司名称' },
     { key: 'MAX_UPLOAD_MB', label: '最大上传大小 (MB)', desc: '单个文件上传的最大体积限制', placeholder: '10' },
     { key: 'DEFAULT_LANGUAGE', label: '默认语言', desc: '系统默认显示语言', placeholder: 'zh-CN' },
@@ -41,7 +41,7 @@ const CONFIG_GROUPS = [
     { key: 'THEME_COLOR', label: '主题色', desc: '系统主色调 (Hex值)', placeholder: 'var(--brand)' },
     { key: 'PAGE_SIZE', label: '默认分页条数', desc: '列表页默认每页显示条数', placeholder: '20' },
     { key: 'DATE_FORMAT', label: '日期格式', desc: '日期显示格式 (YYYY-MM-DD / DD/MM/YYYY)', placeholder: 'YYYY-MM-DD' },
-    { key: 'SHOW_DASHBOARD_CHARTS', label: '仪表盘图表', desc: '仪表盘是否显示统计图表 (true/false)', placeholder: 'true' },
+    { key: 'SHOW_DASHBOARD_CHARTS', label: '首页图表', desc: '首页是否显示统计图表 (true/false)', placeholder: 'true' },
   ]},
 ]
 

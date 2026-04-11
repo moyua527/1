@@ -4,6 +4,7 @@ const { broadcast } = require('../../utils/broadcast');
 const { normalizeProjectClientId } = require('../../services/accessScope');
 const logger = require('../../../config/logger');
 const { invalidateProjectCaches } = require('../../utils/cacheInvalidation');
+const { logActivity } = require('../../utils/activityLogger');
 
 module.exports = async (req, res) => {
   try {
@@ -29,6 +30,8 @@ module.exports = async (req, res) => {
     }
 
     await updateProject(pid, body);
+    const changedFields = Object.keys(body).filter(k => k !== 'client_id' || body[k] !== undefined);
+    logActivity(pid, req.userId, 'project_updated', { entityType: 'project', entityId: Number(pid), title: '更新了项目信息', detail: { fields: changedFields } });
     invalidateProjectCaches().catch(() => {});
     broadcast('project', 'updated', { id: pid, userId: req.userId });
     res.json({ success: true });

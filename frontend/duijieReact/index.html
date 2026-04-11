@@ -231,10 +231,15 @@
               var w = reg.installing;
               if (w) w.addEventListener('statechange', function() {
                 if (w.state === 'installed' && navigator.serviceWorker.controller) {
-                  w.postMessage({ type: 'SKIP_WAITING' });
+                  window.__swWaiting = w;
+                  window.dispatchEvent(new Event('sw-update-available'));
                 }
               });
             });
+            if (reg.waiting) {
+              window.__swWaiting = reg.waiting;
+              window.dispatchEvent(new Event('sw-update-available'));
+            }
             reg.update();
             setInterval(function() { reg.update(); }, 60000);
           }).catch(function(){});

@@ -1,9 +1,10 @@
-import { useState, useCallback, useEffect } from 'react'
-import { Plus, Check } from 'lucide-react'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { Plus, Check, ChevronDown, Trash2, RotateCcw } from 'lucide-react'
 import { fetchApi } from '../../../bootstrap'
 import { toast } from '../../ui/Toast'
 import Button from '../../ui/Button'
 import Modal from '../../ui/Modal'
+import { confirm } from '../../ui/ConfirmDialog'
 import TodoDetailModal from './TodoDetailModal'
 
 interface TodoItem {
@@ -40,6 +41,16 @@ export default function TodoTab({ projectId, canEdit, isMobile, currentUserId, m
   const [newDesc, setNewDesc] = useState('')
   const [saving, setSaving] = useState(false)
   const [detailId, setDetailId] = useState<number | null>(null)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 })
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const [filterOpen, setFilterOpen] = useState(false)
+  const filterRef = useRef<HTMLDivElement>(null)
+  const [deleteMode, setDeleteMode] = useState(false)
+  const [deleteSelected, setDeleteSelected] = useState<Set<number>>(new Set())
+  const [showTrash, setShowTrash] = useState(false)
+  const [trashItems, setTrashItems] = useState<TodoItem[]>([])
+  const [trashLoading, setTrashLoading] = useState(false)
 
   const load = useCallback(() => {
     fetchApi(`/api/milestones?project_id=${projectId}`).then(r => {
@@ -49,6 +60,16 @@ export default function TodoTab({ projectId, canEdit, isMobile, currentUserId, m
   }, [projectId])
 
   useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    if (!dropdownOpen && !filterOpen) return
+    const h = (e: MouseEvent) => {
+      if (dropdownOpen && dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setDropdownOpen(false)
+      if (filterOpen && filterRef.current && !filterRef.current.contains(e.target as Node)) setFilterOpen(false)
+    }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [dropdownOpen, filterOpen])
 
   const handleAdd = async () => {
     if (!newTitle.trim()) return
@@ -64,6 +85,36 @@ export default function TodoTab({ projectId, canEdit, isMobile, currentUserId, m
       setShowCreate(false)
       load()
     } else toast(r.message || '添加失败', 'error')
+  }
+
+  const handleDeleteSelected = async () => {
+    if (deleteSelected.size === 0) return
+    if (!(await confirm({ message: `确定删除选中的 ${deleteSelected.size} 个代办？删除后可在回收站恢复。` }))) return
+    let ok = 0
+    for (const id of deleteSelected) {
+      const r = await fetchApi(`/api/milestones/${id}`, { method: 'DELETE' })
+      if (r.success) ok++
+    }
+    toast(`已删除 ${ok} 个代办`, 'success')
+    setDeleteSelected(new Set())
+    setDeleteMode(false)
+    load()
+  }
+
+  const loadTrash = async () => {
+    setTrashLoading(true)
+    const r = await fetchApi(`/api/milestones/trash?project_id=${projectId}`)
+    if (r.success) setTrashItems(r.data || [])
+    setTrashLoading(false)
+  }
+
+  const handleRestore = async (id: number) => {
+    const r = await fetchApi(`/api/milestones/${id}/restore`, { method: 'PATCH' })
+    if (r.success) {
+      toast('已恢复', 'success')
+      loadTrash()
+      load()
+    } else toast(r.message || '恢复失败', 'error')
   }
 
   const filtered = items.filter(i => {
@@ -84,34 +135,108 @@ export default function TodoTab({ projectId, canEdit, isMobile, currentUserId, m
   if (loading) return <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}>加载中...</div>
 
   return (
-    <div style={{ background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexShrink: 0 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>代办</h2>
-        {canEdit && (
-          <button onClick={() => setShowCreate(true)} style={{
-            display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 8, border: 'none',
-            background: 'var(--brand)', color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer',
-          }}>
-            <Plus size={14} /> 新增
-          </button>
-        )}
+    <div style={{ background: 'var(--bg-primary)', borderRadius: isMobile ? 0 : 12, padding: isMobile ? 12 : 20, boxShadow: isMobile ? 'none' : '0 1px 3px rgba(0,0,0,0.06)', marginBottom: isMobile ? 0 : 16, flex: isMobile ? 1 : undefined, display: 'flex', flexDirection: 'column', minHeight: isMobile ? 0 : undefined }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'flex-start' : 'space-between', marginBottom: isMobile ? 8 : 12, flexWrap: isMobile ? 'nowrap' : 'wrap', gap: 8 }}>
+        {!isMobile && <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>代办</h2>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'nowrap', flex: isMobile ? 1 : undefined }}>
+          {isMobile ? (
+            <div ref={filterRef} style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+              <button onClick={() => setFilterOpen(!filterOpen)} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
+                padding: '6px 8px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 12,
+                background: 'var(--bg-primary)', color: 'var(--text-heading)', cursor: 'pointer',
+              }}>
+                <span>{statusFilters.find(s => s.key === filter)?.label || '全部'} ({filter === 'all' ? items.length : filter === 'pending' ? pendingCount : completedCount})</span>
+                <ChevronDown size={14} style={{ flexShrink: 0, color: 'var(--text-tertiary)' }} />
+              </button>
+              {filterOpen && (() => {
+                const rect = filterRef.current?.getBoundingClientRect()
+                const spaceBelow = rect ? window.innerHeight - rect.bottom : 200
+                const openUp = spaceBelow < 140
+                return (
+                  <div style={{
+                    position: 'absolute', left: 0, [openUp ? 'bottom' : 'top']: openUp ? '100%' : '100%',
+                    marginTop: openUp ? 0 : 4, marginBottom: openUp ? 4 : 0,
+                    background: 'var(--bg-primary)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                    border: '1px solid var(--border-primary)', minWidth: '100%', zIndex: 1000, overflow: 'hidden',
+                  }}>
+                    {statusFilters.map(sf => {
+                      const count = sf.key === 'all' ? items.length : sf.key === 'pending' ? pendingCount : completedCount
+                      return (
+                        <button key={sf.key} onClick={() => { setFilter(sf.key); setFilterOpen(false) }} style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
+                          padding: '10px 12px', border: 'none', background: filter === sf.key ? 'rgba(59,130,246,0.08)' : 'none',
+                          cursor: 'pointer', fontSize: 13, color: filter === sf.key ? 'var(--brand)' : 'var(--text-body)', fontWeight: filter === sf.key ? 600 : 400,
+                        }}>
+                          <span>{sf.label} ({count})</span>
+                          {filter === sf.key && <Check size={14} />}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )
+              })()}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {statusFilters.map(sf => {
+                const count = sf.key === 'all' ? items.length : sf.key === 'pending' ? pendingCount : completedCount
+                const active = filter === sf.key
+                return (
+                  <button key={sf.key} onClick={() => setFilter(sf.key)} style={{
+                    padding: '6px 14px', borderRadius: 20, border: 'none', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+                    background: active ? 'var(--brand)' : 'var(--bg-tertiary)',
+                    color: active ? '#fff' : 'var(--text-secondary)',
+                  }}>
+                    {sf.label} ({count})
+                  </button>
+                )
+              })}
+            </div>
+          )}
+          {canEdit && <>
+            <button onClick={() => setShowCreate(true)} style={{
+              display: 'flex', alignItems: 'center', gap: isMobile ? 3 : 4, padding: isMobile ? '6px 10px' : '6px 14px', borderRadius: 8, border: 'none',
+              background: 'var(--brand)', color: '#fff', fontSize: isMobile ? 12 : 13, fontWeight: 500, cursor: 'pointer', flexShrink: 0,
+            }}>
+              <Plus size={isMobile ? 12 : 14} /> 新增
+            </button>
+            <div ref={dropdownRef} style={{ position: 'relative', flexShrink: 0 }}>
+              <button onClick={() => {
+                setDropdownOpen(!dropdownOpen)
+                if (!dropdownOpen && dropdownRef.current) {
+                  const r = dropdownRef.current.getBoundingClientRect()
+                  setDropdownPos({ top: r.bottom + 4, right: window.innerWidth - r.right })
+                }
+              }} style={{
+                display: 'flex', alignItems: 'center', padding: isMobile ? '6px 8px' : '8px 10px', borderRadius: 8,
+                background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)', cursor: 'pointer',
+              }}><ChevronDown size={16} /></button>
+              {dropdownOpen && (
+                <div style={{ position: 'fixed', top: dropdownPos.top, right: Math.max(Math.min(dropdownPos.right, window.innerWidth - 136), 8), background: 'var(--bg-primary)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid var(--border-primary)', minWidth: 120, zIndex: 1000, overflow: 'hidden' }}>
+                  <button onClick={() => { setDropdownOpen(false); setDeleteSelected(new Set()); setDeleteMode(true) }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--color-danger)' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#fef2f2')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                    <Trash2 size={14} /> 删除
+                  </button>
+                  <button onClick={() => { setDropdownOpen(false); setShowTrash(true); loadTrash() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', border: 'none', background: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-secondary)' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-tertiary)')} onMouseLeave={e => (e.currentTarget.style.background = 'none')}>
+                    <Trash2 size={14} /> 回收站
+                  </button>
+                </div>
+              )}
+            </div>
+          </>}
+        </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexShrink: 0, flexWrap: 'wrap' }}>
-        {statusFilters.map(sf => {
-          const count = sf.key === 'all' ? items.length : sf.key === 'pending' ? pendingCount : completedCount
-          const active = filter === sf.key
-          return (
-            <button key={sf.key} onClick={() => setFilter(sf.key)} style={{
-              padding: '6px 14px', borderRadius: 20, border: 'none', fontSize: 13, fontWeight: 500, cursor: 'pointer',
-              background: active ? 'var(--brand)' : 'var(--bg-tertiary)',
-              color: active ? '#fff' : 'var(--text-secondary)',
-            }}>
-              {sf.label} ({count})
-            </button>
-          )
-        })}
-      </div>
+      {deleteMode && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, padding: '8px 12px', background: '#fef2f2', borderRadius: 8 }}>
+          <span style={{ fontSize: 13, color: 'var(--color-danger)', fontWeight: 500 }}>已选 {deleteSelected.size} 项</span>
+          <div style={{ flex: 1 }} />
+          <Button variant="secondary" onClick={() => { setDeleteMode(false); setDeleteSelected(new Set()) }} style={{ fontSize: 12, padding: '4px 10px' }}>取消</Button>
+          <Button onClick={handleDeleteSelected} disabled={deleteSelected.size === 0} style={{ fontSize: 12, padding: '4px 10px', background: 'var(--color-danger)' }}>删除</Button>
+        </div>
+      )}
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {filtered.length === 0 ? (
@@ -127,22 +252,39 @@ export default function TodoTab({ projectId, canEdit, isMobile, currentUserId, m
             {filtered.map(item => (
               <div
                 key={item.id}
-                onClick={() => setDetailId(item.id)}
+                onClick={() => {
+                  if (deleteMode) {
+                    setDeleteSelected(prev => {
+                      const next = new Set(prev)
+                      next.has(item.id) ? next.delete(item.id) : next.add(item.id)
+                      return next
+                    })
+                  } else {
+                    setDetailId(item.id)
+                  }
+                }}
                 style={{
-                  background: 'var(--bg-secondary)', borderRadius: 10, padding: 16,
-                  border: '1px solid var(--border-primary)', cursor: 'pointer',
-                  transition: 'all 0.15s', display: 'flex', flexDirection: 'column',
+                  background: deleteMode && deleteSelected.has(item.id) ? 'rgba(239,68,68,0.06)' : 'var(--bg-secondary)',
+                  borderRadius: 10, padding: 16,
+                  border: `1px solid ${deleteMode && deleteSelected.has(item.id) ? 'var(--color-danger)' : 'var(--border-primary)'}`,
+                  cursor: 'pointer', transition: 'all 0.15s', display: 'flex', flexDirection: 'column',
                   gap: 8, minHeight: 120, position: 'relative',
                 }}
                 onMouseEnter={e => {
-                  e.currentTarget.style.borderColor = 'var(--brand)'
-                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'
+                  if (!deleteMode) { e.currentTarget.style.borderColor = 'var(--brand)'; e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)' }
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.borderColor = 'var(--border-primary)'
-                  e.currentTarget.style.boxShadow = 'none'
+                  if (!deleteMode) { e.currentTarget.style.borderColor = 'var(--border-primary)'; e.currentTarget.style.boxShadow = 'none' }
                 }}
               >
+                {deleteMode && (
+                  <div style={{ position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: 4,
+                    border: `2px solid ${deleteSelected.has(item.id) ? 'var(--color-danger)' : 'var(--border-primary)'}`,
+                    background: deleteSelected.has(item.id) ? 'var(--color-danger)' : 'transparent',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {deleteSelected.has(item.id) && <Check size={12} color="#fff" />}
+                  </div>
+                )}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{
                     fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 4,
@@ -151,7 +293,7 @@ export default function TodoTab({ projectId, canEdit, isMobile, currentUserId, m
                   }}>
                     {item.is_completed ? '已完成' : '进行中'}
                   </span>
-                  {item.is_completed && (
+                  {!deleteMode && item.is_completed && (
                     <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Check size={12} color="#fff" />
                     </div>
@@ -223,6 +365,33 @@ export default function TodoTab({ projectId, canEdit, isMobile, currentUserId, m
             <Button variant="secondary" onClick={() => { setShowCreate(false); setNewTitle(''); setNewDesc('') }}>取消</Button>
             <Button onClick={handleAdd} disabled={saving || !newTitle.trim()}>{saving ? '添加中...' : '添加'}</Button>
           </div>
+        </div>
+      </Modal>
+
+      <Modal open={showTrash} onClose={() => setShowTrash(false)} title="回收站">
+        <div style={{ minHeight: 120 }}>
+          {trashLoading ? (
+            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)' }}>加载中...</div>
+          ) : trashItems.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)', fontSize: 14 }}>回收站为空</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {trashItems.map(item => (
+                <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: 'var(--bg-secondary)', borderRadius: 8, border: '1px solid var(--border-primary)' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>{formatDt(item.created_at)}</div>
+                  </div>
+                  <button onClick={() => handleRestore(item.id)} style={{
+                    display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 6, border: 'none',
+                    background: 'var(--brand)', color: '#fff', fontSize: 12, fontWeight: 500, cursor: 'pointer', flexShrink: 0,
+                  }}>
+                    <RotateCcw size={12} /> 恢复
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </Modal>
     </div>

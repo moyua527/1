@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { LogOut, User, Shield, ChevronRight, ChevronLeft, ChevronDown, Palette, Bell, Settings, Search, HelpCircle, Volume2, LayoutGrid, UserCircle, Home, Star } from 'lucide-react'
+import { LogOut, User, Shield, ChevronRight, ChevronLeft, ChevronDown, Palette, Bell, Settings, Search, HelpCircle, Volume2, UserCircle, Home, Star, FolderKanban } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
 import { can } from '../../stores/permissions'
@@ -140,11 +140,11 @@ export default function Layout() {
 
   if (isMobile && prevPathRef.current !== location.pathname) {
     const prev = prevPathRef.current
-    const mainPages = ['/', '/services', '/my']
-    const wasMain = mainPages.includes(prev)
-    const isMain = mainPages.includes(location.pathname)
-    if (isMain && wasMain) pageAnimRef.current = 'page-fade'
-    else if (isMain && !wasMain) pageAnimRef.current = 'page-slide-left'
+    const tabPages = ['/', '/projects', '/my']
+    const wasTab = tabPages.includes(prev)
+    const isTab = tabPages.includes(location.pathname)
+    if (wasTab && isTab) pageAnimRef.current = ''
+    else if (isTab && !wasTab) pageAnimRef.current = 'page-slide-left'
     else pageAnimRef.current = 'page-slide-right'
     prevPathRef.current = location.pathname
   }
@@ -200,7 +200,7 @@ export default function Layout() {
   const swipeOverlayRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!isMobile) return
-    const mainPages = ['/', '/services', '/my']
+    const mainPages = ['/', '/projects', '/my']
     let startX = 0, startY = 0, tracking = false, confirmed = false
 
     const onTouchStart = (e: TouchEvent) => {
@@ -519,14 +519,20 @@ export default function Layout() {
         {/* ===== 主内容区 ===== */}
         <main ref={mainRef} data-tour="main-content"
           style={{
-            flex: 1, overflow: 'auto', minHeight: 0,
+            flex: 1, overflow: 'auto', minHeight: 0, position: 'relative',
             padding: isMobile ? '20px 16px' : 24,
-            paddingBottom: isMobile ? (['/', '/services', '/my'].includes(location.pathname) ? 20 : 'max(32px, env(safe-area-inset-bottom, 32px))') : 24,
+            paddingBottom: isMobile ? (['/', '/projects', '/my'].includes(location.pathname) ? 20 : 'max(32px, env(safe-area-inset-bottom, 32px))') : 24,
             WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain',
           }}>
           {isMobile && (ptrY > 0 || ptrRefreshing) && (
-            <div style={{ display: 'flex', justifyContent: 'center', height: ptrY || 55, overflow: 'hidden', transition: ptrY > 0 ? 'none' : 'height 0.25s ease' }}>
-              <div style={{ width: 24, height: 24, borderRadius: '50%', border: '2.5px solid #e5e7eb', borderTopColor: 'var(--brand)', margin: 'auto',
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0, zIndex: 50,
+              display: 'flex', justifyContent: 'center', paddingTop: Math.max(ptrY - 30, 4),
+              pointerEvents: 'none',
+            }}>
+              <div style={{ width: 28, height: 28, borderRadius: '50%', border: '2.5px solid #e5e7eb', borderTopColor: 'var(--brand)',
+                background: 'var(--bg-primary)', boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
                 animation: ptrRefreshing ? 'ptr-spin .7s linear infinite' : 'none',
                 transform: ptrRefreshing ? 'none' : `rotate(${Math.min(ptrY / 55, 1) * 360}deg)`,
                 opacity: Math.min(ptrY / 30, 1),
@@ -554,7 +560,7 @@ export default function Layout() {
       </div>
 
       {/* ===== Mobile 底部导航栏（仅主页面显示） ===== */}
-      {isMobile && ['/', '/services', '/my'].includes(location.pathname) && (
+      {isMobile && ['/', '/projects', '/my'].includes(location.pathname) && (
         <nav data-tour="mobile-nav" style={{
           flexShrink: 0, background: 'var(--bg-primary)',
           borderTop: '1px solid var(--border-primary)',
@@ -568,26 +574,18 @@ export default function Layout() {
               color: location.pathname === '/' ? 'var(--brand)' : 'var(--text-tertiary)',
               fontSize: 11, fontWeight: location.pathname === '/' ? 600 : 400,
             }}>
-            <Home size={24} />
+            <Home size={22} />
             <span>首页</span>
           </NavLink>
-          <NavLink to="/services" data-tour="mobile-services"
+          <NavLink to="/projects" data-tour="mobile-projects"
             style={{
               display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 2,
-              padding: '4px 0', textDecoration: 'none', flex: 1, position: 'relative',
-              color: location.pathname !== '/' && location.pathname !== '/my' ? 'var(--brand)' : 'var(--text-tertiary)',
-              fontSize: 11, fontWeight: location.pathname !== '/' && location.pathname !== '/my' ? 600 : 400,
+              padding: '4px 0', textDecoration: 'none', flex: 1,
+              color: location.pathname.startsWith('/projects') ? 'var(--brand)' : 'var(--text-tertiary)',
+              fontSize: 11, fontWeight: location.pathname.startsWith('/projects') ? 600 : 400,
             }}>
-            <LayoutGrid size={24} />
-            <span>服务</span>
-            {dmUnread > 0 && (
-              <span style={{
-                position: 'absolute', top: 0, left: '50%', marginLeft: 8,
-                minWidth: 14, height: 14, borderRadius: 7, background: 'var(--color-danger)', color: '#fff',
-                fontSize: 8, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                padding: '0 3px',
-              }}>{dmUnread > 99 ? '99+' : dmUnread}</span>
-            )}
+            <FolderKanban size={22} />
+            <span>项目</span>
           </NavLink>
           <NavLink to="/my" data-tour="mobile-my"
             style={{
@@ -596,7 +594,7 @@ export default function Layout() {
               color: location.pathname === '/my' ? 'var(--brand)' : 'var(--text-tertiary)',
               fontSize: 11, fontWeight: location.pathname === '/my' ? 600 : 400,
             }}>
-            <UserCircle size={24} />
+            <UserCircle size={22} />
             <span>我的</span>
           </NavLink>
         </nav>

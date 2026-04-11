@@ -1,4 +1,4 @@
-const CACHE_NAME = 'duijie-v42';
+const CACHE_NAME = 'duijie-v67';
 const MAX_CACHE_ITEMS = 100;
 
 // 缓存清理：限制缓存条目数
@@ -12,7 +12,7 @@ async function trimCache(cacheName, maxItems) {
 }
 
 self.addEventListener('install', (e) => {
-  self.skipWaiting();
+  // 不再自动 skipWaiting，由前端用户主动触发更新
 });
 
 self.addEventListener('message', (e) => {
@@ -37,10 +37,10 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // HTML navigation (index.html): network-first
+  // HTML navigation (index.html): network-first, bypass HTTP cache
   if (e.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html')) {
     e.respondWith(
-      fetch(e.request).then((res) => {
+      fetch(new Request(e.request, { cache: 'no-store' })).then((res) => {
         if (res.ok) {
           const clone = res.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));

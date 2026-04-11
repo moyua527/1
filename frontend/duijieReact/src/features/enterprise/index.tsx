@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import { Users, Building, FolderTree, LogIn, KeyRound, FolderKanban, UserPlus } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { useEnterprise } from './useEnterprise'
@@ -18,6 +19,7 @@ import JoinCreateModals from './JoinCreateModals'
 
 export default function Enterprise() {
   const h = useEnterprise()
+  const { isMobile } = useOutletContext<{ isMobile: boolean }>()
   const [pendingRequestCount, setPendingRequestCount] = useState(0)
 
   useEffect(() => {
@@ -64,8 +66,13 @@ export default function Enterprise() {
 
   return (
     <div>
-      <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-heading)', marginBottom: 4 }}>企业管理</h1>
-      <p style={{ fontSize: 14, color: 'var(--text-tertiary)', marginBottom: 20, marginTop: 0 }}>管理企业信息、部门与组织成员</p>
+      <div style={{
+        textAlign: isMobile ? 'center' : undefined, marginBottom: isMobile ? 12 : 0,
+        ...(isMobile ? { position: 'sticky', top: -20, zIndex: 10, background: 'var(--bg-secondary)', margin: '-20px -16px 12px', padding: '16px 16px 10px' } : {}),
+      }}>
+        <h1 style={{ fontSize: isMobile ? 20 : 22, fontWeight: 700, color: 'var(--text-heading)', marginBottom: 4 }}>企业管理</h1>
+        {!isMobile && <p style={{ fontSize: 14, color: 'var(--text-tertiary)', marginBottom: 20, marginTop: 0 }}>管理企业信息、部门与组织成员</p>}
+      </div>
 
       {/* Tab 栏 */}
       <div style={{ display: 'flex', gap: 0, borderBottom: '2px solid var(--border-primary)', marginBottom: 16 }}>

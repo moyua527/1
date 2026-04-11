@@ -13,6 +13,7 @@ import { confirm } from '../../ui/ConfirmDialog'
 import { toast } from '../../ui/Toast'
 import TaskTab from './TaskTab'
 import TodoTab from './TodoTab'
+
 import ProjectFileTab from './ProjectFileTab'
 import ProjectSettingsTab from './ProjectSettingsTab'
 import MessagePanel from '../../message/components/MessagePanel'
@@ -318,7 +319,7 @@ export default function ProjectDetail() {
   void _openManageClientMembers
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 56px - 48px)', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: isMobile ? 'calc(100dvh - 52px)' : 'calc(100vh - 56px - 48px)', overflow: 'hidden' }}>
       {projectTabs.length > 0 && (
         <div style={{ display: 'flex', gap: 0, marginBottom: 0, flexShrink: 0, alignItems: 'stretch', background: 'linear-gradient(180deg, rgba(59,130,246,0.10) 0%, rgba(59,130,246,0.04) 100%)', borderRadius: '10px 10px 0 0', padding: '0 4px' }}>
           <div onClick={() => nav('/projects')}
@@ -425,15 +426,15 @@ export default function ProjectDetail() {
           onRefreshAvailable={refreshClientAvailableUsers}
         />
 
-      {tab === 'tasks' && <TaskTab tasks={tasks} canEdit={canCreateTask} projectId={id!} loadTasks={loadTasks} />}
+      {tab === 'tasks' && <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}><TaskTab tasks={tasks} canEdit={canCreateTask} projectId={id!} loadTasks={loadTasks} /></div>}
 
       {tab === 'todo' && <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}><TodoTab projectId={id!} canEdit={isAdmin || !!projectPerms?.can_create_milestone || !!projectPerms?.can_edit_milestone} isMobile={isMobile} currentUserId={user?.id} members={allMembers} /></div>}
 
       {tab === 'files' && <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}><ProjectFileTab projectId={id!} canEdit={isAdmin || !!projectPerms?.can_upload_file || !!projectPerms?.can_delete_file} members={allMembers} currentUserId={user?.id} /></div>}
 
-      {tab === 'messages' && <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}><div style={{ background: 'var(--bg-primary)', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}><MessagePanel projectId={id!} /></div></div>}
+      {tab === 'messages' && <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}><div style={{ flex: 1, minHeight: 0, background: 'var(--bg-primary)', borderRadius: isMobile ? 0 : 12, boxShadow: isMobile ? 'none' : '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}><MessagePanel projectId={id!} /></div></div>}
 
-      {tab === 'settings' && <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}><ProjectSettingsTab project={project} projectId={id!} isOwner={isOwner} canManageRole={canManageRole} canApproveJoin={canApproveJoin} canEdit={canEdit} canDelete={canDelete} pendingJoinCount={pendingJoinCount} onRefreshProject={loadProject} onRefreshJoinCount={loadPendingJoinCount} onOpenAddMember={() => { setShowAddMember(true); refreshAvailableUsers() }} onMemberClick={setSelectedMember} onEditProject={() => setShowEditProject(true)} onDeleteProject={handleDelete} tasks={tasks} /></div>}
+      {tab === 'settings' && <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}><ProjectSettingsTab project={project} projectId={id!} isOwner={isOwner} canManageRole={canManageRole} canApproveJoin={canApproveJoin} canEdit={canEdit} canDelete={canDelete} pendingJoinCount={pendingJoinCount} onRefreshProject={loadProject} onRefreshJoinCount={loadPendingJoinCount} onOpenAddMember={() => { setShowAddMember(true); refreshAvailableUsers() }} onMemberClick={setSelectedMember} onEditProject={() => setShowEditProject(true)} onDeleteProject={handleDelete} tasks={tasks} isMobile={isMobile} /></div>}
 
 
       <SetClientModal open={showSetClient} hasExternalEnterprise={false}

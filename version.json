@@ -1,7 +1,7 @@
 {
-  "version": "1.3.41",
-  "versionCode": 343,
+  "version": "1.3.76",
+  "versionCode": 378,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "角色体系规范化+企业/项目业务编号(display_id)"
+  "changelog": "修复移动端资料组列表未铺满屏幕"
 }

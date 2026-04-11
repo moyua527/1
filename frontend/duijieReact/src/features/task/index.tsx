@@ -62,12 +62,15 @@ export default function TaskBoard() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'flex-start', marginBottom: isMobile ? 12 : 20, flexWrap: 'wrap', gap: isMobile ? 8 : 12, flexDirection: isMobile ? 'column' : 'row' }}>
-        <div>
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: isMobile ? 'stretch' : 'flex-start', marginBottom: isMobile ? 12 : 20, flexWrap: 'wrap', gap: isMobile ? 8 : 12, flexDirection: isMobile ? 'column' : 'row',
+        ...(isMobile ? { position: 'sticky', top: -20, zIndex: 10, background: 'var(--bg-secondary)', margin: '-20px -16px 12px', padding: '16px 16px 10px' } : {}),
+      }}>
+        <div style={{ textAlign: isMobile ? 'center' : undefined, width: isMobile ? '100%' : undefined }}>
           <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>需求看板</h1>
-          <p style={{ color: 'var(--text-secondary)', margin: '4px 0 0', fontSize: 13 }}>
+          {!isMobile && <p style={{ color: 'var(--text-secondary)', margin: '4px 0 0', fontSize: 13 }}>
             共 {filtered.length} 个需求{filterProject ? '' : '（全部项目）'}
-          </p>
+          </p>}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <div style={{ position: 'relative', flex: isMobile ? '1 1 100%' : '0 0 auto' }}>

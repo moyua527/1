@@ -74,7 +74,7 @@ describe('useI18nStore', () => {
 
   it('translates keys', () => {
     const { t } = useI18nStore.getState()
-    expect(t('nav.dashboard')).toBe('仪表盘')
+    expect(t('nav.dashboard')).toBe('首页')
     expect(t('common.save')).toBe('保存')
   })
 

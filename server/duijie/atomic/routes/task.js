@@ -55,6 +55,8 @@ router.post('/milestones', auth, require('../controllers/milestone/createControl
 router.get('/milestones', auth, require('../controllers/milestone/listController'));
 router.put('/milestones/:id', auth, require('../controllers/milestone/updateController'));
 router.delete('/milestones/:id', auth, require('../controllers/milestone/deleteController'));
+router.get('/milestones/trash', auth, require('../controllers/milestone/trashController'));
+router.patch('/milestones/:id/restore', auth, require('../controllers/milestone/restoreController'));
 router.patch('/milestones/:id/toggle', auth, require('../controllers/milestone/toggleController'));
 router.patch('/milestones/:id/progress', auth, require('../controllers/milestone/updateProgressController'));
 router.get('/milestones/:id/detail', auth, require('../controllers/milestone/detailController'));

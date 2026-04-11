@@ -10,10 +10,15 @@ interface Props {
 export default function PageHeader({ title, subtitle, actions }: Props) {
   const isMobile = useIsMobile()
   if (isMobile) {
-    if (!actions) return null
     return (
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8, gap: 8, flexWrap: 'wrap' }}>
-        {actions}
+      <div style={{
+        position: 'sticky', top: -20, zIndex: 10,
+        background: 'var(--bg-secondary)', margin: '-20px -16px 12px', padding: '16px 16px 10px',
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: actions ? 8 : 0 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>{title}</h1>
+        </div>
+        {actions && <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, flexWrap: 'wrap' }}>{actions}</div>}
       </div>
     )
   }

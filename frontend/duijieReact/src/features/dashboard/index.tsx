@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { FolderKanban, Users, ListTodo, CheckCircle, TrendingUp, Clock, Loader2, FileSignature, AlertTriangle, Bell, MessageSquare } from 'lucide-react'
+import { FolderKanban, Users, ListTodo, CheckCircle, TrendingUp, Clock, Loader2, FileSignature, AlertTriangle, Bell, MessageSquare, LayoutGrid } from 'lucide-react'
 import { can } from '../../stores/permissions'
 import { useDashboardStats, useDashboardChart } from '../../hooks/useApi'
 import DashboardCharts from './DashboardCharts'
 import ClientDashboard from './ClientDashboard'
 import WorkspaceSection from './WorkspaceSection'
+import { navItems, navItemsByGroup } from '../../data/routeManifest'
 
 interface Stats {
   totalProjects: number; planningProjects: number; activeProjects: number; completedProjects: number
@@ -37,14 +38,34 @@ const iconBox = (bg: string): React.CSSProperties => ({
 
 export default function Dashboard() {
   const [chartDays, setChartDays] = useState(30)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
   const nav = useNavigate()
   const { user, isMobile } = useOutletContext<{ user: any; isMobile?: boolean }>()
   const r = user?.role || ''
   const canClients = can(r, 'dashboard:clients')
   const canTasks = can(r, 'dashboard:tasks')
 
+  useEffect(() => {
+    if (!menuOpen) return
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [menuOpen])
+
+  useEffect(() => {
+    if (!menuOpen) return
+    const main = document.querySelector('[data-tour="main-content"]') as HTMLElement | null
+    if (main) main.style.overflow = 'hidden'
+    return () => { if (main) main.style.overflow = '' }
+  }, [menuOpen])
 
   const isClient = r === 'client'
+
+  const serviceItems = navItems().filter(n => n.path !== '/' && n.path !== '/projects' && (!n.perm || can(r, n.perm)))
+  const serviceGroups = navItemsByGroup(serviceItems)
 
   const { data: stats } = useDashboardStats() as { data: Stats | undefined }
   const { data: chartData } = useDashboardChart(chartDays) as { data: any }
@@ -68,9 +89,62 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>仪表盘</h1>
-        <p style={{ color: 'var(--text-secondary)', margin: '4px 0 0', fontSize: 14 }}>项目对接平台概览</p>
+      <div style={{
+        marginBottom: isMobile ? 12 : 24, textAlign: isMobile ? 'center' : undefined, position: isMobile ? 'sticky' : 'relative',
+        ...(isMobile ? { top: -20, zIndex: 10, background: 'var(--bg-secondary)', margin: '-20px -16px 12px', padding: '16px 16px 10px' } : {}),
+      }}>
+        {isMobile ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+            <div ref={menuRef} style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)' }}>
+              <button onClick={() => setMenuOpen(v => !v)} style={{
+                background: 'transparent', border: 'none', borderRadius: 10,
+                width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: 'var(--text-secondary)',
+              }}>
+                <LayoutGrid size={20} />
+              </button>
+              {menuOpen && (
+                <>
+                  <div onClick={() => setMenuOpen(false)} style={{
+                    position: 'fixed', inset: 0, zIndex: 199, background: 'rgba(0,0,0,0.15)',
+                  }} />
+                  <div style={{
+                    position: 'absolute', top: 42, left: 0, zIndex: 200,
+                    background: 'var(--bg-primary)', borderRadius: 16, padding: 12,
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.16)', border: '1px solid var(--border-primary)',
+                    width: 280, maxHeight: '70vh', overflowY: 'auto',
+                  }}>
+                    {serviceGroups.map(g => (
+                      <div key={g.key} style={{ marginBottom: 10 }}>
+                        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', padding: '4px 6px', letterSpacing: '0.03em' }}>{g.label}</div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2 }}>
+                          {g.items.map(item => (
+                            <div key={item.path} onClick={() => { setMenuOpen(false); nav(item.path) }}
+                              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '10px 4px', borderRadius: 10, cursor: 'pointer' }}>
+                              <div style={{
+                                width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                background: 'var(--bg-tertiary)', color: 'var(--text-secondary)',
+                              }}>
+                                <item.icon size={20} />
+                              </div>
+                              <span style={{ fontSize: 11, color: 'var(--text-secondary)', textAlign: 'center', lineHeight: 1.2 }}>{item.mobileLabel || item.label}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>首页</h1>
+          </div>
+        ) : (
+          <>
+            <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>首页</h1>
+            <p style={{ color: 'var(--text-secondary)', margin: '4px 0 0', fontSize: 14 }}>项目对接平台概览</p>
+          </>
+        )}
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
         {items.map(item => (

@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Loader2, Trash2, Download, FileText, Image, FileSpreadsheet, Film, File, CheckSquare, Square, Search, Pencil, Link2, Plus, ExternalLink, X, StickyNote, Paperclip, FolderOpen, Users, Lock, Globe } from 'lucide-react'
+import { Loader2, Trash2, Download, FileText, Image, FileSpreadsheet, Film, File, CheckSquare, Square, Search, Pencil, Link2, Plus, ExternalLink, X, StickyNote, Paperclip, FolderOpen, Users, Lock, Globe, ChevronDown, Check } from 'lucide-react'
+import useIsMobile from '../../ui/useIsMobile'
 import { fetchApi, BACKEND_URL } from '../../../bootstrap'
 import { fileApi, resourceGroupApi } from '../../file/services/api'
 import Button from '../../ui/Button'
@@ -69,6 +70,7 @@ interface Props {
 }
 
 export default function ProjectFileTab({ projectId, canEdit, members = [], currentUserId }: Props) {
+  const isMobile = useIsMobile()
   const [viewMode, setViewMode] = useState<'groups' | 'files'>('groups')
   const [groups, setGroups] = useState<any[]>([])
   const [groupsLoading, setGroupsLoading] = useState(true)
@@ -91,6 +93,15 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
   const [editVisibility, setEditVisibility] = useState<'all' | 'selected'>('all')
   const [editVisibleUsers, setEditVisibleUsers] = useState<number[]>([])
   const [showAddMenu, setShowAddMenu] = useState(false)
+  const [catFilterOpen, setCatFilterOpen] = useState(false)
+  const catFilterRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!catFilterOpen) return
+    const h = (e: MouseEvent) => { if (catFilterRef.current && !catFilterRef.current.contains(e.target as Node)) setCatFilterOpen(false) }
+    document.addEventListener('mousedown', h)
+    return () => document.removeEventListener('mousedown', h)
+  }, [catFilterOpen])
 
   const isGroupCreator = (g: any) => g && currentUserId && String(g.created_by) === String(currentUserId)
 
@@ -336,7 +347,16 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
     load()
   }
 
-  const handleDownload = (f: any) => { window.open(`${BACKEND_URL}/api/files/${f.id}/download`, '_blank') }
+  const handleDownload = (f: any) => {
+    const a = document.createElement('a')
+    a.href = `${BACKEND_URL}/api/files/${f.id}/download`
+    a.download = f.original_name || 'download'
+    a.target = '_blank'
+    a.rel = 'noopener'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }
 
   const getPreviewUrl = (f: any) => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token')
@@ -346,38 +366,60 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
   const currentAddType = addTypes.find(t => t.key === modalTab)
 
   return (
-    <div style={section}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
-        <div>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>资料库</h3>
-          <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
+    <div style={{ ...section, ...(isMobile ? { borderRadius: 0, boxShadow: 'none', marginBottom: 0, flex: 1, display: 'flex', flexDirection: 'column' as const, minHeight: 0 } : {}) }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'flex-start' : 'space-between', marginBottom: isMobile ? 8 : 16, flexWrap: isMobile ? 'nowrap' : 'wrap', gap: isMobile ? 6 : 10 }}>
+        {!isMobile && (
+          <div>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>资料库</h3>
+            <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
+              {(['groups', 'files'] as const).map(m => (
+                <button key={m} onClick={() => setViewMode(m)}
+                  style={{ padding: '3px 10px', borderRadius: 6, border: 'none', fontSize: 12, cursor: 'pointer', fontWeight: 500, background: viewMode === m ? 'var(--brand)' : 'var(--bg-tertiary)', color: viewMode === m ? '#fff' : 'var(--text-secondary)', transition: 'all 0.15s' }}>
+                  {m === 'groups' ? '资料组' : '全部文件'}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        {isMobile && (
+          <div style={{ display: 'flex', gap: 4 }}>
             {(['groups', 'files'] as const).map(m => (
               <button key={m} onClick={() => setViewMode(m)}
-                style={{ padding: '3px 10px', borderRadius: 6, border: 'none', fontSize: 12, cursor: 'pointer', fontWeight: 500, background: viewMode === m ? 'var(--brand)' : 'var(--bg-tertiary)', color: viewMode === m ? '#fff' : 'var(--text-secondary)', transition: 'all 0.15s' }}>
+                style={{ padding: '4px 10px', borderRadius: 6, border: 'none', fontSize: 12, cursor: 'pointer', fontWeight: 500, background: viewMode === m ? 'var(--brand)' : 'var(--bg-tertiary)', color: viewMode === m ? '#fff' : 'var(--text-secondary)' }}>
                 {m === 'groups' ? '资料组' : '全部文件'}
               </button>
             ))}
           </div>
-        </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        )}
+        <div style={{ display: 'flex', gap: isMobile ? 6 : 8, alignItems: 'center', marginLeft: isMobile ? 'auto' : 0 }}>
           {viewMode === 'files' && editing && selected.size > 0 && (
-            <button onClick={handleBatchDelete} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', borderRadius: 8, border: 'none', background: 'var(--bg-danger-hover)', color: 'var(--color-danger)', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
-              <Trash2 size={14} /> 删除 ({selected.size})
+            <button onClick={handleBatchDelete} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: isMobile ? '5px 8px' : '6px 12px', borderRadius: 8, border: 'none', background: 'var(--bg-danger-hover)', color: 'var(--color-danger)', fontSize: isMobile ? 11 : 13, cursor: 'pointer', fontWeight: 500 }}>
+              <Trash2 size={isMobile ? 12 : 14} /> 删除 ({selected.size})
             </button>
           )}
           {canEdit && viewMode === 'groups' && (
-            <Button onClick={() => setShowCreateGroup(true)}>
-              <Plus size={14} /> 添加
-            </Button>
+            <button onClick={() => setShowCreateGroup(true)} style={{
+              display: 'flex', alignItems: 'center', gap: isMobile ? 3 : 4, padding: isMobile ? '6px 10px' : '6px 14px', borderRadius: 8, border: 'none',
+              background: 'var(--brand)', color: '#fff', fontSize: isMobile ? 12 : 13, fontWeight: 500, cursor: 'pointer', flexShrink: 0,
+            }}>
+              <Plus size={isMobile ? 12 : 14} /> 添加
+            </button>
           )}
           {canEdit && viewMode === 'files' && (
             <>
-              <Button onClick={() => { setShowAddModal(true); setModalTab('image') }}>
-                <Plus size={14} /> 添加
-              </Button>
-              <Button variant={editing ? 'secondary' : 'ghost'} onClick={() => { setEditing(v => !v); setSelected(new Set()) }}>
-                {editing ? '完成' : <><Pencil size={14} /> 管理</>}
-              </Button>
+              <button onClick={() => { setShowAddModal(true); setModalTab('image') }} style={{
+                display: 'flex', alignItems: 'center', gap: isMobile ? 3 : 4, padding: isMobile ? '6px 10px' : '6px 14px', borderRadius: 8, border: 'none',
+                background: 'var(--brand)', color: '#fff', fontSize: isMobile ? 12 : 13, fontWeight: 500, cursor: 'pointer', flexShrink: 0,
+              }}>
+                <Plus size={isMobile ? 12 : 14} /> 添加
+              </button>
+              <button onClick={() => { setEditing(v => !v); setSelected(new Set()) }} style={{
+                display: 'flex', alignItems: 'center', gap: isMobile ? 3 : 4, padding: isMobile ? '6px 8px' : '6px 12px', borderRadius: 8,
+                border: '1px solid var(--border-primary)', background: editing ? 'var(--bg-tertiary)' : 'transparent',
+                color: 'var(--text-secondary)', fontSize: isMobile ? 12 : 13, fontWeight: 500, cursor: 'pointer', flexShrink: 0,
+              }}>
+                {editing ? '完成' : <><Pencil size={isMobile ? 12 : 14} /> 管理</>}
+              </button>
             </>
           )}
           <input ref={fileInputRef} type="file" multiple onChange={handleUpload} style={{ display: 'none' }} />
@@ -385,7 +427,7 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
       </div>
 
       {viewMode === 'groups' ? (
-        <div>
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           {groupsLoading ? (
             <div style={{ textAlign: 'center', padding: 40 }}><Loader2 size={28} style={{ animation: 'spin 1s linear infinite', color: 'var(--text-tertiary)' }} /></div>
           ) : groups.length === 0 ? (
@@ -426,18 +468,58 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
         </div>
       ) : (
       <>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: 160, maxWidth: 260 }}>
+      <div style={{ display: 'flex', gap: isMobile ? 6 : 8, marginBottom: isMobile ? 8 : 12, flexWrap: isMobile ? 'nowrap' : 'wrap', alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: isMobile ? 0 : 160, maxWidth: isMobile ? undefined : 260 }}>
           <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索文件..."
-            style={{ width: '100%', padding: '6px 10px 6px 30px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-secondary)', boxSizing: 'border-box' }} />
+            style={{ width: '100%', padding: '6px 10px 6px 30px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: isMobile ? 12 : 13, outline: 'none', background: 'var(--bg-secondary)', boxSizing: 'border-box' }} />
         </div>
-        {categoryTabs.map(t => (
-          <button key={t.key} onClick={() => { setCategory(t.key); setSelected(new Set()) }}
-            style={{ padding: '4px 10px', borderRadius: 6, border: 'none', fontSize: 12, cursor: 'pointer', fontWeight: 500, background: category === t.key ? 'var(--brand)' : 'var(--bg-tertiary)', color: category === t.key ? '#fff' : 'var(--text-secondary)', transition: 'all 0.15s' }}>
-            {t.label}
-          </button>
-        ))}
+        {isMobile ? (
+          <div ref={catFilterRef} style={{ position: 'relative', flexShrink: 0 }}>
+            <button onClick={() => setCatFilterOpen(!catFilterOpen)} style={{
+              display: 'flex', alignItems: 'center', gap: 4, padding: '6px 8px', borderRadius: 8,
+              border: '1px solid var(--border-primary)', fontSize: 12, background: 'var(--bg-primary)',
+              color: category ? 'var(--text-heading)' : 'var(--text-tertiary)', cursor: 'pointer',
+            }}>
+              <span>{categoryTabs.find(t => t.key === category)?.label || '全部'}</span>
+              <ChevronDown size={14} style={{ color: 'var(--text-tertiary)' }} />
+            </button>
+            {catFilterOpen && (() => {
+              const rect = catFilterRef.current?.getBoundingClientRect()
+              const spaceBelow = rect ? window.innerHeight - rect.bottom : 200
+              const openUp = spaceBelow < 240
+              return (
+                <div style={{
+                  position: 'absolute', right: 0, [openUp ? 'bottom' : 'top']: '100%',
+                  marginTop: openUp ? 0 : 4, marginBottom: openUp ? 4 : 0,
+                  background: 'var(--bg-primary)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                  border: '1px solid var(--border-primary)', minWidth: 120, zIndex: 1000, overflow: 'hidden',
+                }}>
+                  {categoryTabs.map(t => {
+                    const active = category === t.key
+                    return (
+                      <button key={t.key} onClick={() => { setCategory(t.key); setSelected(new Set()); setCatFilterOpen(false) }} style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
+                        padding: '10px 12px', border: 'none', background: active ? 'rgba(59,130,246,0.08)' : 'none',
+                        cursor: 'pointer', fontSize: 13, color: active ? 'var(--brand)' : 'var(--text-body)', fontWeight: active ? 600 : 400,
+                      }}>
+                        <span>{t.label}</span>
+                        {active && <Check size={14} />}
+                      </button>
+                    )
+                  })}
+                </div>
+              )
+            })()}
+          </div>
+        ) : (
+          categoryTabs.map(t => (
+            <button key={t.key} onClick={() => { setCategory(t.key); setSelected(new Set()) }}
+              style={{ padding: '4px 10px', borderRadius: 6, border: 'none', fontSize: 12, cursor: 'pointer', fontWeight: 500, background: category === t.key ? 'var(--brand)' : 'var(--bg-tertiary)', color: category === t.key ? '#fff' : 'var(--text-secondary)', transition: 'all 0.15s' }}>
+              {t.label}
+            </button>
+          ))
+        )}
       </div>
 
       {loading ? (
@@ -467,6 +549,7 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
                   if (isNote) setViewNote(f)
                   else if (isUrl) window.open(ensureUrlProtocol(f.path), '_blank')
                   else if (canPreview(f.mime_type)) setPreview(f)
+                  else handleDownload(f)
                 }}>
                 {isImg ? (
                   <div style={{ height: 72, background: '#000', overflow: 'hidden' }}>
@@ -491,6 +574,12 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
                       {f.original_name}
                     </div>
                   </div>
+                )}
+                {!isUrl && !isNote && (
+                  <button onClick={e => { e.stopPropagation(); handleDownload(f) }}
+                    style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(255,255,255,0.9)', border: 'none', cursor: 'pointer', padding: 4, borderRadius: 6, color: 'var(--brand)', display: 'flex', boxShadow: '0 1px 3px rgba(0,0,0,0.12)' }}>
+                    <Download size={14} />
+                  </button>
                 )}
                 {editing && (
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 2, padding: '0 6px 6px' }}>
@@ -604,10 +693,13 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
 
       {/* 资料组详情弹窗 */}
       {activeGroup && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: isMobile ? 'stretch' : 'center', justifyContent: isMobile ? 'stretch' : 'center' }}
           onMouseDown={e => { if (e.target === e.currentTarget) { setActiveGroup(null); setGroupDetail(null); setItemType('') } }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }} />
-          <div style={{ position: 'relative', background: 'var(--bg-primary)', borderRadius: 12, width: 600, height: 600, maxWidth: 'calc(100vw - 24px)', maxHeight: '85vh', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', overflow: 'hidden', margin: 12 }}>
+          {!isMobile && <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)' }} />}
+          <div style={isMobile
+            ? { position: 'relative', background: 'var(--bg-primary)', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }
+            : { position: 'relative', background: 'var(--bg-primary)', borderRadius: 12, width: 600, height: 600, maxWidth: 'calc(100vw - 24px)', maxHeight: '85vh', boxShadow: '0 20px 60px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', overflow: 'hidden', margin: 12 }
+          }>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid var(--border-primary)' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>{activeGroup.name}</h3>

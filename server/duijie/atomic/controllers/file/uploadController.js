@@ -1,5 +1,6 @@
 const uploadFile = require('../../services/file/uploadFile');
 const { getProjectPerms } = require('../../utils/projectPerms');
+const { logActivity } = require('../../utils/activityLogger');
 
 module.exports = async (req, res) => {
   try {
@@ -18,6 +19,9 @@ module.exports = async (req, res) => {
       path: filePath,
       uploaded_by: req.userId,
     });
+    if (req.body.project_id) {
+      logActivity(req.body.project_id, req.userId, 'file_uploaded', { entityType: 'file', entityId: id, title: req.body.original_name || req.file.originalname });
+    }
     res.json({ success: true, data: { id, url: filePath } });
   } catch (e) {
     res.status(500).json({ success: false, message: '服务器内部错误' });

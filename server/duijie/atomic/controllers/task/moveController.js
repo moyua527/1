@@ -2,6 +2,7 @@ const moveTask = require('../../services/task/moveTask');
 const { broadcast } = require('../../utils/broadcast');
 const { notify } = require('../../utils/notify');
 const db = require('../../../config/db');
+const { logActivity } = require('../../utils/activityLogger');
 
 /** 允许的状态转移 */
 const ALLOWED_TRANSITIONS = {
@@ -108,6 +109,10 @@ module.exports = async (req, res) => {
       }
     }
 
+    if (newStatus && taskRow.project_id) {
+      const label = STATUS_LABEL[newStatus] || newStatus;
+      logActivity(taskRow.project_id, req.userId, 'task_status', { entityType: 'task', entityId: Number(req.params.id), title: `${taskRow.title} → ${label}`, detail: { from: taskRow.status, to: newStatus } });
+    }
     broadcast('task', 'updated', { id: req.params.id, project_id: taskRow.project_id, userId: req.userId });
     res.json({ success: true });
   } catch (e) {

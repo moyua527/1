@@ -147,7 +147,7 @@ export default function ProjectList() {
 
   return (
     <div>
-      {projectTabs.length > 0 && (
+      {!isMobile && projectTabs.length > 0 && (
         <div style={{ display: 'flex', gap: 0, marginBottom: 0, alignItems: 'stretch', background: 'linear-gradient(180deg, rgba(59,130,246,0.10) 0%, rgba(59,130,246,0.04) 100%)', borderRadius: '10px 10px 0 0', padding: '0 4px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', whiteSpace: 'nowrap', fontSize: 14, fontWeight: 600, flexShrink: 0,
             background: 'rgba(59,130,246,0.12)', color: 'var(--brand)', borderRadius: '10px 10px 0 0',
@@ -185,7 +185,7 @@ export default function ProjectList() {
           </div>
         </div>
       )}
-      <PageHeader title="项目管理" subtitle={`共 ${filtered.length} 个项目`} actions={
+      {!isMobile && <PageHeader title="项目管理" subtitle={`共 ${filtered.length} 个项目`} actions={
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           {canCreate && <button onClick={() => setShowCreate(true)}
             style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 14px', borderRadius: 8, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>
@@ -213,10 +213,33 @@ export default function ProjectList() {
             </>}
           </div>
         </div>
-      } />
+      } />}
 
-      {projects.length > 3 && <div style={{ marginBottom: 16 }}>
-        <div style={{ position: 'relative', maxWidth: isMobile ? '100%' : 320 }}>
+      {isMobile && (
+        <div style={{
+          position: 'sticky', top: -20, zIndex: 10, background: 'var(--bg-secondary)', margin: '-20px -16px 12px', padding: '16px 16px 10px',
+        }}>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-heading)', margin: '0 0 10px', textAlign: 'center' }}>项目</h1>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+              <Search size={14} style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索..."
+                style={{ width: '100%', padding: '7px 8px 7px 28px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', fontSize: 13, outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+            {canCreate && <button onClick={() => setShowCreate(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '7px 10px', borderRadius: 8, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
+              <Plus size={13} /> 创建
+            </button>}
+            <button onClick={() => { setShowJoin(true); setJoinCode(''); setJoinResult(null); setJoinMessage('') }}
+              style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '7px 10px', borderRadius: 8, border: '1px solid var(--brand)', background: 'transparent', color: 'var(--brand)', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
+              加入
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!isMobile && projects.length > 3 && <div style={{ marginBottom: 16 }}>
+        <div style={{ position: 'relative', maxWidth: 320 }}>
           <Search size={16} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索项目..."
             style={{ width: '100%', padding: '8px 12px 8px 34px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', fontSize: 14, outline: 'none' }} />

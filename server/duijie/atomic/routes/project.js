@@ -71,6 +71,10 @@ router.get('/projects/:id/search-users', auth, pag, require('../controllers/proj
 router.patch('/projects/:id/nickname', auth, pag, require('../controllers/project/setNicknameController'));
 // 成员备注
 router.patch('/projects/:id/member-remark', auth, pag, require('../controllers/project/setMemberRemarkController'));
+// 项目概览统计
+router.get('/projects/:id/overview', auth, pag, require('../controllers/project/overviewController'));
+// 项目统计看板
+router.get('/projects/:id/stats', auth, pag, require('../controllers/project/statsController'));
 // 项目活动动态
 router.get('/projects/:id/activity', auth, pag, require('../controllers/project/activityController'));
 

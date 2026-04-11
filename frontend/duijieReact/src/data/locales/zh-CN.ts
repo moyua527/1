@@ -21,7 +21,7 @@ const zhCN: Record<string, string> = {
   'common.retry': '重试',
 
   // 导航
-  'nav.dashboard': '仪表盘',
+  'nav.dashboard': '首页',
   'nav.projects': '项目管理',
   'nav.clients': '客户管理',
   'nav.opportunities': '商机管理',

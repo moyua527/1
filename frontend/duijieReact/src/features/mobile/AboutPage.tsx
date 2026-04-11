@@ -202,7 +202,20 @@ export default function AboutPage() {
                   </span>
                   <span style={{ fontSize: 12, color: 'var(--text-disabled)' }}>{item.date}</span>
                 </div>
-                <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{item.desc}</div>
+                {(() => {
+                  const parts = item.desc.split(/[；;]/).map(s => s.replace(/^[\s\d.、]+/, '').trim()).filter(Boolean)
+                  if (parts.length <= 1) return <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{item.desc}</div>
+                  return (
+                    <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                      {parts.map((p, idx) => (
+                        <div key={idx} style={{ display: 'flex', gap: 6 }}>
+                          <span style={{ color: 'var(--brand)', fontWeight: 600, flexShrink: 0 }}>{idx + 1}.</span>
+                          <span>{p}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })()}
               </div>
             ))}
           </div>

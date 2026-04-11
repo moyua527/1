@@ -116,6 +116,8 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
   const [editingExistingIdx, setEditingExistingIdx] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const [statusFilterOpen, setStatusFilterOpen] = useState(false)
+  const statusFilterRef = useRef<HTMLDivElement>(null)
 
   const resetCreateForm = useCallback(() => {
     setTaskForm({ title: '', description: '' })
@@ -164,6 +166,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setDropdownOpen(false)
+      if (statusFilterRef.current && !statusFilterRef.current.contains(e.target as Node)) setStatusFilterOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
@@ -436,15 +439,56 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, maxWidth: '100%', overflow: 'hidden' }}>
       <div style={{ ...section, flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, marginBottom: 0, overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>需求列表</h3>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'flex-start' : 'space-between', marginBottom: isMobile ? 8 : 16, flexWrap: isMobile ? 'nowrap' : 'wrap', gap: 8 }}>
+          {!isMobile && <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>需求列表</h3>}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'nowrap', flex: isMobile ? 1 : undefined }}>
             {isMobile ? (
-              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-                style={{ padding: '7px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: statusFilter ? 'var(--text-heading)' : 'var(--text-tertiary)', cursor: 'pointer' }}>
-                <option value="">全部状态 ({tasks.length})</option>
-                {ALL_STATUSES.map(s => <option key={s} value={s}>{taskStatusMap[s].label} ({tasks.filter(t => t.status === s).length})</option>)}
-              </select>
+              <div ref={statusFilterRef} style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+                <button onClick={() => setStatusFilterOpen(!statusFilterOpen)} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
+                  padding: '6px 8px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 12,
+                  background: 'var(--bg-primary)', color: statusFilter ? 'var(--text-heading)' : 'var(--text-tertiary)', cursor: 'pointer',
+                }}>
+                  <span>{statusFilter ? `${taskStatusMap[statusFilter].label} (${tasks.filter(t => t.status === statusFilter).length})` : `全部状态 (${tasks.length})`}</span>
+                  <ChevronDown size={14} style={{ flexShrink: 0, color: 'var(--text-tertiary)' }} />
+                </button>
+                {statusFilterOpen && (() => {
+                  const rect = statusFilterRef.current?.getBoundingClientRect()
+                  const spaceBelow = rect ? window.innerHeight - rect.bottom : 200
+                  const openUp = spaceBelow < 200
+                  return (
+                    <div style={{
+                      position: 'absolute', left: 0, [openUp ? 'bottom' : 'top']: '100%',
+                      marginTop: openUp ? 0 : 4, marginBottom: openUp ? 4 : 0,
+                      background: 'var(--bg-primary)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                      border: '1px solid var(--border-primary)', minWidth: '100%', zIndex: 1000, overflow: 'hidden',
+                    }}>
+                      <button onClick={() => { setStatusFilter(''); setStatusFilterOpen(false) }} style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
+                        padding: '10px 12px', border: 'none', background: !statusFilter ? 'rgba(59,130,246,0.08)' : 'none',
+                        cursor: 'pointer', fontSize: 13, color: !statusFilter ? 'var(--brand)' : 'var(--text-body)', fontWeight: !statusFilter ? 600 : 400,
+                      }}>
+                        <span>全部状态 ({tasks.length})</span>
+                        {!statusFilter && <Check size={14} />}
+                      </button>
+                      {ALL_STATUSES.map(s => {
+                        const cnt = tasks.filter(t => t.status === s).length
+                        const active = statusFilter === s
+                        return (
+                          <button key={s} onClick={() => { setStatusFilter(s); setStatusFilterOpen(false) }} style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
+                            padding: '10px 12px', border: 'none', background: active ? 'rgba(59,130,246,0.08)' : 'none',
+                            cursor: 'pointer', fontSize: 13, color: active ? 'var(--brand)' : 'var(--text-body)', fontWeight: active ? 600 : 400,
+                          }}>
+                            <span>{taskStatusMap[s].label} ({cnt})</span>
+                            {active && <Check size={14} />}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )
+                })()}
+              </div>
             ) : (
               <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                 <button onClick={() => setStatusFilter('')} style={{
@@ -463,16 +507,16 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
             )}
             {canEdit && <>
               <button onClick={() => setShowCreateTask(true)} style={{
-                display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 8,
-                background: 'var(--brand)', color: 'var(--bg-primary)', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 500,
-              }}><Plus size={14} /> 添加</button>
+                display: 'flex', alignItems: 'center', gap: isMobile ? 3 : 6, padding: isMobile ? '6px 10px' : '8px 16px', borderRadius: 8,
+                background: 'var(--brand)', color: 'var(--bg-primary)', border: 'none', cursor: 'pointer', fontSize: isMobile ? 12 : 14, fontWeight: 500, flexShrink: 0,
+              }}><Plus size={isMobile ? 12 : 14} /> 添加</button>
               <button onClick={() => setShowDrafts(true)} style={{
-                display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, position: 'relative',
-                background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)', cursor: 'pointer', fontSize: 13, fontWeight: 500,
-              }}><Archive size={14} /> 草稿{drafts.length > 0 && <span style={{ position: 'absolute', top: -4, right: -4, width: 16, height: 16, borderRadius: '50%', background: 'var(--brand)', color: '#fff', fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{drafts.length}</span>}</button>
-              <div ref={dropdownRef} style={{ position: 'relative' }}>
+                display: 'flex', alignItems: 'center', gap: isMobile ? 3 : 6, padding: isMobile ? '6px 8px' : '8px 14px', borderRadius: 8, position: 'relative',
+                background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)', cursor: 'pointer', fontSize: isMobile ? 12 : 13, fontWeight: 500, flexShrink: 0,
+              }}><Archive size={isMobile ? 12 : 14} /> 草稿{drafts.length > 0 && <span style={{ position: 'absolute', top: -4, right: -4, width: 16, height: 16, borderRadius: '50%', background: 'var(--brand)', color: '#fff', fontSize: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{drafts.length}</span>}</button>
+              <div ref={dropdownRef} style={{ position: 'relative', flexShrink: 0 }}>
                 <button onClick={(e) => { setDropdownOpen(!dropdownOpen); if (!dropdownOpen && dropdownRef.current) { const r = dropdownRef.current.getBoundingClientRect(); setDropdownPos({ top: r.bottom + 4, right: window.innerWidth - r.right }) } }} style={{
-                  display: 'flex', alignItems: 'center', padding: '8px 10px', borderRadius: 8,
+                  display: 'flex', alignItems: 'center', padding: isMobile ? '6px 8px' : '8px 10px', borderRadius: 8,
                   background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-primary)', cursor: 'pointer',
                 }}><ChevronDown size={16} /></button>
                 {dropdownOpen && (

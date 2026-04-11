@@ -200,7 +200,7 @@ export default function Messaging() {
   }
 
   return (
-    <div style={{ display: 'flex', height: isMobile ? 'calc(100vh - 120px)' : 'calc(100vh - 80px)', background: 'var(--bg-primary)', borderRadius: isMobile ? 0 : 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+    <div style={{ display: 'flex', height: isMobile ? 'calc(100dvh - 52px)' : 'calc(100vh - 80px)', background: 'var(--bg-primary)', borderRadius: isMobile ? 0 : 12, overflow: 'hidden', boxShadow: isMobile ? 'none' : '0 1px 3px rgba(0,0,0,0.06)' }}>
       {/* 左栏 */}
       <div style={{ width: isMobile ? ((selectedUser || selectedGroup) ? 0 : '100%') : 320, borderRight: '1px solid var(--border-primary)', display: 'flex', flexDirection: 'column', flexShrink: 0, overflow: 'hidden', transition: 'width 0.2s' }}>
         {/* 标题 + 操作按钮 */}
@@ -300,7 +300,7 @@ export default function Messaging() {
       </div>
 
       {/* 右栏：聊天区域 */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{ flex: 1, display: isMobile && !selectedUser && !selectedGroup ? 'none' : 'flex', flexDirection: 'column', minWidth: 0 }}>
         {selectedUser ? (
           <>
             <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--border-primary)', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -433,7 +433,7 @@ export default function Messaging() {
       {/* 添加好友弹窗 */}
       {showAddFriend && (
         <>
-          <div onClick={() => setShowAddFriend(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 200 }} />
+          <div onClick={() => setShowAddFriend(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.15)', zIndex: 200 }} />
           <div style={{
             position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
             background: 'var(--bg-primary)', borderRadius: 14, padding: 24, width: isMobile ? '92vw' : 400,
@@ -494,7 +494,7 @@ export default function Messaging() {
       {/* 创建群聊 Modal */}
       {showCreateGroup && (
         <>
-          <div onClick={() => setShowCreateGroup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 200 }} />
+          <div onClick={() => setShowCreateGroup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.15)', zIndex: 200 }} />
           <div style={{
             position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
             background: 'var(--bg-primary)', borderRadius: 14, padding: 24, width: isMobile ? '92vw' : 420,

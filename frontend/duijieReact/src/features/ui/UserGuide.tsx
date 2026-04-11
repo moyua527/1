@@ -21,7 +21,7 @@ const PC_STEPS: DriveStep[] = [
     element: '[data-tour="sidebar"]',
     popover: {
       title: '侧边导航',
-      description: '你的工作空间入口：\n• 仪表盘 — 查看整体数据\n• 项目管理 — 创建和管理项目\n• 需求看板 — 查看全部需求\n• 消息 — 与团队沟通',
+      description: '你的工作空间入口：\n• 首页 — 查看整体数据\n• 项目管理 — 创建和管理项目\n• 需求看板 — 查看全部需求\n• 消息 — 与团队沟通',
       side: 'right', align: 'start',
     },
   },
@@ -76,7 +76,7 @@ const MOBILE_STEPS: DriveStep[] = [
     element: '[data-tour="mobile-home"]',
     popover: {
       title: '首页',
-      description: '这是仪表盘，查看项目概览、数据统计和待办事项。',
+      description: '这是首页，查看项目概览、数据统计和待办事项。',
       side: 'top', align: 'start',
     },
   },

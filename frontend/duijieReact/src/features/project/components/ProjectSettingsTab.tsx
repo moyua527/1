@@ -1,9 +1,12 @@
 import { useState } from 'react'
-import { Users, Shield, AppWindow, UserPlus, ChevronRight, UserPlus2, Pencil, Trash2 } from 'lucide-react'
+import { Users, Shield, AppWindow, UserPlus, ChevronRight, UserPlus2, Pencil, Trash2, LayoutDashboard, Clock, BarChart3 } from 'lucide-react'
 import useNicknameStore from '../../../stores/useNicknameStore'
 import ProjectRoleList from './ProjectRoleList'
 import AppTab from './AppTab'
 import JoinRequestsTab from './JoinRequestsTab'
+import ProjectOverviewTab from './ProjectOverviewTab'
+import ProjectActivityTab from './ProjectActivityTab'
+import ProjectStatsTab from './ProjectStatsTab'
 import Avatar from '../../ui/Avatar'
 import Badge from '../../ui/Badge'
 import Button from '../../ui/Button'
@@ -13,7 +16,7 @@ import useUserStore from '../../../stores/useUserStore'
 
 const section: React.CSSProperties = { background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16 }
 
-type SubTab = 'members' | 'roles' | 'app' | 'join_requests' | 'nickname'
+type SubTab = 'overview' | 'activity' | 'stats' | 'members' | 'roles' | 'app' | 'join_requests' | 'nickname'
 
 interface Props {
   project: any
@@ -23,6 +26,7 @@ interface Props {
   canApproveJoin: boolean
   canEdit?: boolean
   canDelete?: boolean
+  isMobile?: boolean
   pendingJoinCount: number
   onRefreshProject: () => void
   onRefreshJoinCount: () => void
@@ -41,6 +45,9 @@ const roleLabel: Record<string, string> = {
 }
 
 const settingsItems: { key: SubTab; label: string; icon: any; desc: string; condition?: string }[] = [
+  { key: 'overview', label: '项目概览', icon: LayoutDashboard, desc: '查看项目统计、进度和动态' },
+  { key: 'activity', label: '项目动态', icon: Clock, desc: '查看项目内的所有操作记录' },
+  { key: 'stats', label: '统计看板', icon: BarChart3, desc: '完成率、成员排行、趋势图表' },
   { key: 'nickname', label: '项目备注', icon: Pencil, desc: '设置仅自己可见的项目备注名' },
   { key: 'members', label: '项目成员', icon: Users, desc: '查看和管理项目成员' },
   { key: 'roles', label: '角色管理', icon: Shield, desc: '自定义角色与权限配置', condition: 'canManageRole' },
@@ -48,7 +55,7 @@ const settingsItems: { key: SubTab; label: string; icon: any; desc: string; cond
   { key: 'join_requests', label: '加入申请', icon: UserPlus, desc: '审批成员加入请求', condition: 'canApproveJoin' },
 ]
 
-export default function ProjectSettingsTab({ project, projectId, isOwner, canManageRole, canApproveJoin, canEdit, canDelete, pendingJoinCount, onRefreshProject, onRefreshJoinCount, onOpenAddMember, onMemberClick, onEditProject, onDeleteProject, tasks = [] }: Props) {
+export default function ProjectSettingsTab({ project, projectId, isOwner, canManageRole, canApproveJoin, canEdit, canDelete, isMobile, pendingJoinCount, onRefreshProject, onRefreshJoinCount, onOpenAddMember, onMemberClick, onEditProject, onDeleteProject, tasks = [] }: Props) {
   const [sub, setSub] = useState<SubTab | null>(null)
   const user = useUserStore(s => s.user)
   const globalDn = useNicknameStore(s => s.getDisplayName)
@@ -84,6 +91,9 @@ export default function ProjectSettingsTab({ project, projectId, isOwner, canMan
           style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0', marginBottom: 12 }}>
           ← 返回设置
         </button>
+        {sub === 'overview' && <ProjectOverviewTab project={project} projectId={projectId} />}
+        {sub === 'activity' && <ProjectActivityTab projectId={projectId} />}
+        {sub === 'stats' && <ProjectStatsTab projectId={projectId} />}
         {sub === 'nickname' && (
           <div style={section}>
             <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>项目备注</h3>

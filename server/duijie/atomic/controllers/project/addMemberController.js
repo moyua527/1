@@ -2,6 +2,7 @@ const db = require('../../../config/db');
 const { notify } = require('../../utils/notify');
 const { broadcast } = require('../../utils/broadcast');
 const { resolveProjectRoleId } = require('../../utils/projectRoles');
+const { logActivity } = require('../../utils/activityLogger');
 
 module.exports = async (req, res) => {
   try {
@@ -30,6 +31,8 @@ module.exports = async (req, res) => {
     if (user_id !== req.userId) {
       await notify(user_id, 'project_member', '项目邀请', `你被添加为项目「${project.name}」的成员`, `/projects/${id}`, Number(id));
     }
+    const [[addedUser]] = await db.query('SELECT nickname, username FROM voice_users WHERE id = ?', [user_id]);
+    logActivity(id, req.userId, 'member_added', { entityType: 'member', entityId: user_id, title: addedUser?.nickname || addedUser?.username || String(user_id) });
     broadcast('project', 'member_added', { id, userId: req.userId });
     res.json({ success: true });
   } catch (e) {

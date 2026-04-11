@@ -7,6 +7,7 @@ import useNicknameStore from '../../../stores/useNicknameStore'
 import ImageViewer from '../../ui/ImageViewer'
 import ImageEditor from '../../ui/ImageEditor'
 import { onSocket, joinProject, leaveProject, isConnected } from '../../ui/smartSocket'
+import useIsMobile from '../../ui/useIsMobile'
 
 const bubble: React.CSSProperties = { padding: '8px 12px', background: 'var(--bg-selected)', borderRadius: '12px 12px 12px 4px', maxWidth: '80%', fontSize: 14, color: 'var(--text-body)', lineHeight: 1.5 }
 const IMG_EXTS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'])
@@ -22,6 +23,7 @@ function getUploadUrl(filename: string) {
 interface Props { projectId: string }
 
 export default function MessagePanel({ projectId }: Props) {
+  const isMobile = useIsMobile()
   const dn = useNicknameStore(s => s.getDisplayName)
   const [messages, setMessages] = useState<any[]>([])
   const [text, setText] = useState('')
@@ -176,11 +178,13 @@ export default function MessagePanel({ projectId }: Props) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 400 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 12px' }}>
-        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>消息</h3>
-        <div style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? 'var(--color-success)' : 'var(--text-tertiary)' }} title={connected ? '已连接' : '未连接'} />
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, flex: 1 }}>
+      {!isMobile && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '0 0 12px' }}>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600 }}>消息</h3>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? 'var(--color-success)' : 'var(--text-tertiary)' }} title={connected ? '已连接' : '未连接'} />
+        </div>
+      )}
       <div ref={scrollContainerRef} onScroll={handleScroll}
         style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, padding: '8px 0' }}>
         {loadingMore && (

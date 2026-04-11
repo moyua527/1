@@ -20,7 +20,7 @@ interface CmdItem {
 }
 
 const NAV_DEFS = [
-  { path: '/', label: '仪表盘', icon: LayoutDashboard, perm: 'dashboard:view', keywords: 'dashboard home 首页' },
+  { path: '/', label: '首页', icon: LayoutDashboard, perm: 'dashboard:view', keywords: 'dashboard home 首页 仪表盘' },
   { path: '/projects', label: '项目管理', icon: FolderKanban, perm: 'project:view', keywords: 'project 项目列表' },
   { path: '/clients', label: '客户管理', icon: Users, perm: 'client:manage', keywords: 'client customer 客户列表' },
   { path: '/opportunities', label: '商机管理', icon: TrendingUp, perm: 'opportunity:view', keywords: 'opportunity sales 销售管道 商机' },
