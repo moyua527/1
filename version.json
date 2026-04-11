@@ -1,7 +1,7 @@
 {
-  "version": "1.3.80",
-  "versionCode": 382,
+  "version": "1.3.81",
+  "versionCode": 383,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "修复移动端页面标题无法固定的问题"
+  "changelog": "彻底修复移动端页面标题固定：去除包裹层"
 }

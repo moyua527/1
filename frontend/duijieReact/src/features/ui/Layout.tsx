@@ -539,14 +539,23 @@ export default function Layout() {
               }} />
             </div>
           )}
-          <div key={isMobile ? location.pathname : undefined} className={isMobile ? pageAnimRef.current : ''} style={isMobile && pageAnimRef.current ? { willChange: 'transform, opacity' } : undefined}>
+          {isMobile && pageAnimRef.current ? (
+            <div key={location.pathname} className={pageAnimRef.current} style={{ willChange: 'transform, opacity' }}>
+              <Outlet context={{
+                user, isMobile, dmUnread,
+                openSettings: (tab: string) => setSettingsTab(tab as any),
+                openProfile: () => setProfileOpen(true),
+                openGuide: () => setGuideOpen(true),
+              }} />
+            </div>
+          ) : (
             <Outlet context={{
               user, isMobile, dmUnread,
               openSettings: (tab: string) => setSettingsTab(tab as any),
               openProfile: () => setProfileOpen(true),
               openGuide: () => setGuideOpen(true),
             }} />
-          </div>
+          )}
           {isMobile && <style>{`
             @keyframes ptr-spin{to{transform:rotate(360deg)}}
             @keyframes pageSlideRight{from{transform:translateX(28%);opacity:.4}to{transform:translateX(0);opacity:1}}
