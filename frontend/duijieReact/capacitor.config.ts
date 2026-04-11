@@ -11,6 +11,7 @@ const config: CapacitorConfig = {
     overrideUserAgent: 'DuiJie-App/1.0 Android',
   },
   server: {
+    url: 'http://160.202.253.143:8080',
     androidScheme: 'http',
     cleartext: true,
   },
