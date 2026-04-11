@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { useNavigate, useOutletContext } from 'react-router-dom'
+import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import { Plus, FolderKanban, Loader2, Download, Search, Trash2, RotateCcw, Upload, Link, MoreVertical, X } from 'lucide-react'
 import { projectApi } from './services/api'
 import { can } from '../../stores/permissions'
@@ -44,6 +44,8 @@ export default function ProjectList() {
   const [inviteLink, setInviteLink] = useState('')
   const [joinLinkSubmitting, setJoinLinkSubmitting] = useState(false)
   const nav = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const statusFilter = searchParams.get('status') || ''
   const { user, isMobile } = useOutletContext<{ user: any; isMobile?: boolean }>()
   const canCreate = can(user?.role || '', 'project:create')
   const openTab = useProjectTabStore(s => s.openTab)
@@ -98,6 +100,7 @@ export default function ProjectList() {
   }, [invalidate])
 
   const filtered = projects.filter((p: any) => {
+    if (statusFilter && p.status !== statusFilter) return false
     if (search) {
       const s = search.toLowerCase()
       const displayName = (p.my_nickname || p.name || '').toLowerCase()
@@ -235,6 +238,16 @@ export default function ProjectList() {
               加入
             </button>
           </div>
+          {statusFilter && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
+              <span style={{ fontSize: 12, padding: '3px 10px', borderRadius: 12, background: 'var(--brand-light-2)', color: 'var(--brand)', fontWeight: 500 }}>
+                {statusMap[statusFilter] || statusFilter}
+              </span>
+              <button onClick={() => setSearchParams({})} style={{ background: 'none', border: 'none', padding: 2, cursor: 'pointer', color: 'var(--text-tertiary)', display: 'flex' }}>
+                <X size={14} />
+              </button>
+            </div>
+          )}
         </div>
       )}
 

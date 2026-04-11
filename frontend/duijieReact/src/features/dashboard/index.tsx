@@ -147,17 +147,16 @@ export default function Dashboard() {
       <div style={isMobile ? { flex: 1, overflowY: 'auto', minHeight: 0, padding: '12px 16px 20px', WebkitOverflowScrolling: 'touch' as any } : undefined}>
       {isMobile && stats ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ background: 'var(--bg-primary)', borderRadius: 14, padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}
-            onClick={() => nav('/projects')}>
+          <div style={{ background: 'var(--bg-primary)', borderRadius: 14, padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 10 }}>项目概况</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
               {[
-                { label: '总项目', value: stats.totalProjects, color: 'var(--brand)' },
-                { label: '规划中', value: stats.planningProjects, color: 'var(--color-purple)' },
-                { label: '进行中', value: stats.activeProjects, color: 'var(--color-warning)' },
-                { label: '已完成', value: stats.completedProjects, color: 'var(--color-success)' },
+                { label: '总项目', value: stats.totalProjects, color: 'var(--brand)', path: '/projects' },
+                { label: '规划中', value: stats.planningProjects, color: 'var(--color-purple)', path: '/projects?status=planning' },
+                { label: '进行中', value: stats.activeProjects, color: 'var(--color-warning)', path: '/projects?status=in_progress' },
+                { label: '已完成', value: stats.completedProjects, color: 'var(--color-success)', path: '/projects?status=completed' },
               ].map(s => (
-                <div key={s.label} style={{ textAlign: 'center' }}>
+                <div key={s.label} onClick={() => nav(s.path)} style={{ textAlign: 'center', cursor: 'pointer', padding: '6px 0', borderRadius: 8 }}>
                   <div style={{ fontSize: 22, fontWeight: 700, color: s.color }}>{s.value}</div>
                   <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>{s.label}</div>
                 </div>
