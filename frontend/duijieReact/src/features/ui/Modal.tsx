@@ -4,6 +4,15 @@ import useIsMobile from './useIsMobile'
 
 interface Props { open: boolean; onClose: () => void; title: string; children: React.ReactNode; width?: number; height?: number }
 
+const _closeStack: (() => void)[] = []
+
+/** Try to close the topmost modal. Returns true if a modal was closed. */
+export function popModalClose(): boolean {
+  const fn = _closeStack[_closeStack.length - 1]
+  if (fn) { fn(); return true }
+  return false
+}
+
 const overlay: React.CSSProperties = {
   position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex',
   alignItems: 'center', justifyContent: 'center', zIndex: 1000,
@@ -38,10 +47,19 @@ export default function Modal({ open, onClose, title, children, width = 600, hei
   const startOffset = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
-    if (open) { lockBody(); setOffset({ x: 0, y: 0 }) }
-    else unlockBody()
+    if (open) {
+      lockBody(); setOffset({ x: 0, y: 0 })
+      _closeStack.push(onClose)
+      return () => {
+        const idx = _closeStack.indexOf(onClose)
+        if (idx >= 0) _closeStack.splice(idx, 1)
+        unlockBody()
+      }
+    } else {
+      unlockBody()
+    }
     return () => { unlockBody() }
-  }, [open])
+  }, [open, onClose])
 
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     if (isMobile) return
