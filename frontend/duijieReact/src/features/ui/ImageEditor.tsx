@@ -364,7 +364,7 @@ export default function ImageEditor({ imageFile, imageSrc, onConfirm, onCancel }
   const canvasRect = canvasRef.current?.getBoundingClientRect()
 
   return (
-    <div data-image-editor style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 9999, display: 'flex', flexDirection: 'column', touchAction: 'none' }}>
+    <div data-image-editor style={{ position: 'fixed', inset: 0, background: '#1a1a2e', zIndex: 9999, display: 'flex', flexDirection: 'column', touchAction: 'none' }}>
       {/* header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', flexShrink: 0 }}>
         <button onClick={onCancel} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>

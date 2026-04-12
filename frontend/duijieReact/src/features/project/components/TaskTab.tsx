@@ -112,7 +112,6 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
   const [responseInputs, setResponseInputs] = useState<Record<number, string>>({})
   const [editingPoint, setEditingPoint] = useState<{ id: number; content: string } | null>(null)
   const [editingImage, setEditingImage] = useState<File | null>(null)
-  const [pendingImages, setPendingImages] = useState<File[]>([])
   const [editingExistingIdx, setEditingExistingIdx] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -140,13 +139,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
         return true
       })
       if (filtered.length < arr.length) toast(`文件数量上限 ${MAX_FILES}，总大小上限 100MB`, 'error')
-      const nonImages = filtered.filter(f => !f.type.startsWith('image/'))
-      const images = filtered.filter(f => f.type.startsWith('image/'))
-      if (images.length) {
-        setEditingImage(images[0])
-        setPendingImages(images.slice(1))
-      }
-      return [...prev, ...nonImages]
+      return [...prev, ...filtered]
     })
   }, [])
 
@@ -193,18 +186,12 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
       setTaskFiles(prev => [...prev, editedFile])
     }
     setEditingImage(null)
-    if (pendingImages.length > 0) {
-      setTimeout(() => { setEditingImage(pendingImages[0]); setPendingImages(prev => prev.slice(1)) }, 100)
-    }
-  }, [editingExistingIdx, pendingImages])
+  }, [editingExistingIdx])
 
   const handleEditorCancel = useCallback(() => {
     if (editingExistingIdx !== null) setEditingExistingIdx(null)
     setEditingImage(null)
-    if (pendingImages.length > 0) {
-      setTimeout(() => { setEditingImage(pendingImages[0]); setPendingImages(prev => prev.slice(1)) }, 100)
-    }
-  }, [editingExistingIdx, pendingImages])
+  }, [editingExistingIdx])
 
   const handleMove = async (taskId: number, newStatus: string) => {
     const r = await taskApi.move(String(taskId), newStatus)
