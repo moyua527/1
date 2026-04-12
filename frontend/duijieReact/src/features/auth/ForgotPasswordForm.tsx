@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { authApi } from './services/api'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
 import { Mail, Phone, ArrowRight, CheckCircle } from 'lucide-react'
+import { EMAIL_REGEX, useCountdown } from './shared'
 
 const getPwdStrength = (pwd: string) => {
   if (!pwd) return { level: 0, label: '', color: '' }
@@ -32,23 +33,17 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
-  const [countdown, setCountdown] = useState(0)
+  const { count: countdown, start: startCountdown, active: counting } = useCountdown()
   const [verifying, setVerifying] = useState(false)
-
-  useEffect(() => {
-    if (countdown <= 0) return
-    const t = setTimeout(() => setCountdown(c => c - 1), 1000)
-    return () => clearTimeout(t)
-  }, [countdown])
 
   const handleForgotSendCode = async () => {
     setError('')
     const type = forgotMethod
     const target = forgotMethod === 'phone' ? phone : email
     if (forgotMethod === 'phone' && !/^\d{11}$/.test(target)) { setError('请输入正确的11位手机号'); return }
-    if (forgotMethod === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(target)) { setError('请输入正确的邮箱'); return }
+    if (forgotMethod === 'email' && !EMAIL_REGEX.test(target)) { setError('请输入正确的邮箱'); return }
     const res = await authApi.forgotPassword(type, target)
-    if (res.success) { setCountdown(60); setSuccess('验证码已发送'); setTimeout(() => setSuccess(''), 8000) }
+    if (res.success) { startCountdown(60); setSuccess('验证码已发送'); setTimeout(() => setSuccess(''), 8000) }
     else setError(res.message || '发送失败')
   }
 
@@ -111,9 +106,9 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
                 <input placeholder="输入6位验证码" value={verifyCode} onChange={e => setVerifyCode(e.target.value)} maxLength={6}
                   style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
                   onFocus={e => (e.currentTarget.style.borderColor = 'var(--brand)')} onBlur={e => (e.currentTarget.style.borderColor = 'var(--text-disabled)')} />
-                <button type="button" disabled={countdown > 0} onClick={handleForgotSendCode}
-                  style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: countdown > 0 ? 'var(--border-primary)' : 'var(--brand)', color: countdown > 0 ? 'var(--text-tertiary)' : 'var(--bg-primary)', fontSize: 13, fontWeight: 500, cursor: countdown > 0 ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
-                  {countdown > 0 ? `${countdown}s` : '获取验证码'}
+                <button type="button" disabled={counting} onClick={handleForgotSendCode}
+                  style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: counting ? 'var(--border-primary)' : 'var(--brand)', color: counting ? 'var(--text-tertiary)' : 'var(--bg-primary)', fontSize: 13, fontWeight: 500, cursor: counting ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
+                  {counting ? `${countdown}s` : '获取验证码'}
                 </button>
               </div>
             </div>

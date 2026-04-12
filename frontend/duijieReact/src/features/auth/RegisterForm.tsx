@@ -5,6 +5,7 @@ import Button from '../ui/Button'
 import Input from '../ui/Input'
 import { confirm } from '../ui/ConfirmDialog'
 import { CheckCircle, ArrowLeft, Eye, EyeOff } from 'lucide-react'
+import { EMAIL_REGEX, useCountdown } from './shared'
 
 interface RegisterFormProps {
   onRegistered: (user: any) => void
@@ -21,7 +22,7 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
   const [password, setPassword] = useState('')
   const [confirmPw, setConfirmPw] = useState('')
   const [showPw, setShowPw] = useState(false)
-  const [countdown, setCountdown] = useState(0)
+  const { count, start: startCountdown, active: counting } = useCountdown()
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
@@ -36,22 +37,13 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
     }
   }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    if (countdown <= 0) return
-    const t = setTimeout(() => setCountdown(c => c - 1), 1000)
-    return () => clearTimeout(t)
-  }, [countdown])
-
   const handleSendEmailCode = async () => {
     setError(''); setSuccess('')
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('请输入正确的邮箱地址'); return }
+    if (!EMAIL_REGEX.test(email)) { setError('请输入正确的邮箱地址'); return }
     try {
       const res = await authApi.sendCode('email', email)
-      if (res.success) {
-        setCountdown(60)
-        setSuccess('验证码已发送到邮箱')
-        setTimeout(() => setSuccess(''), 5000)
-      } else setError(res.message || '发送失败')
+      if (res.success) { startCountdown(60); setSuccess('验证码已发送到邮箱'); setTimeout(() => setSuccess(''), 5000) }
+      else setError(res.message || '发送失败')
     } catch { setError('网络错误') }
   }
 
@@ -88,7 +80,13 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
     setLoading(false)
   }
 
-  // Step 2: Set username & password
+  const feedbackBlock = (
+    <>
+      {error && <div style={{ color: 'var(--color-danger)', fontSize: 13, textAlign: 'center' }}>{error}</div>}
+      {success && <div style={{ color: 'var(--color-success)', fontSize: 13, textAlign: 'center' }}>{success}</div>}
+    </>
+  )
+
   if (step === 2) {
     return (
       <form onSubmit={handleRegister}>
@@ -108,24 +106,18 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>
-              昵称
-            </label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>昵称</label>
             <Input placeholder="显示给其他用户，2~6个字符" value={nickname} onChange={e => setNickname(e.target.value)} maxLength={6} autoFocus />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>
-              用户名
-            </label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>用户名</label>
             <Input placeholder="登录用，英文和数字，3~20个字符" value={regUsername}
               onChange={e => setRegUsername(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))} maxLength={20} />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>
-              设置密码
-            </label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>设置密码</label>
             <div style={{ position: 'relative' }}>
               <Input type={showPw ? 'text' : 'password'} placeholder="至少8位，英文和数字" value={password}
                 onChange={e => setPassword(e.target.value.replace(/[^a-zA-Z0-9]/g, ''))} />
@@ -137,14 +129,11 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>
-              确认密码
-            </label>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>确认密码</label>
             <Input type={showPw ? 'text' : 'password'} placeholder="再次输入密码" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} />
           </div>
 
-          {error && <div style={{ color: 'var(--color-danger)', fontSize: 13, textAlign: 'center' }}>{error}</div>}
-          {success && <div style={{ color: 'var(--color-success)', fontSize: 13, textAlign: 'center' }}>{success}</div>}
+          {feedbackBlock}
 
           <Button type="submit" style={{ width: '100%', justifyContent: 'center', padding: '12px 0', marginTop: 4 }} disabled={loading}>
             {loading ? '注册中...' : '完成注册'}
@@ -156,7 +145,7 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
 
   const handleNextStep = async () => {
     setError(''); setSuccess('')
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('请输入正确的邮箱地址'); return }
+    if (!email || !EMAIL_REGEX.test(email)) { setError('请输入正确的邮箱地址'); return }
     if (!emailCode || emailCode.length < 6) { setError('请输入6位验证码'); return }
     try {
       const res = await authApi.verifyCode('email', email, emailCode)
@@ -165,33 +154,29 @@ export default function RegisterForm({ onRegistered, onSwitchToLogin, inviteToke
     } catch { setError('网络错误') }
   }
 
-  // Step 1: Email verification
+  const sendDisabled = counting || !email || !EMAIL_REGEX.test(email)
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div>
-        <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>
-          邮箱账号
-        </label>
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>邮箱账号</label>
         <Input placeholder="输入邮箱地址" value={email} onChange={e => setEmail(e.target.value)} />
       </div>
 
       <div>
-        <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>
-          邮箱验证码
-        </label>
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }}>邮箱验证码</label>
         <div style={{ display: 'flex', gap: 8 }}>
           <input placeholder="输入6位验证码" value={emailCode} onChange={e => setEmailCode(e.target.value)} maxLength={6}
             style={{ flex: 1, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
             onFocus={e => (e.currentTarget.style.borderColor = 'var(--brand)')} onBlur={e => (e.currentTarget.style.borderColor = 'var(--border-primary)')} />
-          <button type="button" disabled={countdown > 0 || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)} onClick={handleSendEmailCode}
-            style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: (countdown > 0 || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ? 'var(--border-primary)' : 'var(--brand)', color: (countdown > 0 || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ? 'var(--text-tertiary)' : 'var(--bg-primary)', fontSize: 12, fontWeight: 500, cursor: (countdown > 0 || !email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
-            {countdown > 0 ? `${countdown}s` : '发送'}
+          <button type="button" disabled={sendDisabled} onClick={handleSendEmailCode}
+            style={{ padding: '8px 12px', borderRadius: 8, border: 'none', background: sendDisabled ? 'var(--border-primary)' : 'var(--brand)', color: sendDisabled ? 'var(--text-tertiary)' : 'var(--bg-primary)', fontSize: 12, fontWeight: 500, cursor: sendDisabled ? 'default' : 'pointer', whiteSpace: 'nowrap' }}>
+            {counting ? `${count}s` : '发送'}
           </button>
         </div>
       </div>
 
-      {error && <div style={{ color: 'var(--color-danger)', fontSize: 13, textAlign: 'center' }}>{error}</div>}
-      {success && <div style={{ color: 'var(--color-success)', fontSize: 13, textAlign: 'center' }}>{success}</div>}
+      {feedbackBlock}
 
       <Button onClick={handleNextStep}
         style={{ width: '100%', justifyContent: 'center', padding: '12px 0', marginTop: 4 }}

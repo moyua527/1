@@ -1,7 +1,7 @@
 {
-  "version": "1.4.25",
-  "versionCode": 428,
+  "version": "1.4.26",
+  "versionCode": 429,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "修复无企业有项目用户每次登录都弹欢迎页的bug(API返回格式不匹配)"
+  "changelog": "认证模块代码优化：提取共享Hook(useCountdown/useAgreement)和组件(AgreementCheckbox/TermsModal)，消除三文件间重复代码"
 }
