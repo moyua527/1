@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useOutletContext, useSearchParams, useNavigate } from 'react-router-dom'
 import { BACKEND_URL } from '../../bootstrap'
 import { useTasks, useProjects, useInvalidate } from '../../hooks/useApi'
@@ -12,25 +12,7 @@ import TaskDetailModal from './components/TaskDetailModal'
 import TaskCreateModal from './components/TaskCreateModal'
 import { can } from '../../stores/permissions'
 import ImageViewer from '../ui/ImageViewer'
-
-
-const columns = [
-  { key: 'submitted', label: '已提出', color: 'var(--brand)', bg: 'var(--bg-selected)' },
-  { key: 'disputed', label: '待补充', color: 'var(--color-warning)', bg: '#fffbeb' },
-  { key: 'in_progress', label: '执行中', color: '#7c3aed', bg: '#f5f3ff' },
-  { key: 'pending_review', label: '待验收', color: '#ea580c', bg: '#fff7ed' },
-  { key: 'review_failed', label: '验收不通过', color: 'var(--color-danger)', bg: '#fef2f2' },
-  { key: 'accepted', label: '验收通过', color: 'var(--color-success)', bg: '#f0fdf4' },
-]
-
-const priorityMap: Record<string, { label: string; color: string }> = {
-  low: { label: '低', color: 'gray' },
-  medium: { label: '中', color: 'blue' },
-  high: { label: '高', color: 'yellow' },
-  urgent: { label: '紧急', color: 'red' },
-}
-
-const isImageFile = (name: string) => /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(name)
+import { columns, priorityMap, isImageFile } from './constants'
 
 export default function TaskBoard() {
   const { user, isMobile } = useOutletContext<{ user: any; isMobile?: boolean }>()
@@ -48,7 +30,7 @@ export default function TaskBoard() {
   const [previewImages, setPreviewImages] = useState<string[]>([])
   const [previewStartIdx, setPreviewStartIdx] = useState(0)
 
-  const { data: allTasks = [], isLoading: _tasksLoading } = useTasks(filterProject || undefined)
+  const { data: allTasks = [] } = useTasks(filterProject || undefined)
   const { data: projectsData = [] } = useProjects()
   const projects = projectsData
   const invalidate = useInvalidate()
@@ -56,7 +38,7 @@ export default function TaskBoard() {
 
   useLiveData(['task'], () => invalidate('tasks'))
 
-  const filtered = allTasks.filter(t => {
+  const filtered = useMemo(() => allTasks.filter(t => {
     if (debouncedSearchText) {
       const s = debouncedSearchText.toLowerCase()
       if (!(t.title || '').toLowerCase().includes(s) && !(t.assigned_name || '').toLowerCase().includes(s) && !(t.project_name || '').toLowerCase().includes(s)) return false
@@ -64,7 +46,7 @@ export default function TaskBoard() {
     if (filterPriority && t.priority !== filterPriority) return false
     if (filterStatus && t.status !== filterStatus) return false
     return true
-  })
+  }), [allTasks, debouncedSearchText, filterPriority, filterStatus])
   const { visible: visibleTasks, hasMore, sentinelRef } = useProgressiveRender(filtered)
 
   return (

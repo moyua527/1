@@ -1,7 +1,7 @@
 {
-  "version": "1.4.29",
-  "versionCode": 432,
+  "version": "1.4.30",
+  "versionCode": 433,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "客户管理模块优化：统一stageMap到constants、列表加useMemo、修复EditModal渲染阶段setState、删除确认弹窗、ScoreSection防NaN，更新PROJECT.md"
+  "changelog": "需求看板模块优化：统一constants、修复粘贴重复bug、修复onUpdated死prop、useMemo、useEffect依赖修复，更新PROJECT.md"
 }

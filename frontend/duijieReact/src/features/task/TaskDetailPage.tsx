@@ -8,28 +8,10 @@ import ImageViewer from '../ui/ImageViewer'
 import { taskApi } from './services/api'
 import { projectApi } from '../project/services/api'
 import { toast } from '../ui/Toast'
-
-const fmtSize = (b: number) => b < 1024 ? b + 'B' : b < 1048576 ? (b / 1024).toFixed(1) + 'KB' : (b / 1048576).toFixed(1) + 'MB'
-
-const priorityMap: Record<string, { label: string; color: string }> = {
-  low: { label: '低', color: 'gray' },
-  medium: { label: '中', color: 'blue' },
-  high: { label: '高', color: 'yellow' },
-  urgent: { label: '紧急', color: 'red' },
-}
-
-const statusMap: Record<string, { label: string; color: string; bg: string }> = {
-  submitted: { label: '已提出', color: 'var(--brand)', bg: 'var(--bg-selected)' },
-  disputed: { label: '待补充', color: 'var(--color-warning)', bg: '#fffbeb' },
-  in_progress: { label: '执行中', color: '#7c3aed', bg: '#f5f3ff' },
-  pending_review: { label: '待验收', color: '#ea580c', bg: '#fff7ed' },
-  review_failed: { label: '验收不通过', color: 'var(--color-danger)', bg: '#fef2f2' },
-  accepted: { label: '验收通过', color: 'var(--color-success)', bg: '#f0fdf4' },
-}
+import { priorityMap, statusMap, isImageFile, fmtSize } from './constants'
 
 const lbl: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 4 }
 const valStyle: React.CSSProperties = { fontSize: 14, color: 'var(--text-heading)', lineHeight: 1.6 }
-const isImageFile = (name: string) => /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(name)
 
 export default function TaskDetailPage() {
   const { id } = useParams<{ id: string }>()

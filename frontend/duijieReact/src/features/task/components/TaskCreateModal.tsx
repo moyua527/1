@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, DragEvent, ClipboardEvent } from 'react'
+import { useState, useEffect, useRef, useCallback, DragEvent } from 'react'
 import { fetchApi, uploadFile } from '../../../bootstrap'
 import Modal from '../../ui/Modal'
 import Button from '../../ui/Button'
@@ -6,15 +6,7 @@ import { toast } from '../../ui/Toast'
 import { Paperclip, X, Upload } from 'lucide-react'
 import TaskTitleSelector from './TaskTitleSelector'
 import { projectApi } from '../../project/services/api'
-
-const columns = [
-  { key: 'submitted', label: '已提出' },
-  { key: 'disputed', label: '待补充' },
-  { key: 'in_progress', label: '执行中' },
-  { key: 'pending_review', label: '待验收' },
-  { key: 'review_failed', label: '验收不通过' },
-  { key: 'accepted', label: '验收通过' },
-]
+import { columns } from '../constants'
 
 interface Props {
   open: boolean
@@ -79,19 +71,6 @@ export default function TaskCreateModal({ open, onClose, onCreated, projects }: 
   const handleDrop = useCallback((e: DragEvent) => {
     e.preventDefault(); e.stopPropagation(); setIsDragging(false)
     if (e.dataTransfer.files?.length) addFiles(e.dataTransfer.files)
-  }, [addFiles])
-
-  const handlePaste = useCallback((e: ClipboardEvent) => {
-    const items = e.clipboardData?.items
-    if (!items) return
-    const files: File[] = []
-    for (let i = 0; i < items.length; i++) {
-      if (items[i].kind === 'file') {
-        const f = items[i].getAsFile()
-        if (f) files.push(f)
-      }
-    }
-    if (files.length) { e.preventDefault(); e.stopPropagation(); addFiles(files) }
   }, [addFiles])
 
   useEffect(() => {
@@ -204,7 +183,6 @@ export default function TaskCreateModal({ open, onClose, onCreated, projects }: 
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            onPaste={handlePaste}
             tabIndex={0}
             onClick={() => fileRef.current?.click()}
             style={{

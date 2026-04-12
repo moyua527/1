@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { ChevronDown, History, List, Plus, Trash2 } from 'lucide-react'
 import { projectApi } from '../../project/services/api'
 import { toast } from '../../ui/Toast'
@@ -72,44 +72,40 @@ export default function TaskTitleSelector({
   const [savingPreset, setSavingPreset] = useState(false)
   const suggestRef = useRef<HTMLDivElement>(null)
   const presetRef = useRef<HTMLDivElement>(null)
+  const valueRef = useRef(value)
+  const modeRef = useRef(mode)
+  const onChangeRef = useRef(onChange)
+  valueRef.current = value
+  modeRef.current = mode
+  onChangeRef.current = onChange
+
+  const loadOptions = useCallback(async (pid: string) => {
+    setLoading(true)
+    const r = await projectApi.taskTitleOptions(pid)
+    setLoading(false)
+    if (!r.success) { toast(r.message || '需求标题选项加载失败', 'error'); return }
+    const presets = Array.isArray(r.data?.presets) ? r.data.presets : []
+    const history = Array.isArray(r.data?.history) ? r.data.history : []
+    setOptions({ presets, history })
+    if (!valueRef.current) {
+      const last = lastTitleKey ? localStorage.getItem(lastTitleKey) : null
+      if (modeRef.current === 'preset' && last && presets.includes(last)) {
+        onChangeRef.current(last)
+      } else if (modeRef.current === 'history' && last) {
+        onChangeRef.current(last)
+      } else if (modeRef.current === 'history' && history.length > 0) {
+        onChangeRef.current(history[0].title)
+      }
+    }
+  }, [lastTitleKey])
 
   useEffect(() => {
     if (!open) return
+    if (!projectId) { setOptions({ presets: [], history: [] }); return }
     let active = true
-    const timer = window.setTimeout(async () => {
-      if (!active) return
-      if (!projectId) {
-        setOptions({ presets: [], history: [] })
-        setLoading(false)
-        return
-      }
-      setLoading(true)
-      const r = await projectApi.taskTitleOptions(String(projectId))
-      if (!active) return
-      setLoading(false)
-      if (r.success) {
-        const presets = Array.isArray(r.data?.presets) ? r.data.presets : []
-        const history = Array.isArray(r.data?.history) ? r.data.history : []
-        setOptions({ presets, history })
-        if (!value) {
-          const last = lastTitleKey ? localStorage.getItem(lastTitleKey) : null
-          if (mode === 'preset' && last && presets.includes(last)) {
-            onChange(last)
-          } else if (mode === 'history' && last) {
-            onChange(last)
-          } else if (mode === 'history' && history.length > 0) {
-            onChange(history[0].title)
-          }
-        }
-        return
-      }
-      toast(r.message || '需求标题选项加载失败', 'error')
-    }, 0)
-    return () => {
-      active = false
-      window.clearTimeout(timer)
-    }
-  }, [open, projectId])
+    const timer = window.setTimeout(() => { if (active) loadOptions(String(projectId)) }, 0)
+    return () => { active = false; window.clearTimeout(timer) }
+  }, [open, projectId, loadOptions])
 
   // 点击外部关闭下拉列表
   useEffect(() => {
