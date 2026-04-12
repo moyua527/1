@@ -1,16 +1,10 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useOutletContext, useNavigate } from 'react-router-dom'
 import { Bell, CheckCheck, Loader2, ExternalLink, Trash2 } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { useNotifications, useInvalidate } from '../../hooks/useApi'
 import PageHeader from '../ui/PageHeader'
-
-const typeIcon: Record<string, string> = {
-  task_assigned: '📋', task_status: '🔄', task_comment: '💬',
-  ticket_reply: '🎫', project_member: '📁', project_update: '📂',
-  join_request: '🔑', join_approved: '✅', join_rejected: '❌',
-  follow_reminder: '⏰',
-}
+import { typeIcon } from './constants'
 
 export default function NotificationCenter() {
   const { data, isLoading: loading } = useNotifications('all')
@@ -23,15 +17,19 @@ export default function NotificationCenter() {
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
 
   const markRead = async (id: number | 'all') => {
-    await fetchApi(`/api/notifications/${id}/read`, { method: 'PATCH' })
-    invalidate('notifications')
+    try {
+      await fetchApi(`/api/notifications/${id}/read`, { method: 'PATCH' })
+      invalidate('notifications')
+    } catch { /* network error */ }
   }
 
   const deleteNotif = async (id: number | 'all', e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
-    await fetchApi(`/api/notifications/${id}`, { method: 'DELETE' })
-    if (selected?.id === id || id === 'all') setSelected(null)
-    invalidate('notifications')
+    try {
+      await fetchApi(`/api/notifications/${id}`, { method: 'DELETE' })
+      if (selected?.id === id || id === 'all') setSelected(null)
+      invalidate('notifications')
+    } catch { /* network error */ }
   }
 
   const handleClick = (n: any) => {
@@ -39,7 +37,7 @@ export default function NotificationCenter() {
     setSelected(n)
   }
 
-  const displayed = filter === 'unread' ? notifications.filter(n => !n.is_read) : notifications
+  const displayed = useMemo(() => filter === 'unread' ? notifications.filter(n => !n.is_read) : notifications, [notifications, filter])
 
   const actionBtns = (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>

@@ -3,13 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Bell, CheckCheck, ExternalLink, Trash2, X } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { onSocket } from './smartSocket'
-
-const typeIcon: Record<string, string> = {
-  task_assigned: '📋', task_status: '🔄', task_comment: '💬',
-  ticket_reply: '🎫', project_member: '📁', project_update: '📂',
-  join_request: '🔑', join_approved: '✅', join_rejected: '❌',
-  follow_reminder: '⏰',
-}
+import { typeIcon } from '../notification/constants'
 
 const CATEGORIES = [
   { key: 'all', label: '全部' },
@@ -68,16 +62,20 @@ export default function NotificationBell() {
   const switchTab = (cat: string) => { setActiveTab(cat); setSelected(null); load(cat) }
 
   const markRead = async (id: number | 'all') => {
-    await fetchApi(`/api/notifications/${id}/read`, { method: 'PATCH' })
-    load()
+    try {
+      await fetchApi(`/api/notifications/${id}/read`, { method: 'PATCH' })
+      load()
+    } catch { /* network error */ }
   }
 
   const deleteNotif = async (id: number | 'all', e?: React.MouseEvent) => {
     if (e) e.stopPropagation()
     if (id === 'all' && !confirm('确定清空所有通知？')) return
-    await fetchApi(`/api/notifications/${id}`, { method: 'DELETE' })
-    if (selected && (id === 'all' || selected.id === id)) setSelected(null)
-    load()
+    try {
+      await fetchApi(`/api/notifications/${id}`, { method: 'DELETE' })
+      if (selected && (id === 'all' || selected.id === id)) setSelected(null)
+      load()
+    } catch { /* network error */ }
   }
 
   const handleClick = (n: any) => {

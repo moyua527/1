@@ -1,7 +1,7 @@
 {
-  "version": "1.4.34",
-  "versionCode": 437,
+  "version": "1.4.35",
+  "versionCode": 438,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "客户门户/工单/报表模块优化：修复TicketCreateModal渲染阶段setState、工单constants提取、statusTabs/Report计算useMemo、更新PROJECT.md 3.10-3.12"
+  "changelog": "通知系统优化：typeIcon提取constants共享、markRead/deleteNotif加try-catch、displayed加useMemo、更新PROJECT.md 3.13"
 }
