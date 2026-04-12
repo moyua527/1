@@ -14,6 +14,7 @@ import useUserStore from '../../../stores/useUserStore'
 import useNicknameStore from '../../../stores/useNicknameStore'
 import ImageViewer from '../../ui/ImageViewer'
 import ImageEditor from '../../ui/ImageEditor'
+import ImageUploadPreview from '../../ui/ImageUploadPreview'
 import useIsMobile from '../../ui/useIsMobile'
 
 const taskStatusMap: Record<string, { label: string; color: string }> = {
@@ -113,6 +114,8 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
   const [editingPoint, setEditingPoint] = useState<{ id: number; content: string } | null>(null)
   const [editingImage, setEditingImage] = useState<File | null>(null)
   const [editingExistingIdx, setEditingExistingIdx] = useState<number | null>(null)
+  const [uploadPreviewFiles, setUploadPreviewFiles] = useState<File[]>([])
+  const [previewEditIdx, setPreviewEditIdx] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const [statusFilterOpen, setStatusFilterOpen] = useState(false)
@@ -127,21 +130,22 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
     const MAX_FILES = 20
     const MAX_TOTAL_SIZE = 100 * 1024 * 1024
     const arr = Array.from(newFiles)
-    setTaskFiles(prev => {
-      const currentTotal = prev.reduce((s, f) => s + f.size, 0)
-      const remaining = MAX_FILES - prev.length
-      if (remaining <= 0) { toast(`最多上传 ${MAX_FILES} 个文件`, 'error'); return prev }
-      const allowed = arr.slice(0, remaining)
-      let sizeSum = currentTotal
-      const filtered = allowed.filter(f => {
-        if (sizeSum + f.size > MAX_TOTAL_SIZE) return false
-        sizeSum += f.size
-        return true
-      })
-      if (filtered.length < arr.length) toast(`文件数量上限 ${MAX_FILES}，总大小上限 100MB`, 'error')
-      return [...prev, ...filtered]
+    const currentTotal = taskFiles.reduce((s, f) => s + f.size, 0)
+    const remaining = MAX_FILES - taskFiles.length
+    if (remaining <= 0) { toast(`最多上传 ${MAX_FILES} 个文件`, 'error'); return }
+    const allowed = arr.slice(0, remaining)
+    let sizeSum = currentTotal
+    const filtered = allowed.filter(f => {
+      if (sizeSum + f.size > MAX_TOTAL_SIZE) return false
+      sizeSum += f.size
+      return true
     })
-  }, [])
+    if (filtered.length < arr.length) toast(`文件数量上限 ${MAX_FILES}，总大小上限 100MB`, 'error')
+    const images = filtered.filter(f => f.type.startsWith('image/'))
+    const nonImages = filtered.filter(f => !f.type.startsWith('image/'))
+    if (nonImages.length) setTaskFiles(prev => [...prev, ...nonImages])
+    if (images.length) setUploadPreviewFiles(images)
+  }, [taskFiles])
 
   const handleFileDragOver = useCallback((e: DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true) }, [])
   const handleFileDragLeave = useCallback((e: DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false) }, [])
@@ -190,8 +194,30 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
 
   const handleEditorCancel = useCallback(() => {
     if (editingExistingIdx !== null) setEditingExistingIdx(null)
+    if (previewEditIdx !== null) {
+      setEditingImage(null)
+      return
+    }
     setEditingImage(null)
-  }, [editingExistingIdx])
+  }, [editingExistingIdx, previewEditIdx])
+
+  const handlePreviewConfirm = useCallback((files: File[]) => {
+    setTaskFiles(prev => [...prev, ...files])
+    setUploadPreviewFiles([])
+  }, [])
+
+  const handlePreviewEdit = useCallback((_file: File, index: number) => {
+    setPreviewEditIdx(index)
+    setEditingImage(uploadPreviewFiles[index])
+  }, [uploadPreviewFiles])
+
+  const handlePreviewEditorConfirm = useCallback((editedFile: File) => {
+    if (previewEditIdx !== null) {
+      setUploadPreviewFiles(prev => prev.map((f, i) => i === previewEditIdx ? editedFile : f))
+    }
+    setPreviewEditIdx(null)
+    setEditingImage(null)
+  }, [previewEditIdx])
 
   const handleMove = async (taskId: number, newStatus: string) => {
     const r = await taskApi.move(String(taskId), newStatus)
@@ -950,7 +976,17 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
         images={previewImages.length > 1 ? previewImages : undefined} startIndex={previewStartIdx}
         onEdit={(s) => { setPreviewImg(null); setEditingSrc(s) }} />}
       {editingSrc && <ImageEditor imageSrc={editingSrc} onConfirm={() => { setEditingSrc(null) }} onCancel={() => setEditingSrc(null)} />}
-      {editingImage && <ImageEditor imageFile={editingImage} onConfirm={handleEditorConfirm} onCancel={handleEditorCancel} />}
+      {editingImage && <ImageEditor imageFile={editingImage}
+        onConfirm={previewEditIdx !== null ? handlePreviewEditorConfirm : handleEditorConfirm}
+        onCancel={handleEditorCancel} />}
+      {uploadPreviewFiles.length > 0 && !editingImage && (
+        <ImageUploadPreview
+          files={uploadPreviewFiles}
+          onConfirm={handlePreviewConfirm}
+          onEdit={handlePreviewEdit}
+          onCancel={() => setUploadPreviewFiles([])}
+        />
+      )}
     </div>
   )
 }
