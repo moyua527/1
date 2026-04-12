@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Users, Shield, AppWindow, UserPlus, ChevronRight, UserPlus2, Pencil, Trash2, LayoutDashboard, Clock, BarChart3 } from 'lucide-react'
+import { Users, Shield, AppWindow, UserPlus, ChevronRight, UserPlus2, Pencil, Trash2, LayoutDashboard, Clock, BarChart3, SlidersHorizontal } from 'lucide-react'
 import useNicknameStore from '../../../stores/useNicknameStore'
 import ProjectRoleList from './ProjectRoleList'
 import AppTab from './AppTab'
@@ -7,6 +7,7 @@ import JoinRequestsTab from './JoinRequestsTab'
 import ProjectOverviewTab from './ProjectOverviewTab'
 import ProjectActivityTab from './ProjectActivityTab'
 import ProjectStatsTab from './ProjectStatsTab'
+import CustomFieldsManager from './CustomFieldsManager'
 import Avatar from '../../ui/Avatar'
 import Badge from '../../ui/Badge'
 import Button from '../../ui/Button'
@@ -16,7 +17,7 @@ import useUserStore from '../../../stores/useUserStore'
 
 const section: React.CSSProperties = { background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', marginBottom: 16 }
 
-type SubTab = 'overview' | 'activity' | 'stats' | 'members' | 'roles' | 'app' | 'join_requests' | 'nickname'
+type SubTab = 'overview' | 'activity' | 'stats' | 'members' | 'roles' | 'app' | 'join_requests' | 'nickname' | 'custom_fields'
 
 interface Props {
   project: any
@@ -52,6 +53,7 @@ const settingsItems: { key: SubTab; label: string; icon: any; desc: string; cond
   { key: 'members', label: '项目成员', icon: Users, desc: '查看和管理项目成员' },
   { key: 'roles', label: '角色管理', icon: Shield, desc: '自定义角色与权限配置', condition: 'canManageRole' },
   { key: 'app', label: '关联应用', icon: AppWindow, desc: '配置项目关联的外部应用', condition: 'hasApp' },
+  { key: 'custom_fields', label: '扩展属性', icon: SlidersHorizontal, desc: '自定义字段（日期、金额、多选等）' },
   { key: 'join_requests', label: '加入申请', icon: UserPlus, desc: '审批成员加入请求', condition: 'canApproveJoin' },
 ]
 
@@ -151,6 +153,7 @@ export default function ProjectSettingsTab({ project, projectId, isOwner, canMan
             )}
           </div>
         )}
+        {sub === 'custom_fields' && <CustomFieldsManager projectId={projectId} />}
         {sub === 'roles' && <ProjectRoleList canEdit={isOwner || canManageRole} projectId={projectId} />}
         {sub === 'app' && <AppTab project={project} />}
         {sub === 'join_requests' && <JoinRequestsTab projectId={projectId} joinCode={project.join_code} onRefresh={() => { onRefreshProject(); onRefreshJoinCount() }} />}

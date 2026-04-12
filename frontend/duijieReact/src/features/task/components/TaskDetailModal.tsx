@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BACKEND_URL } from '../../../bootstrap'
 import Modal from '../../ui/Modal'
 import Badge from '../../ui/Badge'
-import { Paperclip, Download, Calendar, Flag, AlignLeft, BellRing } from 'lucide-react'
+import { Paperclip, Download, Calendar, Flag, AlignLeft, BellRing, SlidersHorizontal } from 'lucide-react'
 import { formatDateTime } from '../../../utils/datetime'
 import ImageViewer from '../../ui/ImageViewer'
 import { taskApi } from '../services/api'
+import { projectApi } from '../../project/services/api'
 import { toast } from '../../ui/Toast'
 
 const fmtSize = (b: number) => b < 1024 ? b + 'B' : b < 1048576 ? (b / 1024).toFixed(1) + 'KB' : (b / 1048576).toFixed(1) + 'MB'
@@ -39,11 +40,31 @@ interface Props {
   onUpdated?: () => void
 }
 
-export default function TaskDetailModal({ task, open, onClose }: Props) {
+export default function TaskDetailModal({ task, projectId, open, onClose }: Props) {
   const [previewImg, setPreviewImg] = useState<string | null>(null)
   const [previewStartIdx, setPreviewStartIdx] = useState(0)
   const [reminding, setReminding] = useState(false)
+  const [customValues, setCustomValues] = useState<any[]>([])
+  const [customFields, setCustomFields] = useState<any[]>([])
+  const [cfEditing, setCfEditing] = useState<Record<number, string>>({})
+  const [, setCfSaving] = useState(false)
+
+  useEffect(() => {
+    if (open && task?.id && projectId) {
+      projectApi.listCustomFields(projectId).then(r => { if (r.success) setCustomFields(r.data || []) })
+      projectApi.getTaskCustomValues(String(task.id)).then(r => { if (r.success) setCustomValues(r.data || []) })
+    }
+    if (!open) { setCustomValues([]); setCustomFields([]); setCfEditing({}) }
+  }, [open, task?.id, projectId])
+
   if (!task) return null
+
+  const handleCfSave = async (fieldId: number, value: string) => {
+    setCfSaving(true)
+    const r = await projectApi.setTaskCustomValues(String(task.id), [{ field_id: fieldId, value: value || null }])
+    setCfSaving(false)
+    if (!r.success) toast('保存失败', 'error')
+  }
 
   const handleRemind = async () => {
     setReminding(true)
@@ -130,6 +151,60 @@ export default function TaskDetailModal({ task, open, onClose }: Props) {
                   </a>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* 扩展属性 */}
+        {customFields.length > 0 && (
+          <div>
+            <div style={lbl}><SlidersHorizontal size={14} /> 扩展属性</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {customFields.map(f => {
+                const existing = customValues.find(v => v.field_id === f.id)
+                const curVal = cfEditing[f.id] !== undefined ? cfEditing[f.id] : (existing?.value || '')
+                const isEditing = cfEditing[f.id] !== undefined
+                const cfInput: React.CSSProperties = { width: '100%', padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', boxSizing: 'border-box' as const, background: 'var(--bg-secondary)', color: 'var(--text-heading)' }
+                return (
+                  <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 13, color: 'var(--text-secondary)', minWidth: 70, flexShrink: 0 }}>{f.name}:</span>
+                    {f.field_type === 'select' ? (
+                      <select value={curVal} onChange={e => { setCfEditing({ ...cfEditing, [f.id]: e.target.value }); handleCfSave(f.id, e.target.value) }} style={{ ...cfInput, cursor: 'pointer' }}>
+                        <option value="">未选择</option>
+                        {(f.options || []).map((o: string) => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    ) : f.field_type === 'multi_select' ? (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, flex: 1 }}>
+                        {(f.options || []).map((o: string) => {
+                          const selected = (curVal || '').split(',').includes(o)
+                          return (
+                            <button key={o} onClick={() => {
+                              const arr = (curVal || '').split(',').filter(Boolean)
+                              const next = selected ? arr.filter((x: string) => x !== o) : [...arr, o]
+                              const val = next.join(',')
+                              setCfEditing({ ...cfEditing, [f.id]: val })
+                              handleCfSave(f.id, val)
+                            }}
+                              style={{ padding: '2px 8px', borderRadius: 12, border: `1px solid ${selected ? 'var(--brand)' : 'var(--border-primary)'}`, background: selected ? 'var(--bg-selected)' : 'var(--bg-secondary)', color: selected ? 'var(--brand)' : 'var(--text-body)', fontSize: 12, cursor: 'pointer' }}>
+                              {o}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <input
+                        type={f.field_type === 'date' ? 'date' : f.field_type === 'number' || f.field_type === 'amount' ? 'number' : 'text'}
+                        value={curVal}
+                        step={f.field_type === 'amount' ? '0.01' : undefined}
+                        onChange={e => setCfEditing({ ...cfEditing, [f.id]: e.target.value })}
+                        onBlur={() => { if (isEditing) handleCfSave(f.id, curVal) }}
+                        placeholder={f.field_type === 'amount' ? '0.00' : ''}
+                        style={cfInput}
+                      />
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </div>
         )}

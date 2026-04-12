@@ -84,4 +84,13 @@ export const projectApi = {
   createTemplate: (data: { name: string; description?: string; from_project_id?: number }) =>
     fetchApi('/api/project-templates', { method: 'POST', body: JSON.stringify(data) }),
   deleteTemplate: (id: number) => fetchApi(`/api/project-templates/${id}`, { method: 'DELETE' }),
+  listCustomFields: (projectId: string) => fetchApi(`/api/projects/${projectId}/custom-fields`),
+  createCustomField: (projectId: string, data: { name: string; field_type: string; options?: string[]; required?: boolean }) =>
+    fetchApi(`/api/projects/${projectId}/custom-fields`, { method: 'POST', body: JSON.stringify(data) }),
+  updateCustomField: (id: number, data: Record<string, any>) =>
+    fetchApi(`/api/custom-fields/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteCustomField: (id: number) => fetchApi(`/api/custom-fields/${id}`, { method: 'DELETE' }),
+  getTaskCustomValues: (taskId: string) => fetchApi(`/api/tasks/${taskId}/custom-values`),
+  setTaskCustomValues: (taskId: string, values: { field_id: number; value: string | null }[]) =>
+    fetchApi(`/api/tasks/${taskId}/custom-values`, { method: 'PUT', body: JSON.stringify({ values }) }),
 }

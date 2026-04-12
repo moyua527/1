@@ -678,7 +678,18 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | PUT | `/api/timesheets/:id` | 更新工时（仅自己的） | 认证 |
 | DELETE | `/api/timesheets/:id` | 删除工时（仅自己的） | 认证 |
 
-### 4.10.2 项目模板（Project Template）
+### 4.10.2 扩展属性（Custom Fields）
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/api/projects/:projectId/custom-fields` | 项目自定义字段列表 | 项目成员 |
+| POST | `/api/projects/:projectId/custom-fields` | 添加自定义字段 | 项目成员 |
+| PUT | `/api/custom-fields/:id` | 更新字段定义 | 认证 |
+| DELETE | `/api/custom-fields/:id` | 删除字段（同时清除值） | 认证 |
+| GET | `/api/tasks/:taskId/custom-values` | 获取任务自定义字段值 | 认证 |
+| PUT | `/api/tasks/:taskId/custom-values` | 批量设置字段值 | 认证 |
+
+### 4.10.3 项目模板（Project Template）
 
 | 方法 | 路径 | 说明 | 权限 |
 |------|------|------|------|

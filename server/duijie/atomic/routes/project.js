@@ -78,6 +78,15 @@ router.get('/projects/:id/stats', auth, pag, require('../controllers/project/sta
 // 项目活动动态
 router.get('/projects/:id/activity', auth, pag, require('../controllers/project/activityController'));
 
+// Custom Fields (扩展属性)
+const pagPid = projectAccessGuard({ projectIdParam: 'projectId' });
+router.get('/projects/:projectId/custom-fields', auth, pagPid, require('../controllers/customField/listFieldsController'));
+router.post('/projects/:projectId/custom-fields', auth, pagPid, require('../controllers/customField/createFieldController'));
+router.put('/custom-fields/:id', auth, require('../controllers/customField/updateFieldController'));
+router.delete('/custom-fields/:id', auth, require('../controllers/customField/deleteFieldController'));
+router.get('/tasks/:taskId/custom-values', auth, require('../controllers/customField/getValuesController'));
+router.put('/tasks/:taskId/custom-values', auth, require('../controllers/customField/setValuesController'));
+
 // Project Templates
 router.get('/project-templates', auth, require('../controllers/template/listController'));
 router.post('/project-templates', auth, require('../controllers/template/createController'));
