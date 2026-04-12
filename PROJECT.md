@@ -211,9 +211,11 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 - 拖拽切换状态（HTML5 Drag & Drop）+ 列高亮反馈
 - **新建任务弹窗**：项目选择、**任务标题双模式选择器（固定功能名 / 自由输入历史）**、描述、优先级、初始状态、**指派人（项目成员列表）**、**截止日期**、附件上传，支持 Ctrl+V 粘贴图片/文件且单次粘贴只添加一次
 - **任务标题历史**：按用户 + 项目维度记录自由输入标题，创建成功后自动写入历史，可在选择器中复用和删除
-- **任务详情弹窗**：编辑标题/描述/状态/优先级/指派人/截止日期、附件管理、删除任务，并显示创建人/创建时间（精确到秒）、**催办按钮**（向负责人发送应用内+推送通知，30分钟冷却防骚扰）
-- 任务卡片显示：标题、优先级 Badge、截止日期、指派人、附件数
-- 搜索 + 项目筛选 + 优先级筛选
+- **任务详情弹窗/页面**：编辑标题/描述/状态/优先级/指派人/截止日期、附件管理、删除任务，并显示创建人/创建时间（精确到秒）、**催办按钮**（向负责人发送应用内+推送通知，30分钟冷却防骚扰）；移动端点击卡片打开独立详情页面（`TaskDetailPage`），桌面端打开模态弹窗（`TaskDetailModal`）
+- **仿微信图片上传预览**：选择图片后先进入全屏预览（`ImageUploadPreview`），底部工具栏提供"编辑"/"原图"/"确定"三选项，支持左右切换多图、底部缩略图条，可选进入图片编辑器（画笔/文字/裁剪/马赛克）
+- **需求导出 Excel**：需求看板支持导出当前筛选条件下的任务列表为 Excel
+- 任务卡片显示：标题、项目名+状态、优先级 Badge、截止日期、指派人、附件数
+- 搜索 + 项目筛选 + 优先级筛选 + 状态筛选
 
 ### 3.7 文件管理（File）
 
@@ -431,10 +433,19 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 ### 3.24 前端性能优化
 
 - **路由级代码分割**：React.lazy + Suspense，14个页面模块独立打包，首屏JS体积从988KB降至414KB（减少58%）
+- **Tab 懒加载**：ProjectDetail 各 Tab（TaskTab/TodoTab/FileTab/SettingsTab/OverviewTab/StatsTab/ActivityTab）独立 chunk 按需加载（主 bundle 从 218KB 降至 39KB）
+- **图表独立打包**：Recharts 单独 vendor-charts chunk（约 400KB），独立缓存不随业务代码变化
+- **图片懒加载**：列表中的缩略图使用 `loading="lazy"` 延迟加载
+- **API 聚合**：项目详情页 4 个串行请求合并为 1 个 `/api/projects/:id/bundle`
+- **Dashboard 并行查询**：9 个串行 SQL 改为 `Promise.all` 并行执行
+- **渐进式渲染**：长列表使用 `useProgressiveRender` 分批渲染，避免首屏卡顿
 - **骨架屏组件**：`Skeleton` / `SkeletonCard` / `SkeletonList` / `SkeletonDashboard`，替代转圈加载提升感知速度
+- **离线提示横幅**：`OfflineBanner` 组件在网络断开时显示明确提示
+- **列表搜索防抖**：所有搜索输入框统一 300ms debounce（`useDebounce`）
 - **全局命令面板 + 高级搜索**：`Ctrl+K` 快捷键打开，支持页面跳转、快捷操作、模糊搜索 + 键盘导航 + 角色过滤；输入 2 字以上自动调用后端 `/api/search` 跨项目/客户/需求/文件全文搜索，结果高亮匹配关键词；支持类型筛选芯片（全部/项目/客户/需求/文件）、搜索历史记录（最近 8 条/可清空）、300ms 防抖和请求取消
 - **虚拟滚动**：审计日志表格使用 `@tanstack/react-virtual` 虚拟化渲染，每页200条仅渲染可视区域 DOM，60fps 滚动
 - **乐观更新**：任务看板拖拽、商机移阶段操作即时更新 UI，后台异步提交，失败自动回滚
+- **路由级错误边界**：`ErrorBoundary` 组件包裹路由，单个页面崩溃不影响其他页面，提供重试按钮
 
 ### 3.25 实时数据同步
 
@@ -470,7 +481,8 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 
 **应用层防护：**
 - **密码 bcrypt 哈希**：所有密码存储和验证均使用 bcrypt（兼容明文旧数据自动升级）
-- **TOTP 两步验证（2FA）**：支持用户在个人资料中生成验证器密钥、启用/关闭动态验证码校验；登录/验证码登录在密码或验证码校验成功后进入二次验证挑战流程
+- **会话管理**：用户可查看所有活跃会话（`/api/auth/sessions`），支持注销单个或全部会话
+- **登录日志**：记录每次登录的IP、方式、状态（`/api/auth/login-logs`）
 - **登录暴力破解防护**：登录 15 分钟/10 次，注册 1 小时/5 次
 - **API 速率限制**：全局每 IP 每 15 分钟最多 600 次（MySQL 持久化存储，PM2 重启不丢失）
 - **端点级速率限制**：验证码发送 3 次/60秒（按手机号/邮箱）、找回密码 5 次/15分钟、重置密码 5 次/15分钟
@@ -538,13 +550,15 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 - **响应式布局**：侧边栏 → 抽屉式（overlay + 遮罩 + 自动收起）
 - **自适应网格**：客户/项目卡片根据屏幕宽度自动调整列数
 - **弹窗适配**：Modal 最大宽度 `calc(100vw - 24px)`
+- **移动端独立详情页面**：需求（`TaskDetailPage`）、代办/里程碑（`MilestoneDetailPage`）、知识库文章（`KnowledgeDetailPage`）在移动端点击卡片打开独立子页面（带返回按钮，支持侧滑返回），桌面端保持弹窗模式
 - **企业成员系统移动端优化**：成员列表卡片信息区、成员详情弹窗、添加/编辑成员弹窗在窄屏下自动切换为单列布局；手机号导入区、角色新增按钮、底部操作按钮在手机端全宽显示，避免字段和按钮被挤压或显示不完整
 - **安全区与导航优化**：Android 原生 WebView 预留系统状态栏安全区，避免刘海/状态栏遮挡页面内容；移动端顶部导航在详情页显示触摸返回按钮，配合原生返回键优先回到上一页而不是直接退出应用
+- **设置子页面侧滑返回修复**：通过 `history.pushState` 拦截系统返回手势，确保侧滑先退回设置列表而非直接退到首页
 - **仪表盘/项目管理移动端优化**：项目管理顶部搜索区、状态筛选、项目卡片与新建项目弹窗改为窄屏友好布局；仪表盘统计卡片、趋势图表、工作区块、最近跟进/合同列表在手机端改为单列或可换行显示，避免横向挤压
 - **横向滚动**：客户阶段 Tab、任务看板列
 - **内容间距**：移动端自动缩小 padding
 - **自定义 Hook**：`useIsMobile(breakpoint=768)` 检测移动端
-- **Capacitor 推送桥接**：登录后原生 App 自动尝试注册 Push 权限并把设备令牌回传后端；退出登录时自动注销设备令牌
+- **Capacitor 推送桥接**：登录后原生 App 自动尝试注册 Push 权限并把设备令牌回传后端（Firebase Admin SDK）；退出登录时自动注销设备令牌
 - **Android 预留配置**：`android/app/build.gradle` 已兼容 `google-services.json` 存在时自动启用 Google Services 插件
 
 ---
@@ -569,12 +583,13 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | POST | `/api/auth/refresh` | 刷新访问令牌（Refresh Token轮转） | 公开 |
 | GET | `/api/auth/me` | 当前用户信息 | 认证 |
 | PUT | `/api/auth/profile` | 更新个人资料 | 认证 |
-| PUT | `/api/auth/change-password` | 修改密码（需手机验证码） | 认证 |
-| POST | `/api/auth/2fa/login/verify` | 登录二次验证（challenge_token + TOTP） | 公开 |
-| GET | `/api/auth/2fa/status` | 查询当前用户 2FA 状态 | 认证 |
-| POST | `/api/auth/2fa/setup` | 生成验证器密钥 | 认证 |
-| POST | `/api/auth/2fa/enable` | 启用 2FA | 认证 |
-| POST | `/api/auth/2fa/disable` | 关闭 2FA | 认证 |
+| POST | `/api/auth/avatar` | 上传头像 | 认证 |
+| PUT | `/api/auth/change-password` | 修改密码 | 认证 |
+| POST | `/api/auth/guide-done` | 标记新手引导完成 | 认证 |
+| GET | `/api/auth/sessions` | 会话列表 | 认证 |
+| DELETE | `/api/auth/sessions/all` | 清除所有会话 | 认证 |
+| DELETE | `/api/auth/sessions/:id` | 删除指定会话 | 认证 |
+| GET | `/api/auth/login-logs` | 登录日志 | 认证 |
 
 ### 4.2 系统配置（System）
 
@@ -599,12 +614,53 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | 方法 | 路径 | 说明 | 权限 |
 |------|------|------|------|
 | POST | `/api/projects` | 创建项目 | 认证 |
-| GET | `/api/projects/export` | 导出项目列表（CSV） | 认证 |
-| GET | `/api/projects` | 项目列表（admin 全量；member 仅参与/创建的项目，企业权限可扩展可见范围） | 认证 |
+| GET | `/api/projects/export` | 导出项目列表（Excel） | 认证 |
+| POST | `/api/projects/import` | 导入项目 | 认证 |
+| GET | `/api/projects/team-users` | 团队用户列表 | 认证 |
+| GET | `/api/projects/search-by-code` | 按邀请码搜索项目 | 认证 |
+| POST | `/api/projects/join-request` | 申请加入项目 | 认证 |
+| POST | `/api/projects/join-by-invite` | 通过邀请加入 | 认证 |
+| GET | `/api/projects` | 项目列表 | 认证 |
+| GET | `/api/projects/trash` | 回收站项目 | 认证 |
+| PATCH | `/api/projects/:id/restore` | 恢复已删除项目 | 认证 |
 | GET | `/api/projects/:id` | 项目详情（含成员） | 认证 |
-| GET | `/api/projects/:id/overview` | 项目概览统计（任务分布/成员/文件/消息/代办/动态） | 认证+项目成员 |
-| PUT | `/api/projects/:id` | 更新项目 | 认证 |
-| DELETE | `/api/projects/:id` | 删除项目 | 认证 |
+| GET | `/api/projects/:id/bundle` | 项目聚合数据（详情+成员+统计） | 认证 |
+| GET | `/api/projects/:id/overview` | 项目概览统计 | 项目成员 |
+| GET | `/api/projects/:id/stats` | 项目统计数据 | 项目成员 |
+| GET | `/api/projects/:id/activity` | 项目动态列表 | 项目成员 |
+| PUT | `/api/projects/:id` | 更新项目 | 项目成员 |
+| DELETE | `/api/projects/:id` | 删除项目 | 项目成员 |
+| POST | `/api/projects/:id/cover` | 上传项目封面 | 项目成员 |
+| DELETE | `/api/projects/:id/cover` | 删除项目封面 | 项目成员 |
+| GET | `/api/projects/:id/my-perms` | 当前用户在项目中的权限 | 认证 |
+| POST | `/api/projects/:id/members` | 添加项目成员 | 项目成员 |
+| PUT | `/api/projects/:id/members/:memberId` | 更新成员角色 | 项目成员 |
+| DELETE | `/api/projects/:id/members/:userId` | 移除项目成员 | 项目成员 |
+| GET | `/api/projects/:id/available-users` | 可添加的用户列表 | 项目成员 |
+| GET | `/api/projects/:id/search-users` | 搜索项目内用户 | 项目成员 |
+| PATCH | `/api/projects/:id/nickname` | 设置项目内昵称 | 项目成员 |
+| PATCH | `/api/projects/:id/member-remark` | 设置成员备注 | 项目成员 |
+| GET | `/api/projects/:id/roles` | 项目角色列表 | 项目成员 |
+| POST | `/api/projects/:id/roles` | 创建角色 | 项目成员 |
+| PUT | `/api/projects/:id/roles/:roleId` | 更新角色 | 项目成员 |
+| DELETE | `/api/projects/:id/roles/:roleId` | 删除角色 | 项目成员 |
+| GET | `/api/projects/:id/join-requests` | 加入申请列表 | 项目成员 |
+| POST | `/api/projects/:id/join-requests/:requestId/approve` | 审批通过 | 项目成员 |
+| POST | `/api/projects/:id/join-requests/:requestId/reject` | 拒绝申请 | 项目成员 |
+| POST | `/api/projects/:id/invite` | 邀请成员 | 项目成员 |
+| POST | `/api/projects/:id/invite-token` | 生成邀请令牌 | 项目成员 |
+| GET | `/api/projects/:id/task-title-options` | 任务标题选项 | 项目成员 |
+| POST | `/api/projects/:id/task-title-history` | 记录标题历史 | 项目成员 |
+| DELETE | `/api/projects/:id/task-title-history/:historyId` | 删除标题历史 | 项目成员 |
+| PATCH | `/api/projects/:id/task-title-presets` | 编辑预设标题 | 项目成员 |
+| POST | `/api/projects/:id/client-request` | 发起客户关联请求 | 项目成员 |
+| GET | `/api/projects/:id/client-available-users` | 可添加的客户方用户 | 项目成员 |
+| POST | `/api/projects/:id/client-members` | 添加客户方成员 | 项目成员 |
+| DELETE | `/api/projects/:id/client-members/:userId` | 移除客户方成员 | 项目成员 |
+| GET | `/api/projects/client-requests` | 客户关联请求列表 | 认证 |
+| GET | `/api/projects/client-requests/sent` | 已发送的客户请求 | 认证 |
+| POST | `/api/projects/client-requests/:id/approve` | 审批客户请求 | 认证 |
+| POST | `/api/projects/client-requests/:id/reject` | 拒绝客户请求 | 认证 |
 
 ### 4.5 客户管理（Client）
 
@@ -659,16 +715,31 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 
 ### 4.10 任务管理（Task）
 
-- **草稿箱**：添加需求弹窗支持「保存草稿」，草稿存储在 localStorage（`task_drafts_{projectId}`），每个项目最多 20 条；任务列表头部「草稿」按钮可打开草稿箱，点击草稿自动填入表单继续编辑
+- **草稿箱**：支持「保存草稿」/「加载草稿」/「删除草稿」
 
 | 方法 | 路径 | 说明 | 权限 |
 |------|------|------|------|
+| GET | `/api/drafts` | 草稿列表 | 认证 |
+| POST | `/api/drafts` | 保存草稿 | 认证 |
+| DELETE | `/api/drafts/:id` | 删除草稿 | 认证 |
 | POST | `/api/tasks` | 创建任务 | staff |
-| GET | `/api/tasks/export` | 导出任务列表（CSV） | staff |
-| GET | `/api/tasks` | 任务列表 | staff |
+| GET | `/api/tasks/export` | 导出任务列表（Excel） | 认证 |
+| GET | `/api/tasks/trash` | 回收站任务 | staff |
+| GET | `/api/tasks` | 任务列表 | 认证 |
+| GET | `/api/tasks/:id` | 任务详情 | 认证 |
 | PUT | `/api/tasks/:id` | 更新任务 | staff |
 | PATCH | `/api/tasks/:id/move` | 移动状态 | staff |
 | POST | `/api/tasks/:id/remind` | 催办负责人（30分钟冷却） | staff |
+| DELETE | `/api/tasks/:id` | 删除任务 | staff |
+| PATCH | `/api/tasks/:id/restore` | 恢复已删除任务 | staff |
+| POST | `/api/tasks/:id/attachments` | 上传任务附件 | staff |
+| DELETE | `/api/tasks/attachments/:attachmentId` | 删除附件 | staff |
+| GET | `/api/tasks/attachments/:attachmentId/download` | 下载附件 | 认证 |
+| GET | `/api/tasks/:id/review-points` | 审核要点列表 | 认证 |
+| POST | `/api/tasks/:id/review-points` | 添加审核要点 | staff |
+| PUT | `/api/tasks/review-points/:pointId` | 更新审核要点 | staff |
+| PUT | `/api/tasks/review-points/:pointId/respond` | 回复审核要点 | staff |
+| PUT | `/api/tasks/review-points/:pointId/confirm` | 确认审核要点 | staff |
 
 ### 4.10.1 工时汇报（Timesheet）
 
@@ -699,15 +770,53 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | POST | `/api/project-templates` | 创建模板（可从项目提取） | 认证 |
 | DELETE | `/api/project-templates/:id` | 删除模板（创建者/管理员） | 认证 |
 
-### 4.11 文件（File）
+### 4.11 里程碑/代办（Milestone）
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| POST | `/api/milestones` | 创建里程碑 | 认证 |
+| GET | `/api/milestones` | 里程碑列表 | 认证 |
+| PUT | `/api/milestones/:id` | 更新里程碑 | 认证 |
+| DELETE | `/api/milestones/:id` | 删除里程碑 | 认证 |
+| GET | `/api/milestones/trash` | 回收站 | 认证 |
+| PATCH | `/api/milestones/:id/restore` | 恢复删除 | 认证 |
+| PATCH | `/api/milestones/:id/toggle` | 切换完成状态 | 认证 |
+| PATCH | `/api/milestones/:id/progress` | 更新进度 | 认证 |
+| GET | `/api/milestones/:id/detail` | 详情 | 认证 |
+| GET | `/api/milestones/:id/participants` | 参与者列表 | 认证 |
+| POST | `/api/milestones/:id/participants` | 添加参与者 | 认证 |
+| DELETE | `/api/milestones/:id/participants/:userId` | 移除参与者 | 认证 |
+| GET | `/api/milestones/:id/messages` | 里程碑消息 | 认证 |
+| POST | `/api/milestones/:id/messages` | 发送消息 | 认证 |
+| GET | `/api/milestones/:id/reminders` | 提醒列表 | 认证 |
+| POST | `/api/milestones/:id/reminders` | 添加提醒 | 认证 |
+| DELETE | `/api/milestone-reminders/:reminderId` | 删除提醒 | 认证 |
+
+### 4.12 文件（File）
 
 | 方法 | 路径 | 说明 | 权限 |
 |------|------|------|------|
 | POST | `/api/files/upload` | 上传文件 | 认证 |
+| POST | `/api/files/url` | 添加网址书签 | 认证 |
+| POST | `/api/files/note` | 添加文字笔记 | 认证 |
 | GET | `/api/files/all` | 全局文件列表 | 认证 |
 | GET | `/api/files` | 项目文件列表 | 认证 |
 | DELETE | `/api/files/:id` | 删除文件 | 认证 |
 | GET | `/api/files/:id/download` | 下载文件 | 认证 |
+| GET | `/api/files/:id/preview` | 文件预览 | 认证 |
+
+### 4.12.1 资料组（Resource Group）
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| POST | `/api/resource-groups` | 创建资料组 | 认证 |
+| GET | `/api/resource-groups` | 资料组列表 | 认证 |
+| GET | `/api/resource-groups/:id` | 资料组详情 | 认证 |
+| PUT | `/api/resource-groups/:id` | 更新资料组 | 认证 |
+| DELETE | `/api/resource-groups/:id` | 删除资料组 | 认证 |
+| POST | `/api/resource-groups/items` | 添加资料项 | 认证 |
+| PUT | `/api/resource-groups/items/:itemId` | 更新资料项 | 认证 |
+| DELETE | `/api/resource-groups/items/:itemId` | 删除资料项 | 认证 |
 
 ### 4.13 消息（Message）
 
@@ -734,6 +843,38 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | GET | `/api/dm/:userId/history` | 聊天记录（自动标记已读） | 认证 |
 | POST | `/api/dm/send` | 发送消息 | 认证 |
 | PATCH | `/api/dm/:id/recall` | 撤回消息（2分钟内） | 认证 |
+
+### 4.15.1 好友（Friend）
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/api/friends/search` | 搜索用户（ID/用户名/手机号） | 认证 |
+| GET | `/api/friends` | 好友列表 | 认证 |
+| POST | `/api/friends/request` | 发送好友请求 | 认证 |
+| GET | `/api/friends/requests` | 收到的好友请求 | 认证 |
+| PATCH | `/api/friends/:id/respond` | 接受/拒绝好友请求 | 认证 |
+| DELETE | `/api/friends/:id` | 删除好友 | 认证 |
+
+### 4.15.2 群聊（Group）
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| POST | `/api/groups` | 创建群聊 | 认证 |
+| GET | `/api/groups` | 群聊列表 | 认证 |
+| GET | `/api/groups/:id` | 群聊详情 | 认证 |
+| GET | `/api/groups/:id/history` | 群聊消息记录 | 认证 |
+| POST | `/api/groups/:id/send` | 发送群消息 | 认证 |
+| PATCH | `/api/groups/:id/messages/:msgId/recall` | 撤回群消息 | 认证 |
+| POST | `/api/groups/:id/members` | 添加群成员 | 认证 |
+| DELETE | `/api/groups/:id/leave` | 退出群聊 | 认证 |
+
+### 4.15.3 用户备注名（Nickname）
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/api/nicknames` | 当前用户的所有备注名 | 认证 |
+| PUT | `/api/nicknames/:targetUserId` | 设置/更新备注名 | 认证 |
+| DELETE | `/api/nicknames/:targetUserId` | 删除备注名 | 认证 |
 
 ### 4.16 工单（Ticket）
 
@@ -772,9 +913,14 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | 方法 | 路径 | 说明 | 权限 |
 |------|------|------|------|
 | GET | `/api/notifications` | 通知列表 | 认证 |
-| PATCH | `/api/notifications/:id/read` | 标记已读（id=all全部已读） | 认证 |
+| GET | `/api/notifications/unread-summary` | 未读通知摘要 | 认证 |
+| PATCH | `/api/notifications/:id/read` | 标记已读 | 认证 |
+| PATCH | `/api/notifications/read-by-tab` | 按分类标记已读 | 认证 |
+| DELETE | `/api/notifications/cleanup` | 清理通知 | 认证 |
+| DELETE | `/api/notifications/:id` | 删除通知 | 认证 |
 | POST | `/api/notifications/devices` | 注册移动设备令牌 | 认证 |
 | POST | `/api/notifications/devices/unregister` | 注销移动设备令牌 | 认证 |
+| GET | `/api/sse` | SSE 事件流连接 | 认证 |
 
 ### 4.21 合作方管理（Partner）
 
@@ -807,6 +953,34 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 | GET | `/api/open/projects/:id` | 查询单个项目 | X-API-Key + projects:read |
 | POST | `/api/open/webhook` | 接收 Webhook 事件 | X-API-Key + webhook |
 
+### 4.24 知识库（Knowledge Base）
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/api/kb/categories` | 分类列表 | staff |
+| POST | `/api/kb/categories` | 创建分类 | staff |
+| PUT | `/api/kb/categories/:id` | 更新分类 | staff |
+| DELETE | `/api/kb/categories/:id` | 删除分类 | staff |
+| GET | `/api/kb/articles` | 文章列表 | staff |
+| GET | `/api/kb/articles/:id` | 文章详情 | staff |
+| POST | `/api/kb/articles` | 创建文章 | staff |
+| PUT | `/api/kb/articles/:id` | 更新文章 | staff |
+| DELETE | `/api/kb/articles/:id` | 删除文章 | staff |
+
+### 4.25 全局搜索 & 应用版本
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/api/search` | 全局搜索（项目/客户/需求/文件） | 认证 |
+| GET | `/api/health` | 健康检查 | 公开 |
+| GET | `/api/app/version` | 应用版本信息 | 公开 |
+| GET | `/api/app/bundle` | 前端包信息 | 公开 |
+| GET | `/api/app/bundle/download` | 下载前端包 | 公开 |
+| POST | `/api/invite-links` | 创建邀请链接 | admin |
+| GET | `/api/invite-links` | 邀请链接列表 | admin |
+| GET | `/api/invite-links/:token/validate` | 验证邀请链接 | 公开 |
+| DELETE | `/api/invite-links/:id` | 删除邀请链接 | admin |
+
 项目列表、详情、导出与企业项目接口均返回双方企业字段：`internal_client_id`、`internal_client_name`、`internal_client_company`、`client_id`、`client_name`、`client_company`。
 
 项目详情页的企业信息与成员区按当前登录用户的活跃企业视角显示：当前企业显示为“我方企业 / 我方团队”，另一侧显示为“客户企业”或“对方企业”。
@@ -815,56 +989,103 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 
 ## 五、数据库表结构
 
-数据库：`duijie_db`，共 25 张表。
+数据库：`duijie_db`，共 40+ 张表（含迁移新增表）。
 
 | 表名 | 说明 |
 |------|------|
-| `voice_users` | 用户表（id, username, password, nickname, email, phone, avatar, role, client_id, manager_id, last_login_at, totp_secret, totp_enabled） |
+| `voice_users` | 用户表（id, username, password, nickname, email, phone, avatar, role, client_id, display_id, guide_done, department, employee_no） |
 | `system_config` | 系统配置（JWT_SECRET, INVITE_CODE） |
-| `duijie_clients` | 客户/企业表（assigned_to, credit_code, legal_person, registered_capital, established_date, business_scope, company_type, website, join_code） |
-| `duijie_opportunities` | 商机表（title, client_id, amount, probability, stage, assigned_to） |
-| `duijie_direct_messages` | 站内消息表（sender_id, receiver_id, content, read_at, is_recalled） |
-| `duijie_tickets` | 工单表（title, content, type, priority, status, project_id, assigned_to, rating） |
-| `duijie_ticket_replies` | 工单回复表（ticket_id, content, created_by） |
-| `duijie_projects` | 项目表（internal_client_id, client_id, status, progress, app_name, app_url） |
-| `duijie_tasks` | 任务表 |
-| `duijie_files` | 文件表 |
+| `verification_codes` | 验证码表 |
+| `refresh_tokens` | 刷新令牌表 |
+| `rate_limit_store` | 速率限制存储 |
+| `duijie_clients` | 客户/企业表（assigned_to, credit_code, legal_person, display_id, join_code） |
+| `duijie_client_members` | 企业成员表（client_id, user_id, name, role, position, department_id） |
+| `duijie_departments` | 部门表（client_id, name, parent_id, sort_order） |
+| `duijie_join_requests` | 加入企业申请表（client_id, user_id, status） |
+| `enterprise_roles` | 企业自定义角色表（client_id, name, color, 16个权限字段） |
+| `duijie_projects` | 项目表（internal_client_id, client_id, status, display_id, cover_image） |
+| `duijie_project_members` | 项目成员关联表（project_id, user_id, role, enterprise_role_id, project_role_id） |
+| `project_roles` | 项目角色表（project_id, enterprise_id, role_key, 60个 can_* 权限字段） |
+| `duijie_project_join_requests` | 项目加入申请表 |
+| `duijie_project_invite_tokens` | 项目邀请令牌表 |
+| `duijie_project_client_requests` | 项目-客户关联请求表 |
+| `duijie_client_requests` | 客户关联请求表 |
+| `duijie_project_activities` | 项目动态表（project_id, user_id, type, entity_type, entity_id, title, detail） |
+| `duijie_tasks` | 任务表（project_id, assignee_id, status, display_id） |
+| `duijie_task_title_history` | 任务标题历史表 |
+| `duijie_task_drafts` | 任务草稿表 |
+| `duijie_task_review_points` | 审核要点表 |
+| `duijie_milestones` | 里程碑/代办表（project_id, progress, is_completed） |
+| `duijie_milestone_participants` | 里程碑参与者表 |
+| `duijie_milestone_messages` | 里程碑消息表 |
+| `duijie_milestone_reminders` | 里程碑提醒表 |
+| `duijie_files` | 文件表（project_id, uploaded_by, description） |
+| `duijie_resource_groups` | 资料组表（project_id, name, created_by） |
+| `duijie_resource_group_items` | 资料组内容表 |
+| `duijie_resource_group_visibility` | 资料组可见性表 |
 | `duijie_messages` | 项目消息表 |
-| `duijie_project_members` | 项目成员关联表 |
+| `duijie_direct_messages` | 站内消息表（sender_id, receiver_id, content, is_recalled） |
+| `duijie_friends` | 好友关系表 |
+| `duijie_groups` | 群聊表 |
+| `duijie_group_members` | 群成员表 |
+| `duijie_group_messages` | 群消息表 |
+| `user_nicknames` | 用户备注名表 |
 | `duijie_contacts` | 联系人表 |
 | `duijie_contracts` | 合同表 |
 | `duijie_follow_ups` | 跟进记录表 |
 | `duijie_tags` | 标签表 |
 | `duijie_client_tags` | 客户标签关联表 |
 | `duijie_client_logs` | 客户变更日志表 |
+| `duijie_opportunities` | 商机表（title, client_id, amount, probability, stage） |
+| `duijie_tickets` | 工单表 |
+| `duijie_ticket_replies` | 工单回复表 |
 | `duijie_notifications` | 通知表（user_id, type, category, title, content, link, is_read, project_id） |
-| `duijie_projects.cover_image` | 项目封面图 URL（VARCHAR(500)） |
-| `duijie_audit_logs` | 审计日志表（user_id, username, action, entity_type, entity_id, detail, ip） |
-| `duijie_client_members` | 企业成员表（client_id, user_id, name, role[creator/admin/member], position, department_id, phone, email） |
-| `duijie_departments` | 部门表（client_id, name, parent_id, sort_order） |
-| `duijie_join_requests` | 加入企业申请表（client_id, user_id, status[pending/approved/rejected]） |
-| `duijie_device_tokens` | 移动设备令牌表（user_id, platform, device_token, app_version, is_active, last_seen_at） |
+| `duijie_device_tokens` | 移动设备令牌表（user_id, platform, device_token） |
+| `duijie_audit_logs` | 审计日志表（user_id, action, entity_type, detail, ip） |
+| `duijie_partner_api_keys` | 合作方 API Key 表 |
+| `duijie_kb_categories` | 知识库分类表（enterprise_id, name, parent_id） |
+| `duijie_kb_articles` | 知识库文章表（enterprise_id, category_id, title, content, status） |
+| `duijie_login_logs` | 登录日志表（user_id, login_type, ip, status） |
+| `duijie_timesheets` | 工时记录表（user_id, task_id, project_id, work_date, hours） |
+| `duijie_project_templates` | 项目模板表（name, enterprise_id, config JSON） |
+| `duijie_custom_fields` | 自定义字段定义表（project_id, name, field_type, options JSON） |
+| `duijie_custom_field_values` | 自定义字段值表（task_id, field_id, value） |
 
 ---
 
 ## 六、前端路由
 
+路由定义在 `routeManifest.ts` 中，由 `App.tsx` 根据用户权限动态过滤渲染。
+
 | 路径 | 组件 | 说明 | 权限 |
 |------|------|------|------|
 | `/` | Dashboard | 仪表盘首页 | 认证 |
 | `/projects` | ProjectList | 项目列表 | 认证 |
-| `/projects/:id` | ProjectDetail | 项目详情（5 Tab：需求/资料库/待办/消息/设置） | 认证 |
+| `/projects/:id` | ProjectDetail | 项目详情（多 Tab：需求/资料库/待办/概览/统计/动态/设置） | 认证 |
 | `/clients` | ClientList | 客户列表 | staff |
 | `/clients/:id` | ClientDetail | 客户详情 | staff |
-| `/opportunities` | OpportunityList | 商机管道看板 | staff |
-| `/tasks` | TaskBoard | 任务看板 | staff |
+| `/tasks` | TaskBoard | 需求看板 | 认证 |
+| `/tasks/:id` | TaskDetailPage | 需求详情（移动端独立页面） | 认证 |
+| `/timesheets` | TimesheetPage | 工时汇报 | 认证 |
+| `/enterprise` | EnterpriseMgmt | 企业管理 | 认证 |
 | `/messaging` | Messaging | 站内消息聊天 | 认证 |
-| `/tickets` | TicketPage | 工单系统（提交/列表/详情/回复/评价） | 认证 |
-| `/report` | Report | 数据报表 | staff |
+| `/calendar` | CalendarPage | 日历日程 | 认证 |
 | `/files` | FileManager | 文件管理 | 认证 |
+| `/contacts` | ContactList | 联系人管理 | 认证 |
+| `/notifications` | NotificationCenter | 通知中心 | 认证 |
+| `/knowledge` | KnowledgeBase | 知识库 | 认证 |
+| `/knowledge/:id` | KnowledgeDetailPage | 知识库文章详情（移动端独立页面） | 认证 |
+| `/milestones/:id` | MilestoneDetailPage | 代办/里程碑详情（移动端独立页面） | 认证 |
 | `/users` | UserManagement | 用户管理 + 邀请码管理 | admin |
 | `/audit` | AuditLog | 审计日志 | admin |
+| `/partners` | PartnerManagement | 合作方管理 | admin |
 | `/settings` | SystemSettings | 系统配置 | admin |
+| `/user-settings` | UserSettings | 个人设置 | 认证 |
+| `/services` | ServicesPage | 服务页面 | 认证 |
+| `/my` | MyPage | 我的（移动端个人中心） | 认证 |
+| `/about` | AboutPage | 关于 | 认证 |
+| `/join/:code` | JoinProjectPage | 项目邀请链接入口 | 公开（未登录跳登录） |
+| `/invite/:token` | InviteLandingPage | 邀请链接落地页 | 公开 |
 
 ---
 
