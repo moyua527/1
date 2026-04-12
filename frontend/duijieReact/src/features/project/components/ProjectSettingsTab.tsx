@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Users, Shield, AppWindow, UserPlus, ChevronRight, UserPlus2, Pencil, Trash2, LayoutDashboard, Clock, BarChart3, SlidersHorizontal } from 'lucide-react'
 import useNicknameStore from '../../../stores/useNicknameStore'
 import ProjectRoleList from './ProjectRoleList'
@@ -59,16 +59,24 @@ const settingsItems: { key: SubTab; label: string; icon: any; desc: string; cond
 
 export default function ProjectSettingsTab({ project, projectId, isOwner, canManageRole, canApproveJoin, canEdit, canDelete, isMobile, pendingJoinCount, onRefreshProject, onRefreshJoinCount, onOpenAddMember, onMemberClick, onEditProject, onDeleteProject, tasks = [] }: Props) {
   const [sub, setSub] = useState<SubTab | null>(null)
-  const subRef = useRef(sub)
-  subRef.current = sub
+
+  const openSub = (s: SubTab) => {
+    setSub(s)
+    window.history.pushState({ settingsSub: s }, '')
+  }
 
   useEffect(() => {
-    (window as any).__gestureBackHandler = () => {
-      if (subRef.current) { setSub(null); return true }
-      return false
+    const onPop = (e: PopStateEvent) => {
+      if (sub && (!e.state || !e.state.settingsSub)) {
+        e.stopImmediatePropagation()
+        setSub(null)
+      }
     }
-    return () => { (window as any).__gestureBackHandler = null }
-  }, [])
+    if (sub) {
+      window.addEventListener('popstate', onPop)
+      return () => window.removeEventListener('popstate', onPop)
+    }
+  }, [sub])
 
   const user = useUserStore(s => s.user)
   const globalDn = useNicknameStore(s => s.getDisplayName)
@@ -178,7 +186,7 @@ export default function ProjectSettingsTab({ project, projectId, isOwner, canMan
       <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>设置</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {visible.map(item => (
-          <button key={item.key} onClick={() => { if (item.key === 'nickname') setNicknameInput(currentNickname); setSub(item.key) }}
+          <button key={item.key} onClick={() => { if (item.key === 'nickname') setNicknameInput(currentNickname); openSub(item.key) }}
             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 12px', borderRadius: 10, border: 'none', background: 'transparent', cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'background 0.15s' }}
             onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'}
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>

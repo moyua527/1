@@ -232,14 +232,9 @@ export default function Layout() {
       if (swipeOverlayRef.current) swipeOverlayRef.current.style.display = 'none'
       if (dx > 80) {
         if (!popModalClose()) {
-          const backFn = (window as any).__gestureBackHandler
-          if (typeof backFn === 'function' && backFn()) {
-            // sub-tab handled the back gesture
-          } else {
-            const path = location.pathname
-            const parent = path.replace(/\/[^/]+\/?$/, '') || '/'
-            navigate(parent)
-          }
+          const path = location.pathname
+          const parent = path.replace(/\/[^/]+\/?$/, '') || '/'
+          navigate(parent)
         }
       }
     }

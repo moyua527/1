@@ -13,20 +13,6 @@ export function popModalClose(): boolean {
   return false
 }
 
-const _backStack: (() => void)[] = []
-
-/** Register a "back" handler (e.g. sub-tab → parent). Returns unregister fn. */
-export function pushBackHandler(fn: () => void): () => void {
-  _backStack.push(fn)
-  return () => { const i = _backStack.indexOf(fn); if (i >= 0) _backStack.splice(i, 1) }
-}
-
-/** Try to pop the topmost back handler. Returns true if handled. */
-export function popBackHandler(): boolean {
-  const fn = _backStack.pop()
-  if (fn) { fn(); return true }
-  return false
-}
 
 const overlay: React.CSSProperties = {
   position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex',
