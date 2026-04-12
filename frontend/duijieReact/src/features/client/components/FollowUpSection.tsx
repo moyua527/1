@@ -48,6 +48,7 @@ export default function FollowUpSection({ clientId, followUps, onRefresh, embedd
   }
 
   const handleDelete = async (fId: number) => {
+    if (!window.confirm('确定要删除这条跟进记录吗？')) return
     const r = await clientApi.deleteFollowUp(fId)
     if (r.success) { toast('跟进记录已删除', 'success'); onRefresh() }
     else toast(r.message || '删除失败', 'error')

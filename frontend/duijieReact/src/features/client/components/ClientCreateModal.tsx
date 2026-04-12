@@ -6,14 +6,7 @@ import Modal from '../../ui/Modal'
 import Input from '../../ui/Input'
 import Button from '../../ui/Button'
 import { toast } from '../../ui/Toast'
-
-const stageMap: Record<string, { label: string }> = {
-  potential: { label: '潜在' },
-  intent: { label: '意向' },
-  signed: { label: '签约' },
-  active: { label: '合作中' },
-  lost: { label: '流失' },
-}
+import { stageMap } from './constants'
 
 interface Props {
   open: boolean

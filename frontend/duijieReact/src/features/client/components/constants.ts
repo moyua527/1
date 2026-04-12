@@ -18,10 +18,10 @@ export const followTypeMap: Record<string, { label: string; icon: string }> = {
 
 export const stageMap: Record<string, { label: string; color: string; bg: string }> = {
   potential: { label: '潜在', color: '#6b7280', bg: '#f3f4f6' },
-  intent: { label: '意向', color: '#2563eb', bg: '#eff6ff' },
-  signed: { label: '签约', color: '#7c3aed', bg: '#f5f3ff' },
-  active: { label: '合作中', color: '#16a34a', bg: '#f0fdf4' },
-  lost: { label: '流失', color: '#dc2626', bg: '#fef2f2' },
+  intent: { label: '意向', color: 'var(--brand)', bg: 'var(--bg-selected)' },
+  signed: { label: '签约', color: 'var(--color-purple)', bg: '#f5f3ff' },
+  active: { label: '合作中', color: 'var(--color-success)', bg: '#f0fdf4' },
+  lost: { label: '流失', color: 'var(--color-danger)', bg: '#fef2f2' },
 }
 
 export const contractStatusMap: Record<string, { label: string; color: string; bg: string }> = {

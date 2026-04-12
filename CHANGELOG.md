@@ -2,6 +2,7 @@
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.4.29 | 2026-04-12 | 客户管理模块优化：统一stageMap到constants消除3处重复、客户列表加useMemo、修复ClientEditModal渲染阶段setState、跟进记录删除加确认弹窗、ScoreSection防NaN、更新PROJECT.md 3.4文档 |
 | v1.4.28 | 2026-04-12 | 项目管理模块优化：修复useEffect缺失依赖/TodoTab移动端定位bug/JSON.parse崩溃/URL.createObjectURL泄漏，清理ProjectDetail/ProjectSettingsTab/TaskTab死代码死props，列表过滤加useMemo |
 | v1.4.27 | 2026-04-12 | 首页代码优化：提取SalesFunnel/FollowUpAlerts/RecentActivity/QuickNavMenu独立组件，WorkspaceSection改用useApi hook，删除无效useEffect，更新PROJECT.md首页文档 |
 | v1.4.26 | 2026-04-12 | 认证模块代码优化：提取共享Hook和组件，消除LoginForm/RegisterForm/ForgotPasswordForm三文件间重复代码 |

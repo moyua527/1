@@ -1,7 +1,7 @@
 {
-  "version": "1.4.28",
-  "versionCode": 431,
+  "version": "1.4.29",
+  "versionCode": 432,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "项目管理模块代码优化：修复useEffect依赖/TodoTab定位bug/JSON.parse崩溃/URL泄漏，清理死代码，添加useMemo"
+  "changelog": "客户管理模块优化：统一stageMap到constants、列表加useMemo、修复EditModal渲染阶段setState、删除确认弹窗、ScoreSection防NaN，更新PROJECT.md"
 }

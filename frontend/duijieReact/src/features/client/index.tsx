@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
 import { Plus, Users, Loader2, Download, Upload } from 'lucide-react'
 import { clientApi } from './services/api'
@@ -12,18 +12,11 @@ import FilterBar from '../ui/FilterBar'
 import EmptyState from '../ui/EmptyState'
 import ClientCreateModal from './components/ClientCreateModal'
 import ClientImportModal from './components/ClientImportModal'
+import { stageMap } from './components/constants'
 
 const cardStyle: React.CSSProperties = {
   background: 'var(--bg-primary)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
   cursor: 'pointer', transition: 'box-shadow 0.15s', display: 'flex', alignItems: 'center', gap: 16,
-}
-
-const stageMap: Record<string, { label: string; color: string; bg: string }> = {
-  potential: { label: '潜在', color: '#6b7280', bg: '#f3f4f6' },
-  intent: { label: '意向', color: 'var(--brand)', bg: 'var(--bg-selected)' },
-  signed: { label: '签约', color: 'var(--color-purple)', bg: '#f5f3ff' },
-  active: { label: '合作中', color: 'var(--color-success)', bg: '#f0fdf4' },
-  lost: { label: '流失', color: 'var(--color-danger)', bg: '#fef2f2' },
 }
 
 
@@ -47,14 +40,14 @@ export default function ClientList() {
   const load = () => invalidate('clients')
   useLiveData(['client'], load)
 
-  const filtered = clients.filter(c => {
+  const filtered = useMemo(() => clients.filter(c => {
     if (stageFilter && (c.stage || 'potential') !== stageFilter) return false
     if (debouncedSearch.trim()) {
       const q = debouncedSearch.trim().toLowerCase()
       return [c.name, c.company, c.phone, c.email, c.channel].some(v => v && String(v).toLowerCase().includes(q))
     }
     return true
-  })
+  }), [clients, stageFilter, debouncedSearch])
 
   return (
     <div>

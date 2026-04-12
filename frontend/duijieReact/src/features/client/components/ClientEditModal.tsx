@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Building2, UserCircle } from 'lucide-react'
 import { clientApi } from '../services/api'
 import Button from '../../ui/Button'
@@ -14,15 +14,14 @@ export default function ClientEditModal({ open, onClose, client, clientId, onSav
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [staffMembers, setStaffMembers] = useState<any[]>([])
-  const [inited, setInited] = useState(false)
 
-  if (open && !inited) {
-    setForm({ client_type: client.client_type || 'company', name: client.name || '', company: client.company || '', email: client.email || '', phone: client.phone || '', channel: client.channel || '', stage: client.stage || 'potential', notes: client.notes || '', position_level: client.position_level || '', department: client.department || '', job_function: client.job_function || '', assigned_to: client.assigned_to ? String(client.assigned_to) : '' })
-    setErrors({})
-    clientApi.availableMembers().then(r => { if (r.success) setStaffMembers(r.data || []) })
-    setInited(true)
-  }
-  if (!open && inited) setInited(false)
+  useEffect(() => {
+    if (open) {
+      setForm({ client_type: client.client_type || 'company', name: client.name || '', company: client.company || '', email: client.email || '', phone: client.phone || '', channel: client.channel || '', stage: client.stage || 'potential', notes: client.notes || '', position_level: client.position_level || '', department: client.department || '', job_function: client.job_function || '', assigned_to: client.assigned_to ? String(client.assigned_to) : '' })
+      setErrors({})
+      clientApi.availableMembers().then(r => { if (r.success) setStaffMembers(r.data || []) })
+    }
+  }, [open, client])
 
   const clr = (k: string) => setErrors(prev => { const n = { ...prev }; delete n[k]; return n })
   const ee = errors

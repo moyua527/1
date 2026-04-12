@@ -21,15 +21,18 @@ export default function ScoreSection({ score }: ScoreSectionProps) {
         <span style={{ fontSize: 14, color: 'var(--text-tertiary)' }}>{score.total}/100</span>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {Object.entries(score.breakdown).map(([k, v]) => (
-          <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-            <span style={{ width: 70, color: 'var(--text-secondary)', flexShrink: 0 }}>{dimLabels[k] || k}</span>
-            <div style={{ flex: 1, height: 6, background: 'var(--bg-tertiary)', borderRadius: 3, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${((v as number) / dimMax[k]) * 100}%`, background: colors[score.label], borderRadius: 3, transition: 'width 0.3s' }} />
+        {Object.entries(score.breakdown).map(([k, v]) => {
+          const max = dimMax[k] || 1
+          return (
+            <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+              <span style={{ width: 70, color: 'var(--text-secondary)', flexShrink: 0 }}>{dimLabels[k] || k}</span>
+              <div style={{ flex: 1, height: 6, background: 'var(--bg-tertiary)', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${((v as number) / max) * 100}%`, background: colors[score.label], borderRadius: 3, transition: 'width 0.3s' }} />
+              </div>
+              <span style={{ width: 36, textAlign: 'right', color: 'var(--text-tertiary)', fontSize: 12 }}>{v as number}/{max}</span>
             </div>
-            <span style={{ width: 36, textAlign: 'right', color: 'var(--text-tertiary)', fontSize: 12 }}>{v as number}/{dimMax[k]}</span>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
