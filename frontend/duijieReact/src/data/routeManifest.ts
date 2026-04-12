@@ -46,6 +46,9 @@ const ROUTES: RouteEntry[] = [
     path: '/tasks', label: '需求看板', icon: ListTodo, perm: 'task:view',
     importFn: () => import('../features/task/index'),
     showInNav: true, prefetch: true, group: 'business',
+    children: [
+      { path: '/tasks/:id', label: '需求详情', icon: ListTodo, perm: 'task:view', importFn: () => import('../features/task/TaskDetailPage'), showInNav: false },
+    ],
   },
   {
     path: '/timesheets', label: '工时汇报', icon: Clock, perm: 'task:view',
@@ -86,6 +89,9 @@ const ROUTES: RouteEntry[] = [
     path: '/knowledge', label: '知识库', icon: BookOpen, perm: 'dashboard:view',
     importFn: () => import('../features/knowledge/index'),
     showInNav: true, group: 'workspace',
+    children: [
+      { path: '/knowledge/:id', label: '知识详情', icon: BookOpen, perm: 'dashboard:view', importFn: () => import('../features/knowledge/KnowledgeDetailPage'), showInNav: false },
+    ],
   },
   {
     path: '/users', label: '用户管理', icon: Shield, perm: 'user:manage',
@@ -125,6 +131,11 @@ const ROUTES: RouteEntry[] = [
   {
     path: '/about', label: '关于', icon: UserCircle, perm: null,
     importFn: () => import('../features/mobile/AboutPage'),
+    showInNav: false,
+  },
+  {
+    path: '/milestones/:id', label: '代办详情', icon: CalendarDays, perm: null,
+    importFn: () => import('../features/project/MilestoneDetailPage'),
     showInNav: false,
   },
 ]

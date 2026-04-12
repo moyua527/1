@@ -1,5 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useCallback } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useOutletContext, useNavigate } from 'react-router-dom'
 import { Plus, Search, FolderOpen, Edit3, Trash2, Eye, Clock, BookOpen, X } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import useDebounce from '../../hooks/useDebounce'
@@ -15,6 +15,7 @@ interface Article {
 
 export default function KnowledgeBase() {
   const { isMobile } = useOutletContext<{ isMobile: boolean }>() as { isMobile: boolean }
+  const navigate = useNavigate()
   const [categories, setCategories] = useState<Category[]>([])
   const [articles, setArticles] = useState<Article[]>([])
   const [total, setTotal] = useState(0)
@@ -51,6 +52,10 @@ export default function KnowledgeBase() {
   const handleSearch = () => { setPage(1) }
 
   const openArticle = async (id: number) => {
+    if (isMobile) {
+      navigate(`/knowledge/${id}`)
+      return
+    }
     const r = await fetchApi(`/api/kb/articles/${id}`)
     if (r.success) setViewing(r.data)
   }

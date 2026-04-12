@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useOutletContext, useSearchParams } from 'react-router-dom'
+import { useOutletContext, useSearchParams, useNavigate } from 'react-router-dom'
 import { BACKEND_URL } from '../../bootstrap'
 import { useTasks, useProjects, useInvalidate } from '../../hooks/useApi'
 import useLiveData from '../../hooks/useLiveData'
@@ -34,6 +34,7 @@ const isImageFile = (name: string) => /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test
 
 export default function TaskBoard() {
   const { user, isMobile } = useOutletContext<{ user: any; isMobile?: boolean }>()
+  const navigate = useNavigate()
   const canAddTask = can(user?.role || '', 'task:create')
   const [filterProject, setFilterProject] = useState<string>('')
   const [searchText, setSearchText] = useState('')
@@ -140,7 +141,7 @@ export default function TaskBoard() {
               boxShadow: '0 1px 3px rgba(0,0,0,0.06)', cursor: 'pointer',
               border: '1px solid var(--border-primary)', transition: 'box-shadow 0.15s',
             }}
-              onClick={() => setSelectedTask(task)}
+              onClick={() => isMobile ? navigate(`/tasks/${task.id}`, { state: { task } }) : setSelectedTask(task)}
               onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)')}
               onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)')}>
               {/* 项目名 + 标题 + 状态 */}

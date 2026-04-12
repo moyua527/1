@@ -23,6 +23,7 @@ router.post('/tasks', auth, roleGuard('admin', 'member', { soft: true }), enterp
 router.get('/tasks/export', auth, require('../controllers/task/exportController'));
 router.get('/tasks/trash', auth, taskStaff, require('../controllers/task/trashController'));
 router.get('/tasks', auth, require('../controllers/task/listController'));
+router.get('/tasks/:id', auth, require('../controllers/task/detailController'));
 router.put('/tasks/:id', auth, taskStaff,
   taskPermGuard(['can_edit_task_title', 'can_edit_task_desc', 'can_edit_task_priority', 'can_edit_task_deadline', 'can_assign_task']),
   require('../controllers/task/updateController'));

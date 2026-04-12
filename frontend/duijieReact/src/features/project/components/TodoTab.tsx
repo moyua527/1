@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Plus, Check, ChevronDown, Trash2, RotateCcw } from 'lucide-react'
 import { fetchApi } from '../../../bootstrap'
 import { toast } from '../../ui/Toast'
@@ -33,6 +34,7 @@ const statusFilters = [
 ] as const
 
 export default function TodoTab({ projectId, canEdit, isMobile, currentUserId, members = [] }: Props) {
+  const navigate = useNavigate()
   const [items, setItems] = useState<TodoItem[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>('all')
@@ -259,6 +261,8 @@ export default function TodoTab({ projectId, canEdit, isMobile, currentUserId, m
                       next.has(item.id) ? next.delete(item.id) : next.add(item.id)
                       return next
                     })
+                  } else if (isMobile) {
+                    navigate(`/milestones/${item.id}`, { state: { projectId, canEdit, currentUserId, members } })
                   } else {
                     setDetailId(item.id)
                   }

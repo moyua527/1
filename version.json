@@ -1,7 +1,7 @@
 {
-  "version": "1.4.21",
-  "versionCode": 424,
+  "version": "1.4.22",
+  "versionCode": 425,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "Dashboard统计9个串行查询改Promise.all并行，部署脚本补充firebase密钥同步"
+  "changelog": "移动端详情独立页面：需求/代办/知识库点击卡片打开下级页面，支持侧滑返回"
 }
