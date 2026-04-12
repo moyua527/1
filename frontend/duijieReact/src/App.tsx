@@ -89,7 +89,7 @@ export default function App() {
           <Route element={<Layout />}>
             {allowed.map(rt => {
               const Comp = routeComponents.get(rt.path)!
-              return <Route key={rt.path} path={rt.path} element={<Comp />} />
+              return <Route key={rt.path} path={rt.path} element={<ErrorBoundary><Comp /></ErrorBoundary>} />
             })}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

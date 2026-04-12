@@ -1,7 +1,7 @@
 {
-  "version": "1.4.14",
-  "versionCode": 417,
+  "version": "1.4.15",
+  "versionCode": 418,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "修复设置子页面侧滑返回：通过history.pushState拦截系统返回手势"
+  "changelog": "稳定性优化：路由级错误边界、部署健康检查重试、PM2计数重置"
 }

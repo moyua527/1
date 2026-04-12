@@ -197,16 +197,22 @@ def main():
     except:
         pass
 
-    # 6. Health check
+    # 6. Health check with retries
     print('\n[6/6] Health check...')
     import time
-    time.sleep(2)
-    health_out = run_cmd(ssh, 'curl -s -o /dev/null -w "%{http_code}" http://localhost:1800/api/app/version', 'API health check')
-    status_code = health_out.strip()
-    if status_code == '200':
-        print('    ✅ API 健康检查通过 (HTTP 200)')
-    else:
-        print(f'    ⚠️  API 返回 HTTP {status_code}，请检查服务日志: pm2 logs duijie')
+    health_ok = False
+    for attempt in range(1, 6):
+        time.sleep(3)
+        health_out = run_cmd(ssh, 'curl -s -o /dev/null -w "%{http_code}" http://localhost:1800/api/app/version', f'API health check (attempt {attempt}/5)')
+        status_code = health_out.strip()
+        if status_code == '200':
+            print(f'    ✅ API 健康检查通过 (HTTP 200, attempt {attempt})')
+            health_ok = True
+            break
+        else:
+            print(f'    ⏳ attempt {attempt}: HTTP {status_code}, retrying...')
+    if not health_ok:
+        print(f'    ⚠️  API 5次检查均未通过 (最后 HTTP {status_code})，请检查: pm2 logs duijie')
 
     # Deploy log
     deploy_log = f'{deploy_time} | v{version} | success'
