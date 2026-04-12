@@ -30,7 +30,8 @@ export default function ProjectOnboarding() {
   const loadPendingRequests = useCallback(async () => {
     try {
       const r = await projectApi.list({ page: '1', limit: '1' })
-      if (r.success && Array.isArray(r.data) && r.data.length > 0) {
+      const rows = Array.isArray(r.data) ? r.data : (r.data?.rows || [])
+      if (r.success && rows.length > 0) {
         useEnterpriseStore.getState().setHasProjects(true)
         window.location.reload()
         return

@@ -1,7 +1,7 @@
 {
-  "version": "1.4.24",
-  "versionCode": 427,
+  "version": "1.4.25",
+  "versionCode": 428,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "仿微信图片上传预览：选图后先预览，底部编辑/原图/确认三选项"
+  "changelog": "修复无企业有项目用户每次登录都弹欢迎页的bug(API返回格式不匹配)"
 }

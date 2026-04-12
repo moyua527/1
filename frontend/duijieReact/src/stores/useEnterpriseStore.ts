@@ -80,7 +80,8 @@ const useEnterpriseStore = create<EnterpriseState>((set, get) => ({
         } else {
           try {
             const pr = await fetchApi('/api/projects')
-            const hasPrj = pr.success && Array.isArray(pr.data) && pr.data.length > 0
+            const rows = Array.isArray(pr.data) ? pr.data : (pr.data?.rows || [])
+            const hasPrj = pr.success && rows.length > 0
             set({ hasProjects: hasPrj })
             if (hasPrj) localStorage.setItem('onboarding_done', '1')
           } catch {
