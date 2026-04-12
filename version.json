@@ -1,7 +1,7 @@
 {
-  "version": "1.4.35",
-  "versionCode": 438,
+  "version": "1.4.35.1",
+  "versionCode": 439,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "通知系统优化：typeIcon提取constants共享、markRead/deleteNotif加try-catch、displayed加useMemo、更新PROJECT.md 3.13"
+  "changelog": "知识库模块优化：文章/分类CRUD加try-catch、更新PROJECT.md 3.13.2(分类列表非树/移动端详情页/搜索防抖/分页)"
 }

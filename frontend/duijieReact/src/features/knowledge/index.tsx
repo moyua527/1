@@ -62,32 +62,40 @@ export default function KnowledgeBase() {
 
   const saveArticle = async () => {
     if (!editing) return
-    const body = { title: editing.title, content: editing.content, category_id: editing.category_id, tags: editing.tags, status: editing.status || 'draft' }
-    const r = editing.id
-      ? await fetchApi(`/api/kb/articles/${editing.id}`, { method: 'PUT', body: JSON.stringify(body) })
-      : await fetchApi('/api/kb/articles', { method: 'POST', body: JSON.stringify(body) })
-    if (r.success) { setEditing(null); loadArticles() }
+    try {
+      const body = { title: editing.title, content: editing.content, category_id: editing.category_id, tags: editing.tags, status: editing.status || 'draft' }
+      const r = editing.id
+        ? await fetchApi(`/api/kb/articles/${editing.id}`, { method: 'PUT', body: JSON.stringify(body) })
+        : await fetchApi('/api/kb/articles', { method: 'POST', body: JSON.stringify(body) })
+      if (r.success) { setEditing(null); loadArticles() }
+    } catch { /* network error */ }
   }
 
   const deleteArticle = async (id: number) => {
     if (!confirm('确定删除这篇文章？')) return
-    await fetchApi(`/api/kb/articles/${id}`, { method: 'DELETE' })
-    loadArticles()
+    try {
+      await fetchApi(`/api/kb/articles/${id}`, { method: 'DELETE' })
+      loadArticles()
+    } catch { /* network error */ }
   }
 
   const saveCat = async () => {
     if (!catEditing?.name?.trim()) return
-    const r = catEditing.id
-      ? await fetchApi(`/api/kb/categories/${catEditing.id}`, { method: 'PUT', body: JSON.stringify({ name: catEditing.name }) })
-      : await fetchApi('/api/kb/categories', { method: 'POST', body: JSON.stringify({ name: catEditing.name }) })
-    if (r.success) { setCatEditing(null); loadCategories() }
+    try {
+      const r = catEditing.id
+        ? await fetchApi(`/api/kb/categories/${catEditing.id}`, { method: 'PUT', body: JSON.stringify({ name: catEditing.name }) })
+        : await fetchApi('/api/kb/categories', { method: 'POST', body: JSON.stringify({ name: catEditing.name }) })
+      if (r.success) { setCatEditing(null); loadCategories() }
+    } catch { /* network error */ }
   }
 
   const deleteCat = async (id: number) => {
     if (!confirm('删除分类后文章将变为未分类，确定？')) return
-    await fetchApi(`/api/kb/categories/${id}`, { method: 'DELETE' })
-    if (selectedCat === id) setSelectedCat(null)
-    loadCategories(); loadArticles()
+    try {
+      await fetchApi(`/api/kb/categories/${id}`, { method: 'DELETE' })
+      if (selectedCat === id) setSelectedCat(null)
+      loadCategories(); loadArticles()
+    } catch { /* network error */ }
   }
 
   const totalPages = Math.ceil(total / 20) || 1
