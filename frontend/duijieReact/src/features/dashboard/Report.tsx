@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { BarChart3, TrendingUp, PieChart, Loader2, FileSignature, Users, Activity, Target, DollarSign, Printer } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 
@@ -34,25 +34,26 @@ export default function Report() {
   if (!data) return <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}>暂无数据</div>
 
   const funnelStages = ['potential', 'intent', 'signed', 'active', 'lost'] as const
-  const funnelMax = Math.max(...funnelStages.map(s => data.funnel[s] || 0), 1)
-  const totalClients = funnelStages.reduce((s, k) => s + (data.funnel[k] || 0), 0)
 
-  const followDates = data.followTrend || []
-  const followMax = Math.max(...followDates.map((d: any) => d.count), 1)
-  const followTotal = followDates.reduce((s: number, d: any) => s + d.count, 0)
+  const computed = useMemo(() => {
+    const funnelMax = Math.max(...funnelStages.map(s => data.funnel[s] || 0), 1)
+    const totalClients = funnelStages.reduce((s, k) => s + (data.funnel[k] || 0), 0)
+    const followDates = data.followTrend || []
+    const followMax = Math.max(...followDates.map((d: any) => d.count), 1)
+    const followTotal = followDates.reduce((s: number, d: any) => s + d.count, 0)
+    const clientDates = data.clientTrend || []
+    const clientMax = Math.max(...clientDates.map((d: any) => d.count), 1)
+    const newClientsTotal = clientDates.reduce((s: number, d: any) => s + d.count, 0)
+    const channelTotal = (data.channelDist || []).reduce((s: number, c: any) => s + c.count, 0) || 1
+    const contractMonths = data.contractTrend || []
+    const contractMax = Math.max(...contractMonths.map((m: any) => Number(m.total)), 1)
+    const contractTotalAmount = contractMonths.reduce((s: number, m: any) => s + Number(m.total || 0), 0)
+    const contractTotalCount = contractMonths.reduce((s: number, m: any) => s + Number(m.count || 0), 0)
+    const conversionRate = data.funnel.potential > 0 ? ((data.funnel.active / data.funnel.potential) * 100).toFixed(1) : '0'
+    return { funnelMax, totalClients, followDates, followMax, followTotal, clientDates, clientMax, newClientsTotal, channelTotal, contractMonths, contractMax, contractTotalAmount, contractTotalCount, conversionRate }
+  }, [data])
 
-  const clientDates = data.clientTrend || []
-  const clientMax = Math.max(...clientDates.map((d: any) => d.count), 1)
-  const newClientsTotal = clientDates.reduce((s: number, d: any) => s + d.count, 0)
-
-  const channelTotal = (data.channelDist || []).reduce((s: number, c: any) => s + c.count, 0) || 1
-
-  const contractMonths = data.contractTrend || []
-  const contractMax = Math.max(...contractMonths.map((m: any) => Number(m.total)), 1)
-  const contractTotalAmount = contractMonths.reduce((s: number, m: any) => s + Number(m.total || 0), 0)
-  const contractTotalCount = contractMonths.reduce((s: number, m: any) => s + Number(m.count || 0), 0)
-
-  const conversionRate = data.funnel.potential > 0 ? ((data.funnel.active / data.funnel.potential) * 100).toFixed(1) : '0'
+  const { funnelMax, totalClients, followDates, followMax, followTotal, clientDates, clientMax, newClientsTotal, channelTotal, contractMonths, contractMax, contractTotalAmount, contractTotalCount, conversionRate } = computed
 
   const summaryCards = [
     { label: '客户总数', value: totalClients, icon: Users, color: 'var(--brand)', bg: 'var(--brand-light-2)' },

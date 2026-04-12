@@ -1,7 +1,7 @@
 {
-  "version": "1.4.33",
-  "versionCode": 436,
+  "version": "1.4.34",
+  "versionCode": 437,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "用户管理模块优化：修复禁用用户bug(is_active三态+登录校验)/角色修改即时生效(清auth缓存)/删除死文件/邀请链接刷新/try-catch/共享常量/更新PROJECT.md"
+  "changelog": "客户门户/工单/报表模块优化：修复TicketCreateModal渲染阶段setState、工单constants提取、statusTabs/Report计算useMemo、更新PROJECT.md 3.10-3.12"
 }

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, DragEvent, ClipboardEvent } from 'react'
+import { useState, useEffect, useRef, useCallback, DragEvent, ClipboardEvent } from 'react'
 import { Paperclip, X, Upload } from 'lucide-react'
 import { fetchApi, uploadFile } from '../../bootstrap'
 import Modal from '../ui/Modal'
@@ -16,7 +16,6 @@ export default function TicketCreateModal({ open, onClose, onCreated }: Props) {
   const [files, setFiles] = useState<File[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
-  const [inited, setInited] = useState(false)
 
   const addFiles = useCallback((newFiles: FileList | File[]) => {
     setFiles(prev => [...prev, ...Array.from(newFiles)])
@@ -34,13 +33,13 @@ export default function TicketCreateModal({ open, onClose, onCreated }: Props) {
     if (pastedFiles.length) { e.preventDefault(); addFiles(pastedFiles) }
   }, [addFiles])
 
-  if (open && !inited) {
-    setForm({ title: '', content: '', type: 'question', priority: 'medium', project_id: '' })
-    setFiles([])
-    fetchApi('/api/projects').then(r => { if (r.success) setProjects(r.data?.rows || r.data || []) })
-    setInited(true)
-  }
-  if (!open && inited) setInited(false)
+  useEffect(() => {
+    if (open) {
+      setForm({ title: '', content: '', type: 'question', priority: 'medium', project_id: '' })
+      setFiles([])
+      fetchApi('/api/projects').then(r => { if (r.success) setProjects(r.data?.rows || r.data || []) })
+    }
+  }, [open])
 
   const handleCreate = async () => {
     if (!form.title.trim()) { toast('标题必填', 'error'); return }

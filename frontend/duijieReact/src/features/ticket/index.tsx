@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Ticket, Plus, Clock, Loader2, CheckCircle, XCircle, Star } from 'lucide-react'
+import { Ticket, Plus, Loader2, Star } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { useTickets, useUsers, useInvalidate } from '../../hooks/useApi'
 import { can } from '../../stores/permissions'
@@ -10,21 +10,7 @@ import FilterBar from '../ui/FilterBar'
 import EmptyState from '../ui/EmptyState'
 import TicketDetail from './TicketDetail'
 import TicketCreateModal from './TicketCreateModal'
-
-const typeMap: Record<string, { label: string; color: string }> = {
-  requirement: { label: '需求', color: 'var(--brand)' }, bug: { label: '问题', color: 'var(--color-danger)' },
-  question: { label: '咨询', color: 'var(--color-warning)' }, other: { label: '其他', color: '#6b7280' },
-}
-const priorityMap: Record<string, { label: string; color: string }> = {
-  low: { label: '低', color: '#6b7280' }, medium: { label: '中', color: 'var(--color-warning)' },
-  high: { label: '高', color: 'var(--color-orange)' }, urgent: { label: '紧急', color: 'var(--color-danger)' },
-}
-const statusMap: Record<string, { label: string; color: string; icon: any }> = {
-  open: { label: '待处理', color: 'var(--color-warning)', icon: Clock },
-  processing: { label: '处理中', color: 'var(--brand)', icon: Loader2 },
-  resolved: { label: '已解决', color: 'var(--color-success)', icon: CheckCircle },
-  closed: { label: '已关闭', color: '#6b7280', icon: XCircle },
-}
+import { typeMap, priorityMap, statusMap } from './constants'
 
 export default function TicketPage() {
   const { user } = useOutletContext<{ user: any; isMobile: boolean }>()
@@ -49,14 +35,14 @@ export default function TicketPage() {
     })
   }
 
-  const filtered = filter === 'all' ? tickets : tickets.filter(t => t.status === filter)
-  const statusTabs = [
+  const filtered = useMemo(() => filter === 'all' ? tickets : tickets.filter(t => t.status === filter), [tickets, filter])
+  const statusTabs = useMemo(() => [
     { key: 'all', label: '全部', count: tickets.length },
     { key: 'open', label: '待处理', count: tickets.filter(t => t.status === 'open').length },
     { key: 'processing', label: '处理中', count: tickets.filter(t => t.status === 'processing').length },
     { key: 'resolved', label: '已解决', count: tickets.filter(t => t.status === 'resolved').length },
     { key: 'closed', label: '已关闭', count: tickets.filter(t => t.status === 'closed').length },
-  ]
+  ], [tickets])
 
   if (selected && !detailLoading) {
     return <TicketDetail ticket={selected} user={user} staffMembers={staffMembers} onBack={() => setSelected(null)} onRefresh={load} onReloadDetail={openDetail} />
