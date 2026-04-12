@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Send, Loader2, ImagePlus, X, Pencil, Paperclip, FileText } from 'lucide-react'
 import { messageApi } from '../services/api'
 import Avatar from '../../ui/Avatar'
@@ -43,41 +43,49 @@ export default function MessagePanel({ projectId }: Props) {
   const imgInputRef = useRef<HTMLInputElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // 加载最新消息（初始加载）
-  const loadLatest = useCallback(() => {
-    messageApi.list(projectId).then(r => {
+  const pendingImageUrl = useMemo(() => pendingImage ? URL.createObjectURL(pendingImage) : null, [pendingImage])
+  useEffect(() => { return () => { if (pendingImageUrl) URL.revokeObjectURL(pendingImageUrl) } }, [pendingImageUrl])
+
+  const loadLatest = useCallback(async () => {
+    try {
+      const r = await messageApi.list(projectId)
       if (r.success) {
         const data = r.data?.rows || r.data || []
         setMessages(data)
         setHasMore(data.length >= 30)
         isInitialLoad.current = true
       }
-    })
+    } catch { /* network error, silent */ }
   }, [projectId])
 
-  // 加载更早的消息（滚动加载）
+  const messagesRef = useRef(messages)
+  messagesRef.current = messages
+
   const loadOlder = useCallback(async () => {
-    if (loadingMore || !hasMore || messages.length === 0) return
+    if (loadingMore || !hasMore || messagesRef.current.length === 0) return
     setLoadingMore(true)
-    const oldestId = messages[0]?.id
+    const oldestId = messagesRef.current[0]?.id
     const container = scrollContainerRef.current
     const prevScrollHeight = container?.scrollHeight || 0
 
-    const r = await messageApi.list(projectId, oldestId)
-    setLoadingMore(false)
-    if (r.success) {
-      const older = r.data?.rows || r.data || []
-      if (older.length === 0) { setHasMore(false); return }
-      if (older.length < 30) setHasMore(false)
-      setMessages(prev => [...older, ...prev])
-      // 保持滚动位置（关键！）
-      requestAnimationFrame(() => {
-        if (container) {
-          container.scrollTop = container.scrollHeight - prevScrollHeight
-        }
-      })
+    try {
+      const r = await messageApi.list(projectId, oldestId)
+      setLoadingMore(false)
+      if (r.success) {
+        const older = r.data?.rows || r.data || []
+        if (older.length === 0) { setHasMore(false); return }
+        if (older.length < 30) setHasMore(false)
+        setMessages(prev => [...older, ...prev])
+        requestAnimationFrame(() => {
+          if (container) {
+            container.scrollTop = container.scrollHeight - prevScrollHeight
+          }
+        })
+      }
+    } catch {
+      setLoadingMore(false)
     }
-  }, [projectId, messages, loadingMore, hasMore])
+  }, [projectId, loadingMore, hasMore])
 
   useEffect(() => {
     loadLatest()
@@ -114,22 +122,24 @@ export default function MessagePanel({ projectId }: Props) {
   const handleSend = async () => {
     if (!text.trim() && !pendingImage && !pendingFile) return
     setSending(true)
-    let r
-    if (pendingImage) {
-      r = await messageApi.sendImage(Number(projectId), pendingImage)
-      setPendingImage(null)
-    } else if (pendingFile) {
-      r = await messageApi.sendFile(Number(projectId), pendingFile)
-      setPendingFile(null)
-    } else {
-      r = await messageApi.send({ project_id: Number(projectId), content: text.trim() })
-    }
-    setText('')
+    try {
+      let r
+      if (pendingImage) {
+        r = await messageApi.sendImage(Number(projectId), pendingImage)
+        setPendingImage(null)
+      } else if (pendingFile) {
+        r = await messageApi.sendFile(Number(projectId), pendingFile)
+        setPendingFile(null)
+      } else {
+        r = await messageApi.send({ project_id: Number(projectId), content: text.trim() })
+      }
+      setText('')
+      if (r.success) {
+        loadLatest()
+        setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
+      }
+    } catch { /* network error */ }
     setSending(false)
-    if (r.success) {
-      loadLatest()
-      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100)
-    }
   }
 
   const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true) }
@@ -220,8 +230,8 @@ export default function MessagePanel({ projectId }: Props) {
       {(pendingImage || pendingFile) && (
         <div style={{ padding: '8px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ position: 'relative', display: 'inline-block' }}>
-            {pendingImage ? (
-              <img src={URL.createObjectURL(pendingImage)} alt="" style={{ maxWidth: 100, maxHeight: 80, borderRadius: 6 }} />
+            {pendingImage && pendingImageUrl ? (
+              <img src={pendingImageUrl} alt="" style={{ maxWidth: 100, maxHeight: 80, borderRadius: 6 }} />
             ) : pendingFile ? (
               <div style={{ width: 60, height: 60, borderRadius: 8, background: 'var(--bg-tertiary)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
                 <FileText size={24} color="var(--text-tertiary)" />

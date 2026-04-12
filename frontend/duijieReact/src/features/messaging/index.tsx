@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { Send, MessageSquare, Search, Loader2, UserPlus, Users, X, UserCheck, LogOut, Check } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
@@ -13,7 +13,6 @@ const roleLabel: Record<string, string> = { admin: '管理员', member: '成员'
 
 const dmApi = {
   conversations: () => fetchApi('/api/dm/conversations'),
-  users: () => fetchApi('/api/dm/users'),
   history: (userId: number) => fetchApi(`/api/dm/${userId}/history`),
   send: (receiver_id: number, content: string) => fetchApi('/api/dm/send', { method: 'POST', body: JSON.stringify({ receiver_id, content }) }),
   recall: (id: number) => fetchApi(`/api/dm/${id}/recall`, { method: 'PATCH' }),
@@ -25,7 +24,6 @@ const friendApi = {
   request: (friend_id: number, message: string) => fetchApi('/api/friends/request', { method: 'POST', body: JSON.stringify({ friend_id, message }) }),
   requests: () => fetchApi('/api/friends/requests'),
   respond: (id: number, action: string) => fetchApi(`/api/friends/${id}/respond`, { method: 'PATCH', body: JSON.stringify({ action }) }),
-  remove: (id: number) => fetchApi(`/api/friends/${id}`, { method: 'DELETE' }),
 }
 
 const groupApi = {
@@ -213,6 +211,20 @@ export default function Messaging() {
     else toast(r.message || '发送失败', 'error')
   }
 
+  const handleDmRecall = useCallback(async (msgId: number) => {
+    if (!selectedUser) return
+    const r = await dmApi.recall(msgId)
+    if (r.success) { toast('消息已撤回', 'success'); dmApi.history(selectedUser.id).then(r => { if (r.success) setMessages(r.data || []) }) }
+    else toast(r.message || '撤回失败', 'error')
+  }, [selectedUser])
+
+  const handleGrpRecall = useCallback(async (msgId: number) => {
+    if (!selectedGroup) return
+    const r = await groupApi.recall(selectedGroup.id, msgId)
+    if (r.success) { toast('消息已撤回', 'success'); groupApi.history(selectedGroup.id).then(r => { if (r.success) setGroupMessages(r.data || []) }) }
+    else toast(r.message || '撤回失败', 'error')
+  }, [selectedGroup])
+
   const handleRespondRequest = async (id: number, action: 'accept' | 'reject') => {
     const r = await friendApi.respond(id, action)
     if (r.success) { toast(action === 'accept' ? '已添加好友' : '已拒绝', 'success'); loadFriends() }
@@ -337,18 +349,12 @@ export default function Messaging() {
                 const isMine = me && m.sender_id === me.id
                 const isRecalled = m.is_recalled
                 const canRecall = isMine && !isRecalled && (Date.now() - new Date(m.created_at).getTime()) < 2 * 60 * 1000
-                const handleRecall = async () => {
-                  if (!canRecall) return
-                  const r = await dmApi.recall(m.id)
-                  if (r.success) { toast('消息已撤回', 'success'); dmApi.history(selectedUser.id).then(r => { if (r.success) setMessages(r.data || []) }) }
-                  else toast(r.message || '撤回失败', 'error')
-                }
                 return (
                   <div key={m.id} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
                     {isRecalled ? (
                       <div style={{ fontSize: 12, color: 'var(--text-tertiary)', fontStyle: 'italic', padding: '4px 0' }}>{isMine ? '你' : dn(selectedUser.id, selectedUser.nickname || selectedUser.username)}撤回了一条消息</div>
                     ) : (
-                      <div style={{ position: 'relative', maxWidth: '70%' }} onDoubleClick={canRecall ? handleRecall : undefined}>
+                      <div style={{ position: 'relative', maxWidth: '70%' }} onDoubleClick={canRecall ? () => handleDmRecall(m.id) : undefined}>
                         <div style={{
                           padding: '10px 14px', borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
                           background: isMine ? 'var(--brand)' : 'var(--bg-tertiary)', color: isMine ? '#fff' : 'var(--text-heading)',
@@ -402,18 +408,12 @@ export default function Messaging() {
                 const isMine = me && m.sender_id === me.id
                 const isRecalled = m.is_recalled
                 const canRecall = isMine && !isRecalled && (Date.now() - new Date(m.created_at).getTime()) < 2 * 60 * 1000
-                const handleGroupRecall = async () => {
-                  if (!canRecall) return
-                  const r = await groupApi.recall(selectedGroup.id, m.id)
-                  if (r.success) { toast('消息已撤回', 'success'); groupApi.history(selectedGroup.id).then(r => { if (r.success) setGroupMessages(r.data || []) }) }
-                  else toast(r.message || '撤回失败', 'error')
-                }
                 return (
                   <div key={m.id} style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
                     {isRecalled ? (
                       <div style={{ fontSize: 12, color: 'var(--text-tertiary)', fontStyle: 'italic', padding: '4px 0' }}>{isMine ? '你' : dn(m.sender_id, m.sender_nickname || m.sender_username)}撤回了一条消息</div>
                     ) : (
-                      <div style={{ position: 'relative', maxWidth: '70%' }} onDoubleClick={canRecall ? handleGroupRecall : undefined}>
+                      <div style={{ position: 'relative', maxWidth: '70%' }} onDoubleClick={canRecall ? () => handleGrpRecall(m.id) : undefined}>
                         {!isMine && <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 2 }}>{dn(m.sender_id, m.sender_nickname || m.sender_username)}</div>}
                         <div style={{
                           padding: '10px 14px', borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
@@ -482,9 +482,9 @@ export default function Messaging() {
                 <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: 8 }}>搜索结果</div>
                 {searchResults.map(u => (
                   <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--border-secondary)' }}>
-                    <Avatar name={u.nickname || u.username} size={40} />
+                    <Avatar name={dn(u.id, u.nickname || u.username)} size={40} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)' }}>{u.nickname || u.username}</div>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)' }}>{dn(u.id, u.nickname || u.username)}</div>
                       <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>ID: {u.id}{u.phone ? ` · ${u.phone}` : ''}</div>
                     </div>
                     <button onClick={() => handleSendRequest(u.id)} disabled={requestingId === u.id}

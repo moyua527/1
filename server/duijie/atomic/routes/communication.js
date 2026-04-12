@@ -297,7 +297,7 @@ router.post('/groups/:id/send', auth, async (req, res) => {
     const io = req.app.get('io');
     if (io) {
       members.forEach(m => {
-        io.to(`user_${m.user_id}`).emit('new_group_msg', { group_id: Number(req.params.id), sender_id: req.userId });
+        io.to(`user:${m.user_id}`).emit('new_group_msg', { group_id: Number(req.params.id), sender_id: req.userId });
       });
     }
     res.json({ success: true });
@@ -309,9 +309,11 @@ router.post('/groups/:id/send', auth, async (req, res) => {
 // 撤回群消息
 router.patch('/groups/:id/messages/:msgId/recall', auth, async (req, res) => {
   try {
-    const [[msg]] = await db.query('SELECT id, sender_id FROM duijie_group_messages WHERE id = ? AND group_id = ?', [req.params.msgId, req.params.id]);
+    const [[msg]] = await db.query('SELECT id, sender_id, created_at FROM duijie_group_messages WHERE id = ? AND group_id = ?', [req.params.msgId, req.params.id]);
     if (!msg) return res.status(404).json({ success: false, message: '消息不存在' });
     if (msg.sender_id !== req.userId) return res.status(403).json({ success: false, message: '只能撤回自己的消息' });
+    const diffMs = Date.now() - new Date(msg.created_at).getTime();
+    if (diffMs > 2 * 60 * 1000) return res.status(403).json({ success: false, message: '超过2分钟不可撤回' });
     await db.query('UPDATE duijie_group_messages SET is_recalled = 1 WHERE id = ?', [req.params.msgId]);
     res.json({ success: true });
   } catch (e) {

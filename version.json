@@ -1,7 +1,7 @@
 {
-  "version": "1.4.31",
-  "versionCode": 434,
+  "version": "1.4.32",
+  "versionCode": 435,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "文件管理模块优化：修复资料组文件上传bug/预览排除特殊MIME/删除权限/URL泄漏/useMemo/上传失败提示，更新PROJECT.md"
+  "changelog": "消息模块优化：修复群聊Socket room不匹配/群撤回加2分钟限制/pendingImage URL泄漏/清理死代码/try-catch/recall提取/搜索用nickname，更新PROJECT.md"
 }
