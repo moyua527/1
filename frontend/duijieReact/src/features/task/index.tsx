@@ -4,6 +4,7 @@ import { BACKEND_URL } from '../../bootstrap'
 import { useTasks, useProjects, useInvalidate } from '../../hooks/useApi'
 import useLiveData from '../../hooks/useLiveData'
 import useDebounce from '../../hooks/useDebounce'
+import useProgressiveRender from '../../hooks/useProgressiveRender'
 import Badge from '../ui/Badge'
 import { Plus, Paperclip, Download, Search, FileSpreadsheet } from 'lucide-react'
 import { toast } from '../ui/Toast'
@@ -63,6 +64,7 @@ export default function TaskBoard() {
     if (filterStatus && t.status !== filterStatus) return false
     return true
   })
+  const { visible: visibleTasks, hasMore, sentinelRef } = useProgressiveRender(filtered)
 
   return (
     <div>
@@ -127,7 +129,7 @@ export default function TaskBoard() {
         {filtered.length === 0 && (
           <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 40, color: 'var(--text-disabled)', fontSize: 14 }}>暂无需求</div>
         )}
-        {filtered.map(task => {
+        {visibleTasks.map(task => {
           const pr = priorityMap[task.priority] || priorityMap.medium
           const st = columns.find(c => c.key === task.status)
           const imgs = ((task as any).attachments || []).filter((a: any) => isImageFile(a.original_name || a.filename))
@@ -166,7 +168,7 @@ export default function TaskBoard() {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 4 }}>
                   {imgs.map((a: any, i: number) => {
                     const allImgs = imgs.map((x: any) => `${BACKEND_URL}/uploads/${x.filename}`)
-                    return <img key={a.id} src={`${BACKEND_URL}/uploads/${a.filename}`} alt=""
+                    return <img key={a.id} src={`${BACKEND_URL}/uploads/${a.filename}`} alt="" loading="lazy"
                       onClick={e => { e.stopPropagation(); setPreviewImg(`${BACKEND_URL}/uploads/${a.filename}`); setPreviewImages(allImgs); setPreviewStartIdx(i) }}
                       onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
                       style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border-primary)', display: 'block', cursor: 'pointer' }} />
@@ -187,6 +189,7 @@ export default function TaskBoard() {
             </div>
           )
         })}
+        {hasMore && <div ref={sentinelRef} style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 16, color: 'var(--text-tertiary)', fontSize: 13 }}>加载更多...</div>}
       </div>
 
       <TaskDetailModal

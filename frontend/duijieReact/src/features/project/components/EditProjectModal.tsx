@@ -80,7 +80,7 @@ export default function EditProjectModal({ open, project, onClose, onSave, onCov
             onChange={e => { const f = e.target.files?.[0]; if (f) handleCoverUpload(f); e.target.value = '' }} />
           {coverImage ? (
             <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', marginBottom: 4 }}>
-              <img src={resolveAssetUrl(coverImage)} alt="cover" style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }} />
+              <img src={resolveAssetUrl(coverImage)} alt="cover" loading="lazy" style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }} />
               <div style={{ position: 'absolute', top: 6, right: 6, display: 'flex', gap: 4 }}>
                 <button type="button" onClick={() => coverInputRef.current?.click()} disabled={coverUploading}
                   style={{ width: 28, height: 28, borderRadius: '50%', background: 'rgba(0,0,0,0.5)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>

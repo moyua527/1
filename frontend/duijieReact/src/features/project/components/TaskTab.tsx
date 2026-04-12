@@ -377,7 +377,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                       {(() => { const imgs: string[] = typeof p.images === 'string' ? JSON.parse(p.images || '[]') : (p.images || []); return imgs.length > 0 ? (
                         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
                           {imgs.map((url: string, idx: number) => (
-                            <img key={idx} src={url} alt="" onClick={() => { setPreviewImg(url); setPreviewImages(imgs); setPreviewStartIdx(idx) }}
+                            <img key={idx} src={url} alt="" loading="lazy" onClick={() => { setPreviewImg(url); setPreviewImages(imgs); setPreviewStartIdx(idx) }}
                               onError={e => { e.currentTarget.style.display = 'none' }}
                               style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border-primary)', cursor: 'pointer' }} />
                           ))}
@@ -586,7 +586,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                               const imgIdx = allImgs.indexOf(fileUrl)
                               return (
                                 <div key={a.id} onClick={() => { setPreviewImg(fileUrl); setPreviewImages(allImgs); setPreviewStartIdx(Math.max(0, imgIdx)) }} style={{ cursor: 'pointer', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border-primary)', width: 80, height: 80, flexShrink: 0, background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                  <img src={fileUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                  <img src={fileUrl} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                     onError={e => { const el = e.currentTarget; if (el.parentElement) el.parentElement.style.display = 'none' }} />
                                 </div>
                               )
@@ -761,7 +761,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                         {isImg ? (
                           <div style={{ width: 56, height: 56, borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border-primary)', cursor: 'pointer', background: 'var(--bg-tertiary)' }}
                             onClick={() => { const allImgs = draftFiles.filter(x => x.mime_type.startsWith('image/')).map(x => resolveAssetUrl(`/uploads/${x.filename}`)); setPreviewImg(url); setPreviewImages(allImgs); setPreviewStartIdx(Math.max(0, allImgs.indexOf(url))) }}>
-                            <img src={url} alt={df.original_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none' }} />
+                            <img src={url} alt={df.original_name} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.currentTarget.style.display = 'none' }} />
                           </div>
                         ) : (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', background: 'var(--bg-primary)', borderRadius: 6, border: '1px solid var(--border-primary)', fontSize: 12, color: 'var(--text-body)' }}>

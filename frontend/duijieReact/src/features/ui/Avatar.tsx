@@ -6,7 +6,7 @@ const colors = ['var(--brand)', 'var(--color-purple)', '#059669', 'var(--color-w
 
 export default function Avatar({ name, size = 36, src }: Props) {
   const resolvedSrc = resolveAssetUrl(src)
-  if (resolvedSrc) return <img src={resolvedSrc} alt={name} style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover' }} />
+  if (resolvedSrc) return <img src={resolvedSrc} alt={name} loading="lazy" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover' }} />
   const idx = name.charCodeAt(0) % colors.length
   return (
     <div style={{

@@ -204,7 +204,7 @@ export default function MessagePanel({ projectId }: Props) {
               <div>
                 <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginBottom: 2 }}>{dn(m.sender_id, m.sender_name || '用户')} · {new Date(m.created_at).toLocaleString('zh-CN')}</div>
                 {isImg ? (
-                  <img src={getUploadUrl(m.content)} alt="" onClick={() => setPreviewSrc(getUploadUrl(m.content))}
+                  <img src={getUploadUrl(m.content)} alt="" loading="lazy" onClick={() => setPreviewSrc(getUploadUrl(m.content))}
                     style={{ maxWidth: 200, maxHeight: 200, borderRadius: 8, cursor: 'pointer', display: 'block' }} />
                 ) : (
                   <div style={bubble}>{m.content}</div>

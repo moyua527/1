@@ -35,6 +35,7 @@ router.get('/projects', auth, projectStaff, require('../controllers/project/list
 // 项目回收站
 router.get('/projects/trash', auth, projectStaff, require('../controllers/project/trashController'));
 router.patch('/projects/:id/restore', auth, projectStaff, require('../controllers/project/restoreController'));
+router.get('/projects/:id/bundle', auth, projectStaff, require('../controllers/project/bundleController'));
 router.get('/projects/:id', auth, projectStaff, require('../controllers/project/detailController'));
 router.get('/projects/:id/task-title-options', auth, pag, require('../controllers/project/taskTitleOptionsController'));
 router.post('/projects/:id/task-title-history', auth, pag, require('../controllers/project/rememberTaskTitleController'));

@@ -3,6 +3,7 @@ import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom
 import { Plus, FolderKanban, Loader2, Download, Search, Trash2, RotateCcw, Upload, Link, MoreVertical, X } from 'lucide-react'
 import { SkeletonList } from '../ui/Skeleton'
 import useDebounce from '../../hooks/useDebounce'
+import useProgressiveRender from '../../hooks/useProgressiveRender'
 import { projectApi } from './services/api'
 import { can } from '../../stores/permissions'
 import { useProjects, useInvalidate, useProjectUnreadSummary } from '../../hooks/useApi'
@@ -113,6 +114,7 @@ export default function ProjectList() {
     }
     return true
   })
+  const { visible: visibleProjects, hasMore: hasMoreProjects, sentinelRef: projectSentinelRef } = useProgressiveRender(filtered)
 
   useEffect(() => {
     if (showCreate) {
@@ -281,7 +283,7 @@ export default function ProjectList() {
           action={projects.length === 0 && canCreate ? { label: '新建项目', onClick: () => setShowCreate(true) } : undefined} />
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 10 : 24, alignItems: 'start' }}>
-          {filtered.map((p: any) => {
+          {visibleProjects.map((p: any) => {
             const displayName = p.my_nickname || p.name
             const Icon = getProjectIcon(p.icon)
             const bgColor = p.icon_color || 'var(--brand)'
@@ -346,6 +348,7 @@ export default function ProjectList() {
               </div>
             )
           })}
+          {hasMoreProjects && <div ref={projectSentinelRef} style={{ gridColumn: '1 / -1', textAlign: 'center', padding: 12, color: 'var(--text-tertiary)', fontSize: 13 }}>加载更多...</div>}
         </div>
       )}
 

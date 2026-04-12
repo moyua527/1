@@ -1,7 +1,7 @@
 {
-  "version": "1.4.16",
-  "versionCode": 419,
+  "version": "1.4.17",
+  "versionCode": 420,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "体验优化：骨架屏、离线提示、搜索防抖(300ms)"
+  "changelog": "性能优化：图表懒加载、图片懒加载、API聚合、渐进式渲染"
 }

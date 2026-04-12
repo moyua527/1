@@ -142,6 +142,38 @@ export default function ProjectDetail() {
 
   useLiveData(['project'], loadProject)
 
+  const loadBundle = useCallback(async () => {
+    if (!id) return
+    const requestId = id
+    try {
+      const r = await projectApi.bundle(id)
+      if (requestId !== activeIdRef.current) return
+      if (r.success && r.data) {
+        const { project: proj, tasks: taskList, joinRequests, roles: roleList } = r.data
+        projectRef.current = proj
+        setProject(proj)
+        setProjectError('')
+        setProjectLoading(false)
+        const cacheEntry = { project: proj, tasks: taskList, ts: Date.now() }
+        _projectCache.set(id, cacheEntry)
+        setTasks(taskList)
+        const tvk = `task_view_${user?.id}_${id}`
+        const lastView = localStorage.getItem(tvk)
+        const submitted = taskList.filter((t: any) => t.status === 'submitted')
+        if (!lastView) {
+          setHasNewSubmitted(submitted.length > 0)
+        } else {
+          const lastTs = new Date(lastView).getTime()
+          setHasNewSubmitted(submitted.some((t: any) => new Date(t.created_at).getTime() > lastTs))
+        }
+        setPendingJoinCount((joinRequests || []).filter((req: any) => req.status === 'pending').length)
+        setProjectRoles(roleList || [])
+        return
+      }
+    } catch { /* fall through to individual loads */ }
+    loadProject()
+  }, [id, user?.id, loadProject])
+
   const loadPendingJoinCount = useCallback(() => {
     if (!id) return
     projectApi.getJoinRequests(id).then(r => {
@@ -155,6 +187,7 @@ export default function ProjectDetail() {
       if (r.success) setProjectRoles(r.data || [])
     })
   }, [id])
+  void loadRoles
 
   const taskViewKey = `task_view_${user?.id}_${id}`
 
@@ -238,13 +271,10 @@ export default function ProjectDetail() {
       body: JSON.stringify({ project_id: id, tab: 'all' }),
     }).then(() => invalidate('project-unread-summary')).catch(() => {})
     const timer = window.setTimeout(() => {
-      loadProject()
-      loadTasks()
-      loadPendingJoinCount()
-      loadRoles()
+      loadBundle()
     }, 0)
     return () => window.clearTimeout(timer)
-  }, [id, loadProject, loadTasks, loadPendingJoinCount, loadRoles])
+  }, [id, loadBundle])
 
   useEffect(() => {
     if (!project || !user) return

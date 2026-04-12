@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, lazy, Suspense } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import { FolderKanban, Users, ListTodo, CheckCircle, TrendingUp, Clock, FileSignature, AlertTriangle, Bell, MessageSquare, LayoutGrid } from 'lucide-react'
 import { SkeletonDashboard } from '../ui/Skeleton'
 import { can } from '../../stores/permissions'
 import { useDashboardStats, useDashboardChart } from '../../hooks/useApi'
-import DashboardCharts from './DashboardCharts'
+const DashboardCharts = lazy(() => import('./DashboardCharts'))
 import ClientDashboard from './ClientDashboard'
 import WorkspaceSection from './WorkspaceSection'
 import { navItems, navItemsByGroup } from '../../data/routeManifest'
@@ -209,7 +209,7 @@ export default function Dashboard() {
         </div>
       )}
       <WorkspaceSection isMobile={!!isMobile} />
-      {chartData && <DashboardCharts chartData={chartData} days={chartDays} onDaysChange={setChartDays} canClients={canClients} isMobile={!!isMobile} />}
+      {chartData && <Suspense fallback={<SkeletonDashboard />}><DashboardCharts chartData={chartData} days={chartDays} onDaysChange={setChartDays} canClients={canClients} isMobile={!!isMobile} /></Suspense>}
       {canClients && stats?.clientStages && (() => {
         const stages = stats.clientStages!
         const total = Object.values(stages).reduce((a, b) => a + b, 0)

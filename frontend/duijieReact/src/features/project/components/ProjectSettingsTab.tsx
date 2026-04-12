@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { Users, Shield, AppWindow, UserPlus, ChevronRight, UserPlus2, Pencil, Trash2, LayoutDashboard, Clock, BarChart3, SlidersHorizontal } from 'lucide-react'
 import useNicknameStore from '../../../stores/useNicknameStore'
 import ProjectRoleList from './ProjectRoleList'
 import AppTab from './AppTab'
 import JoinRequestsTab from './JoinRequestsTab'
-import ProjectOverviewTab from './ProjectOverviewTab'
+const ProjectOverviewTab = lazy(() => import('./ProjectOverviewTab'))
 import ProjectActivityTab from './ProjectActivityTab'
-import ProjectStatsTab from './ProjectStatsTab'
+const ProjectStatsTab = lazy(() => import('./ProjectStatsTab'))
 import CustomFieldsManager from './CustomFieldsManager'
 import Avatar from '../../ui/Avatar'
 import Badge from '../../ui/Badge'
@@ -112,9 +112,9 @@ export default function ProjectSettingsTab({ project, projectId, isOwner, canMan
           style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--brand)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0', marginBottom: 12 }}>
           ← 返回设置
         </button>
-        {sub === 'overview' && <ProjectOverviewTab project={project} projectId={projectId} />}
+        {sub === 'overview' && <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-tertiary)' }}>加载中...</div>}><ProjectOverviewTab project={project} projectId={projectId} /></Suspense>}
         {sub === 'activity' && <ProjectActivityTab projectId={projectId} />}
-        {sub === 'stats' && <ProjectStatsTab projectId={projectId} />}
+        {sub === 'stats' && <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-tertiary)' }}>加载中...</div>}><ProjectStatsTab projectId={projectId} /></Suspense>}
         {sub === 'nickname' && (
           <div style={section}>
             <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 600 }}>项目备注</h3>

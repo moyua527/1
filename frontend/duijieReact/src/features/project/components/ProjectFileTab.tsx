@@ -553,7 +553,7 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
                 }}>
                 {isImg ? (
                   <div style={{ height: 72, background: '#000', overflow: 'hidden' }}>
-                    <img src={thumbUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={thumbUrl} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 10px' }}>

@@ -126,7 +126,7 @@ export default function TaskDetailModal({ task, projectId, open, onClose }: Prop
             <div style={{ ...lbl, marginBottom: 8 }}><Paperclip size={14} /> 图片 ({imgs.length})</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {imgs.map((a: any, i: number) => (
-                <img key={a.id} src={`${BACKEND_URL}/uploads/${a.filename}`} alt=""
+                <img key={a.id} src={`${BACKEND_URL}/uploads/${a.filename}`} alt="" loading="lazy"
                   onClick={() => { setPreviewImg(`${BACKEND_URL}/uploads/${a.filename}`); setPreviewStartIdx(i) }}
                   onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
                   style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border-primary)', display: 'block', cursor: 'pointer' }} />
