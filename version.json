@@ -1,7 +1,7 @@
 {
-  "version": "1.4.17",
-  "versionCode": 420,
+  "version": "1.4.18",
+  "versionCode": 421,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "性能优化：图表懒加载、图片懒加载、API聚合、渐进式渲染"
+  "changelog": "打包优化：Recharts独立vendor-charts chunk，长期浏览器缓存"
 }
