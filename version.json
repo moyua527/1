@@ -1,7 +1,7 @@
 {
-  "version": "1.4.20",
-  "versionCode": 423,
+  "version": "1.4.21",
+  "versionCode": 424,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "紧急修复：remindController require路径错误导致task模块加载失败，恢复任务/代办/里程碑/文件/资源组全部路由"
+  "changelog": "Dashboard统计9个串行查询改Promise.all并行，部署脚本补充firebase密钥同步"
 }

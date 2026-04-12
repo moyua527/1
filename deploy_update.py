@@ -111,7 +111,7 @@ def main():
         if os.path.isdir(ld):
             ensure_remote_dir(f'{remote_server}/{d}')
             sync_dir(ld, f'{remote_server}/{d}')
-    for f in ['standalone.js', 'app.js', 'package.json']:
+    for f in ['standalone.js', 'app.js', 'package.json', 'firebase-admin-key.json']:
         lp = os.path.join(local_server, f)
         if os.path.isfile(lp):
             sftp.put(lp, f'{remote_server}/{f}')

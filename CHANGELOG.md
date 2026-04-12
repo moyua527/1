@@ -2,6 +2,7 @@
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.4.21 | 2026-04-12 | Dashboard统计API并行查询优化(9串行→Promise.all)，部署脚本自动同步firebase密钥 |
 | v1.4.20 | 2026-04-12 | 紧急修复：remindController require路径错误导致task模块加载失败，恢复全部任务相关路由 |
 | v1.4.19 | 2026-04-12 | 代码分割：ProjectDetail拆分Tab懒加载(218KB→39KB)，各Tab独立chunk按需加载 |
 | v1.4.18 | 2026-04-12 | 打包优化：Recharts独立vendor-charts chunk(400KB)，独立缓存不随业务代码变化 |
