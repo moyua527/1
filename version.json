@@ -1,7 +1,7 @@
 {
-  "version": "1.4.19",
-  "versionCode": 422,
+  "version": "1.4.20",
+  "versionCode": 423,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "代码分割：ProjectDetail拆分Tab懒加载(218KB→39KB)，各Tab独立chunk按需加载"
+  "changelog": "紧急修复：remindController require路径错误导致task模块加载失败，恢复任务/代办/里程碑/文件/资源组全部路由"
 }

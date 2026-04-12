@@ -1,6 +1,6 @@
-const db = require('../../config/db');
+const db = require('../../../config/db');
 const { notify } = require('../../utils/notify');
-const logger = require('../../config/logger');
+const logger = require('../../../config/logger');
 
 const COOLDOWN_MS = 30 * 60 * 1000; // 30 min
 
