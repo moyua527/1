@@ -53,9 +53,9 @@ export default function ProjectDetail() {
   const [projectError, setProjectError] = useState('')
   const [tasks, setTasks] = useState<any[]>(cached?.tasks ?? [])
   const activeIdRef = useRef(id)
-  const [, setHasNewSubmitted] = useState(false)
-  const [, setHasNewMessages] = useState(false)
-  const [, setHasNewFiles] = useState(false)
+  const hasNewSubmittedRef = useRef(false)
+  const hasNewMessagesRef = useRef(false)
+  const hasNewFilesRef = useRef(false)
   const [selectedMember, setSelectedMember] = useState<any>(null)
   const [searchParams, setSearchParams] = useSearchParams()
   const validTabs = ['tasks', 'todo', 'files', 'messages', 'settings'] as const
@@ -66,10 +66,10 @@ export default function ProjectDetail() {
     setSearchParams({ tab: t }, { replace: true })
     if (t === 'tasks') {
       localStorage.setItem(`task_view_${user?.id}_${id}`, new Date().toISOString())
-      setHasNewSubmitted(false)
+      hasNewSubmittedRef.current = false
     }
-    if (t === 'messages') setHasNewMessages(false)
-    if (t === 'files') setHasNewFiles(false)
+    if (t === 'messages') hasNewMessagesRef.current = false
+    if (t === 'files') hasNewFilesRef.current = false
     if (id && ['tasks', 'todo', 'messages', 'files'].includes(t)) {
       fetchApi('/api/notifications/read-by-tab', {
         method: 'PATCH',
@@ -90,11 +90,11 @@ export default function ProjectDetail() {
   const [pendingJoinCount, setPendingJoinCount] = useState(0)
   const [showProjectGuide, setShowProjectGuide] = useState(false)
 
-  const _openClientModal = (clientId: number) => {
+  const _openClientModal = useCallback((clientId: number) => {
     setClientModal(true)
     setClientData(null)
     fetchApi(`/api/clients/${clientId}`).then(r => { if (r.success) setClientData(r.data) })
-  }
+  }, [])
   void _openClientModal
 
   const loadProject = useCallback(async () => {
@@ -160,10 +160,10 @@ export default function ProjectDetail() {
         const lastView = localStorage.getItem(tvk)
         const submitted = taskList.filter((t: any) => t.status === 'submitted')
         if (!lastView) {
-          setHasNewSubmitted(submitted.length > 0)
+          hasNewSubmittedRef.current = submitted.length > 0
         } else {
           const lastTs = new Date(lastView).getTime()
-          setHasNewSubmitted(submitted.some((t: any) => new Date(t.created_at).getTime() > lastTs))
+          hasNewSubmittedRef.current = submitted.some((t: any) => new Date(t.created_at).getTime() > lastTs)
         }
         setPendingJoinCount((joinRequests || []).filter((req: any) => req.status === 'pending').length)
         setProjectRoles(roleList || [])
@@ -180,13 +180,13 @@ export default function ProjectDetail() {
     })
   }, [id])
 
-  const loadRoles = useCallback(() => {
+  const _loadRoles = useCallback(() => {
     if (!id) return
     projectApi.listRoles(id).then(r => {
       if (r.success) setProjectRoles(r.data || [])
     })
   }, [id])
-  void loadRoles
+  void _loadRoles
 
   const taskViewKey = `task_view_${user?.id}_${id}`
 
@@ -203,10 +203,10 @@ export default function ProjectDetail() {
       const lastView = localStorage.getItem(taskViewKey)
       const submitted = data.filter((t: any) => t.status === 'submitted')
       if (!lastView) {
-        setHasNewSubmitted(submitted.length > 0)
+        hasNewSubmittedRef.current = submitted.length > 0
       } else {
         const lastTs = new Date(lastView).getTime()
-        setHasNewSubmitted(submitted.some((t: any) => new Date(t.created_at).getTime() > lastTs))
+        hasNewSubmittedRef.current = submitted.some((t: any) => new Date(t.created_at).getTime() > lastTs)
       }
     })
   }, [id, taskViewKey])
@@ -216,7 +216,7 @@ export default function ProjectDetail() {
     const off = onSocket('data_changed', (payload: any) => {
       if (payload?.project_id && String(payload.project_id) !== String(id)) return
       if (payload?.entity === 'task') loadTasks()
-      if (payload?.entity === 'file') setHasNewFiles(true)
+      if (payload?.entity === 'file') hasNewFilesRef.current = true
       invalidate('project-unread-summary')
     })
     return off
@@ -227,7 +227,7 @@ export default function ProjectDetail() {
     const off = onSocket('new_message', (payload: any) => {
       if (String(payload?.project_id) !== String(id)) return
       if (payload?.sender_id === user?.id) return
-      setHasNewMessages(true)
+      hasNewMessagesRef.current = true
       invalidate('project-unread-summary')
     })
     return off
@@ -261,10 +261,10 @@ export default function ProjectDetail() {
     if (!id) return
     if (tab === 'tasks' && user?.id) {
       localStorage.setItem(`task_view_${user.id}_${id}`, new Date().toISOString())
-      setHasNewSubmitted(false)
+      hasNewSubmittedRef.current = false
     }
-    if (tab === 'messages') setHasNewMessages(false)
-    if (tab === 'files') setHasNewFiles(false)
+    if (tab === 'messages') hasNewMessagesRef.current = false
+    if (tab === 'files') hasNewFilesRef.current = false
     fetchApi('/api/notifications/read-by-tab', {
       method: 'PATCH',
       body: JSON.stringify({ project_id: id, tab: 'all' }),
@@ -305,7 +305,7 @@ export default function ProjectDetail() {
       a?.removeEventListener('wheel', handler)
       b?.removeEventListener('wheel', handler)
     }
-  })
+  }, [])
 
   
 
@@ -464,7 +464,7 @@ export default function ProjectDetail() {
 
       {tab === 'messages' && <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}><div style={{ flex: 1, minHeight: 0, background: 'var(--bg-primary)', borderRadius: isMobile ? 0 : 12, boxShadow: isMobile ? 'none' : '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}><MessagePanel projectId={id!} /></div></div>}
 
-      {tab === 'settings' && <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}><ProjectSettingsTab project={project} projectId={id!} isOwner={isOwner} canManageRole={canManageRole} canApproveJoin={canApproveJoin} canEdit={canEdit} canDelete={canDelete} pendingJoinCount={pendingJoinCount} onRefreshProject={loadProject} onRefreshJoinCount={loadPendingJoinCount} onOpenAddMember={() => { setShowAddMember(true); refreshAvailableUsers() }} onMemberClick={setSelectedMember} onEditProject={() => setShowEditProject(true)} onDeleteProject={handleDelete} tasks={tasks} isMobile={isMobile} /></div>}
+      {tab === 'settings' && <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}><ProjectSettingsTab project={project} projectId={id!} isOwner={isOwner} canManageRole={canManageRole} canApproveJoin={canApproveJoin} canEdit={canEdit} canDelete={canDelete} pendingJoinCount={pendingJoinCount} onRefreshProject={loadProject} onRefreshJoinCount={loadPendingJoinCount} onOpenAddMember={() => { setShowAddMember(true); refreshAvailableUsers() }} onMemberClick={setSelectedMember} onEditProject={() => setShowEditProject(true)} onDeleteProject={handleDelete} isMobile={isMobile} /></div>}
       </Suspense>
 
 

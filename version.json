@@ -1,7 +1,7 @@
 {
-  "version": "1.4.27",
-  "versionCode": 430,
+  "version": "1.4.28",
+  "versionCode": 431,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "首页代码优化：提取SalesFunnel/FollowUpAlerts/RecentActivity/QuickNavMenu独立组件，WorkspaceSection改用useApi hook，删除无效useEffect"
+  "changelog": "项目管理模块代码优化：修复useEffect依赖/TodoTab定位bug/JSON.parse崩溃/URL泄漏，清理死代码，添加useMemo"
 }

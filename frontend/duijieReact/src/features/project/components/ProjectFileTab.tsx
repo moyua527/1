@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { Loader2, Trash2, Download, FileText, Image, FileSpreadsheet, Film, File, CheckSquare, Square, Search, Pencil, Link2, Plus, ExternalLink, X, StickyNote, Paperclip, FolderOpen, Users, Lock, Globe, ChevronDown, Check } from 'lucide-react'
 import useIsMobile from '../../ui/useIsMobile'
 import { fetchApi, BACKEND_URL } from '../../../bootstrap'
@@ -247,11 +247,11 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
 
   useEffect(() => { load() }, [load])
 
-  const filtered = files.filter(f => {
+  const filtered = useMemo(() => files.filter(f => {
     if (category && getCategory(f.mime_type) !== category) return false
     if (search.trim()) return (f.original_name || '').toLowerCase().includes(search.toLowerCase())
     return true
-  })
+  }), [files, category, search])
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = e.target.files

@@ -36,7 +36,6 @@ interface TaskTabProps {
   canEdit: boolean
   projectId: string
   loadTasks: () => void
-  remarkMap?: Record<string, string>
 }
 
 export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTabProps) {
@@ -387,7 +386,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                       ) : (
                         <div style={{ fontSize: 13, color: 'var(--text-heading)', fontWeight: 500 }}>{p.content}</div>
                       )}
-                      {(() => { const imgs: string[] = typeof p.images === 'string' ? JSON.parse(p.images || '[]') : (p.images || []); return imgs.length > 0 ? (
+                      {(() => { let imgs: string[] = []; try { imgs = typeof p.images === 'string' ? JSON.parse(p.images || '[]') : (p.images || []) } catch { /* malformed JSON */ } return imgs.length > 0 ? (
                         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 6 }}>
                           {imgs.map((url: string, idx: number) => (
                             <img key={idx} src={url} alt="" loading="lazy" onClick={() => { setPreviewImg(url); setPreviewImages(imgs); setPreviewStartIdx(idx) }}
@@ -794,7 +793,7 @@ export default function TaskTab({ tasks, canEdit, projectId, loadTasks }: TaskTa
                       <div key={`f-${i}`} style={{ position: 'relative', display: 'inline-flex' }}>
                         {isImg ? (
                           <div style={{ width: 56, height: 56, borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border-primary)', position: 'relative', cursor: 'pointer' }}
-                            onClick={() => { const allImgs = taskFiles.filter(x => x.type.startsWith('image/')).map(x => URL.createObjectURL(x)); setPreviewImg(objUrl); setPreviewImages(allImgs); setPreviewStartIdx(Math.max(0, allImgs.indexOf(objUrl))) }}>
+                            onClick={() => { const allImgs = taskFiles.filter(x => x.type.startsWith('image/')).map(x => URL.createObjectURL(x)); setPreviewImg(objUrl); setPreviewImages(allImgs); setPreviewStartIdx(Math.max(0, allImgs.findIndex(u => u === objUrl))); setTimeout(() => allImgs.forEach(u => { if (u !== objUrl) URL.revokeObjectURL(u) }), 100) }}>
                             <img src={objUrl} alt={f.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             <button onClick={(e) => { e.stopPropagation(); setEditingExistingIdx(i); setEditingImage(f) }}
                               style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 10, padding: '2px 0', textAlign: 'center' }}>编辑</button>

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Check, ChevronDown, Trash2, RotateCcw } from 'lucide-react'
 import { fetchApi } from '../../../bootstrap'
@@ -119,13 +119,13 @@ export default function TodoTab({ projectId, canEdit, isMobile, currentUserId, m
     } else toast(r.message || '恢复失败', 'error')
   }
 
-  const filtered = items.filter(i => {
+  const filtered = useMemo(() => items.filter(i => {
     if (filter === 'pending') return !i.is_completed
     if (filter === 'completed') return i.is_completed
     return true
-  })
+  }), [items, filter])
 
-  const completedCount = items.filter(i => i.is_completed).length
+  const completedCount = useMemo(() => items.filter(i => i.is_completed).length, [items])
   const pendingCount = items.length - completedCount
 
   const formatDt = (d: string) => {
@@ -157,7 +157,7 @@ export default function TodoTab({ projectId, canEdit, isMobile, currentUserId, m
                 const openUp = spaceBelow < 140
                 return (
                   <div style={{
-                    position: 'absolute', left: 0, [openUp ? 'bottom' : 'top']: openUp ? '100%' : '100%',
+                    position: 'absolute', left: 0, [openUp ? 'bottom' : 'top']: '100%',
                     marginTop: openUp ? 0 : 4, marginBottom: openUp ? 4 : 0,
                     background: 'var(--bg-primary)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
                     border: '1px solid var(--border-primary)', minWidth: '100%', zIndex: 1000, overflow: 'hidden',

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import { Plus, FolderKanban, Loader2, Download, Search, Trash2, RotateCcw, Upload, Link, MoreVertical, X } from 'lucide-react'
 import { SkeletonList } from '../ui/Skeleton'
@@ -71,7 +71,7 @@ export default function ProjectList() {
     const el = homeTabScrollRef.current
     el?.addEventListener('wheel', handler, { passive: false })
     return () => el?.removeEventListener('wheel', handler)
-  })
+  }, [])
 
   
 
@@ -105,7 +105,7 @@ export default function ProjectList() {
     return () => { offNotif(); offMsg(); offData(); offTask() }
   }, [invalidate])
 
-  const filtered = projects.filter((p: any) => {
+  const filtered = useMemo(() => projects.filter((p: any) => {
     if (statusFilter && p.status !== statusFilter) return false
     if (debouncedSearch) {
       const s = debouncedSearch.toLowerCase()
@@ -113,7 +113,7 @@ export default function ProjectList() {
       if (!displayName.includes(s)) return false
     }
     return true
-  })
+  }), [projects, statusFilter, debouncedSearch])
   const { visible: visibleProjects, hasMore: hasMoreProjects, sentinelRef: projectSentinelRef } = useProgressiveRender(filtered)
 
   useEffect(() => {
