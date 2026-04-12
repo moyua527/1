@@ -1,7 +1,7 @@
 {
-  "version": "1.4.18",
-  "versionCode": 421,
+  "version": "1.4.19",
+  "versionCode": 422,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "打包优化：Recharts独立vendor-charts chunk，长期浏览器缓存"
+  "changelog": "代码分割：ProjectDetail拆分Tab懒加载(218KB→39KB)，各Tab独立chunk按需加载"
 }

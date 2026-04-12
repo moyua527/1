@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
 import { useParams, useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
 import { X } from 'lucide-react'
 import useProjectTabStore from '../../../stores/useProjectTabStore'
@@ -11,17 +11,16 @@ import { taskApi } from '../../task/services/api'
 import Button from '../../ui/Button'
 import { confirm } from '../../ui/ConfirmDialog'
 import { toast } from '../../ui/Toast'
-import TaskTab from './TaskTab'
-import TodoTab from './TodoTab'
-
-import ProjectFileTab from './ProjectFileTab'
-import ProjectSettingsTab from './ProjectSettingsTab'
-import MessagePanel from '../../message/components/MessagePanel'
+const TaskTab = lazy(() => import('./TaskTab'))
+const TodoTab = lazy(() => import('./TodoTab'))
+const ProjectFileTab = lazy(() => import('./ProjectFileTab'))
+const ProjectSettingsTab = lazy(() => import('./ProjectSettingsTab'))
+const MessagePanel = lazy(() => import('../../message/components/MessagePanel'))
 import { ManageMembersModal, ManageClientMembersModal, MemberInfoModal, ClientInfoModal } from './ProjectModals'
 import useLiveData from '../../../hooks/useLiveData'
 import { onSocket } from '../../ui/smartSocket'
-import EditProjectModal from './EditProjectModal'
-import SetClientModal from './SetClientModal'
+const EditProjectModal = lazy(() => import('./EditProjectModal'))
+const SetClientModal = lazy(() => import('./SetClientModal'))
 import ProjectGuide from '../../ui/ProjectGuide'
 
 
@@ -424,13 +423,13 @@ export default function ProjectDetail() {
           })}
         </div>
       </div>
-      <EditProjectModal open={showEditProject} project={project} onClose={() => setShowEditProject(false)}
+      {showEditProject && <Suspense fallback={null}><EditProjectModal open={showEditProject} project={project} onClose={() => setShowEditProject(false)}
         onCoverChange={() => { loadProject(); invalidate('projects') }}
         onSave={async (data) => {
           const r = await projectApi.update(id!, data)
           if (r.success) { toast('已更新', 'success'); loadProject(); return true }
           toast(r.message || '更新失败', 'error'); return false
-        }} />
+        }} /></Suspense>}
 
 
       <div style={{ flex: 1, minHeight: 0, paddingTop: 8, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -456,6 +455,7 @@ export default function ProjectDetail() {
           onRefreshAvailable={refreshClientAvailableUsers}
         />
 
+      <Suspense fallback={<div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)' }}>加载中...</div>}>
       {tab === 'tasks' && <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}><TaskTab tasks={tasks} canEdit={canCreateTask} projectId={id!} loadTasks={loadTasks} /></div>}
 
       {tab === 'todo' && <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}><TodoTab projectId={id!} canEdit={isAdmin || !!projectPerms?.can_create_milestone || !!projectPerms?.can_edit_milestone} isMobile={isMobile} currentUserId={user?.id} members={allMembers} /></div>}
@@ -465,9 +465,10 @@ export default function ProjectDetail() {
       {tab === 'messages' && <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}><div style={{ flex: 1, minHeight: 0, background: 'var(--bg-primary)', borderRadius: isMobile ? 0 : 12, boxShadow: isMobile ? 'none' : '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}><MessagePanel projectId={id!} /></div></div>}
 
       {tab === 'settings' && <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}><ProjectSettingsTab project={project} projectId={id!} isOwner={isOwner} canManageRole={canManageRole} canApproveJoin={canApproveJoin} canEdit={canEdit} canDelete={canDelete} pendingJoinCount={pendingJoinCount} onRefreshProject={loadProject} onRefreshJoinCount={loadPendingJoinCount} onOpenAddMember={() => { setShowAddMember(true); refreshAvailableUsers() }} onMemberClick={setSelectedMember} onEditProject={() => setShowEditProject(true)} onDeleteProject={handleDelete} tasks={tasks} isMobile={isMobile} /></div>}
+      </Suspense>
 
 
-      <SetClientModal open={showSetClient} hasExternalEnterprise={false}
+      {showSetClient && <Suspense fallback={null}><SetClientModal open={showSetClient} hasExternalEnterprise={false}
         onClose={() => setShowSetClient(false)}
         onSendRequest={async (clientId) => {
           const r = await projectApi.sendClientRequest(id!, { to_enterprise_id: clientId })
@@ -478,7 +479,7 @@ export default function ProjectDetail() {
           const r = await projectApi.update(id!, { client_id: null })
           if (r.success) { toast('已取消关联', 'success'); loadProject(); return true }
           toast(r.message || '操作失败', 'error'); return false
-        }} />
+        }} /></Suspense>}
 
       <MemberInfoModal member={selectedMember} onClose={() => setSelectedMember(null)} />
       <ClientInfoModal open={clientModal} onClose={() => setClientModal(false)} clientData={clientData} />
