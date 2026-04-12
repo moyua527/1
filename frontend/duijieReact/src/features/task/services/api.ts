@@ -14,6 +14,7 @@ export const taskApi = {
   update: (id: string, data: any) => fetchApi(`/api/tasks/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   move: (id: string, status: string, sort_order?: number) => fetchApi(`/api/tasks/${id}/move`, { method: 'PATCH', body: JSON.stringify({ status, sort_order }) }),
   remove: (id: string) => fetchApi(`/api/tasks/${id}`, { method: 'DELETE' }),
+  remind: (id: string) => fetchApi(`/api/tasks/${id}/remind`, { method: 'POST' }),
   trash: (project_id: string) => fetchApi(`/api/tasks/trash?project_id=${project_id}`),
   restore: (id: string) => fetchApi(`/api/tasks/${id}/restore`, { method: 'PATCH' }),
   // 审核要点

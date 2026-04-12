@@ -1,7 +1,7 @@
 import { type ComponentType } from 'react'
 import {
   LayoutDashboard, FolderKanban, Users, ListTodo, Building2,
-  MessageSquare, CalendarDays, FileText, BellRing,
+  MessageSquare, CalendarDays, FileText, BellRing, Clock,
   Shield, ScrollText, Plug2, Settings, LayoutGrid, UserCircle, BookOpen,
 } from 'lucide-react'
 
@@ -46,6 +46,11 @@ const ROUTES: RouteEntry[] = [
     path: '/tasks', label: '需求看板', icon: ListTodo, perm: 'task:view',
     importFn: () => import('../features/task/index'),
     showInNav: true, prefetch: true, group: 'business',
+  },
+  {
+    path: '/timesheets', label: '工时汇报', icon: Clock, perm: 'task:view',
+    importFn: () => import('../features/timesheet/index'),
+    showInNav: true, group: 'business',
   },
   {
     path: '/enterprise', label: '企业管理', mobileLabel: '企业', icon: Building2, perm: 'enterprise:view',

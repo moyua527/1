@@ -29,6 +29,7 @@ router.put('/tasks/:id', auth, taskStaff,
 router.patch('/tasks/:id/move', auth, taskStaff,
   taskPermGuard(['can_move_task_accept', 'can_move_task_dispute', 'can_move_task_supplement', 'can_move_task_submit_review', 'can_move_task_reject', 'can_move_task_approve', 'can_move_task_resubmit']),
   require('../controllers/task/moveController'));
+router.post('/tasks/:id/remind', auth, taskStaff, require('../controllers/task/remindController'));
 router.delete('/tasks/:id', auth, taskStaff, taskPermGuard('can_delete_task'), require('../controllers/task/deleteController'));
 router.patch('/tasks/:id/restore', auth, taskStaff, taskPermGuard('can_delete_task'), require('../controllers/task/restoreController'));
 router.post('/tasks/:id/attachments', auth, taskStaff, taskPermGuard('can_upload_task_attachment'), upload.array('files', 10), require('../controllers/task/uploadAttachmentController'));
@@ -94,5 +95,12 @@ router.delete('/resource-groups/:id', auth, require('../controllers/resource/del
 router.post('/resource-groups/items', auth, upload.single('file'), require('../controllers/resource/addItemController'));
 router.put('/resource-groups/items/:itemId', auth, require('../controllers/resource/updateItemController'));
 router.delete('/resource-groups/items/:itemId', auth, require('../controllers/resource/deleteItemController'));
+
+// Timesheets (工时汇报)
+router.get('/timesheets', auth, require('../controllers/timesheet/listController'));
+router.get('/timesheets/summary', auth, require('../controllers/timesheet/summaryController'));
+router.post('/timesheets', auth, require('../controllers/timesheet/createController'));
+router.put('/timesheets/:id', auth, require('../controllers/timesheet/updateController'));
+router.delete('/timesheets/:id', auth, require('../controllers/timesheet/deleteController'));
 
 module.exports = router;

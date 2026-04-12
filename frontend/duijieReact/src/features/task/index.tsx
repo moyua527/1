@@ -4,7 +4,8 @@ import { BACKEND_URL } from '../../bootstrap'
 import { useTasks, useProjects, useInvalidate } from '../../hooks/useApi'
 import useLiveData from '../../hooks/useLiveData'
 import Badge from '../ui/Badge'
-import { Plus, Paperclip, Download, Search } from 'lucide-react'
+import { Plus, Paperclip, Download, Search, FileSpreadsheet } from 'lucide-react'
+import { toast } from '../ui/Toast'
 import TaskDetailModal from './components/TaskDetailModal'
 import TaskCreateModal from './components/TaskCreateModal'
 import { can } from '../../stores/permissions'
@@ -97,6 +98,19 @@ export default function TaskBoard() {
             <option value="">状态</option>
             {columns.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
           </select>
+          <button onClick={async () => {
+              const token = localStorage.getItem('token')
+              const qs = filterProject ? `?project_id=${filterProject}` : ''
+              const res = await fetch(`/api/tasks/export${qs}`, { headers: { Authorization: `Bearer ${token}` } })
+              if (!res.ok) { toast('导出失败', 'error'); return }
+              const blob = await res.blob()
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement('a'); a.href = url; a.download = `tasks_${new Date().toISOString().slice(0, 10)}.xlsx`; a.click()
+              URL.revokeObjectURL(url)
+            }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', cursor: 'pointer', fontSize: 13, flexShrink: 0 }}>
+            <FileSpreadsheet size={14} /> 导出
+          </button>
           {canAddTask && (
             <button onClick={() => setShowCreateModal(true)}
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, background: 'var(--brand)', color: 'var(--bg-primary)', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, width: isMobile ? '100%' : 'auto' }}>
@@ -125,9 +139,12 @@ export default function TaskBoard() {
               onClick={() => setSelectedTask(task)}
               onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)')}
               onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)')}>
-              {/* 标题 + 状态 */}
-              <div style={{ display: 'flex', alignItems: 'start', gap: 8, marginBottom: 4 }}>
-                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)', flex: 1 }}>{task.title}</div>
+              {/* 项目名 + 标题 + 状态 */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                {task.project_name && !filterProject && (
+                  <span style={{ fontSize: 10, color: 'var(--brand)', background: 'var(--bg-selected)', borderRadius: 4, padding: '1px 6px', whiteSpace: 'nowrap', flexShrink: 0 }}>{task.project_name}</span>
+                )}
+                <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{task.title}</div>
                 {st && (
                   <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 10, background: st.bg, color: st.color, fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0, border: `1px solid ${st.color}30` }}>{st.label}</span>
                 )}
@@ -136,11 +153,8 @@ export default function TaskBoard() {
               {task.description && (
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6, lineHeight: 1.5, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' as any }}>{task.description}</div>
               )}
-              {/* 项目名 + 优先级 + 负责人 */}
+              {/* 优先级 + 负责人 + 截止日期 */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
-                {task.project_name && !filterProject && (
-                  <span style={{ fontSize: 11, color: 'var(--brand)', background: 'var(--bg-selected)', borderRadius: 4, padding: '1px 6px' }}>{task.project_name}</span>
-                )}
                 <Badge color={pr.color}>{pr.label}</Badge>
                 {task.assigned_name && <span style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: 2 }}><span style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--brand)', display: 'inline-block' }} />{task.assigned_name}</span>}
                 {task.due_date && <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>截止 {task.due_date.slice(0, 10)}</span>}

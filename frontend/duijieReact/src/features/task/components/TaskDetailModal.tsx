@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { BACKEND_URL } from '../../../bootstrap'
 import Modal from '../../ui/Modal'
 import Badge from '../../ui/Badge'
-import { Paperclip, Download, Calendar, Flag, AlignLeft } from 'lucide-react'
+import { Paperclip, Download, Calendar, Flag, AlignLeft, BellRing } from 'lucide-react'
 import { formatDateTime } from '../../../utils/datetime'
 import ImageViewer from '../../ui/ImageViewer'
+import { taskApi } from '../services/api'
+import { toast } from '../../ui/Toast'
 
 const fmtSize = (b: number) => b < 1024 ? b + 'B' : b < 1048576 ? (b / 1024).toFixed(1) + 'KB' : (b / 1048576).toFixed(1) + 'MB'
 
@@ -40,7 +42,18 @@ interface Props {
 export default function TaskDetailModal({ task, open, onClose }: Props) {
   const [previewImg, setPreviewImg] = useState<string | null>(null)
   const [previewStartIdx, setPreviewStartIdx] = useState(0)
+  const [reminding, setReminding] = useState(false)
   if (!task) return null
+
+  const handleRemind = async () => {
+    setReminding(true)
+    try {
+      const r = await taskApi.remind(String(task.id))
+      if (r.success) toast('催办已发送', 'success')
+      else toast(r.message || '催办失败', 'error')
+    } catch { toast('催办失败', 'error') }
+    finally { setReminding(false) }
+  }
 
   const st = statusMap[task.status] || statusMap.submitted
   const pr = priorityMap[task.priority] || priorityMap.medium
@@ -127,8 +140,14 @@ export default function TaskDetailModal({ task, open, onClose }: Props) {
           {task.created_at && <span>创建时间: {formatDateTime(task.created_at)}</span>}
         </div>
 
-        {/* 关闭按钮 */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: 8, borderTop: '1px solid var(--border-secondary)' }}>
+        {/* 操作按钮 */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 8, borderTop: '1px solid var(--border-secondary)' }}>
+          {task.assignee_id && task.status !== 'accepted' && (
+            <button onClick={handleRemind} disabled={reminding}
+              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 16px', borderRadius: 8, border: 'none', background: 'var(--color-warning-bg, #fffbeb)', color: 'var(--color-warning, #d97706)', fontSize: 13, cursor: reminding ? 'not-allowed' : 'pointer', fontWeight: 500, opacity: reminding ? 0.6 : 1 }}>
+              <BellRing size={14} /> {reminding ? '发送中...' : '催办'}
+            </button>
+          )}
           <button onClick={onClose}
             style={{ padding: '8px 20px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', fontSize: 13, cursor: 'pointer' }}>
             关闭

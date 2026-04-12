@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Send, MessageSquare, Search, Loader2, UserPlus, Users, Phone, X, UserCheck, LogOut, Check } from 'lucide-react'
+import { Send, MessageSquare, Search, Loader2, UserPlus, Users, X, UserCheck, LogOut, Check } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { onSocket } from '../ui/smartSocket'
 import Avatar from '../ui/Avatar'
@@ -20,7 +20,7 @@ const dmApi = {
 
 const friendApi = {
   list: () => fetchApi('/api/friends'),
-  search: (phone: string) => fetchApi(`/api/friends/search?phone=${encodeURIComponent(phone)}`),
+  search: (keyword: string) => fetchApi(`/api/friends/search?phone=${encodeURIComponent(keyword)}`),
   request: (friend_id: number, message: string) => fetchApi('/api/friends/request', { method: 'POST', body: JSON.stringify({ friend_id, message }) }),
   requests: () => fetchApi('/api/friends/requests'),
   respond: (id: number, action: string) => fetchApi(`/api/friends/${id}/respond`, { method: 'PATCH', body: JSON.stringify({ action }) }),
@@ -178,7 +178,7 @@ export default function Messaging() {
   const totalUnread = conversations.reduce((s, c) => s + (c.unread_count || 0), 0)
 
   const handlePhoneSearch = async () => {
-    if (!phoneSearch.trim() || phoneSearch.trim().length < 3) return
+    if (!phoneSearch.trim()) return
     setSearching(true)
     const r = await friendApi.search(phoneSearch.trim())
     setSearching(false)
@@ -446,8 +446,8 @@ export default function Messaging() {
 
             <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
               <div style={{ flex: 1, position: 'relative' }}>
-                <Phone size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
-                <input value={phoneSearch} onChange={e => setPhoneSearch(e.target.value)} placeholder="输入手机号搜索..."
+                <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
+                <input value={phoneSearch} onChange={e => setPhoneSearch(e.target.value)} placeholder="输入ID、手机号或用户名搜索..."
                   onKeyDown={e => { if (e.key === 'Enter') handlePhoneSearch() }}
                   style={{ width: '100%', padding: '10px 12px 10px 34px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-body)' }} autoFocus />
               </div>
@@ -465,7 +465,7 @@ export default function Messaging() {
                     <Avatar name={u.nickname || u.username} size={40} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)' }}>{u.nickname || u.username}</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{u.phone}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>ID: {u.id}{u.phone ? ` · ${u.phone}` : ''}</div>
                     </div>
                     <button onClick={() => handleSendRequest(u.id)} disabled={requestingId === u.id}
                       style={{ background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -477,13 +477,13 @@ export default function Messaging() {
               </div>
             )}
 
-            {searchResults.length === 0 && phoneSearch.length >= 3 && !searching && (
+            {searchResults.length === 0 && phoneSearch.trim().length >= 1 && !searching && (
               <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 13 }}>未找到匹配用户</div>
             )}
 
             <div style={{ marginTop: 12, padding: 12, background: 'var(--bg-secondary)', borderRadius: 8 }}>
               <div style={{ fontSize: 12, color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
-                💡 输入对方手机号搜索，找到后点击"申请添加"。<br />
+                💡 输入对方ID、手机号或用户名搜索，找到后点击"申请添加"。<br />
                 对方同意后即可成为好友，互相发送消息。
               </div>
             </div>

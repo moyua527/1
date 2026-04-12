@@ -27,9 +27,39 @@ interface FileTableProps {
   onPreview: (f: any) => void
   onDownload: (f: any) => void
   onDelete: (f: any) => void
+  isMobile?: boolean
+  multiSelect?: boolean
 }
 
-export default function FileTable({ files, selected, onToggleSelect, onSelectAll, onPreview, onDownload, onDelete }: FileTableProps) {
+export default function FileTable({ files, selected, onToggleSelect, onSelectAll, onPreview, onDownload, onDelete, isMobile, multiSelect }: FileTableProps) {
+  if (isMobile) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        {files.map(f => (
+          <div key={f.id} onClick={() => multiSelect ? onToggleSelect(f.id) : onPreview(f)}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 0', borderBottom: '1px solid var(--border-secondary)', background: selected.has(f.id) ? 'var(--bg-selected)' : 'transparent', cursor: 'pointer' }}>
+            {multiSelect && (
+              <button onClick={(e) => { e.stopPropagation(); onToggleSelect(f.id) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: selected.has(f.id) ? 'var(--brand)' : 'var(--text-tertiary)', display: 'flex', flexShrink: 0 }}>
+                {selected.has(f.id) ? <CheckSquare size={18} /> : <Square size={18} />}
+              </button>
+            )}
+            <div style={{ flexShrink: 0 }}>{iconByType(f.mime_type)}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.original_name}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>{formatSize(f.size || 0)}{f.project_name ? ` · ${f.project_name}` : ''}</div>
+            </div>
+            {!multiSelect && (
+              <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+                <button onClick={(e) => { e.stopPropagation(); onDownload(f) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--brand)' }}><Download size={16} /></button>
+                <button onClick={(e) => { e.stopPropagation(); onDelete(f) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--color-danger)' }}><Trash2 size={16} /></button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div style={{ background: 'var(--bg-card)', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
       <div style={{ overflowX: 'auto' }}>

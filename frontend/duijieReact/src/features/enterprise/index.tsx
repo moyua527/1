@@ -69,11 +69,11 @@ export default function Enterprise() {
   return (
     <div style={isMobile ? { display: 'flex', flexDirection: 'column' as const, height: '100%', margin: '-20px -16px', padding: 0 } : undefined}>
       <div style={{
-        textAlign: isMobile ? 'center' : undefined, marginBottom: isMobile ? 0 : 0,
-        ...(isMobile ? { flexShrink: 0, background: 'var(--bg-secondary)', padding: '16px 16px 10px' } : {}),
+        textAlign: isMobile ? 'center' : undefined,
+        ...(isMobile ? { flexShrink: 0, background: 'var(--bg-secondary)', padding: '14px 16px 6px' } : { marginBottom: 0 }),
       }}>
-        <h1 style={{ fontSize: isMobile ? 20 : 22, fontWeight: 700, color: 'var(--text-heading)', marginBottom: 4 }}>企业管理</h1>
-        {!isMobile && <p style={{ fontSize: 14, color: 'var(--text-tertiary)', marginBottom: 20, marginTop: 0 }}>管理企业信息、部门与组织成员</p>}
+        <h1 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>企业管理</h1>
+        {!isMobile && <p style={{ fontSize: 14, color: 'var(--text-tertiary)', marginBottom: 20, marginTop: 4 }}>管理企业信息、部门与组织成员</p>}
       </div>
 
       {/* Tab 栏 */}
@@ -84,10 +84,10 @@ export default function Enterprise() {
         const isMoreActive = isMobile && moreTabs.some(t => t.key === h.tab)
         const moreLabel = isMoreActive ? (moreTabs.find(t => t.key === h.tab)?.label || '更多') : '更多'
         return (
-          <div style={{ display: 'flex', gap: 0, borderBottom: '2px solid var(--border-primary)', marginBottom: isMobile ? 0 : 16, position: 'relative', flexShrink: 0, ...(isMobile ? { padding: '0 16px' } : {}) }}>
+          <div style={{ display: 'flex', gap: 0, borderBottom: '2px solid var(--border-primary)', marginBottom: isMobile ? 0 : 16, position: 'relative', flexShrink: 0, ...(isMobile ? { padding: '0 16px', background: 'var(--bg-secondary)' } : {}) }}>
             {mainTabs.map(t => (
               <button key={t.key} onClick={() => { h.setTab(t.key); setMoreOpen(false) }}
-                style={{ display: 'flex', alignItems: 'center', gap: 4, padding: isMobile ? '8px 14px' : '10px 20px', border: 'none', cursor: 'pointer', fontSize: isMobile ? 13 : 14, fontWeight: 600,
+                style={{ display: 'flex', alignItems: 'center', gap: 4, padding: isMobile ? '8px 0' : '10px 20px', marginRight: isMobile ? 20 : 0, border: 'none', cursor: 'pointer', fontSize: isMobile ? 14 : 14, fontWeight: 600,
                   color: h.tab === t.key ? 'var(--brand)' : 'var(--text-secondary)', background: 'transparent',
                   borderBottom: h.tab === t.key ? '2px solid #2563eb' : '2px solid transparent', marginBottom: -2, transition: 'all 0.15s',
                   whiteSpace: 'nowrap', flexShrink: 0 }}>
@@ -98,14 +98,17 @@ export default function Enterprise() {
             {isMobile && moreTabs.length > 0 && (
               <>
                 <button onClick={() => setMoreOpen(v => !v)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 14px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+                  style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '8px 0', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600,
                     color: isMoreActive ? 'var(--brand)' : 'var(--text-secondary)', background: 'transparent',
                     borderBottom: isMoreActive ? '2px solid #2563eb' : '2px solid transparent', marginBottom: -2, whiteSpace: 'nowrap', flexShrink: 0, marginLeft: 'auto' }}>
                   {moreLabel} <MoreHorizontal size={14} />
                 </button>
                 {moreOpen && (
                   <>
-                    <div onClick={() => setMoreOpen(false)} style={{ position: 'fixed', inset: 0, zIndex: 199 }} />
+                    <div onClick={(e) => { e.stopPropagation(); setMoreOpen(false) }}
+                      onTouchStart={(e) => e.stopPropagation()}
+                      onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setMoreOpen(false) }}
+                      style={{ position: 'fixed', inset: 0, zIndex: 199 }} />
                     <div style={{ position: 'absolute', top: '100%', right: 0, zIndex: 200, background: 'var(--bg-primary)', borderRadius: 12, padding: 6, boxShadow: '0 8px 24px rgba(0,0,0,0.14)', border: '1px solid var(--border-primary)', minWidth: 140, marginTop: 4 }}>
                       {moreTabs.map(t => (
                         <button key={t.key} onClick={() => { h.setTab(t.key); setMoreOpen(false) }}
@@ -125,7 +128,7 @@ export default function Enterprise() {
         )
       })()}
 
-      <div style={isMobile ? { flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 16px 16px', WebkitOverflowScrolling: 'touch' as any } : undefined}>
+      <div style={isMobile ? { flex: 1, overflowY: 'auto', minHeight: 0, padding: '12px 16px 16px', WebkitOverflowScrolling: 'touch' as any } : undefined}>
       <EnterpriseCard
         ent={h.ent} myRole={h.myRole} isOwner={h.isOwner} canAdmin={h.canAdmin} canEditEnterprise={h.canEditEnterprise}
         entMenuOpen={h.entMenuOpen} setEntMenuOpen={h.setEntMenuOpen}

@@ -103,7 +103,10 @@ export default function Dashboard() {
               </button>
               {menuOpen && (
                 <>
-                  <div onClick={() => setMenuOpen(false)} style={{
+                  <div onClick={(e) => { e.stopPropagation(); setMenuOpen(false) }}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setMenuOpen(false) }}
+                    style={{
                     position: 'fixed', inset: 0, zIndex: 199, background: 'rgba(0,0,0,0.15)',
                   }} />
                   <div style={{

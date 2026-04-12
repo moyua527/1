@@ -1,4 +1,5 @@
 const db = require('../../../config/db');
+const XLSX = require('xlsx');
 
 module.exports = async (req, res) => {
   try {
@@ -33,26 +34,31 @@ module.exports = async (req, res) => {
       params
     );
 
-    const statusMap = { todo: '待办', submitted: '已提出', disputed: '待补充', in_progress: '执行中', pending_review: '待验收', review_failed: '验收不通过', accepted: '验收通过', done: '已完成' };
+    const statusMap = { todo: '待办', submitted: '已提出', disputed: '待补充', in_progress: '执行中', pending_review: '待验收', review_failed: '验收不通过', accepted: '验收通过' };
     const priorityMap = { urgent: '紧急', high: '高', medium: '中', low: '低' };
 
-    const BOM = '\uFEFF';
-    const header = '任务标题,状态,优先级,项目,负责人,创建者,截止日期,创建时间\n';
+    const header = ['任务标题', '状态', '优先级', '项目', '负责人', '创建者', '截止日期', '创建时间'];
     const rows = tasks.map(t => [
-      `"${(t.title || '').replace(/"/g, '""')}"`,
+      t.title || '',
       statusMap[t.status] || t.status,
       priorityMap[t.priority] || t.priority || '-',
-      `"${(t.project_name || '-').replace(/"/g, '""')}"`,
+      t.project_name || '-',
       t.assignee_name || '-',
       t.creator_name || '-',
       t.due_date ? new Date(t.due_date).toLocaleDateString('zh-CN') : '-',
       new Date(t.created_at).toLocaleString('zh-CN'),
-    ].join(',')).join('\n');
+    ]);
 
-    const csv = BOM + header + rows;
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename=tasks_${new Date().toISOString().slice(0, 10)}.csv`);
-    res.send(csv);
+    const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+    ws['!cols'] = [{ wch: 30 }, { wch: 10 }, { wch: 8 }, { wch: 20 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 18 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '需求列表');
+    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+    const fname = `tasks_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=${fname}`);
+    res.send(buf);
   } catch (e) {
     res.status(500).json({ success: false, message: '导出失败' });
   }

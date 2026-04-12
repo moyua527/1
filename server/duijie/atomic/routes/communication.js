@@ -88,15 +88,27 @@ router.delete('/nicknames/:targetUserId', auth, async (req, res) => {
 });
 
 // Friends
-// 搜索用户（手机号）
+// 搜索用户（手机号 / 用户ID / 用户名）
 router.get('/friends/search', auth, async (req, res) => {
   try {
     const { phone } = req.query;
-    if (!phone || phone.length < 3) return res.json({ success: true, data: [] });
-    const [rows] = await db.query(
-      `SELECT id, username, nickname, phone, role FROM voice_users WHERE phone LIKE ? AND id != ? AND is_deleted = 0 LIMIT 10`,
-      [`%${phone}%`, req.userId]
-    );
+    if (!phone || phone.length < 1) return res.json({ success: true, data: [] });
+    const keyword = phone.trim();
+    const isNumeric = /^\d+$/.test(keyword);
+    let rows;
+    if (isNumeric) {
+      [rows] = await db.query(
+        `SELECT id, username, nickname, phone, role FROM voice_users
+         WHERE (id = ? OR phone LIKE ?) AND id != ? AND is_deleted = 0 LIMIT 10`,
+        [Number(keyword), `%${keyword}%`, req.userId]
+      );
+    } else {
+      [rows] = await db.query(
+        `SELECT id, username, nickname, phone, role FROM voice_users
+         WHERE (username LIKE ? OR nickname LIKE ? OR phone LIKE ?) AND id != ? AND is_deleted = 0 LIMIT 10`,
+        [`%${keyword}%`, `%${keyword}%`, `%${keyword}%`, req.userId]
+      );
+    }
     res.json({ success: true, data: rows });
   } catch (e) {
     res.status(500).json({ success: false, message: '搜索失败' });

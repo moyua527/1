@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { FileText, Upload, Loader2, Trash2, Search } from 'lucide-react'
+import { FileText, Upload, Loader2, Trash2, Search, MoreVertical, CheckSquare, X } from 'lucide-react'
 import { fetchApi, uploadFile, BACKEND_URL } from '../../bootstrap'
 import { useFiles, useInvalidate } from '../../hooks/useApi'
 import useLiveData from '../../hooks/useLiveData'
@@ -44,6 +44,8 @@ export default function FileManager() {
   const [preview, setPreview] = useState<any>(null)
   const [category, setCategory] = useState('')
   const [selected, setSelected] = useState<Set<number>>(new Set())
+  const [multiSelect, setMultiSelect] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useLiveData(['file'], () => invalidate('files'))
@@ -112,16 +114,11 @@ export default function FileManager() {
   const totalSize = files.reduce((s, f) => s + (f.size || 0), 0)
 
   return (
-    <div>
-      <PageHeader title="文件管理" subtitle={`共 ${files.length} 个文件 · ${formatSize(totalSize)}`}
-        actions={isMobile ? undefined : <>
-          <Button disabled={uploading} onClick={() => fileInputRef.current?.click()}><Upload size={14} /> {uploading ? '上传中...' : '上传文件'}</Button>
-        </>} />
-      <input ref={fileInputRef} type="file" multiple onChange={handleUpload} style={{ display: 'none' }} />
-
+    <div style={isMobile ? { display: 'flex', flexDirection: 'column' as const, height: '100%', margin: '-20px -16px', padding: 0 } : undefined}>
       {isMobile ? (
-        <>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '0 0 10px' }}>
+        <div style={{ flexShrink: 0, background: 'var(--bg-secondary)', padding: '14px 16px 0' }}>
+          <h1 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-heading)', margin: '0 0 10px', textAlign: 'center' }}>文件管理</h1>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', paddingBottom: 10 }}>
             <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
               <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜索文件..."
@@ -129,8 +126,29 @@ export default function FileManager() {
             </div>
             <button disabled={uploading} onClick={() => fileInputRef.current?.click()}
               style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '7px 12px', borderRadius: 8, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 13, cursor: 'pointer', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }}>
-              <Upload size={14} /> {uploading ? '上传中...' : '上传'}
+              <Upload size={14} /> {uploading ? '上传中' : '上传'}
             </button>
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <button onClick={() => setMenuOpen(v => !v)}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+                <MoreVertical size={16} />
+              </button>
+              {menuOpen && (
+                <>
+                  <div onClick={(e) => { e.stopPropagation(); setMenuOpen(false) }}
+                    onTouchStart={(e) => e.stopPropagation()}
+                    onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setMenuOpen(false) }}
+                    style={{ position: 'fixed', inset: 0, zIndex: 199 }} />
+                  <div style={{ position: 'absolute', top: 40, right: 0, zIndex: 200, background: 'var(--bg-primary)', borderRadius: 10, padding: 4, boxShadow: '0 8px 24px rgba(0,0,0,0.14)', border: '1px solid var(--border-primary)', minWidth: 120 }}>
+                    <button onClick={() => { setMultiSelect(v => !v); setSelected(new Set()); setMenuOpen(false) }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 12px', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500,
+                        color: multiSelect ? 'var(--brand)' : 'var(--text-body)', background: 'transparent', borderRadius: 8 }}>
+                      <CheckSquare size={15} /> {multiSelect ? '退出多选' : '多选'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
           <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 10, WebkitOverflowScrolling: 'touch' as any }}>
             {categoryTabs.map(t => {
@@ -148,15 +166,34 @@ export default function FileManager() {
               )
             })}
           </div>
-          {selected.size > 0 && (
-            <div style={{ paddingBottom: 8 }}>
-              <button onClick={handleBatchDelete} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 14px', borderRadius: 8, border: 'none', background: 'var(--bg-danger-hover)', color: 'var(--color-danger)', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
-                <Trash2 size={14} /> 删除选中 ({selected.size})
+          {multiSelect && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 8 }}>
+              <button onClick={selectAll} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', fontSize: 12, cursor: 'pointer', color: 'var(--text-secondary)', fontWeight: 500 }}>
+                <CheckSquare size={13} /> {selected.size === filtered.length && filtered.length > 0 ? '取消全选' : '全选'}
+              </button>
+              {selected.size > 0 && (
+                <button onClick={handleBatchDelete} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 12px', borderRadius: 8, border: 'none', background: 'var(--bg-danger-hover)', color: 'var(--color-danger)', fontSize: 12, cursor: 'pointer', fontWeight: 500 }}>
+                  <Trash2 size={13} /> 删除 ({selected.size})
+                </button>
+              )}
+              <button onClick={() => { setMultiSelect(false); setSelected(new Set()) }} style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 8, border: 'none', background: 'transparent', fontSize: 12, cursor: 'pointer', color: 'var(--text-tertiary)' }}>
+                <X size={13} /> 取消
               </button>
             </div>
           )}
-        </>
+        </div>
       ) : (
+        <>
+        <PageHeader title="文件管理" subtitle={`共 ${files.length} 个文件 · ${formatSize(totalSize)}`}
+          actions={<>
+            <Button disabled={uploading} onClick={() => fileInputRef.current?.click()}><Upload size={14} /> {uploading ? '上传中...' : '上传文件'}</Button>
+          </>} />
+      </>
+      )}
+      <input ref={fileInputRef} type="file" multiple onChange={handleUpload} style={{ display: 'none' }} />
+
+      <div style={isMobile ? { flex: 1, overflowY: 'auto', minHeight: 0, padding: '0 16px 16px', WebkitOverflowScrolling: 'touch' as any } : undefined}>
+      {!isMobile && (
         <FilterBar
           search={search} onSearchChange={setSearch} searchPlaceholder="搜索文件..."
           filters={[{
@@ -188,8 +225,11 @@ export default function FileManager() {
           onPreview={setPreview}
           onDownload={handleDownload}
           onDelete={handleDelete}
+          isMobile={isMobile}
+          multiSelect={multiSelect}
         />
       )}
+      </div>
       {preview && (
         <FilePreviewModal
           file={preview}

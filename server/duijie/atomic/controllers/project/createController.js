@@ -21,6 +21,30 @@ module.exports = async (req, res) => {
 
     ensureDefaultProjectRoles(id, req.userId).catch(() => {});
 
+    if (req.body.template_id) {
+      try {
+        const [[tpl]] = await db.query('SELECT config FROM duijie_project_templates WHERE id = ? AND is_deleted = 0', [req.body.template_id]);
+        if (tpl?.config) {
+          const cfg = typeof tpl.config === 'string' ? JSON.parse(tpl.config) : tpl.config;
+          if (cfg.tasks?.length) {
+            for (let i = 0; i < cfg.tasks.length; i++) {
+              const t = cfg.tasks[i];
+              await db.query(
+                'INSERT INTO duijie_tasks (project_id, title, description, priority, status, sort_order, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                [id, t.title, t.description || '', t.priority || 'medium', 'submitted', i, req.userId]
+              );
+            }
+          }
+          if (cfg.presetTitles?.length) {
+            await db.query(
+              'INSERT INTO duijie_task_title_presets (project_id, preset_titles) VALUES (?, ?) ON DUPLICATE KEY UPDATE preset_titles = VALUES(preset_titles)',
+              [id, JSON.stringify(cfg.presetTitles)]
+            );
+          }
+        }
+      } catch (_) {}
+    }
+
     invalidateProjectCaches().catch(() => {});
     broadcast('project', 'created', { id, userId: req.userId });
     res.json({ success: true, data: { id } });

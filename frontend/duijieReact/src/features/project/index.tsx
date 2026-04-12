@@ -43,6 +43,8 @@ export default function ProjectList() {
   const [showJoinLink, setShowJoinLink] = useState(false)
   const [inviteLink, setInviteLink] = useState('')
   const [joinLinkSubmitting, setJoinLinkSubmitting] = useState(false)
+  const [templates, setTemplates] = useState<any[]>([])
+  const [selectedTemplate, setSelectedTemplate] = useState('')
   const nav = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const statusFilter = searchParams.get('status') || ''
@@ -109,12 +111,20 @@ export default function ProjectList() {
     return true
   })
 
+  useEffect(() => {
+    if (showCreate) {
+      projectApi.listTemplates().then(r => { if (r.success) setTemplates(r.data || []) })
+    }
+  }, [showCreate])
+
   const handleCreate = async () => {
     if (!form.name.trim()) { toast('请输入项目名称', 'error'); return }
     setSubmitting(true)
-    const r = await projectApi.create({ name: form.name.trim(), description: form.description.trim() })
+    const data: any = { name: form.name.trim(), description: form.description.trim() }
+    if (selectedTemplate) data.template_id = Number(selectedTemplate)
+    const r = await projectApi.create(data)
     setSubmitting(false)
-    if (r.success) { toast('项目创建成功', 'success'); window.dispatchEvent(new CustomEvent('onboarding-done', { detail: { type: 'create_project' } })); setShowCreate(false); setForm({ name: '', description: '' }); load() }
+    if (r.success) { toast('项目创建成功', 'success'); window.dispatchEvent(new CustomEvent('onboarding-done', { detail: { type: 'create_project' } })); setShowCreate(false); setForm({ name: '', description: '' }); setSelectedTemplate(''); load() }
     else toast(r.message || '创建失败', 'error')
   }
 
@@ -208,7 +218,7 @@ export default function ProjectList() {
               <div style={{ position: 'absolute', right: 0, top: '100%', marginTop: 6, background: 'var(--bg-primary)', border: '1px solid var(--border-primary)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.15)', zIndex: 100, minWidth: 180, overflow: 'hidden' }}>
                 <button onClick={() => { setShowMenu(false); setShowJoinLink(true); setInviteLink('') }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Link size={15} /> 通过邀请链接加入</button>
                 <div style={{ height: 1, background: 'var(--border-primary)', margin: '2px 8px' }} />
-                <button onClick={async () => { setShowMenu(false); const ok = await projectApi.exportCsv(); if (!ok) toast('导出失败', 'error') }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Download size={15} /> 导出项目</button>
+                <button onClick={async () => { setShowMenu(false); const ok = await projectApi.exportExcel(); if (!ok) toast('导出失败', 'error') }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Download size={15} /> 导出项目</button>
                 <button onClick={() => { setShowMenu(false); const input = document.createElement('input'); input.type = 'file'; input.accept = '.csv'; input.onchange = async (e: any) => { const file = e.target.files?.[0]; if (!file) return; const r = await projectApi.importCsv(file); if (r.success) { toast(r.message || '导入成功', 'success'); load() } else toast(r.message || '导入失败', 'error') }; input.click() }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Upload size={15} /> 导入项目</button>
                 <div style={{ height: 1, background: 'var(--border-primary)', margin: '2px 8px' }} />
                 <button onClick={async () => { setShowMenu(false); setShowTrash(true); setTrashLoading(true); const r = await projectApi.trash(); setTrashLoading(false); if (r.success) setTrashList(r.data || []); else toast(r.message || '加载失败', 'error') }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, color: 'var(--text-body)', textAlign: 'left' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-secondary)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}><Trash2 size={15} /> 回收站</button>
@@ -338,6 +348,16 @@ export default function ProjectList() {
 
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title="新建项目">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {templates.length > 0 && (
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>使用模板</label>
+              <select value={selectedTemplate} onChange={e => setSelectedTemplate(e.target.value)}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1', fontSize: 14, outline: 'none', color: selectedTemplate ? 'var(--text-heading)' : 'var(--text-tertiary)' }}>
+                <option value="">不使用模板</option>
+                {templates.map(t => <option key={t.id} value={t.id}>{t.name}{t.description ? ` — ${t.description}` : ''}</option>)}
+              </select>
+            </div>
+          )}
           <Input label="项目名称 *" placeholder="输入项目名称" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
           <div>
             <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-body)', marginBottom: 4 }}>项目描述</label>

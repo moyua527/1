@@ -1,7 +1,7 @@
 {
-  "version": "1.4.2",
-  "versionCode": 404,
+  "version": "1.4.10",
+  "versionCode": 413,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "后端推送改用Firebase Admin SDK V1 API，安装Capacitor推送插件"
+  "changelog": "项目模板：创建/应用模板，模板自动填充需求和预设标题"
 }

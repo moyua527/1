@@ -78,4 +78,9 @@ router.get('/projects/:id/stats', auth, pag, require('../controllers/project/sta
 // 项目活动动态
 router.get('/projects/:id/activity', auth, pag, require('../controllers/project/activityController'));
 
+// Project Templates
+router.get('/project-templates', auth, require('../controllers/template/listController'));
+router.post('/project-templates', auth, require('../controllers/template/createController'));
+router.delete('/project-templates/:id', auth, require('../controllers/template/deleteController'));
+
 module.exports = router;

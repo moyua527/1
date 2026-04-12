@@ -1,10 +1,10 @@
 const db = require('../../../config/db');
+const XLSX = require('xlsx');
 
 module.exports = async (req, res) => {
   try {
     const uid = req.userId;
     const role = req.userRole;
-    const format = req.query.format || 'csv';
 
     let pf = 'AND (p.created_by = ? OR p.id IN (SELECT project_id FROM duijie_project_members WHERE user_id = ?))';
     let params = [uid, uid];
@@ -29,25 +29,30 @@ module.exports = async (req, res) => {
 
     const statusMap = { planning: '规划中', in_progress: '进行中', completed: '已完成', on_hold: '暂停' };
 
-    const BOM = '\uFEFF';
-    const header = '项目名称,状态,我方企业,客户企业,创建者,任务总数,已完成,成员数,创建时间,更新时间\n';
+    const header = ['项目名称', '状态', '我方企业', '客户企业', '创建者', '任务总数', '已完成', '成员数', '创建时间', '更新时间'];
     const rows = projects.map(p => [
-      `"${(p.name || '').replace(/"/g, '""')}"`,
+      p.name || '',
       statusMap[p.status] || p.status,
-      `"${((p.internal_client_name || '-')).replace(/"/g, '""')}"`,
-      `"${(p.client_name || '-').replace(/"/g, '""')}"`,
+      p.internal_client_name || '-',
+      p.client_name || '-',
       p.creator_name || '-',
       p.task_count,
       p.done_count,
       p.member_count,
       new Date(p.created_at).toLocaleString('zh-CN'),
       new Date(p.updated_at).toLocaleString('zh-CN'),
-    ].join(',')).join('\n');
+    ]);
 
-    const csv = BOM + header + rows;
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename=projects_${new Date().toISOString().slice(0, 10)}.csv`);
-    res.send(csv);
+    const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+    ws['!cols'] = [{ wch: 24 }, { wch: 8 }, { wch: 16 }, { wch: 16 }, { wch: 10 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 18 }, { wch: 18 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '项目列表');
+    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+    const fname = `projects_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=${fname}`);
+    res.send(buf);
   } catch (e) {
     res.status(500).json({ success: false, message: '导出失败' });
   }

@@ -40,7 +40,7 @@ export const projectApi = {
   inviteMember: (id: string, data: { user_id: number; message?: string }) => fetchApi(`/api/projects/${id}/invite`, { method: 'POST', body: JSON.stringify(data) }),
   // 搜索可邀请用户（全局）
   searchUsersForInvite: (id: string, q: string) => fetchApi(`/api/projects/${id}/search-users?q=${encodeURIComponent(q)}`),
-  exportCsv: async () => {
+  exportExcel: async () => {
     const token = localStorage.getItem('token')
     const res = await fetch('/api/projects/export', { headers: { Authorization: `Bearer ${token}` } })
     if (!res.ok) return false
@@ -48,7 +48,7 @@ export const projectApi = {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `projects_${new Date().toISOString().slice(0, 10)}.csv`
+    a.download = `projects_${new Date().toISOString().slice(0, 10)}.xlsx`
     a.click()
     URL.revokeObjectURL(url)
     return true
@@ -80,4 +80,8 @@ export const projectApi = {
   setCover: (id: string, file: File) => { const fd = new FormData(); fd.append('cover', file); return uploadFile(`/api/projects/${id}/cover`, fd) },
   setCoverUrl: (id: string, url: string) => fetchApi(`/api/projects/${id}/cover`, { method: 'POST', body: JSON.stringify({ cover_image_url: url }) }),
   removeCover: (id: string) => fetchApi(`/api/projects/${id}/cover`, { method: 'DELETE' }),
+  listTemplates: () => fetchApi('/api/project-templates'),
+  createTemplate: (data: { name: string; description?: string; from_project_id?: number }) =>
+    fetchApi('/api/project-templates', { method: 'POST', body: JSON.stringify(data) }),
+  deleteTemplate: (id: number) => fetchApi(`/api/project-templates/${id}`, { method: 'DELETE' }),
 }
