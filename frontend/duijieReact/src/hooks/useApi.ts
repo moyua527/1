@@ -120,6 +120,17 @@ export function useDashboardChart(days: number) {
   })
 }
 
+export function useDashboardWorkspace() {
+  return useQuery<Record<string, any>>({
+    queryKey: ['dashboard', 'workspace'],
+    queryFn: async () => {
+      const r: ApiResponse = await fetchApi('/api/dashboard/workspace')
+      if (!r.success) throw new Error(r.message)
+      return r.data
+    },
+  })
+}
+
 export function useNotifications(category = 'all') {
   return useQuery<{ notifications: any[]; unreadCount: number; unreadByCategory: Record<string, number> }>({
     queryKey: ['notifications', category],

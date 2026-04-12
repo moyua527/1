@@ -1,7 +1,7 @@
 {
-  "version": "1.4.26",
-  "versionCode": 429,
+  "version": "1.4.27",
+  "versionCode": 430,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "认证模块代码优化：提取共享Hook(useCountdown/useAgreement)和组件(AgreementCheckbox/TermsModal)，消除三文件间重复代码"
+  "changelog": "首页代码优化：提取SalesFunnel/FollowUpAlerts/RecentActivity/QuickNavMenu独立组件，WorkspaceSection改用useApi hook，删除无效useEffect"
 }

@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ClipboardList, FolderKanban, UserCheck, AlertTriangle, ChevronRight } from 'lucide-react'
-import { fetchApi } from '../../bootstrap'
+import { useDashboardWorkspace } from '../../hooks/useApi'
 
 const priorityColor: Record<string, { bg: string; text: string; label: string }> = {
   urgent: { bg: '#fef2f2', text: 'var(--color-danger)', label: '紧急' },
@@ -18,13 +17,8 @@ const projStatus: Record<string, { color: string; label: string }> = {
 }
 
 export default function WorkspaceSection({ isMobile = false }: { isMobile?: boolean }) {
-  const [data, setData] = useState<any>(null)
+  const { data } = useDashboardWorkspace() as { data: any }
   const nav = useNavigate()
-
-  const load = useCallback(() => {
-    fetchApi('/api/dashboard/workspace').then(r => { if (r.success) setData(r.data) })
-  }, [])
-  useEffect(load, [load])
 
   if (!data) return null
 
@@ -34,7 +28,6 @@ export default function WorkspaceSection({ isMobile = false }: { isMobile?: bool
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(340px, 1fr))', gap: 16, marginTop: 24 }}>
-      {/* 我的待办需求 */}
       {myTasks?.length > 0 && (
         <div style={{ background: 'var(--bg-primary)', borderRadius: 12, padding: isMobile ? 16 : 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
@@ -66,7 +59,6 @@ export default function WorkspaceSection({ isMobile = false }: { isMobile?: bool
         </div>
       )}
 
-      {/* 即将到期 */}
       {dueSoon?.length > 0 && (
         <div style={{ background: 'var(--bg-primary)', borderRadius: 12, padding: isMobile ? 16 : 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
@@ -92,7 +84,6 @@ export default function WorkspaceSection({ isMobile = false }: { isMobile?: bool
         </div>
       )}
 
-      {/* 我的项目 */}
       {myProjects?.length > 0 && (
         <div style={{ background: 'var(--bg-primary)', borderRadius: 12, padding: isMobile ? 16 : 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
@@ -129,7 +120,6 @@ export default function WorkspaceSection({ isMobile = false }: { isMobile?: bool
         </div>
       )}
 
-      {/* 待审批 */}
       {pendingApprovals?.length > 0 && (
         <div style={{ background: 'var(--bg-primary)', borderRadius: 12, padding: isMobile ? 16 : 20, boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
           <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
