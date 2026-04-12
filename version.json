@@ -1,7 +1,7 @@
 {
-  "version": "1.4.13",
-  "versionCode": 416,
+  "version": "1.4.14",
+  "versionCode": 417,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "修复设置子页面侧滑返回（v2：改用事件机制）"
+  "changelog": "修复设置子页面侧滑返回：通过history.pushState拦截系统返回手势"
 }
