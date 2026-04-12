@@ -10,7 +10,7 @@ import useIsMobile from './useIsMobile'
 import NotificationBell from './NotificationBell'
 import CommandPalette from './CommandPalette'
 import ProfileModal from './ProfileModal'
-import { popModalClose, popBackHandler } from './Modal'
+import { popModalClose } from './Modal'
 import ThemeToggle from './ThemeToggle'
 import SettingsPanel from './SettingsPanel'
 import EnterpriseSwitcher from './EnterpriseSwitcher'
@@ -231,10 +231,14 @@ export default function Layout() {
       tracking = false; confirmed = false
       if (swipeOverlayRef.current) swipeOverlayRef.current.style.display = 'none'
       if (dx > 80) {
-        if (!popModalClose() && !popBackHandler()) {
-          const path = location.pathname
-          const parent = path.replace(/\/[^/]+\/?$/, '') || '/'
-          navigate(parent)
+        if (!popModalClose()) {
+          const evt = new CustomEvent('gesture-back', { cancelable: true })
+          window.dispatchEvent(evt)
+          if (!evt.defaultPrevented) {
+            const path = location.pathname
+            const parent = path.replace(/\/[^/]+\/?$/, '') || '/'
+            navigate(parent)
+          }
         }
       }
     }

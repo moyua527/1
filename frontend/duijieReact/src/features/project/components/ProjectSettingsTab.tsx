@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Users, Shield, AppWindow, UserPlus, ChevronRight, UserPlus2, Pencil, Trash2, LayoutDashboard, Clock, BarChart3, SlidersHorizontal } from 'lucide-react'
 import useNicknameStore from '../../../stores/useNicknameStore'
 import ProjectRoleList from './ProjectRoleList'
@@ -12,7 +12,6 @@ import Avatar from '../../ui/Avatar'
 import Badge from '../../ui/Badge'
 import Button from '../../ui/Button'
 import { toast } from '../../ui/Toast'
-import { pushBackHandler } from '../../ui/Modal'
 import { projectApi } from '../services/api'
 import useUserStore from '../../../stores/useUserStore'
 
@@ -60,11 +59,19 @@ const settingsItems: { key: SubTab; label: string; icon: any; desc: string; cond
 
 export default function ProjectSettingsTab({ project, projectId, isOwner, canManageRole, canApproveJoin, canEdit, canDelete, isMobile, pendingJoinCount, onRefreshProject, onRefreshJoinCount, onOpenAddMember, onMemberClick, onEditProject, onDeleteProject, tasks = [] }: Props) {
   const [sub, setSub] = useState<SubTab | null>(null)
+  const subRef = useRef(sub)
+  subRef.current = sub
 
   useEffect(() => {
-    if (!sub) return
-    return pushBackHandler(() => setSub(null))
-  }, [sub])
+    const handler = (e: Event) => {
+      if (subRef.current) {
+        e.preventDefault()
+        setSub(null)
+      }
+    }
+    window.addEventListener('gesture-back', handler)
+    return () => window.removeEventListener('gesture-back', handler)
+  }, [])
 
   const user = useUserStore(s => s.user)
   const globalDn = useNicknameStore(s => s.getDisplayName)

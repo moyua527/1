@@ -1,7 +1,7 @@
 {
-  "version": "1.4.12",
-  "versionCode": 415,
+  "version": "1.4.13",
+  "versionCode": 416,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "修复设置子页面侧滑返回：先退回设置列表，不再直接退到首页"
+  "changelog": "修复设置子页面侧滑返回（v2：改用事件机制）"
 }
