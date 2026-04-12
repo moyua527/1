@@ -4,6 +4,7 @@ import { Plus, Users, Loader2, Download, Upload } from 'lucide-react'
 import { clientApi } from './services/api'
 import { useClients, useInvalidate } from '../../hooks/useApi'
 import useLiveData from '../../hooks/useLiveData'
+import useDebounce from '../../hooks/useDebounce'
 import Button from '../ui/Button'
 import Avatar from '../ui/Avatar'
 import PageHeader from '../ui/PageHeader'
@@ -34,6 +35,7 @@ export default function ClientList() {
   const stageFilter = searchParams.get('stage') || ''
   const setStageFilter = (s: string) => { if (!s) { searchParams.delete('stage'); setSearchParams(searchParams, { replace: true }) } else { setSearchParams({ stage: s }, { replace: true }) } }
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search, 300)
   const [scores, setScores] = useState<Record<string, any>>({})
   const [showImport, setShowImport] = useState(false)
   const nav = useNavigate()
@@ -47,8 +49,8 @@ export default function ClientList() {
 
   const filtered = clients.filter(c => {
     if (stageFilter && (c.stage || 'potential') !== stageFilter) return false
-    if (search.trim()) {
-      const q = search.trim().toLowerCase()
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.trim().toLowerCase()
       return [c.name, c.company, c.phone, c.email, c.channel].some(v => v && String(v).toLowerCase().includes(q))
     }
     return true

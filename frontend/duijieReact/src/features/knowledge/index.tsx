@@ -1,7 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useLayoutEffect, useCallback } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { Plus, Search, FolderOpen, Edit3, Trash2, Eye, Clock, BookOpen, X } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
+import useDebounce from '../../hooks/useDebounce'
 import PageHeader from '../ui/PageHeader'
 
 interface Category { id: number; name: string; parent_id: number | null; sort_order: number }
@@ -19,8 +20,8 @@ export default function KnowledgeBase() {
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [selectedCat, setSelectedCat] = useState<number | null>(null)
-  const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
+  const debouncedSearchInput = useDebounce(searchInput, 300)
   const [statusFilter, setStatusFilter] = useState<string>('')
   const [editing, setEditing] = useState<Partial<Article> | null>(null)
   const [viewing, setViewing] = useState<Article | null>(null)
@@ -36,17 +37,18 @@ export default function KnowledgeBase() {
     setLoading(true)
     const params = new URLSearchParams({ page: String(page), limit: '20' })
     if (selectedCat) params.set('category_id', String(selectedCat))
-    if (search) params.set('search', search)
+    if (debouncedSearchInput.trim()) params.set('search', debouncedSearchInput.trim())
     if (statusFilter) params.set('status', statusFilter)
     const r = await fetchApi(`/api/kb/articles?${params}`)
     if (r.success) { setArticles(r.data.rows || []); setTotal(r.data.total || 0) }
     setLoading(false)
-  }, [page, selectedCat, search, statusFilter])
+  }, [page, selectedCat, debouncedSearchInput, statusFilter])
 
   useEffect(() => { loadCategories() }, [loadCategories])
+  useLayoutEffect(() => { setPage(1) }, [debouncedSearchInput])
   useEffect(() => { loadArticles() }, [loadArticles])
 
-  const handleSearch = () => { setSearch(searchInput); setPage(1) }
+  const handleSearch = () => { setPage(1) }
 
   const openArticle = async (id: number) => {
     const r = await fetchApi(`/api/kb/articles/${id}`)

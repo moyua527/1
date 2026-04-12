@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import { Plus, FolderKanban, Loader2, Download, Search, Trash2, RotateCcw, Upload, Link, MoreVertical, X } from 'lucide-react'
+import { SkeletonList } from '../ui/Skeleton'
+import useDebounce from '../../hooks/useDebounce'
 import { projectApi } from './services/api'
 import { can } from '../../stores/permissions'
 import { useProjects, useInvalidate, useProjectUnreadSummary } from '../../hooks/useApi'
@@ -29,6 +31,7 @@ export default function ProjectList() {
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState({ name: '', description: '' })
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search, 300)
   const [showJoin, setShowJoin] = useState(false)
   const [joinCode, setJoinCode] = useState('')
   const [joinResult, setJoinResult] = useState<any>(null)
@@ -103,8 +106,8 @@ export default function ProjectList() {
 
   const filtered = projects.filter((p: any) => {
     if (statusFilter && p.status !== statusFilter) return false
-    if (search) {
-      const s = search.toLowerCase()
+    if (debouncedSearch) {
+      const s = debouncedSearch.toLowerCase()
       const displayName = (p.my_nickname || p.name || '').toLowerCase()
       if (!displayName.includes(s)) return false
     }
@@ -271,7 +274,7 @@ export default function ProjectList() {
       </div>}
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
+        <SkeletonList rows={5} />
       ) : filtered.length === 0 ? (
         <EmptyState icon={FolderKanban} title={projects.length === 0 ? '暂无项目' : '无匹配项目'}
           subtitle={projects.length === 0 ? '点击右上角新建项目' : '调整筛选条件试试'}

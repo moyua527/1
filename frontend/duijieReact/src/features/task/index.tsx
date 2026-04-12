@@ -3,6 +3,7 @@ import { useOutletContext, useSearchParams } from 'react-router-dom'
 import { BACKEND_URL } from '../../bootstrap'
 import { useTasks, useProjects, useInvalidate } from '../../hooks/useApi'
 import useLiveData from '../../hooks/useLiveData'
+import useDebounce from '../../hooks/useDebounce'
 import Badge from '../ui/Badge'
 import { Plus, Paperclip, Download, Search, FileSpreadsheet } from 'lucide-react'
 import { toast } from '../ui/Toast'
@@ -35,6 +36,7 @@ export default function TaskBoard() {
   const canAddTask = can(user?.role || '', 'task:create')
   const [filterProject, setFilterProject] = useState<string>('')
   const [searchText, setSearchText] = useState('')
+  const debouncedSearchText = useDebounce(searchText, 300)
   const [filterPriority, setFilterPriority] = useState<string>('')
   const [taskSearchParams] = useSearchParams()
   const [filterStatus, setFilterStatus] = useState<string>(taskSearchParams.get('status') || '')
@@ -53,8 +55,8 @@ export default function TaskBoard() {
   useLiveData(['task'], () => invalidate('tasks'))
 
   const filtered = allTasks.filter(t => {
-    if (searchText) {
-      const s = searchText.toLowerCase()
+    if (debouncedSearchText) {
+      const s = debouncedSearchText.toLowerCase()
       if (!(t.title || '').toLowerCase().includes(s) && !(t.assigned_name || '').toLowerCase().includes(s) && !(t.project_name || '').toLowerCase().includes(s)) return false
     }
     if (filterPriority && t.priority !== filterPriority) return false

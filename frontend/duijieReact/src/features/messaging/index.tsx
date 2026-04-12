@@ -7,6 +7,7 @@ import Avatar from '../ui/Avatar'
 import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
 import useNicknameStore from '../../stores/useNicknameStore'
+import useDebounce from '../../hooks/useDebounce'
 
 const roleLabel: Record<string, string> = { admin: '管理员', member: '成员' }
 
@@ -55,6 +56,7 @@ export default function Messaging() {
   // 添加好友
   const [showAddFriend, setShowAddFriend] = useState(false)
   const [phoneSearch, setPhoneSearch] = useState('')
+  const debouncedPhoneSearch = useDebounce(phoneSearch, 300)
   const [searchResults, setSearchResults] = useState<any[]>([])
   const [searching, setSearching] = useState(false)
   const [requestingId, setRequestingId] = useState<number | null>(null)
@@ -144,6 +146,24 @@ export default function Messaging() {
   }
 
   useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current) }, [])
+
+  useEffect(() => {
+    if (!showAddFriend) return
+    const q = debouncedPhoneSearch.trim()
+    if (!q) {
+      setSearchResults([])
+      setSearching(false)
+      return
+    }
+    setSearching(true)
+    let cancelled = false
+    friendApi.search(q).then(r => {
+      if (cancelled) return
+      setSearching(false)
+      if (r.success) setSearchResults(r.data || [])
+    })
+    return () => { cancelled = true }
+  }, [debouncedPhoneSearch, showAddFriend])
 
   const handleSend = async () => {
     if (!input.trim()) return
@@ -477,7 +497,7 @@ export default function Messaging() {
               </div>
             )}
 
-            {searchResults.length === 0 && phoneSearch.trim().length >= 1 && !searching && (
+            {searchResults.length === 0 && debouncedPhoneSearch.trim().length >= 1 && !searching && (
               <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 13 }}>未找到匹配用户</div>
             )}
 

@@ -8,6 +8,7 @@ import AppUpdateChecker from './features/ui/AppUpdateChecker'
 import SwUpdateBanner from './features/ui/SwUpdateBanner'
 import GestureLockScreen from './features/ui/GestureLockScreen'
 import ErrorBoundary from './features/ui/ErrorBoundary'
+import OfflineBanner from './features/ui/OfflineBanner'
 import useUserStore from './stores/useUserStore'
 import useEnterpriseStore from './stores/useEnterpriseStore'
 import { can } from './stores/permissions'
@@ -79,6 +80,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
+      <OfflineBanner />
       <ToastContainer />
       <MobilePushBridge />
       <AppUpdateChecker />

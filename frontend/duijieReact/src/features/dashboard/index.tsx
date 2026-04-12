@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { FolderKanban, Users, ListTodo, CheckCircle, TrendingUp, Clock, Loader2, FileSignature, AlertTriangle, Bell, MessageSquare, LayoutGrid } from 'lucide-react'
+import { FolderKanban, Users, ListTodo, CheckCircle, TrendingUp, Clock, FileSignature, AlertTriangle, Bell, MessageSquare, LayoutGrid } from 'lucide-react'
+import { SkeletonDashboard } from '../ui/Skeleton'
 import { can } from '../../stores/permissions'
 import { useDashboardStats, useDashboardChart } from '../../hooks/useApi'
 import DashboardCharts from './DashboardCharts'
@@ -69,7 +70,7 @@ export default function Dashboard() {
   const { data: chartData } = useDashboardChart(chartDays) as { data: any }
 
   if (isClient && stats) return <ClientDashboard stats={stats} nav={nav} />
-  if (isClient && !stats) return <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
+  if (isClient && !stats) return <div style={{ padding: 16 }}><SkeletonDashboard /></div>
 
   const items = stats ? [
     { label: '总项目', value: stats.totalProjects, icon: FolderKanban, bg: 'var(--brand-light-2)', color: 'var(--brand)', path: '/projects' },
@@ -313,7 +314,7 @@ export default function Dashboard() {
           )}
         </div>
       )}
-      {!stats && <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>}
+      {!stats && <SkeletonDashboard />}
       </div>
     </div>
   )

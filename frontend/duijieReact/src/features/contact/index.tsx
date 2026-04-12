@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import { UserCheck, Phone, Mail, MessageCircle, Building2, Plus, Edit3, Trash2, Star, Loader2 } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { useContacts, useClients, useInvalidate } from '../../hooks/useApi'
+import useDebounce from '../../hooks/useDebounce'
 import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
 import Button from '../ui/Button'
@@ -16,6 +17,7 @@ export default function ContactList() {
   const { data: clients = [] } = useClients()
   const invalidate = useInvalidate()
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search, 300)
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<any>(null)
   const [form, setForm] = useState({ name: '', position: '', phone: '', email: '', wechat: '', notes: '', client_id: '', is_primary: false })
@@ -23,8 +25,8 @@ export default function ContactList() {
   const { isMobile } = useOutletContext<{ isMobile: boolean }>()
 
   const filtered = contacts.filter(c => {
-    if (!search) return true
-    const s = search.toLowerCase()
+    if (!debouncedSearch) return true
+    const s = debouncedSearch.toLowerCase()
     return (c.name || '').toLowerCase().includes(s) ||
       (c.phone || '').includes(s) ||
       (c.email || '').toLowerCase().includes(s) ||
@@ -84,7 +86,7 @@ export default function ContactList() {
       {loading ? (
         <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
       ) : filtered.length === 0 ? (
-        <EmptyState icon={UserCheck} title={search ? '无匹配联系人' : '暂无联系人'} subtitle={search ? undefined : '点击右上角新建联系人'} />
+        <EmptyState icon={UserCheck} title={debouncedSearch ? '无匹配联系人' : '暂无联系人'} subtitle={debouncedSearch ? undefined : '点击右上角新建联系人'} />
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fill, minmax(320px, 1fr))', gap: 12 }}>
           {filtered.map(c => (

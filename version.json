@@ -1,7 +1,7 @@
 {
-  "version": "1.4.15",
-  "versionCode": 418,
+  "version": "1.4.16",
+  "versionCode": 419,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "稳定性优化：路由级错误边界、部署健康检查重试、PM2计数重置"
+  "changelog": "体验优化：骨架屏、离线提示、搜索防抖(300ms)"
 }
