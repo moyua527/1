@@ -51,7 +51,7 @@ export default function FilePreviewModal({ file, previewUrl, onDownload, onClose
           {file.mime_type?.startsWith('audio/') && (
             <audio src={previewUrl} controls style={{ margin: 40 }} />
           )}
-          {(file.mime_type?.startsWith('text/') || file.mime_type === 'application/json') && (
+          {(file.mime_type?.startsWith('text/') && file.mime_type !== 'text/x-url' && file.mime_type !== 'text/x-note' || file.mime_type === 'application/json') && (
             <iframe src={previewUrl} style={{ width: '100%', height: '80vh', border: 'none', background: 'var(--bg-card)' }} title={file.original_name} sandbox="" />
           )}
         </div>

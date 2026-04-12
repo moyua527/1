@@ -1,4 +1,4 @@
-const CACHE_NAME = 'duijie-v124';
+const CACHE_NAME = 'duijie-v125';
 const MAX_CACHE_ITEMS = 100;
 
 async function trimCache(cacheName, maxItems) {

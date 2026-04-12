@@ -28,11 +28,7 @@ module.exports = async (req, res) => {
         [group.project_id, group_id, `note-${Date.now()}`, displayName, content.trim(), req.userId]
       );
     } else if (type === 'file' && req.file) {
-      const uploadDir = path.join(__dirname, '../../../../uploads');
-      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-      const fileName = `${Date.now()}-${req.file.originalname}`;
-      const filePath = path.join(uploadDir, fileName);
-      fs.writeFileSync(filePath, req.file.buffer);
+      const fileName = req.file.filename || path.basename(req.file.path);
       await db.query(
         'INSERT INTO duijie_files (project_id, resource_group_id, name, original_name, size, mime_type, path, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
         [group.project_id, group_id, fileName, req.file.originalname, req.file.size, req.file.mimetype, `/uploads/${fileName}`, req.userId]

@@ -1,7 +1,7 @@
 {
-  "version": "1.4.30",
-  "versionCode": 433,
+  "version": "1.4.31",
+  "versionCode": 434,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "需求看板模块优化：统一constants、修复粘贴重复bug、修复onUpdated死prop、useMemo、useEffect依赖修复，更新PROJECT.md"
+  "changelog": "文件管理模块优化：修复资料组文件上传bug/预览排除特殊MIME/删除权限/URL泄漏/useMemo/上传失败提示，更新PROJECT.md"
 }

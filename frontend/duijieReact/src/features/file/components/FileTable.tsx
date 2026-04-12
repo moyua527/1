@@ -16,6 +16,7 @@ const formatSize = (bytes: number) => {
 
 const canPreview = (mime: string) => {
   if (!mime) return false
+  if (mime === 'text/x-url' || mime === 'text/x-note') return false
   return mime.startsWith('image/') || mime === 'application/pdf' || mime.startsWith('video/') || mime.startsWith('audio/') || mime.startsWith('text/') || mime === 'application/json'
 }
 

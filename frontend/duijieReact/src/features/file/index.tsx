@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { FileText, Upload, Loader2, Trash2, Search, MoreVertical, CheckSquare, X } from 'lucide-react'
 import { fetchApi, uploadFile, BACKEND_URL } from '../../bootstrap'
 import { useFiles, useInvalidate } from '../../hooks/useApi'
@@ -50,14 +50,20 @@ export default function FileManager() {
 
   useLiveData(['file'], () => invalidate('files'))
 
-  const filtered = files.filter(f => {
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { '': files.length }
+    for (const f of files) { const c = getCategory(f.mime_type); counts[c] = (counts[c] || 0) + 1 }
+    return counts
+  }, [files])
+
+  const filtered = useMemo(() => files.filter(f => {
     if (category && getCategory(f.mime_type) !== category) return false
     if (search.trim()) {
       const s = search.toLowerCase()
       return (f.original_name || '').toLowerCase().includes(s) || (f.project_name || '').toLowerCase().includes(s)
     }
     return true
-  })
+  }), [files, category, search])
 
   const toggleSelect = (id: number) => {
     setSelected(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s })
@@ -71,13 +77,16 @@ export default function FileManager() {
     const fileList = e.target.files
     if (!fileList || fileList.length === 0) return
     setUploading(true)
+    let ok = 0, fail = 0
     for (let i = 0; i < fileList.length; i++) {
       const fd = new FormData()
       fd.append('file', fileList[i])
-      await uploadFile('/api/files/upload', fd)
+      const r = await uploadFile('/api/files/upload', fd)
+      if (r.success) ok++; else fail++
     }
     setUploading(false)
-    toast(`${fileList.length}个文件上传完成`, 'success')
+    if (fail === 0) toast(`${ok}个文件上传完成`, 'success')
+    else toast(`上传完成：${ok}成功，${fail}失败`, fail > 0 ? 'error' : 'success')
     invalidate('files')
     e.target.value = ''
   }
@@ -152,7 +161,7 @@ export default function FileManager() {
           </div>
           <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 10, WebkitOverflowScrolling: 'touch' as any }}>
             {categoryTabs.map(t => {
-              const count = t.key ? files.filter(f => getCategory(f.mime_type) === t.key).length : files.length
+              const count = categoryCounts[t.key] || 0
               const active = category === t.key
               return (
                 <button key={t.key} onClick={() => { setCategory(t.key); setSelected(new Set()) }}
@@ -198,8 +207,8 @@ export default function FileManager() {
           search={search} onSearchChange={setSearch} searchPlaceholder="搜索文件..."
           filters={[{
             value: category, onChange: (v: string) => { setCategory(v); setSelected(new Set()) },
-            options: categoryTabs.map(t => ({ value: t.key, label: `${t.label}${t.key ? ` (${files.filter(f => getCategory(f.mime_type) === t.key).length})` : ''}` })),
-            placeholder: `全部 (${files.length})`,
+            options: categoryTabs.map(t => ({ value: t.key, label: `${t.label}${t.key ? ` (${categoryCounts[t.key] || 0})` : ''}` })),
+            placeholder: `全部 (${categoryCounts[''] || 0})`,
           }]}
           resultCount={filtered.length}
           hasFilters={!!(search.trim() || category)} activeFilterCount={(search.trim() ? 1 : 0) + (category ? 1 : 0)}

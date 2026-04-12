@@ -2,6 +2,7 @@
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.4.31 | 2026-04-12 | 文件管理模块优化：修复资料组文件上传(req.file.buffer→path)、预览排除text/x-url和text/x-note、资料组删除按钮仅创建人可见、ProjectFileTab URL泄漏修复、文件列表useMemo+分类计数合并、上传失败计数提示、更新PROJECT.md 3.7文档 |
 | v1.4.30 | 2026-04-12 | 需求看板模块优化：新建constants.ts统一4文件重复常量、修复TaskCreateModal粘贴重复添加文件bug、修复TaskDetailModal的onUpdated死prop、列表加useMemo、清理未用变量、TaskTitleSelector的useEffect依赖用ref修复、更新PROJECT.md 3.6文档 |
 | v1.4.29 | 2026-04-12 | 客户管理模块优化：统一stageMap到constants消除3处重复、客户列表加useMemo、修复ClientEditModal渲染阶段setState、跟进记录删除加确认弹窗、ScoreSection防NaN、更新PROJECT.md 3.4文档 |
 | v1.4.28 | 2026-04-12 | 项目管理模块优化：修复useEffect缺失依赖/TodoTab移动端定位bug/JSON.parse崩溃/URL.createObjectURL泄漏，清理ProjectDetail/ProjectSettingsTab/TaskTab死代码死props，列表过滤加useMemo |

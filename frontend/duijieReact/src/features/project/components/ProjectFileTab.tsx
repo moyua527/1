@@ -232,6 +232,8 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
   const [noteContent, setNoteContent] = useState('')
   const [addingNote, setAddingNote] = useState(false)
   const [noteFiles, setNoteFiles] = useState<File[]>([])
+  const noteFileUrls = useMemo(() => noteFiles.map(f => f.type.startsWith('image/') ? URL.createObjectURL(f) : ''), [noteFiles])
+  useEffect(() => () => { noteFileUrls.forEach(u => { if (u) URL.revokeObjectURL(u) }) }, [noteFileUrls])
   const [noteDragging, setNoteDragging] = useState(false)
   const [viewNote, setViewNote] = useState<any>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -848,7 +850,7 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
                                 <Pencil size={13} />
                               </button>
                             )}
-                            {(canEdit || isGroupCreator(activeGroup)) && (
+                            {isGroupCreator(activeGroup) && (
                               <button onClick={e => { e.stopPropagation(); handleDeleteItem(item) }}
                                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, color: 'var(--color-danger, #ef4444)', borderRadius: 6, flexShrink: 0, opacity: 0.6 }}
                                 onMouseEnter={e => { e.currentTarget.style.opacity = '1' }} onMouseLeave={e => { e.currentTarget.style.opacity = '0.6' }}>
@@ -956,7 +958,7 @@ export default function ProjectFileTab({ projectId, canEdit, members = [], curre
                               <div key={i} style={{ position: 'relative', display: 'inline-flex' }}>
                                 {isImg ? (
                                   <div style={{ width: 56, height: 56, borderRadius: 6, overflow: 'hidden', border: '1px solid var(--border-primary)' }}>
-                                    <img src={URL.createObjectURL(f)} alt={f.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <img src={noteFileUrls[i]} alt={f.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                   </div>
                                 ) : (
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px', background: 'var(--bg-primary)', borderRadius: 6, border: '1px solid var(--border-primary)', fontSize: 12, color: 'var(--text-body)' }}>
