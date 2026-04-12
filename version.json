@@ -1,7 +1,7 @@
 {
-  "version": "1.4.11",
-  "versionCode": 414,
+  "version": "1.4.12",
+  "versionCode": 415,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "扩展属性：项目自定义字段（文本/数字/日期/金额/单选/多选），需求详情内可编辑"
+  "changelog": "修复设置子页面侧滑返回：先退回设置列表，不再直接退到首页"
 }
