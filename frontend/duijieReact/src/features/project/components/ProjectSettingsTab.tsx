@@ -63,14 +63,11 @@ export default function ProjectSettingsTab({ project, projectId, isOwner, canMan
   subRef.current = sub
 
   useEffect(() => {
-    const handler = (e: Event) => {
-      if (subRef.current) {
-        e.preventDefault()
-        setSub(null)
-      }
+    (window as any).__gestureBackHandler = () => {
+      if (subRef.current) { setSub(null); return true }
+      return false
     }
-    window.addEventListener('gesture-back', handler)
-    return () => window.removeEventListener('gesture-back', handler)
+    return () => { (window as any).__gestureBackHandler = null }
   }, [])
 
   const user = useUserStore(s => s.user)
