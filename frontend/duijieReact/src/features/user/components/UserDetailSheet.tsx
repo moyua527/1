@@ -1,29 +1,11 @@
-import { User, Shield, Edit2 } from 'lucide-react'
+import { Edit2 } from 'lucide-react'
 import Button from '../../ui/Button'
 import Avatar from '../../ui/Avatar'
 import Badge from '../../ui/Badge'
 import Drawer from '../../ui/Drawer'
 import InfoGrid from '../../ui/InfoGrid'
 import SectionCard from '../../ui/SectionCard'
-
-const roleMap: Record<string, { label: string; color: string; icon: any }> = {
-  admin: { label: '管理员', color: 'red', icon: Shield },
-  member: { label: '成员', color: 'blue', icon: User },
-}
-
-const statusMap: Record<number, { label: string; color: string }> = {
-  1: { label: '启用', color: 'green' },
-  0: { label: '待审批', color: 'yellow' },
-  2: { label: '禁用', color: 'gray' },
-}
-
-const fmtDate = (d: string | null) => d ? new Date(d).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'
-
-const getStatusInfo = (u: any) => {
-  if (u.is_active === 0) return statusMap[0]
-  if (u.is_active === 2) return statusMap[2]
-  return statusMap[1]
-}
+import { roleMap, fmtDate, getStatusInfo } from '../constants'
 
 interface Props {
   detailUser: any

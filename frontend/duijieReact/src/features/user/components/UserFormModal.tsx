@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { Shield, User } from 'lucide-react'
 import { fetchApi } from '../../../bootstrap'
 import Modal from '../../ui/Modal'
 import Input from '../../ui/Input'
@@ -7,13 +6,7 @@ import Select from '../../ui/Select'
 import { FormSection, FormGrid, FormActions } from '../../ui/Form'
 import { toast } from '../../ui/Toast'
 import { confirm } from '../../ui/ConfirmDialog'
-
-const roleMap: Record<string, { label: string; color: string; bg: string; icon: any }> = {
-  admin: { label: '管理员', color: 'var(--color-danger)', bg: '#fef2f2', icon: Shield },
-  member: { label: '成员', color: 'var(--brand)', bg: 'var(--bg-selected)', icon: User },
-}
-
-const roleOptions = Object.entries(roleMap).map(([k, v]) => ({ value: k, label: v.label }))
+import { roleMap, roleOptions } from '../constants'
 
 const emptyForm = { username: '', password: '', nickname: '', role: 'member', email: '', phone: '', client_id: '', manager_id: '' }
 

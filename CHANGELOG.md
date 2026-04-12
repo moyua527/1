@@ -2,6 +2,7 @@
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.4.33 | 2026-04-12 | 用户管理模块优化：修复updateUser.js is_active布尔强转导致禁用失效(2→1)、loginService.js禁用用户(is_active=2)仍能登录、updateController清auth缓存使角色修改即时生效、删除死文件UserDetailModal.tsx、InviteLinkSection打开时刷新数据、操作加try-catch、提取constants.ts共享roleMap/statusMap/fmtDate消除3文件重复、剪贴板catch、更新PROJECT.md 3.9文档(6张卡片/Drawer/操作菜单/上级限admin) |
 | v1.4.32 | 2026-04-12 | 消息模块优化：修复群聊Socket room名不匹配(user_→user:)导致实时推送失效、群聊撤回加2分钟时间限制、MessagePanel pendingImage URL.createObjectURL泄漏修复、清理dmApi.users/friendApi.remove死代码、loadLatest/handleSend/loadOlder加try-catch、handleRecall/handleGroupRecall从.map提取为useCallback、搜索结果用nickname store、更新PROJECT.md 3.8文档 |
 | v1.4.31 | 2026-04-12 | 文件管理模块优化：修复资料组文件上传(req.file.buffer→path)、预览排除text/x-url和text/x-note、资料组删除按钮仅创建人可见、ProjectFileTab URL泄漏修复、文件列表useMemo+分类计数合并、上传失败计数提示、更新PROJECT.md 3.7文档 |
 | v1.4.30 | 2026-04-12 | 需求看板模块优化：新建constants.ts统一4文件重复常量、修复TaskCreateModal粘贴重复添加文件bug、修复TaskDetailModal的onUpdated死prop、列表加useMemo、清理未用变量、TaskTitleSelector的useEffect依赖用ref修复、更新PROJECT.md 3.6文档 |

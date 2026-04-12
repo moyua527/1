@@ -17,23 +17,12 @@ import { SkeletonTable } from '../ui/Skeleton'
 import UserDetailSheet from './components/UserDetailSheet'
 import UserFormModal from './components/UserFormModal'
 import InviteLinkSection from './components/InviteLinkSection'
-
-const roleMap: Record<string, { label: string; color: string; bg: string; icon: any }> = {
-  admin: { label: '管理员', color: 'var(--color-danger)', bg: 'var(--bg-danger)', icon: Shield },
-  member: { label: '成员', color: 'var(--brand)', bg: 'var(--brand-light)', icon: User },
-}
-
-const statusMap: Record<number, { label: string; color: string; bg: string }> = {
-  1: { label: '启用', color: 'var(--color-success)', bg: 'var(--bg-success)' },
-  0: { label: '待审批', color: 'var(--color-warning)', bg: 'var(--bg-warning)' },
-  2: { label: '禁用', color: 'var(--text-tertiary)', bg: 'var(--bg-tertiary)' },
-}
+import { roleMap, statusMap, fmtDate, getStatusInfo } from './constants'
 
 const PAGE_SIZE = 10
 
 const maskPhone = (p: string) => p ? p.replace(/(\d{3})\d{4}(\d+)/, '$1****$2') : ''
 const maskEmail = (e: string) => e ? e.replace(/(.{2}).+(@.+)/, '$1***$2') : ''
-const fmtDate = (d: string | null) => d ? new Date(d).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '-'
 
 export default function UserManagement() {
   const isMobile = useIsMobile()
@@ -76,31 +65,39 @@ export default function UserManagement() {
 
   const handleDelete = async (u: any) => {
     if (!(await confirm({ message: `确定删除账号 "${u.nickname || u.username}"？此操作不可恢复。`, danger: true }))) return
-    const r = await fetchApi(`/api/users/${u.id}`, { method: 'DELETE' })
-    if (r.success) { toast('已删除', 'success'); load() }
-    else toast(r.message || '删除失败', 'error')
+    try {
+      const r = await fetchApi(`/api/users/${u.id}`, { method: 'DELETE' })
+      if (r.success) { toast('已删除', 'success'); load() }
+      else toast(r.message || '删除失败', 'error')
+    } catch { toast('网络错误', 'error') }
   }
 
   const handleResetPwd = async (u: any) => {
     if (!(await confirm({ message: `确定重置「${u.nickname || u.username}」的密码为 123456？`, danger: true }))) return
-    const r = await fetchApi(`/api/users/${u.id}`, { method: 'PUT', body: JSON.stringify({ password: '123456' }) })
-    if (r.success) toast('密码已重置为 123456', 'success')
-    else toast(r.message || '操作失败', 'error')
+    try {
+      const r = await fetchApi(`/api/users/${u.id}`, { method: 'PUT', body: JSON.stringify({ password: '123456' }) })
+      if (r.success) toast('密码已重置为 123456', 'success')
+      else toast(r.message || '操作失败', 'error')
+    } catch { toast('网络错误', 'error') }
   }
 
   const handleToggleStatus = async (u: any) => {
     const active = u.is_active === 1
     const label = active ? '禁用' : '启用'
     if (!(await confirm({ message: `确定${label}账号「${u.nickname || u.username}」？`, danger: active }))) return
-    const r = await fetchApi(`/api/users/${u.id}`, { method: 'PUT', body: JSON.stringify({ is_active: active ? 2 : 1 }) })
-    if (r.success) { toast(`已${label}`, 'success'); load() }
-    else toast(r.message || '操作失败', 'error')
+    try {
+      const r = await fetchApi(`/api/users/${u.id}`, { method: 'PUT', body: JSON.stringify({ is_active: active ? 2 : 1 }) })
+      if (r.success) { toast(`已${label}`, 'success'); load() }
+      else toast(r.message || '操作失败', 'error')
+    } catch { toast('网络错误', 'error') }
   }
 
   const handleApprove = async (u: any) => {
-    const r = await fetchApi(`/api/users/${u.id}`, { method: 'PUT', body: JSON.stringify({ is_active: 1 }) })
-    if (r.success) { toast('已审批激活', 'success'); load() }
-    else toast(r.message || '操作失败', 'error')
+    try {
+      const r = await fetchApi(`/api/users/${u.id}`, { method: 'PUT', body: JSON.stringify({ is_active: 1 }) })
+      if (r.success) { toast('已审批激活', 'success'); load() }
+      else toast(r.message || '操作失败', 'error')
+    } catch { toast('网络错误', 'error') }
   }
 
   const handleBatchToggle = async (activate: boolean) => {
@@ -154,12 +151,6 @@ export default function UserManagement() {
     setSearch('')
     setRoleFilter('all')
     setStatusFilter('all')
-  }
-
-  const getStatusInfo = (u: any) => {
-    if (u.is_active === 0) return statusMap[0]
-    if (u.is_active === 2) return statusMap[2]
-    return statusMap[1]
   }
 
   const statCounts = useMemo(() => ({

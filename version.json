@@ -1,7 +1,7 @@
 {
-  "version": "1.4.32",
-  "versionCode": 435,
+  "version": "1.4.33",
+  "versionCode": 436,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "消息模块优化：修复群聊Socket room不匹配/群撤回加2分钟限制/pendingImage URL泄漏/清理死代码/try-catch/recall提取/搜索用nickname，更新PROJECT.md"
+  "changelog": "用户管理模块优化：修复禁用用户bug(is_active三态+登录校验)/角色修改即时生效(清auth缓存)/删除死文件/邀请链接刷新/try-catch/共享常量/更新PROJECT.md"
 }

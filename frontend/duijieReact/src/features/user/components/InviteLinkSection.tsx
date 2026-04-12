@@ -32,7 +32,7 @@ export default function InviteLinkSection({ open, onClose }: InviteLinkSectionPr
     if (r.success) setInviteLinks(r.data || [])
   }
 
-  useEffect(() => { loadLinks() }, [])
+  useEffect(() => { if (open) loadLinks() }, [open])
 
   return (
     <Modal open={open} onClose={onClose} title="邀请链接管理">
@@ -76,7 +76,7 @@ export default function InviteLinkSection({ open, onClose }: InviteLinkSectionPr
                       {used && <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 2 }}>使用者: {link.used_by_name || link.used_by_username}</div>}
                     </div>
                     {!used && !expired && (
-                      <Button variant="ghost" size="sm" onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/invite/${link.token}`); toast('已复制', 'success') }}><Copy size={14} /></Button>
+                      <Button variant="ghost" size="sm" onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/invite/${link.token}`).then(() => toast('已复制', 'success')).catch(() => toast('复制失败', 'error')) }}><Copy size={14} /></Button>
                     )}
                     <Button variant="ghost" size="sm" onClick={async () => { const r2 = await fetchApi(`/api/invite-links/${link.id}`, { method: 'DELETE' }); if (r2.success) { toast('已删除', 'success'); loadLinks() } }} style={{ color: 'var(--color-danger)' }}><Trash2 size={14} /></Button>
                   </div>
