@@ -1,20 +1,14 @@
 #!/bin/bash
-set -euo pipefail
-
-BACKUP_DIR="/opt/duijie/backups"
-DB_NAME="duijie_db"
-DB_USER="duijie"
-DB_PASS="DuiJie@2024!"
-KEEP_DAYS=7
-
+BACKUP_DIR=/opt/duijie/backups/db
+DATE=$(date +%Y%m%d)
 mkdir -p "$BACKUP_DIR"
-
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_FILE="$BACKUP_DIR/${DB_NAME}_${TIMESTAMP}.sql.gz"
-
-mysqldump -u"$DB_USER" -p"$DB_PASS" --single-transaction --routines --triggers "$DB_NAME" | gzip > "$BACKUP_FILE"
-
-echo "[$(date)] Backup created: $BACKUP_FILE ($(du -h "$BACKUP_FILE" | cut -f1))"
-
-find "$BACKUP_DIR" -name "*.sql.gz" -mtime +$KEEP_DAYS -delete
-echo "[$(date)] Cleaned backups older than ${KEEP_DAYS} days"
+source /opt/duijie/server/duijie/.env
+mysqldump -u "$DB_USER" -p"$DB_PASSWORD" --single-transaction --routines --triggers "$DB_NAME" | gzip > "$BACKUP_DIR/${DB_NAME}_${DATE}.sql.gz"
+if [ $? -eq 0 ]; then
+    SIZE=$(du -sh "$BACKUP_DIR/${DB_NAME}_${DATE}.sql.gz" | cut -f1)
+    echo "[$(date)] DB backup done: ${DB_NAME}_${DATE}.sql.gz ($SIZE)"
+else
+    echo "[$(date)] DB backup FAILED!"
+    exit 1
+fi
+find "$BACKUP_DIR" -name "${DB_NAME}_*.sql.gz" -mtime +30 -delete
