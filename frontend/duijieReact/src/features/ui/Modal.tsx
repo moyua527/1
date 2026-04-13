@@ -140,7 +140,7 @@ export default function Modal({ open, onClose, title, children, width = 600, hei
             background: 'var(--bg-primary)', borderRadius: isMobile ? '16px 16px 0 0' : 12,
             width: isMobile ? '100%' : width, height: isMobile ? 'auto' : height,
             maxWidth: isMobile ? '100%' : 'calc(100vw - 24px)',
-            maxHeight: isMobile ? '90vh' : '85vh', overflow: 'hidden',
+            maxHeight: isMobile ? '80vh' : '85vh', overflow: 'hidden',
             boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
             margin: isMobile ? 0 : 12,
             display: 'flex', flexDirection: 'column',

@@ -1,7 +1,7 @@
 {
-  "version": "1.4.48",
-  "versionCode": 458,
+  "version": "1.4.49",
+  "versionCode": 459,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "修复版本信息页:添加返回按钮,功能介绍与版本更新拆为独立卡片,修复按钮事件冒泡"
+  "changelog": "修复移动端弹窗高度过大标题被截断:maxHeight从90vh降为80vh"
 }
