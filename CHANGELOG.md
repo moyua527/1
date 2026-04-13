@@ -2,6 +2,7 @@
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.4.37 | 2026-04-13 | 移除移动端「账号与安全」页面顶部的用户信息卡片（头像+昵称+用户名+角色+编辑按钮）和编辑表单 |
 | v1.4.36.2 | 2026-04-13 | PROJECT.md大幅修正：新增4.22企业管理API章节(~30端点)、补全4.5客户成员/审批API(10端点)、补全4.6/4.8全量列表端点、更新第七章项目结构(27控制器+21功能模块+45 UI组件)、更新第十一章统计数据(295端点/57表/27路由) |
 | v1.4.36.1 | 2026-04-13 | 文档修正：PROJECT.md 3.19 API测试从2文件24用例更新为25个测试文件完整列表、3.34 Vite构建补充vendor-charts(~400KB Recharts)独立chunk |
 | v1.4.36 | 2026-04-13 | 3.14-3.18模块审查：删除partner/PartnerCard.tsx+PartnerFormModal.tsx+AppViewer.tsx+constants.ts共4个死文件、Settings handleSave加try-catch、Partner handleCopyKey加catch、知识库CRUD加try-catch、更新PROJECT.md 3.13.2(分类扁平列表/移动端详情页/防抖/分页)/3.17(去掉未实现的连接测试/启用禁用/权限选择/补充嵌入容错重试按钮) |

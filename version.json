@@ -1,7 +1,7 @@
 {
-  "version": "1.4.36.2",
-  "versionCode": 442,
+  "version": "1.4.37",
+  "versionCode": 443,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "PROJECT.md大幅修正：新增企业管理API章节(30端点)、补全客户成员/审批/联系人/跟进端点、更新统计数据和项目结构"
+  "changelog": "移除移动端账号与安全页面顶部用户信息卡片和编辑表单"
 }

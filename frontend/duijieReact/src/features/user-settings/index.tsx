@@ -511,36 +511,6 @@ export default function UserSettings() {
                 ) : (
                   /* 移动端主菜单 */
                   <div>
-                    {/* 用户信息卡片 */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16, background: 'var(--bg-primary)', borderRadius: 16, marginBottom: 12 }}>
-                      <Avatar name={user.nickname || user.username} size={56} src={user.avatar || undefined} />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-heading)' }}>{user.nickname || user.username}</div>
-                        <div style={{ fontSize: 13, color: 'var(--text-tertiary)', marginTop: 2 }}>@{user.username}</div>
-                        <div style={{ display: 'inline-block', fontSize: 11, padding: '2px 8px', borderRadius: 10, background: 'var(--bg-selected)', color: 'var(--brand)', fontWeight: 500, marginTop: 4 }}>
-                          {roleLabel[user.role] || user.role}
-                        </div>
-                      </div>
-                      <Button variant="secondary" onClick={startEditing} style={{ flexShrink: 0 }}>编辑</Button>
-                    </div>
-
-                    {/* 编辑表单（内嵌在卡片下方） */}
-                    {editing && (
-                      <div style={{ background: 'var(--bg-primary)', borderRadius: 16, padding: 16, marginBottom: 12 }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                          <Input label="用户名" placeholder="英文、数字和下划线，3-20位" value={form.username} onChange={e => setForm({ ...form, username: e.target.value.replace(/[^a-zA-Z0-9_]/g, '') })} />
-                          <Input label="昵称" placeholder="输入昵称" value={form.nickname} onChange={e => setForm({ ...form, nickname: e.target.value })} />
-                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
-                            <Button variant="secondary" onClick={() => setEditing(false)}>取消</Button>
-                            <Button onClick={handleSave} disabled={saving}>
-                              {saving ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={14} />}
-                              {saving ? ' 保存中...' : ' 保存'}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
                     {/* 安全设置菜单 */}
                     <div style={{ background: 'var(--bg-primary)', borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
                       {([
