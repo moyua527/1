@@ -1,7 +1,7 @@
 {
-  "version": "1.4.46",
-  "versionCode": 456,
+  "version": "1.4.47",
+  "versionCode": 457,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "还原我的面板为左侧抽屉"
+  "changelog": "修复抽屉内导航卡住:关闭动画完成后再跳转"
 }

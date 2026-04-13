@@ -48,13 +48,13 @@ export default function Dashboard() {
   const drawerRef = useRef<HTMLDivElement>(null)
 
   const drawerHistoryRef = useRef(false)
-  const closeDrawer = useCallback(() => {
+  const closeDrawer = useCallback((afterClose?: () => void) => {
     setDrawerClosing(true)
     if (drawerHistoryRef.current) {
       drawerHistoryRef.current = false
       window.history.back()
     }
-    setTimeout(() => { setDrawerOpen(false); setDrawerClosing(false) }, 220)
+    setTimeout(() => { setDrawerOpen(false); setDrawerClosing(false); afterClose?.() }, 240)
   }, [])
 
   useEffect(() => {
@@ -192,7 +192,7 @@ export default function Dashboard() {
             @keyframes drawerFadeIn{from{opacity:0}to{opacity:1}}
             @keyframes drawerFadeOut{from{opacity:1}to{opacity:0}}
           `}</style>
-          <div onClick={closeDrawer} style={{
+          <div onClick={() => closeDrawer()} style={{
             position: 'fixed', inset: 0, zIndex: 1000,
             background: 'rgba(0,0,0,0.4)',
             animation: drawerClosing ? 'drawerFadeOut .22s ease forwards' : 'drawerFadeIn .2s ease',
@@ -205,12 +205,12 @@ export default function Dashboard() {
               padding: 'env(safe-area-inset-top, 16px) 16px 20px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-                <div onClick={closeDrawer} style={{ padding: 4, cursor: 'pointer', color: 'var(--text-tertiary)' }}>
+                <div onClick={() => closeDrawer()} style={{ padding: 4, cursor: 'pointer', color: 'var(--text-tertiary)' }}>
                   <X size={20} />
                 </div>
               </div>
 
-              <div onClick={() => { closeDrawer(); nav('/user-settings?tab=account&sub=profile') }}
+              <div onClick={() => closeDrawer(() => nav('/user-settings?tab=account&sub=profile'))}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 14, padding: 16, marginBottom: 12,
                   background: 'var(--bg-primary)', borderRadius: 16, cursor: 'pointer',
@@ -233,8 +233,8 @@ export default function Dashboard() {
 
               <div style={{ background: 'var(--bg-primary)', borderRadius: 16, overflow: 'hidden' }}>
                 {[
-                  { icon: Settings, label: '设置', action: () => { closeDrawer(); nav('/user-settings') } },
-                  { icon: HelpCircle, label: '新手引导', action: () => { closeDrawer(); setConfirmGuide(true) } },
+                  { icon: Settings, label: '设置', action: () => closeDrawer(() => nav('/user-settings')) },
+                  { icon: HelpCircle, label: '新手引导', action: () => closeDrawer(() => setConfirmGuide(true)) },
                 ].map((item, i, arr) => (
                   <div key={item.label} onClick={item.action}
                     style={{
@@ -248,7 +248,7 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              <div onClick={() => { closeDrawer(); nav('/about') }} style={{
+              <div onClick={() => closeDrawer(() => nav('/about'))} style={{
                 display: 'flex', alignItems: 'center', gap: 12, padding: '15px 16px', marginTop: 12,
                 background: 'var(--bg-primary)', borderRadius: 16, cursor: 'pointer',
               }}>
@@ -258,7 +258,7 @@ export default function Dashboard() {
                 <ChevronRight size={16} style={{ color: 'var(--text-tertiary)' }} />
               </div>
 
-              <div onClick={() => { closeDrawer(); logout() }}
+              <div onClick={() => closeDrawer(() => logout())}
                 style={{
                   marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                   padding: 16, borderRadius: 16, background: 'var(--bg-primary)', cursor: 'pointer',
