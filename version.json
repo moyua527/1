@@ -1,7 +1,7 @@
 {
-  "version": "1.4.38.3",
-  "versionCode": 447,
+  "version": "1.4.38.4",
+  "versionCode": 448,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "页面切换动画方向跟随按钮位置"
+  "changelog": "首页头像改为左侧抽屉打开我的页面"
 }

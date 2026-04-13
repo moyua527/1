@@ -1,6 +1,6 @@
-import { useState, lazy, Suspense } from 'react'
+import { useState, lazy, Suspense, useRef } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { FolderKanban, Users, ListTodo, CheckCircle, TrendingUp, Clock, FileSignature } from 'lucide-react'
+import { FolderKanban, Users, ListTodo, CheckCircle, TrendingUp, Clock, FileSignature, LogOut, Settings, HelpCircle, ChevronRight, Info, X } from 'lucide-react'
 import { SkeletonDashboard } from '../ui/Skeleton'
 import { can } from '../../stores/permissions'
 import { useDashboardStats, useDashboardChart } from '../../hooks/useApi'
@@ -9,6 +9,9 @@ import ClientDashboard from './ClientDashboard'
 import WorkspaceSection from './WorkspaceSection'
 import Avatar from '../ui/Avatar'
 import { SalesFunnel, FollowUpAlerts, RecentActivity } from './SalesFunnel'
+import useUserStore from '../../stores/useUserStore'
+import EnterpriseSwitcher from '../ui/EnterpriseSwitcher'
+import { APP_VERSION } from '../../utils/capacitor'
 
 interface Stats {
   totalProjects: number; planningProjects: number; activeProjects: number; completedProjects: number
@@ -33,11 +36,15 @@ const iconBox = (bg: string): React.CSSProperties => ({
 export default function Dashboard() {
   const [chartDays, setChartDays] = useState(30)
   const nav = useNavigate()
-  const { user, isMobile } = useOutletContext<{ user: any; isMobile?: boolean }>()
+  const { user, isMobile, openGuide } = useOutletContext<{ user: any; isMobile?: boolean; openGuide?: () => void }>()
   const r = user?.role || ''
   const canClients = can(r, 'dashboard:clients')
   const canTasks = can(r, 'dashboard:tasks')
   const isClient = r === 'client'
+  const { logout } = useUserStore()
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [confirmGuide, setConfirmGuide] = useState(false)
+  const drawerRef = useRef<HTMLDivElement>(null)
 
   
 
@@ -69,7 +76,7 @@ export default function Dashboard() {
       }}>
         {isMobile ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-            <div onClick={() => nav('/my')} style={{
+            <div onClick={() => setDrawerOpen(true)} style={{
               position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
               width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer', borderRadius: '50%',
@@ -152,6 +159,112 @@ export default function Dashboard() {
       {canClients && stats && <RecentActivity followUps={stats.recentFollowUps} contracts={stats.recentContracts} isMobile={!!isMobile} />}
       {!stats && <SkeletonDashboard />}
       </div>
+
+      {isMobile && drawerOpen && (
+        <>
+          <style>{`
+            @keyframes drawerSlideIn{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+            @keyframes drawerFadeIn{from{opacity:0}to{opacity:1}}
+          `}</style>
+          <div onClick={() => setDrawerOpen(false)} style={{
+            position: 'fixed', inset: 0, zIndex: 1000,
+            background: 'rgba(0,0,0,0.4)', animation: 'drawerFadeIn .2s ease',
+          }}>
+            <div ref={drawerRef} onClick={e => e.stopPropagation()} style={{
+              position: 'absolute', left: 0, top: 0, bottom: 0, width: '78%', maxWidth: 320,
+              background: 'var(--bg-secondary)', animation: 'drawerSlideIn .25s cubic-bezier(.25,.46,.45,.94)',
+              display: 'flex', flexDirection: 'column', overflowY: 'auto',
+              padding: 'env(safe-area-inset-top, 16px) 16px 20px',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+                <div onClick={() => setDrawerOpen(false)} style={{ padding: 4, cursor: 'pointer', color: 'var(--text-tertiary)' }}>
+                  <X size={20} />
+                </div>
+              </div>
+
+              <div onClick={() => { setDrawerOpen(false); nav('/user-settings?tab=account&sub=profile') }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 14, padding: 16, marginBottom: 12,
+                  background: 'var(--bg-primary)', borderRadius: 16, cursor: 'pointer',
+                }}>
+                <Avatar name={user?.nickname || user?.username || ''} size={56} src={user?.avatar || undefined} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-heading)' }}>
+                    {user?.nickname || user?.username}
+                  </div>
+                  <div style={{ fontSize: 13, color: 'var(--text-tertiary)', marginTop: 3 }}>
+                    {user?.email || (r === 'admin' ? '管理员' : '成员')}
+                  </div>
+                </div>
+                <ChevronRight size={18} style={{ color: 'var(--text-tertiary)' }} />
+              </div>
+
+              <div style={{ background: 'var(--bg-primary)', borderRadius: 16, marginBottom: 12, position: 'relative', zIndex: 5 }}>
+                <EnterpriseSwitcher />
+              </div>
+
+              <div style={{ background: 'var(--bg-primary)', borderRadius: 16, overflow: 'hidden' }}>
+                {[
+                  { icon: Settings, label: '设置', action: () => { setDrawerOpen(false); nav('/user-settings') } },
+                  { icon: HelpCircle, label: '新手引导', action: () => { setDrawerOpen(false); setConfirmGuide(true) } },
+                ].map((item, i, arr) => (
+                  <div key={item.label} onClick={item.action}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 12, padding: '15px 16px', cursor: 'pointer',
+                      borderBottom: i < arr.length - 1 ? '1px solid var(--border-secondary)' : 'none',
+                    }}>
+                    <item.icon size={20} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
+                    <span style={{ flex: 1, fontSize: 15, color: 'var(--text-primary)' }}>{item.label}</span>
+                    <ChevronRight size={16} style={{ color: 'var(--text-tertiary)' }} />
+                  </div>
+                ))}
+              </div>
+
+              <div onClick={() => { setDrawerOpen(false); nav('/about') }} style={{
+                display: 'flex', alignItems: 'center', gap: 12, padding: '15px 16px', marginTop: 12,
+                background: 'var(--bg-primary)', borderRadius: 16, cursor: 'pointer',
+              }}>
+                <Info size={20} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
+                <span style={{ flex: 1, fontSize: 15, color: 'var(--text-primary)' }}>版本信息</span>
+                <span style={{ fontSize: 14, color: 'var(--text-tertiary)' }}>v{APP_VERSION}</span>
+                <ChevronRight size={16} style={{ color: 'var(--text-tertiary)' }} />
+              </div>
+
+              <div onClick={() => { setDrawerOpen(false); logout() }}
+                style={{
+                  marginTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  padding: 16, borderRadius: 16, background: 'var(--bg-primary)', cursor: 'pointer',
+                  color: 'var(--color-danger)', fontSize: 15, fontWeight: 500,
+                }}>
+                <LogOut size={16} />
+                退出登录
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {confirmGuide && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={() => setConfirmGuide(false)}>
+          <div onClick={e => e.stopPropagation()}
+            style={{ width: 280, background: 'var(--bg-primary)', borderRadius: 16, padding: 24, textAlign: 'center' }}>
+            <HelpCircle size={36} style={{ color: 'var(--brand)', marginBottom: 12 }} />
+            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-heading)', marginBottom: 8 }}>新手引导</div>
+            <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 20 }}>将为你展示主要功能的使用方法，是否开始？</div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setConfirmGuide(false)}
+                style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
+                取消
+              </button>
+              <button onClick={() => { setConfirmGuide(false); openGuide?.() }}
+                style={{ flex: 1, padding: '10px 0', borderRadius: 10, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 14, fontWeight: 500, cursor: 'pointer' }}>
+                开始引导
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
