@@ -6,18 +6,15 @@ import useLiveData from '../../hooks/useLiveData'
 import useDebounce from '../../hooks/useDebounce'
 import useProgressiveRender from '../../hooks/useProgressiveRender'
 import Badge from '../ui/Badge'
-import { Plus, Paperclip, Download, Search, FileSpreadsheet } from 'lucide-react'
+import { Paperclip, Download, Search, FileSpreadsheet } from 'lucide-react'
 import { toast } from '../ui/Toast'
 import TaskDetailModal from './components/TaskDetailModal'
-import TaskCreateModal from './components/TaskCreateModal'
-import { can } from '../../stores/permissions'
 import ImageViewer from '../ui/ImageViewer'
 import { columns, priorityMap, isImageFile } from './constants'
 
 export default function TaskBoard() {
-  const { user, isMobile } = useOutletContext<{ user: any; isMobile?: boolean }>()
+  const { isMobile } = useOutletContext<{ user: any; isMobile?: boolean }>()
   const navigate = useNavigate()
-  const canAddTask = can(user?.role || '', 'task:create')
   const [filterProject, setFilterProject] = useState<string>('')
   const [searchText, setSearchText] = useState('')
   const debouncedSearchText = useDebounce(searchText, 300)
@@ -25,7 +22,6 @@ export default function TaskBoard() {
   const [taskSearchParams] = useSearchParams()
   const [filterStatus, setFilterStatus] = useState<string>(taskSearchParams.get('status') || '')
   const [selectedTask, setSelectedTask] = useState<any>(null)
-  const [showCreateModal, setShowCreateModal] = useState(false)
   const [previewImg, setPreviewImg] = useState<string | null>(null)
   const [previewImages, setPreviewImages] = useState<string[]>([])
   const [previewStartIdx, setPreviewStartIdx] = useState(0)
@@ -98,12 +94,6 @@ export default function TaskBoard() {
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', color: 'var(--text-body)', cursor: 'pointer', fontSize: 13, flexShrink: 0 }}>
             <FileSpreadsheet size={14} /> 导出
           </button>
-          {canAddTask && (
-            <button onClick={() => setShowCreateModal(true)}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 16px', borderRadius: 8, background: 'var(--brand)', color: 'var(--bg-primary)', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 500, width: isMobile ? '100%' : 'auto' }}>
-              <Plus size={14} /> 新建需求
-            </button>
-          )}
         </div>
       </div>
 
@@ -183,7 +173,6 @@ export default function TaskBoard() {
         onUpdated={reload}
       />
 
-      <TaskCreateModal open={showCreateModal} onClose={() => setShowCreateModal(false)} onCreated={reload} projects={projects} />
 
       {previewImg && <ImageViewer src={previewImg} onClose={() => { setPreviewImg(null); setPreviewImages([]) }}
         images={previewImages.length > 1 ? previewImages : undefined} startIndex={previewStartIdx} />}

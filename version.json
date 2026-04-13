@@ -1,7 +1,7 @@
 {
-  "version": "1.4.49",
-  "versionCode": 459,
+  "version": "1.4.50",
+  "versionCode": 460,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "修复移动端弹窗高度过大标题被截断:maxHeight从90vh降为80vh"
+  "changelog": "移除需求看板的新建需求按钮"
 }
