@@ -2,6 +2,7 @@
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.4.43 | 2026-04-13 | 首页「我的」面板从左侧抽屉改为底部弹出面板(Bottom Sheet) |
 | v1.4.42 | 2026-04-13 | Modal弹窗和Drawer抽屉支持侧滑/返回键关闭：打开时pushState推虚拟历史记录，侧滑/返回先关闭弹窗不退页面，关闭后再侧滑才回上一页 |
 | v1.4.41 | 2026-04-13 | 全面优化：客户/通知/知识库列表加骨架屏、部署改PM2 reload零停机、deploy_update.py增加--rollback一键回滚、npm audit修复axios/lodash/path-to-regexp等漏洞、Nginx SSL配置同步gzip/SSE/downloads |
 | v1.4.40 | 2026-04-13 | APK热更新改为用户确认：后台下载bundle后不再自动set强制重载，改为弹出提示条让用户选择"立即更新"；AboutPage复用已下载的bundle避免重复下载 |

@@ -1,6 +1,6 @@
 import { useState, useEffect, lazy, Suspense, useRef, useCallback } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import { FolderKanban, Users, ListTodo, CheckCircle, TrendingUp, Clock, FileSignature, LogOut, Settings, HelpCircle, ChevronRight, Info, X } from 'lucide-react'
+import { FolderKanban, Users, ListTodo, CheckCircle, TrendingUp, Clock, FileSignature, LogOut, Settings, HelpCircle, ChevronRight, Info } from 'lucide-react'
 import { SkeletonDashboard } from '../ui/Skeleton'
 import { can } from '../../stores/permissions'
 import { useDashboardStats, useDashboardChart } from '../../hooks/useApi'
@@ -187,8 +187,8 @@ export default function Dashboard() {
       {isMobile && drawerOpen && (
         <>
           <style>{`
-            @keyframes drawerSlideIn{from{transform:translateX(-100%)}to{transform:translateX(0)}}
-            @keyframes drawerSlideOut{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+            @keyframes sheetSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+            @keyframes sheetSlideDown{from{transform:translateY(0)}to{transform:translateY(100%)}}
             @keyframes drawerFadeIn{from{opacity:0}to{opacity:1}}
             @keyframes drawerFadeOut{from{opacity:1}to{opacity:0}}
           `}</style>
@@ -198,17 +198,14 @@ export default function Dashboard() {
             animation: drawerClosing ? 'drawerFadeOut .22s ease forwards' : 'drawerFadeIn .2s ease',
           }}>
             <div ref={drawerRef} onClick={e => e.stopPropagation()} style={{
-              position: 'absolute', left: 0, top: 0, bottom: 0, width: '78%', maxWidth: 320,
-              background: 'var(--bg-secondary)',
-              animation: drawerClosing ? 'drawerSlideOut .22s ease forwards' : 'drawerSlideIn .25s cubic-bezier(.25,.46,.45,.94)',
+              position: 'fixed', left: 0, right: 0, bottom: 0,
+              maxHeight: '85vh',
+              background: 'var(--bg-secondary)', borderRadius: '16px 16px 0 0',
+              animation: drawerClosing ? 'sheetSlideDown .22s ease forwards' : 'sheetSlideUp .25s cubic-bezier(.25,.46,.45,.94)',
               display: 'flex', flexDirection: 'column', overflowY: 'auto',
-              padding: 'env(safe-area-inset-top, 16px) 16px 20px',
+              padding: '12px 16px env(safe-area-inset-bottom, 20px)',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-                <div onClick={closeDrawer} style={{ padding: 4, cursor: 'pointer', color: 'var(--text-tertiary)' }}>
-                  <X size={20} />
-                </div>
-              </div>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--border-primary)', margin: '0 auto 12px' }} />
 
               <div onClick={() => { closeDrawer(); nav('/user-settings?tab=account&sub=profile') }}
                 style={{
