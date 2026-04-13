@@ -294,7 +294,7 @@ export default function UserSettings() {
                 !accountSub ? (
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 4px', marginBottom: 8 }}>
-                      <button onClick={() => navigate('/my')} style={{ display: 'flex', alignItems: 'center', padding: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+                      <button onClick={() => navigate(-1)} style={{ display: 'flex', alignItems: 'center', padding: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
                         <ArrowLeft size={20} />
                       </button>
                       <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-heading)' }}>设置</div>

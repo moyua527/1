@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink, useLocation, useNavigate, useNavigationType } from 'react-router-dom'
 import { LogOut, User, Shield, ChevronRight, ChevronLeft, ChevronDown, Palette, Bell, Settings, Search, HelpCircle, Volume2, Home, Star, FolderKanban, LayoutGrid } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
@@ -97,25 +97,9 @@ export default function Layout() {
   const ptrRefreshingRef = useRef(false)
   const navigate = useNavigate()
   const location = useLocation()
+  const navType = useNavigationType()
   const prevPathRef = useRef(location.pathname)
   const pageAnimRef = useRef('')
-  const lastClickXRef = useRef<number | null>(null)
-
-  useEffect(() => {
-    if (!isMobile) return
-    const handler = (e: MouseEvent | TouchEvent) => {
-      const nav = (e.target as HTMLElement).closest('[data-tour="mobile-nav"]')
-      if (nav) { lastClickXRef.current = null; return }
-      const x = 'touches' in e ? e.touches[0]?.clientX : e.clientX
-      if (x != null) lastClickXRef.current = x
-    }
-    document.addEventListener('click', handler, true)
-    document.addEventListener('touchstart', handler, true)
-    return () => {
-      document.removeEventListener('click', handler, true)
-      document.removeEventListener('touchstart', handler, true)
-    }
-  }, [isMobile])
   const role = user?.role || 'member'
   const NAV_ITEMS = navItems().filter(n => !n.perm || can(role, n.perm))
 
@@ -163,15 +147,11 @@ export default function Layout() {
     const isTab = tabPages.includes(location.pathname)
     if (wasTab && isTab) {
       pageAnimRef.current = ''
-    } else if (lastClickXRef.current != null) {
-      const mid = window.innerWidth / 2
-      pageAnimRef.current = lastClickXRef.current >= mid ? 'page-slide-right' : 'page-slide-left'
-    } else if (isTab && !wasTab) {
+    } else if (navType === 'POP') {
       pageAnimRef.current = 'page-slide-left'
     } else {
       pageAnimRef.current = 'page-slide-right'
     }
-    lastClickXRef.current = null
     prevPathRef.current = location.pathname
   }
 

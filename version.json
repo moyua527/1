@@ -1,7 +1,7 @@
 {
-  "version": "1.4.38.4",
-  "versionCode": 448,
+  "version": "1.4.39",
+  "versionCode": 449,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "首页头像改为左侧抽屉打开我的页面"
+  "changelog": "统一页面动画体系：栈式导航(进=右入退=左出)+Modal进出动画+抽屉关闭动画"
 }

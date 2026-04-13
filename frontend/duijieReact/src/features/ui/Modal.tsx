@@ -13,12 +13,7 @@ export function popModalClose(): boolean {
   return false
 }
 
-
-const overlay: React.CSSProperties = {
-  position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex',
-  alignItems: 'center', justifyContent: 'center', zIndex: 1000,
-  touchAction: 'none',
-}
+const ANIM_MS = 220
 
 function lockBody() {
   const scrollY = window.scrollY
@@ -46,9 +41,12 @@ export default function Modal({ open, onClose, title, children, width = 600, hei
   const dragging = useRef(false)
   const startPos = useRef({ x: 0, y: 0 })
   const startOffset = useRef({ x: 0, y: 0 })
+  const [visible, setVisible] = useState(false)
+  const [closing, setClosing] = useState(false)
 
   useEffect(() => {
     if (open) {
+      setVisible(true); setClosing(false)
       lockBody(); setOffset({ x: 0, y: 0 })
       _closeStack.push(onClose)
       return () => {
@@ -56,11 +54,13 @@ export default function Modal({ open, onClose, title, children, width = 600, hei
         if (idx >= 0) _closeStack.splice(idx, 1)
         unlockBody()
       }
-    } else {
-      unlockBody()
+    } else if (visible) {
+      setClosing(true)
+      const t = setTimeout(() => { setVisible(false); setClosing(false); unlockBody() }, ANIM_MS)
+      return () => clearTimeout(t)
     }
     return () => { unlockBody() }
-  }, [open, onClose])
+  }, [open])
 
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     if (isMobile) return
@@ -85,38 +85,64 @@ export default function Modal({ open, onClose, title, children, width = 600, hei
     if (e.target === e.currentTarget) e.preventDefault()
   }, [])
 
-  if (!open) return null
+  if (!visible) return null
+
+  const overlayAnim = closing ? 'modal-overlay-out' : 'modal-overlay-in'
+  const panelAnim = closing
+    ? (isMobile ? 'modal-sheet-out' : 'modal-scale-out')
+    : (isMobile ? 'modal-sheet-in' : 'modal-scale-in')
+
   return (
-    <div style={overlay} onTouchMove={stopTouch} onClick={e => { if (e.target === e.currentTarget && isMobile) e.stopPropagation() }}>
-      <div
-        onClick={e => e.stopPropagation()}
-        onTouchStart={e => e.stopPropagation()}
-        style={{
-          background: 'var(--bg-primary)', borderRadius: isMobile ? '16px 16px 0 0' : 12,
-          width: isMobile ? '100%' : width, height: isMobile ? 'auto' : height,
-          maxWidth: isMobile ? '100%' : 'calc(100vw - 24px)',
-          maxHeight: isMobile ? '90vh' : '85vh', overflow: 'hidden',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
-          margin: isMobile ? 0 : 12,
-          display: 'flex', flexDirection: 'column',
-          touchAction: 'auto',
-          ...(isMobile
-            ? { position: 'fixed' as const, bottom: 0, left: 0, right: 0 }
-            : { transform: `translate(${offset.x}px, ${offset.y}px)`, transition: dragging.current ? 'none' : 'transform 0.15s ease' }),
-        }}>
+    <>
+      <style>{`
+        @keyframes modalOverlayIn{from{opacity:0}to{opacity:1}}
+        @keyframes modalOverlayOut{from{opacity:1}to{opacity:0}}
+        @keyframes modalScaleIn{from{opacity:0;transform:scale(1.05)}to{opacity:1;transform:scale(1)}}
+        @keyframes modalScaleOut{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(0.97)}}
+        @keyframes modalSheetIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
+        @keyframes modalSheetOut{from{transform:translateY(0)}to{transform:translateY(100%)}}
+        .modal-overlay-in{animation:modalOverlayIn ${ANIM_MS}ms ease}
+        .modal-overlay-out{animation:modalOverlayOut ${ANIM_MS}ms ease forwards}
+        .modal-scale-in{animation:modalScaleIn ${ANIM_MS}ms cubic-bezier(.25,.46,.45,.94)}
+        .modal-scale-out{animation:modalScaleOut ${ANIM_MS}ms ease forwards}
+        .modal-sheet-in{animation:modalSheetIn ${ANIM_MS}ms cubic-bezier(.25,.46,.45,.94)}
+        .modal-sheet-out{animation:modalSheetOut ${ANIM_MS}ms ease forwards}
+      `}</style>
+      <div className={overlayAnim} style={{
+        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex',
+        alignItems: 'center', justifyContent: 'center', zIndex: 1000, touchAction: 'none',
+      }} onTouchMove={stopTouch} onClick={e => { if (e.target === e.currentTarget) onClose() }}>
         <div
-          {...(!isMobile && { onPointerDown, onPointerMove, onPointerUp })}
+          className={panelAnim}
+          onClick={e => e.stopPropagation()}
+          onTouchStart={e => e.stopPropagation()}
           style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '16px 20px', borderBottom: '1px solid var(--border-primary)', flexShrink: 0,
-            cursor: isMobile ? 'default' : 'grab', userSelect: 'none',
-            ...(!isMobile && { touchAction: 'none' as const }),
+            background: 'var(--bg-primary)', borderRadius: isMobile ? '16px 16px 0 0' : 12,
+            width: isMobile ? '100%' : width, height: isMobile ? 'auto' : height,
+            maxWidth: isMobile ? '100%' : 'calc(100vw - 24px)',
+            maxHeight: isMobile ? '90vh' : '85vh', overflow: 'hidden',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+            margin: isMobile ? 0 : 12,
+            display: 'flex', flexDirection: 'column',
+            touchAction: 'auto',
+            ...(isMobile
+              ? { position: 'fixed' as const, bottom: 0, left: 0, right: 0 }
+              : { transform: `translate(${offset.x}px, ${offset.y}px)`, transition: dragging.current ? 'none' : 'transform 0.15s ease' }),
           }}>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>{title}</h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', padding: 4 }}><X size={18} /></button>
+          <div
+            {...(!isMobile && { onPointerDown, onPointerMove, onPointerUp })}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              padding: '16px 20px', borderBottom: '1px solid var(--border-primary)', flexShrink: 0,
+              cursor: isMobile ? 'default' : 'grab', userSelect: 'none',
+              ...(!isMobile && { touchAction: 'none' as const }),
+            }}>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: 'var(--text-heading)' }}>{title}</h3>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', padding: 4 }}><X size={18} /></button>
+          </div>
+          <div style={{ padding: 20, flex: 1, minHeight: 0, overflow: 'auto', display: 'flex', flexDirection: 'column', touchAction: 'pan-y' }}>{children}</div>
         </div>
-        <div style={{ padding: 20, flex: 1, minHeight: 0, overflow: 'auto', display: 'flex', flexDirection: 'column', touchAction: 'pan-y' }}>{children}</div>
       </div>
-    </div>
+    </>
   )
 }
