@@ -1,7 +1,7 @@
 {
-  "version": "1.4.47",
-  "versionCode": 457,
+  "version": "1.4.48",
+  "versionCode": 458,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "修复抽屉内导航卡住:关闭动画完成后再跳转"
+  "changelog": "修复版本信息页:添加返回按钮,功能介绍与版本更新拆为独立卡片,修复按钮事件冒泡"
 }

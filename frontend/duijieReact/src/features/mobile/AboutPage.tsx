@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { ChevronRight, ChevronDown, Loader2, Download, RefreshCw } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { ChevronLeft, ChevronRight, ChevronDown, Loader2, Download, RefreshCw } from 'lucide-react'
 import { isCapacitor, APP_VERSION, SERVER_URL } from '../../utils/capacitor'
 import { fetchApi } from '../../bootstrap'
 import { toast } from '../ui/Toast'
@@ -18,6 +19,7 @@ function compareVer(a: string, b: string): number {
 }
 
 export default function AboutPage() {
+  const nav = useNavigate()
   const [checking, setChecking] = useState(false)
   const [showLog, setShowLog] = useState(false)
   const [serverVersion, setServerVersion] = useState(APP_VERSION)
@@ -38,6 +40,7 @@ export default function AboutPage() {
   }, [])
 
   const checkUpdate = async () => {
+    if (checking || updateAvailable) return
     setChecking(true)
     try {
       const r = await fetchApi('/api/app/version')
@@ -59,7 +62,8 @@ export default function AboutPage() {
     setChecking(false)
   }
 
-  const handleInAppUpdate = async () => {
+  const handleInAppUpdate = async (e: React.MouseEvent) => {
+    e.stopPropagation()
     if (updating) return
     setUpdating(true)
 
@@ -126,7 +130,8 @@ export default function AboutPage() {
     }
   }
 
-  const startDownload = async () => {
+  const startDownload = async (e: React.MouseEvent) => {
+    e.stopPropagation()
     const url = downloadUrl || `${SERVER_URL}/downloads/duijie.apk`
     try {
       const { Browser } = await import('@capacitor/browser')
@@ -136,10 +141,22 @@ export default function AboutPage() {
     }
   }
 
+  const filtered = versionLog.filter(item => compareVer(item.ver, APP_VERSION) <= 0)
+
   return (
     <div style={{ minHeight: '100dvh', background: 'var(--bg-secondary)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', padding: '12px 16px', background: 'var(--bg-secondary)',
+        position: 'sticky', top: 0, zIndex: 10,
+      }}>
+        <div onClick={() => nav(-1)} style={{ padding: 4, cursor: 'pointer', color: 'var(--text-secondary)', marginRight: 8 }}>
+          <ChevronLeft size={22} />
+        </div>
+        <span style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-heading)' }}>版本信息</span>
+      </div>
+
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '0 20px' }}>
-        <div style={{ marginTop: 32, marginBottom: 16 }}>
+        <div style={{ marginTop: 16, marginBottom: 16 }}>
           <div style={{
             width: 80, height: 80, borderRadius: 20, background: 'var(--brand)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -149,77 +166,22 @@ export default function AboutPage() {
           </div>
         </div>
         <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-heading)', marginBottom: 4 }}>DuiJie</div>
-        <div style={{ fontSize: 15, color: 'var(--text-tertiary)', marginBottom: 32 }}>Version {APP_VERSION}</div>
+        <div style={{ fontSize: 15, color: 'var(--text-tertiary)', marginBottom: 24 }}>Version {APP_VERSION}</div>
 
-        <div style={{ width: '100%', background: 'var(--bg-primary)', borderRadius: 16, overflow: 'hidden', marginBottom: 16 }}>
+        {/* 功能介绍 - 独立卡片 */}
+        <div style={{ width: '100%', background: 'var(--bg-primary)', borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
           <div onClick={() => setShowLog(!showLog)} style={{
             display: 'flex', alignItems: 'center', padding: '16px 18px', cursor: 'pointer',
-            borderBottom: '1px solid var(--border-secondary)',
           }}>
             <span style={{ flex: 1, fontSize: 16, color: 'var(--text-primary)' }}>功能介绍</span>
             {showLog
               ? <ChevronDown size={18} style={{ color: 'var(--text-tertiary)' }} />
               : <ChevronRight size={18} style={{ color: 'var(--text-tertiary)' }} />}
           </div>
-          <div onClick={(!updateAvailable && !checking) ? checkUpdate : undefined} style={{
-            padding: '16px 18px', cursor: (updateAvailable || checking) ? 'default' : 'pointer',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <span style={{ flex: 1, fontSize: 16, color: 'var(--text-primary)' }}>版本更新</span>
-              {checking ? (
-                <Loader2 size={16} style={{ color: 'var(--text-tertiary)', animation: 'spin 1s linear infinite' }} />
-              ) : updateAvailable ? (
-                <span style={{ fontSize: 13, color: '#22c55e', fontWeight: 600 }}>v{serverVersion} 可用</span>
-              ) : (
-                <ChevronRight size={18} style={{ color: 'var(--text-tertiary)' }} />
-              )}
-            </div>
-
-            {updateAvailable && (
-              <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <div style={{ fontSize: 12, color: 'var(--text-secondary)', textAlign: 'center' }}>
-                  当前 v{APP_VERSION} → 最新 v{serverVersion}
-                </div>
-                {updateProgress && (
-                  <div style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                    padding: '10px 16px', background: 'var(--bg-selected)', borderRadius: 10,
-                    fontSize: 13, color: 'var(--brand)', fontWeight: 500,
-                  }}>
-                    <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
-                    {updateProgress}
-                  </div>
-                )}
-                <button onClick={handleInAppUpdate} disabled={updating} style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  width: '100%', padding: '12px 0',
-                  background: updating ? 'var(--bg-tertiary)' : 'var(--brand)',
-                  color: updating ? 'var(--text-tertiary)' : '#fff',
-                  borderRadius: 10, border: 'none', fontSize: 15, fontWeight: 600,
-                  cursor: updating ? 'default' : 'pointer', opacity: updating ? 0.7 : 1,
-                }}>
-                  <RefreshCw size={16} />
-                  {updating ? '更新中...' : '应用内更新'}
-                </button>
-                <button onClick={startDownload} disabled={updating} style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  width: '100%', padding: '10px 0', background: 'transparent',
-                  color: updating ? 'var(--text-disabled)' : 'var(--text-secondary)',
-                  borderRadius: 10, border: '1px solid var(--border-primary)', fontSize: 13, fontWeight: 500,
-                  cursor: updating ? 'default' : 'pointer',
-                }}>
-                  <Download size={14} />
-                  下载完整安装包
-                </button>
-              </div>
-            )}
-          </div>
         </div>
 
-        {showLog && versionLog.length > 0 && (() => {
-          const filtered = versionLog.filter(item => compareVer(item.ver, APP_VERSION) <= 0)
-          return filtered.length > 0 && (
-          <div style={{ width: '100%', background: 'var(--bg-primary)', borderRadius: 16, padding: '4px 0', marginBottom: 16, maxHeight: '50vh', overflowY: 'auto' }}>
+        {showLog && filtered.length > 0 && (
+          <div style={{ width: '100%', background: 'var(--bg-primary)', borderRadius: 16, padding: '4px 0', marginBottom: 12, maxHeight: '50vh', overflowY: 'auto' }}>
             {filtered.map((item, i) => (
               <div key={item.ver} style={{
                 padding: '14px 18px',
@@ -248,8 +210,64 @@ export default function AboutPage() {
               </div>
             ))}
           </div>
-          )
-        })()}
+        )}
+
+        {/* 版本更新 - 独立卡片 */}
+        <div style={{ width: '100%', background: 'var(--bg-primary)', borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
+          <div onClick={checkUpdate} style={{
+            padding: '16px 18px', cursor: (updateAvailable || checking) ? 'default' : 'pointer',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <span style={{ flex: 1, fontSize: 16, color: 'var(--text-primary)' }}>版本更新</span>
+              {checking ? (
+                <Loader2 size={16} style={{ color: 'var(--text-tertiary)', animation: 'spin 1s linear infinite' }} />
+              ) : updateAvailable ? (
+                <span style={{ fontSize: 13, color: '#22c55e', fontWeight: 600 }}>v{serverVersion} 可用</span>
+              ) : (
+                <ChevronRight size={18} style={{ color: 'var(--text-tertiary)' }} />
+              )}
+            </div>
+          </div>
+
+          {updateAvailable && (
+            <div style={{ padding: '0 18px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', textAlign: 'center' }}>
+                当前 v{APP_VERSION} → 最新 v{serverVersion}
+              </div>
+              {updateProgress && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  padding: '10px 16px', background: 'var(--bg-selected)', borderRadius: 10,
+                  fontSize: 13, color: 'var(--brand)', fontWeight: 500,
+                }}>
+                  <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />
+                  {updateProgress}
+                </div>
+              )}
+              <button onClick={handleInAppUpdate} disabled={updating} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                width: '100%', padding: '12px 0',
+                background: updating ? 'var(--bg-tertiary)' : 'var(--brand)',
+                color: updating ? 'var(--text-tertiary)' : '#fff',
+                borderRadius: 10, border: 'none', fontSize: 15, fontWeight: 600,
+                cursor: updating ? 'default' : 'pointer', opacity: updating ? 0.7 : 1,
+              }}>
+                <RefreshCw size={16} />
+                {updating ? '更新中...' : '应用内更新'}
+              </button>
+              <button onClick={startDownload} disabled={updating} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                width: '100%', padding: '10px 0', background: 'transparent',
+                color: updating ? 'var(--text-disabled)' : 'var(--text-secondary)',
+                borderRadius: 10, border: '1px solid var(--border-primary)', fontSize: 13, fontWeight: 500,
+                cursor: updating ? 'default' : 'pointer',
+              }}>
+                <Download size={14} />
+                下载完整安装包
+              </button>
+            </div>
+          )}
+        </div>
 
         <div style={{ flex: 1 }} />
 
