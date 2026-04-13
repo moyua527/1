@@ -2,19 +2,12 @@
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
-| v1.4.39.1 | 2026-04-13 | APK热更新改为用户确认：后台下载bundle后不再自动set强制重载，改为弹出提示条让用户选择"立即更新"；AboutPage复用已下载的bundle避免重复下载 |
-| v1.4.39 | 2026-04-13 | 统一动画体系：页面导航改为栈式(PUSH=右滑入/POP=左滑出/Tab无动画)；Modal添加缩放+淡入淡出进出动画(移动端为底部弹出)；抽屉添加关闭动画(左滑出+遮罩淡出)；修复设置页返回按钮指向 |
-| v1.4.38.4 | 2026-04-13 | 首页左上角头像改为左侧抽屉方式打开"我的"页面，包含个人信息、企业切换、设置、新手引导、版本信息、退出登录 |
-| v1.4.38.3 | 2026-04-13 | 页面切换动画方向跟随按钮位置：点击屏幕右侧按钮→页面从右滑入，点击左侧→从左滑入；底部导航栏tab切换无动画 |
-| v1.4.38.2 | 2026-04-13 | 移除服务页星标收藏功能：删除Star图标、favPaths/toggleFav状态逻辑、顶部收藏分组；整个卡片改为直接点击跳转 |
-| v1.4.38.1 | 2026-04-13 | 移动端导航互换：首页左上角LayoutGrid快捷菜单→用户头像(链接/my)、底部"我的"tab→"服务"tab(链接/services)；ServicesPage增加标题和滚动容器 |
-| v1.4.38 | 2026-04-13 | 移动端设置页重构为微信风格分组列表：账号(个人资料/账号安全/个人信息与权限)、通用(通知/界面与显示/存储空间)、帮助与关于(帮助与反馈/关于DuiJie)+退出登录；新增6个子页面(security/notification/appearance/privacy/storage/feedback/about)；MyPage菜单简化为单个「设置」入口 |
-| v1.4.37 | 2026-04-13 | 移除移动端「账号与安全」页面顶部的用户信息卡片（头像+昵称+用户名+角色+编辑按钮）和编辑表单 |
-| v1.4.36.2 | 2026-04-13 | PROJECT.md大幅修正：新增4.22企业管理API章节(~30端点)、补全4.5客户成员/审批API(10端点)、补全4.6/4.8全量列表端点、更新第七章项目结构(27控制器+21功能模块+45 UI组件)、更新第十一章统计数据(295端点/57表/27路由) |
-| v1.4.36.1 | 2026-04-13 | 文档修正：PROJECT.md 3.19 API测试从2文件24用例更新为25个测试文件完整列表、3.34 Vite构建补充vendor-charts(~400KB Recharts)独立chunk |
-| v1.4.36 | 2026-04-13 | 3.14-3.18模块审查：删除partner/PartnerCard.tsx+PartnerFormModal.tsx+AppViewer.tsx+constants.ts共4个死文件、Settings handleSave加try-catch、Partner handleCopyKey加catch、知识库CRUD加try-catch、更新PROJECT.md 3.13.2(分类扁平列表/移动端详情页/防抖/分页)/3.17(去掉未实现的连接测试/启用禁用/权限选择/补充嵌入容错重试按钮) |
-| v1.4.35.1 | 2026-04-12 | 知识库模块优化：saveArticle/deleteArticle/saveCat/deleteCat加try-catch防网络错误、更新PROJECT.md 3.13.2(分类列表非树改扁平列表描述/补充移动端详情页KnowledgeDetailPage/搜索防抖300ms/分页20条) |
-| v1.4.35 | 2026-04-12 | 通知系统优化：typeIcon从notification/index.tsx和NotificationBell.tsx提取到notification/constants.ts共享、markRead/deleteNotif加try-catch防网络错误、displayed列表加useMemo、更新PROJECT.md 3.13(分类Tab改为3个主分类+项目子分类/补充删除清空/通知中心独立页面/MobilePushBridge描述) |
+| v1.4.40 | 2026-04-13 | APK热更新改为用户确认：后台下载bundle后不再自动set强制重载，改为弹出提示条让用户选择"立即更新"；AboutPage复用已下载的bundle避免重复下载 |
+| v1.4.39 | 2026-04-13 | 统一动画体系：页面导航改为栈式(PUSH=右滑入/POP=左滑出/Tab无动画)；Modal添加缩放+淡入淡出进出动画(移动端为底部弹出)；抽屉添加关闭动画(左滑出+遮罩淡出)；首页头像改为左侧抽屉；移除服务页星标收藏；长按导航栏不再显示URL；修复设置页返回按钮指向 |
+| v1.4.38 | 2026-04-13 | 移动端UI重构：导航互换(首页头像+底部服务tab)；设置页重构为微信风格分组列表(账号/通用/帮助与关于)新增6子页面；移除账号页用户卡片 |
+| v1.4.37 | 2026-04-13 | PROJECT.md大幅修正：新增4.22企业管理API(~30端点)、补全客户/联系人/跟进API、更新项目结构和统计数据；API测试和Vite构建文档更新 |
+| v1.4.36 | 2026-04-13 | 3.14-3.18模块审查：删除partner/4个死文件、Settings/Partner/知识库CRUD加try-catch、更新PROJECT.md |
+| v1.4.35 | 2026-04-12 | 通知系统+知识库优化：typeIcon/markRead/deleteNotif加try-catch、displayed列表useMemo、知识库CRUD错误处理、更新PROJECT.md |
 | v1.4.34 | 2026-04-12 | 客户门户/工单/报表模块优化：修复TicketCreateModal渲染阶段setState(违反React规则改useEffect)、工单typeMap/priorityMap/statusMap/fmtSize提取到constants.ts消除index.tsx和TicketDetail.tsx重复、statusTabs和filtered加useMemo、Report.tsx计算值(funnelMax/followMax等)useMemo化、更新PROJECT.md 3.10客户门户(去掉未实现里程碑/工单独立路由)/3.11工单系统(手动状态切换/附件上传/满意度评价细化)/3.12报表(5档时间筛选/漏斗含流失/条形图非折线图) |
 | v1.4.33 | 2026-04-12 | 用户管理模块优化：修复updateUser.js is_active布尔强转导致禁用失效(2→1)、loginService.js禁用用户(is_active=2)仍能登录、updateController清auth缓存使角色修改即时生效、删除死文件UserDetailModal.tsx、InviteLinkSection打开时刷新数据、操作加try-catch、提取constants.ts共享roleMap/statusMap/fmtDate消除3文件重复、剪贴板catch、更新PROJECT.md 3.9文档(6张卡片/Drawer/操作菜单/上级限admin) |
 | v1.4.32 | 2026-04-12 | 消息模块优化：修复群聊Socket room名不匹配(user_→user:)导致实时推送失效、群聊撤回加2分钟时间限制、MessagePanel pendingImage URL.createObjectURL泄漏修复、清理dmApi.users/friendApi.remove死代码、loadLatest/handleSend/loadOlder加try-catch、handleRecall/handleGroupRecall从.map提取为useCallback、搜索结果用nickname store、更新PROJECT.md 3.8文档 |
@@ -107,10 +100,8 @@
 | v1.3.43 | 2026-04-10 | **项目动态日志**：新建 `duijie_project_activities` 表记录项目内所有操作（需求创建/状态变更/删除、成员添加/移除、文件上传/删除、项目更新）；项目设置新增"项目动态"页面，支持按类型筛选、按日期分组的时间线展示；概览页动态数据优先读取活动表 |
 | v1.3.42 | 2026-04-10 | **项目概览**：项目设置新增"项目概览"入口，展示6项统计卡片（总需求/已完成/已逾期/成员/文件/消息）、需求状态分布饼图+完成率环、代办进度条、最近动态时间线；后端新增 `GET /api/projects/:id/overview` 聚合API |
 | v1.3.41 | 2026-04-10 | **角色体系规范化 + 业务编号**：平台角色只保留admin/member，清除tech/business；企业默认角色改名为"企业创建者/企业成员"；项目默认角色改名为"项目负责人/项目编辑/项目查看"；企业新增display_id（q+6位自增），项目新增display_id（x+8-9位），前端展示业务编号替代数据库ID |
-| v1.3.40.1 | 2026-04-10 | **注册流程优化**：验证码不再自动验证，用户输入验证码后点"下一步"触发验证；验证码错误显示"验证码错误"，过期显示相应提示，验证失败不能进入下一步 |
-| v1.3.40 | 2026-04-10 | **账号体系规范化**：昵称上限6个字符；注册第二步新增用户名输入框（英文+数字，3~20位，可用于登录）；密码只能包含英文和数字；修改密码时新密码不能与旧密码相同；验证码输满6位自动验证，移除验证按钮 |
-| v1.3.39.2 | 2026-04-10 | **注册页优化**：移除邮箱验证码旁的"验证"按钮，改为输入满6位后自动验证，简化注册流程 |
-| v1.3.39.1 | 2026-04-10 | **注册流程优化**：邮箱验证成功后进入第二步设置用户名和密码，支持密码显隐切换、确认密码校验、密码强度提示；注册时前端传递nickname+password到后端 |
+| v1.3.41 | 2026-04-10 | **注册流程优化**：验证码不再自动验证，用户点"下一步"触发；验证码错误/过期显示相应提示 |
+| v1.3.40 | 2026-04-10 | **账号体系规范化**：昵称上限6字符；注册第二步新增用户名(英数3~20位)；密码只能英数；新密码不能与旧密码相同；注册支持邮箱验证→设置用户名密码分步流程 |
 | v1.3.39 | 2026-04-10 | **登录日志**：自动记录每次登录（密码/验证码）的时间、IP、设备名称、登录方式、成功/失败状态；数据库新增`duijie_login_logs`表；loginController和loginByCodeController自动写入日志；PC端账号设置展示最近10条登录记录（设备图标+状态指示灯）；移动端账号安全→登录日志子页面；API `GET /api/auth/login-logs` |
 | v1.3.38 | 2026-04-10 | **知识库模块**：新增企业级知识库功能，支持文章CRUD、分类管理、全文搜索、标签、草稿/发布状态、阅读统计；数据库新增`duijie_kb_categories`和`duijie_kb_articles`表（FULLTEXT索引）；后端完整REST API；前端知识库页面含分类侧栏、搜索筛选、文章编辑器、详情查看；已注册到侧栏导航和CommandPalette |
 | v1.3.37 | 2026-04-09 | **高级搜索**：后端新增统一搜索API(`/api/search`)跨项目/客户/需求/文件全文检索，支持按角色权限过滤结果；CommandPalette升级为输入2字以上自动搜索真实数据，搜索结果高亮关键词并按类型分组；新增类型筛选芯片（全部/项目/客户/需求/文件）、搜索历史记录、300ms防抖+请求取消 |
