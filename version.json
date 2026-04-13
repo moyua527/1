@@ -1,7 +1,7 @@
 {
-  "version": "1.4.38",
-  "versionCode": 444,
+  "version": "1.4.38.1",
+  "versionCode": 445,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "移动端设置页重构为微信风格分组列表（账号/通用/帮助与关于），新增6个子页面"
+  "changelog": "首页左上角与底部导航互换：头像入口移到左上角，服务网格移到底部tab"
 }

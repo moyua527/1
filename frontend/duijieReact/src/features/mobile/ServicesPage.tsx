@@ -69,7 +69,14 @@ export default function ServicesPage() {
   )
 
   return (
-    <div>
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+      <div style={{
+        flexShrink: 0, zIndex: 10, background: 'var(--bg-secondary)',
+        padding: '16px 16px 10px', textAlign: 'center',
+      }}>
+        <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>服务</h1>
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '12px 16px 20px', WebkitOverflowScrolling: 'touch' as any }}>
       {favItems.length > 0 && (
         <div style={{ marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 600, color: 'var(--text-tertiary)', padding: '0 4px 8px' }}>
@@ -87,6 +94,7 @@ export default function ServicesPage() {
           {renderGrid(g.items)}
         </div>
       ))}
+      </div>
     </div>
   )
 }

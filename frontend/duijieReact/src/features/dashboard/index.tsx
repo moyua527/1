@@ -7,9 +7,8 @@ import { useDashboardStats, useDashboardChart } from '../../hooks/useApi'
 const DashboardCharts = lazy(() => import('./DashboardCharts'))
 import ClientDashboard from './ClientDashboard'
 import WorkspaceSection from './WorkspaceSection'
-import QuickNavMenu from './QuickNavMenu'
+import Avatar from '../ui/Avatar'
 import { SalesFunnel, FollowUpAlerts, RecentActivity } from './SalesFunnel'
-import { navItems, navItemsByGroup } from '../../data/routeManifest'
 
 interface Stats {
   totalProjects: number; planningProjects: number; activeProjects: number; completedProjects: number
@@ -40,8 +39,7 @@ export default function Dashboard() {
   const canTasks = can(r, 'dashboard:tasks')
   const isClient = r === 'client'
 
-  const serviceItems = navItems().filter(n => n.path !== '/' && n.path !== '/projects' && (!n.perm || can(r, n.perm)))
-  const serviceGroups = navItemsByGroup(serviceItems)
+  
 
   const { data: stats } = useDashboardStats() as { data: Stats | undefined }
   const { data: chartData } = useDashboardChart(chartDays) as { data: any }
@@ -71,7 +69,13 @@ export default function Dashboard() {
       }}>
         {isMobile ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-            <QuickNavMenu groups={serviceGroups} />
+            <div onClick={() => nav('/my')} style={{
+              position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
+              width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', borderRadius: '50%',
+            }}>
+              <Avatar name={user?.nickname || user?.username || ''} size={32} src={user?.avatar || undefined} />
+            </div>
             <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>首页</h1>
           </div>
         ) : (

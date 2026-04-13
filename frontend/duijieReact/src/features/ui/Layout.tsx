@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { LogOut, User, Shield, ChevronRight, ChevronLeft, ChevronDown, Palette, Bell, Settings, Search, HelpCircle, Volume2, UserCircle, Home, Star, FolderKanban } from 'lucide-react'
+import { LogOut, User, Shield, ChevronRight, ChevronLeft, ChevronDown, Palette, Bell, Settings, Search, HelpCircle, Volume2, Home, Star, FolderKanban, LayoutGrid } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
 import { can } from '../../stores/permissions'
@@ -141,7 +141,7 @@ export default function Layout() {
 
   if (isMobile && prevPathRef.current !== location.pathname) {
     const prev = prevPathRef.current
-    const tabPages = ['/', '/projects', '/my']
+    const tabPages = ['/', '/projects', '/services']
     const wasTab = tabPages.includes(prev)
     const isTab = tabPages.includes(location.pathname)
     if (wasTab && isTab) pageAnimRef.current = ''
@@ -201,7 +201,7 @@ export default function Layout() {
   const swipeOverlayRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!isMobile) return
-    const mainPages = ['/', '/projects', '/my']
+    const mainPages = ['/', '/projects', '/services']
     let startX = 0, startY = 0, tracking = false, confirmed = false
 
     const onTouchStart = (e: TouchEvent) => {
@@ -527,7 +527,7 @@ export default function Layout() {
         <main ref={mainRef} data-tour="main-content"
           style={{
             flex: 1, minHeight: 0, position: 'relative',
-            ...(isMobile && ['/', '/projects', '/my'].includes(location.pathname)
+            ...(isMobile && ['/', '/projects', '/services'].includes(location.pathname)
               ? { overflow: 'hidden', padding: 0, display: 'flex', flexDirection: 'column' as const }
               : { overflow: 'auto', padding: isMobile ? '20px 16px' : 24, paddingBottom: isMobile ? 'max(32px, env(safe-area-inset-bottom, 32px))' : 24, WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain' }
             ),
@@ -577,7 +577,7 @@ export default function Layout() {
       </div>
 
       {/* ===== Mobile 底部导航栏（仅主页面显示） ===== */}
-      {isMobile && ['/', '/projects', '/my'].includes(location.pathname) && (
+      {isMobile && ['/', '/projects', '/services'].includes(location.pathname) && (
         <nav data-tour="mobile-nav" style={{
           flexShrink: 0, background: 'var(--bg-primary)',
           borderTop: '1px solid var(--border-primary)',
@@ -604,15 +604,15 @@ export default function Layout() {
             <FolderKanban size={22} />
             <span>项目</span>
           </NavLink>
-          <NavLink to="/my" data-tour="mobile-my"
+          <NavLink to="/services" data-tour="mobile-services"
             style={{
               display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 2,
               padding: '4px 0', textDecoration: 'none', flex: 1,
-              color: location.pathname === '/my' ? 'var(--brand)' : 'var(--text-tertiary)',
-              fontSize: 11, fontWeight: location.pathname === '/my' ? 600 : 400,
+              color: location.pathname === '/services' ? 'var(--brand)' : 'var(--text-tertiary)',
+              fontSize: 11, fontWeight: location.pathname === '/services' ? 600 : 400,
             }}>
-            <UserCircle size={22} />
-            <span>我的</span>
+            <LayoutGrid size={22} />
+            <span>服务</span>
           </NavLink>
         </nav>
       )}
