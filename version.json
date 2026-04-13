@@ -1,7 +1,7 @@
 {
-  "version": "1.4.36.1",
-  "versionCode": 441,
+  "version": "1.4.36.2",
+  "versionCode": 442,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "更新PROJECT.md 3.19(测试文件25个非24个)/3.34(补充vendor-charts chunk)"
+  "changelog": "PROJECT.md大幅修正：新增企业管理API章节(30端点)、补全客户成员/审批/联系人/跟进端点、更新统计数据和项目结构"
 }
