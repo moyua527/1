@@ -3,6 +3,7 @@ import { ChevronRight, ChevronDown, Loader2, Download, RefreshCw } from 'lucide-
 import { isCapacitor, APP_VERSION, SERVER_URL } from '../../utils/capacitor'
 import { fetchApi } from '../../bootstrap'
 import { toast } from '../ui/Toast'
+import { getPendingBundle, applyPendingBundle } from '../../utils/liveUpdate'
 
 type VersionEntry = { ver: string; date: string; desc: string }
 
@@ -64,6 +65,13 @@ export default function AboutPage() {
 
     if (isCapacitor) {
       try {
+        const pending = getPendingBundle()
+        if (pending) {
+          setUpdateProgress('正在应用更新，即将重启...')
+          await applyPendingBundle()
+          return
+        }
+
         setUpdateProgress('正在获取更新信息...')
         const res = await fetchApi('/api/app/bundle')
         if (!res.success || !res.data?.url || !res.data?.version) {

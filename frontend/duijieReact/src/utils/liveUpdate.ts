@@ -1,6 +1,8 @@
 import { isCapacitor, SERVER_URL } from './capacitor'
 
 let initialized = false
+let pendingBundle: any = null
+let pendingVersion = ''
 
 function toAbsoluteUrl(url: string): string {
   if (url.startsWith('http://') || url.startsWith('https://')) {
@@ -10,6 +12,23 @@ function toAbsoluteUrl(url: string): string {
     return url
   }
   return `${SERVER_URL}${url.startsWith('/') ? '' : '/'}${url}`
+}
+
+export function getPendingBundle() {
+  return pendingBundle ? { bundle: pendingBundle, version: pendingVersion } : null
+}
+
+export async function applyPendingBundle() {
+  if (!pendingBundle) return false
+  try {
+    const { CapacitorUpdater } = await import('@capgo/capacitor-updater')
+    await CapacitorUpdater.set(pendingBundle)
+    pendingBundle = null
+    return true
+  } catch (e: any) {
+    console.warn('[LiveUpdate] Apply error:', e?.message || String(e))
+    return false
+  }
 }
 
 export async function initLiveUpdate() {
@@ -35,8 +54,12 @@ export async function initLiveUpdate() {
       version: res.data.version,
     })
 
-    console.log(`[LiveUpdate] Bundle downloaded, applying and reloading...`)
-    await CapacitorUpdater.set(bundle)
+    console.log(`[LiveUpdate] Bundle downloaded, waiting for user to apply`)
+    pendingBundle = bundle
+    pendingVersion = res.data.version
+    window.dispatchEvent(new CustomEvent('capacitor-update-available', {
+      detail: { version: res.data.version },
+    }))
   } catch (e: any) {
     console.warn('[LiveUpdate] Error:', e?.message || e?.errorMessage || String(e), e)
   }

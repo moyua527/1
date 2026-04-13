@@ -1,7 +1,7 @@
 {
-  "version": "1.4.39",
-  "versionCode": 449,
+  "version": "1.4.39.1",
+  "versionCode": 450,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "统一页面动画体系：栈式导航(进=右入退=左出)+Modal进出动画+抽屉关闭动画"
+  "changelog": "APK热更新改为用户确认后再应用，不再强制刷新打断使用"
 }

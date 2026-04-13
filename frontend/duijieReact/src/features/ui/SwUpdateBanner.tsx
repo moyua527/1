@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
+import { applyPendingBundle, getPendingBundle } from '../../utils/liveUpdate'
+import { isCapacitor } from '../../utils/capacitor'
 
 declare global {
   interface Window { __swWaiting?: ServiceWorker }
@@ -7,25 +9,49 @@ declare global {
 
 export default function SwUpdateBanner() {
   const [show, setShow] = useState(false)
+  const [capVersion, setCapVersion] = useState('')
 
   useEffect(() => {
     const justUpdated = sessionStorage.getItem('sw-just-updated')
     if (justUpdated && Date.now() - Number(justUpdated) < 120000) return
 
-    const handler = () => {
+    const swHandler = () => {
       const ts = sessionStorage.getItem('sw-just-updated')
       if (ts && Date.now() - Number(ts) < 120000) return
       setShow(true)
     }
-    window.addEventListener('sw-update-available', handler)
-    if (window.__swWaiting) handler()
-    return () => window.removeEventListener('sw-update-available', handler)
+
+    const capHandler = (e: Event) => {
+      const ts = sessionStorage.getItem('sw-just-updated')
+      if (ts && Date.now() - Number(ts) < 120000) return
+      setCapVersion((e as CustomEvent).detail?.version || '')
+      setShow(true)
+    }
+
+    window.addEventListener('sw-update-available', swHandler)
+    window.addEventListener('capacitor-update-available', capHandler)
+    if (window.__swWaiting) swHandler()
+    if (isCapacitor) {
+      const p = getPendingBundle()
+      if (p) { setCapVersion(p.version); setShow(true) }
+    }
+    return () => {
+      window.removeEventListener('sw-update-available', swHandler)
+      window.removeEventListener('capacitor-update-available', capHandler)
+    }
   }, [])
 
   if (!show) return null
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     sessionStorage.setItem('sw-just-updated', String(Date.now()))
+
+    if (isCapacitor && capVersion) {
+      setShow(false)
+      await applyPendingBundle()
+      return
+    }
+
     const w = window.__swWaiting
     if (w) w.postMessage({ type: 'SKIP_WAITING' })
     setShow(false)
@@ -42,7 +68,7 @@ export default function SwUpdateBanner() {
       animation: 'fadeIn 0.3s ease',
     }}>
       <RefreshCw size={15} />
-      <span>新版本已就绪</span>
+      <span>新版本{capVersion ? ` v${capVersion} ` : ''}已就绪</span>
       <button onClick={handleUpdate} style={{
         background: 'rgba(255,255,255,0.25)', border: 'none', color: '#fff',
         padding: '4px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
