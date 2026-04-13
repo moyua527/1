@@ -187,8 +187,8 @@ export default function Dashboard() {
       {isMobile && drawerOpen && (
         <>
           <style>{`
-            @keyframes sheetSlideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-            @keyframes sheetSlideDown{from{transform:translateY(0)}to{transform:translateY(100%)}}
+            @keyframes drawerSlideIn{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+            @keyframes drawerSlideOut{from{transform:translateX(0)}to{transform:translateX(-100%)}}
             @keyframes drawerFadeIn{from{opacity:0}to{opacity:1}}
             @keyframes drawerFadeOut{from{opacity:1}to{opacity:0}}
           `}</style>
@@ -198,15 +198,13 @@ export default function Dashboard() {
             animation: drawerClosing ? 'drawerFadeOut .22s ease forwards' : 'drawerFadeIn .2s ease',
           }}>
             <div ref={drawerRef} onClick={e => e.stopPropagation()} style={{
-              position: 'fixed', left: 0, right: 0, bottom: 0,
-              maxHeight: '92vh',
-              background: 'var(--bg-secondary)', borderRadius: '16px 16px 0 0',
-              animation: drawerClosing ? 'sheetSlideDown .22s ease forwards' : 'sheetSlideUp .25s cubic-bezier(.25,.46,.45,.94)',
+              position: 'absolute', left: 0, top: 0, bottom: 0, width: '78%', maxWidth: 320,
+              background: 'var(--bg-secondary)',
+              animation: drawerClosing ? 'drawerSlideOut .22s ease forwards' : 'drawerSlideIn .25s cubic-bezier(.25,.46,.45,.94)',
               display: 'flex', flexDirection: 'column', overflowY: 'auto',
-              padding: '0 16px env(safe-area-inset-bottom, 20px)',
+              padding: 'env(safe-area-inset-top, 16px) 16px 20px',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0 12px', position: 'sticky', top: 0, background: 'var(--bg-secondary)', zIndex: 1 }}>
-                <span style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-heading)' }}>我的</span>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
                 <div onClick={closeDrawer} style={{ padding: 4, cursor: 'pointer', color: 'var(--text-tertiary)' }}>
                   <X size={20} />
                 </div>

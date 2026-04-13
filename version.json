@@ -1,7 +1,7 @@
 {
-  "version": "1.4.45",
-  "versionCode": 455,
+  "version": "1.4.46",
+  "versionCode": 456,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "我的面板改为底部弹出面板(Bottom Sheet)样式"
+  "changelog": "还原我的面板为左侧抽屉"
 }
