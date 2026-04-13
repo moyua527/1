@@ -8,6 +8,7 @@ import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
 import Button from '../ui/Button'
 import Input from '../ui/Input'
+import Modal from '../ui/Modal'
 import PageHeader from '../ui/PageHeader'
 import FilterBar from '../ui/FilterBar'
 import EmptyState from '../ui/EmptyState'
@@ -154,47 +155,34 @@ export default function ContactList() {
         </div>
       )}
 
-      {/* 新建/编辑模态框 */}
-      {modalOpen && (
-        <>
-          <div onClick={() => setModalOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 200 }} />
-          <div style={{
-            position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-            background: 'var(--bg-primary)', borderRadius: 14, padding: 24, width: isMobile ? '92vw' : 440,
-            maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', zIndex: 201,
-          }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-heading)', margin: '0 0 16px' }}>
-              {editing ? '编辑联系人' : '新建联系人'}
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <Input label="姓名 *" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4, display: 'block' }}>所属客户 *</label>
-                <select value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', fontSize: 13, color: 'var(--text-body)' }}>
-                  <option value="">请选择客户</option>
-                  {clients.map((cl: any) => <option key={cl.id} value={cl.id}>{cl.company_name}</option>)}
-                </select>
-              </div>
-              <Input label="职位" value={form.position} onChange={e => setForm({ ...form, position: e.target.value })} />
-              <Input label="电话" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
-              <Input label="邮箱" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-              <Input label="微信" value={form.wechat} onChange={e => setForm({ ...form, wechat: e.target.value })} />
-              <Input label="备注" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-body)', cursor: 'pointer' }}>
-                <input type="checkbox" checked={form.is_primary} onChange={e => setForm({ ...form, is_primary: e.target.checked })} />
-                设为主要联系人
-              </label>
-            </div>
-            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 20 }}>
-              <button onClick={() => setModalOpen(false)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', fontSize: 13, cursor: 'pointer' }}>取消</button>
-              <button onClick={handleSave} disabled={saving} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 13, cursor: 'pointer', fontWeight: 600 }}>
-                {saving ? '保存中...' : '保存'}
-              </button>
-            </div>
+      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? '编辑联系人' : '新建联系人'}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <Input label="姓名 *" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 4, display: 'block' }}>所属客户 *</label>
+            <select value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value })}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-primary)', fontSize: 13, color: 'var(--text-body)' }}>
+              <option value="">请选择客户</option>
+              {clients.map((cl: any) => <option key={cl.id} value={cl.id}>{cl.company_name}</option>)}
+            </select>
           </div>
-        </>
-      )}
+          <Input label="职位" value={form.position} onChange={e => setForm({ ...form, position: e.target.value })} />
+          <Input label="电话" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+          <Input label="邮箱" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+          <Input label="微信" value={form.wechat} onChange={e => setForm({ ...form, wechat: e.target.value })} />
+          <Input label="备注" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-body)', cursor: 'pointer' }}>
+            <input type="checkbox" checked={form.is_primary} onChange={e => setForm({ ...form, is_primary: e.target.checked })} />
+            设为主要联系人
+          </label>
+        </div>
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 20 }}>
+          <button onClick={() => setModalOpen(false)} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border-primary)', background: 'var(--bg-secondary)', color: 'var(--text-secondary)', fontSize: 13, cursor: 'pointer' }}>取消</button>
+          <button onClick={handleSave} disabled={saving} style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: 'var(--brand)', color: '#fff', fontSize: 13, cursor: 'pointer', fontWeight: 600 }}>
+            {saving ? '保存中...' : '保存'}
+          </button>
+        </div>
+      </Modal>
     </div>
   )
 }

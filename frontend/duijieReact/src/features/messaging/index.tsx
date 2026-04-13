@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useOutletContext } from 'react-router-dom'
-import { Send, MessageSquare, Search, Loader2, UserPlus, Users, X, UserCheck, LogOut, Check } from 'lucide-react'
+import { Send, MessageSquare, Search, Loader2, UserPlus, Users, UserCheck, LogOut, Check } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { onSocket } from '../ui/smartSocket'
 import Avatar from '../ui/Avatar'
+import Modal from '../ui/Modal'
 import { toast } from '../ui/Toast'
 import { confirm } from '../ui/ConfirmDialog'
 import useNicknameStore from '../../stores/useNicknameStore'
@@ -450,158 +451,127 @@ export default function Messaging() {
         )}
       </div>
 
-      {/* 添加好友弹窗 */}
-      {showAddFriend && (
-        <>
-          <div onClick={() => setShowAddFriend(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.15)', zIndex: 200 }} />
-          <div style={{
-            position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-            background: 'var(--bg-primary)', borderRadius: 14, padding: 24, width: isMobile ? '92vw' : 400,
-            maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', zIndex: 201,
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>添加好友</h2>
-              <button onClick={() => setShowAddFriend(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)' }}><X size={20} /></button>
-            </div>
-
-            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-              <div style={{ flex: 1, position: 'relative' }}>
-                <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
-                <input value={phoneSearch} onChange={e => setPhoneSearch(e.target.value)} placeholder="输入ID、手机号或用户名搜索..."
-                  onKeyDown={e => { if (e.key === 'Enter') handlePhoneSearch() }}
-                  style={{ width: '100%', padding: '10px 12px 10px 34px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-body)' }} autoFocus />
-              </div>
-              <button onClick={handlePhoneSearch} disabled={searching}
-                style={{ background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 8, padding: '0 16px', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>
-                {searching ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Search size={16} />}
-              </button>
-            </div>
-
-            {searchResults.length > 0 && (
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: 8 }}>搜索结果</div>
-                {searchResults.map(u => (
-                  <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--border-secondary)' }}>
-                    <Avatar name={dn(u.id, u.nickname || u.username)} size={40} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)' }}>{dn(u.id, u.nickname || u.username)}</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>ID: {u.id}{u.phone ? ` · ${u.phone}` : ''}</div>
-                    </div>
-                    <button onClick={() => handleSendRequest(u.id)} disabled={requestingId === u.id}
-                      style={{ background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}>
-                      {requestingId === u.id ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <UserPlus size={14} />}
-                      申请添加
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {searchResults.length === 0 && debouncedPhoneSearch.trim().length >= 1 && !searching && (
-              <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 13 }}>未找到匹配用户</div>
-            )}
-
-            <div style={{ marginTop: 12, padding: 12, background: 'var(--bg-secondary)', borderRadius: 8 }}>
-              <div style={{ fontSize: 12, color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
-                💡 输入对方ID、手机号或用户名搜索，找到后点击"申请添加"。<br />
-                对方同意后即可成为好友，互相发送消息。
-              </div>
-            </div>
+      <Modal open={showAddFriend} onClose={() => setShowAddFriend(false)} title="添加好友">
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+          <div style={{ flex: 1, position: 'relative' }}>
+            <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)' }} />
+            <input value={phoneSearch} onChange={e => setPhoneSearch(e.target.value)} placeholder="输入ID、手机号或用户名搜索..."
+              onKeyDown={e => { if (e.key === 'Enter') handlePhoneSearch() }}
+              style={{ width: '100%', padding: '10px 12px 10px 34px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-body)' }} autoFocus />
           </div>
-        </>
-      )}
+          <button onClick={handlePhoneSearch} disabled={searching}
+            style={{ background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 8, padding: '0 16px', cursor: 'pointer', fontSize: 13, fontWeight: 500 }}>
+            {searching ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Search size={16} />}
+          </button>
+        </div>
 
-      {/* 创建群聊 Modal */}
-      {showCreateGroup && (
-        <>
-          <div onClick={() => setShowCreateGroup(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.15)', zIndex: 200 }} />
-          <div style={{
-            position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-            background: 'var(--bg-primary)', borderRadius: 14, padding: 24, width: isMobile ? '92vw' : 420,
-            maxHeight: '80vh', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', zIndex: 201,
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-heading)', margin: 0 }}>创建群聊</h2>
-              <button onClick={() => setShowCreateGroup(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-tertiary)' }}><X size={20} /></button>
-            </div>
-
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-body)', marginBottom: 6, display: 'block' }}>群名称</label>
-              <input value={groupName} onChange={e => setGroupName(e.target.value)} placeholder="输入群聊名称..."
-                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-body)' }} autoFocus />
-            </div>
-
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-body)', marginBottom: 6, display: 'block' }}>
-                选择好友 {selectedFriendIds.length > 0 && <span style={{ color: 'var(--brand)', fontWeight: 400 }}>（已选 {selectedFriendIds.length} 人）</span>}
-              </label>
-              {friendsList.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 13 }}>暂无好友，请先添加好友</div>
-              ) : (
-                <div style={{ maxHeight: 260, overflowY: 'auto', border: '1px solid var(--border-primary)', borderRadius: 8 }}>
-                  {friendsList.map((f: any) => {
-                    const isSelected = selectedFriendIds.includes(f.id)
-                    return (
-                      <div key={f.id} onClick={() => {
-                        setSelectedFriendIds(prev => isSelected ? prev.filter(id => id !== f.id) : [...prev, f.id])
-                      }} style={{
-                        display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
-                        cursor: 'pointer', borderBottom: '1px solid var(--border-secondary)',
-                        background: isSelected ? 'var(--bg-selected, var(--bg-secondary))' : 'transparent',
-                      }}>
-                        <div style={{
-                          width: 20, height: 20, borderRadius: 4, border: `2px solid ${isSelected ? 'var(--brand)' : 'var(--border-primary)'}`,
-                          background: isSelected ? 'var(--brand)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                        }}>
-                          {isSelected && <Check size={14} color="#fff" />}
-                        </div>
-                        <Avatar name={dn(f.id, f.nickname || f.username)} size={32} />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{dn(f.id, f.nickname || f.username)}</div>
-                        </div>
-                      </div>
-                    )
-                  })}
+        {searchResults.length > 0 && (
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', marginBottom: 8 }}>搜索结果</div>
+            {searchResults.map(u => (
+              <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--border-secondary)' }}>
+                <Avatar name={dn(u.id, u.nickname || u.username)} size={40} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)' }}>{dn(u.id, u.nickname || u.username)}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>ID: {u.id}{u.phone ? ` · ${u.phone}` : ''}</div>
                 </div>
-              )}
-            </div>
-
-            <button onClick={async () => {
-              if (!groupName.trim()) { toast('请输入群名称', 'error'); return }
-              if (selectedFriendIds.length === 0) { toast('请至少选择一位好友', 'error'); return }
-              setCreatingGroup(true)
-              const r = await groupApi.create(groupName.trim(), selectedFriendIds)
-              setCreatingGroup(false)
-              if (r.success) {
-                toast('群聊创建成功', 'success')
-                setShowCreateGroup(false)
-                setGroupName('')
-                setSelectedFriendIds([])
-                // 刷新群聊列表
-                groupApi.list().then(res => { if (res.success) setGroups(res.data || []) })
-              } else {
-                toast(r.message || '创建失败', 'error')
-              }
-            }} disabled={creatingGroup || !groupName.trim() || selectedFriendIds.length === 0}
-              style={{
-                width: '100%', padding: '12px 0', borderRadius: 8, border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                background: (!groupName.trim() || selectedFriendIds.length === 0) ? 'var(--bg-secondary)' : 'var(--brand)',
-                color: (!groupName.trim() || selectedFriendIds.length === 0) ? 'var(--text-tertiary)' : '#fff',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-              }}>
-              {creatingGroup ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Users size={16} />}
-              {creatingGroup ? '创建中...' : '创建群聊'}
-            </button>
-
-            <div style={{ marginTop: 12, padding: 12, background: 'var(--bg-secondary)', borderRadius: 8 }}>
-              <div style={{ fontSize: 12, color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
-                💡 输入群名称并选择好友，点击"创建群聊"即可。<br />
-                群聊创建后，所有成员都可以在群内发送消息。
+                <button onClick={() => handleSendRequest(u.id)} disabled={requestingId === u.id}
+                  style={{ background: 'var(--brand)', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 12, cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {requestingId === u.id ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <UserPlus size={14} />}
+                  申请添加
+                </button>
               </div>
-            </div>
+            ))}
           </div>
-        </>
-      )}
+        )}
+
+        {searchResults.length === 0 && debouncedPhoneSearch.trim().length >= 1 && !searching && (
+          <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 13 }}>未找到匹配用户</div>
+        )}
+
+        <div style={{ marginTop: 12, padding: 12, background: 'var(--bg-secondary)', borderRadius: 8 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
+            💡 输入对方ID、手机号或用户名搜索，找到后点击"申请添加"。<br />
+            对方同意后即可成为好友，互相发送消息。
+          </div>
+        </div>
+      </Modal>
+
+      <Modal open={showCreateGroup} onClose={() => setShowCreateGroup(false)} title="创建群聊">
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-body)', marginBottom: 6, display: 'block' }}>群名称</label>
+          <input value={groupName} onChange={e => setGroupName(e.target.value)} placeholder="输入群聊名称..."
+            style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border-primary)', fontSize: 13, outline: 'none', background: 'var(--bg-primary)', color: 'var(--text-body)' }} autoFocus />
+        </div>
+
+        <div style={{ marginBottom: 16 }}>
+          <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-body)', marginBottom: 6, display: 'block' }}>
+            选择好友 {selectedFriendIds.length > 0 && <span style={{ color: 'var(--brand)', fontWeight: 400 }}>（已选 {selectedFriendIds.length} 人）</span>}
+          </label>
+          {friendsList.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-tertiary)', fontSize: 13 }}>暂无好友，请先添加好友</div>
+          ) : (
+            <div style={{ maxHeight: 260, overflowY: 'auto', border: '1px solid var(--border-primary)', borderRadius: 8 }}>
+              {friendsList.map((f: any) => {
+                const isSelected = selectedFriendIds.includes(f.id)
+                return (
+                  <div key={f.id} onClick={() => {
+                    setSelectedFriendIds(prev => isSelected ? prev.filter(id => id !== f.id) : [...prev, f.id])
+                  }} style={{
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px',
+                    cursor: 'pointer', borderBottom: '1px solid var(--border-secondary)',
+                    background: isSelected ? 'var(--bg-selected, var(--bg-secondary))' : 'transparent',
+                  }}>
+                    <div style={{
+                      width: 20, height: 20, borderRadius: 4, border: `2px solid ${isSelected ? 'var(--brand)' : 'var(--border-primary)'}`,
+                      background: isSelected ? 'var(--brand)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    }}>
+                      {isSelected && <Check size={14} color="#fff" />}
+                    </div>
+                    <Avatar name={dn(f.id, f.nickname || f.username)} size={32} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{dn(f.id, f.nickname || f.username)}</div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        <button onClick={async () => {
+          if (!groupName.trim()) { toast('请输入群名称', 'error'); return }
+          if (selectedFriendIds.length === 0) { toast('请至少选择一位好友', 'error'); return }
+          setCreatingGroup(true)
+          const r = await groupApi.create(groupName.trim(), selectedFriendIds)
+          setCreatingGroup(false)
+          if (r.success) {
+            toast('群聊创建成功', 'success')
+            setShowCreateGroup(false)
+            setGroupName('')
+            setSelectedFriendIds([])
+            groupApi.list().then(res => { if (res.success) setGroups(res.data || []) })
+          } else {
+            toast(r.message || '创建失败', 'error')
+          }
+        }} disabled={creatingGroup || !groupName.trim() || selectedFriendIds.length === 0}
+          style={{
+            width: '100%', padding: '12px 0', borderRadius: 8, border: 'none', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+            background: (!groupName.trim() || selectedFriendIds.length === 0) ? 'var(--bg-secondary)' : 'var(--brand)',
+            color: (!groupName.trim() || selectedFriendIds.length === 0) ? 'var(--text-tertiary)' : '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+          }}>
+          {creatingGroup ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Users size={16} />}
+          {creatingGroup ? '创建中...' : '创建群聊'}
+        </button>
+
+        <div style={{ marginTop: 12, padding: 12, background: 'var(--bg-secondary)', borderRadius: 8 }}>
+          <div style={{ fontSize: 12, color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
+            💡 输入群名称并选择好友，点击"创建群聊"即可。<br />
+            群聊创建后，所有成员都可以在群内发送消息。
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

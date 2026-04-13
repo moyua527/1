@@ -3,5 +3,5 @@
   "versionCode": 460,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "移除需求看板的新建需求按钮"
+  "changelog": "移除需求看板新建按钮；统一弹窗组件"
 }
