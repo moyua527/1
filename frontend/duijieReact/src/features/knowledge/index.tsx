@@ -4,6 +4,7 @@ import { Plus, Search, FolderOpen, Edit3, Trash2, Eye, Clock, BookOpen, X } from
 import { fetchApi } from '../../bootstrap'
 import useDebounce from '../../hooks/useDebounce'
 import PageHeader from '../ui/PageHeader'
+import { SkeletonList } from '../ui/Skeleton'
 
 interface Category { id: number; name: string; parent_id: number | null; sort_order: number }
 interface Article {
@@ -341,7 +342,7 @@ export default function KnowledgeBase() {
 
           {/* Article list */}
           {loading ? (
-            <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-tertiary)' }}>加载中...</div>
+            <SkeletonList rows={5} />
           ) : articles.length === 0 ? (
             <div style={{ padding: 60, textAlign: 'center' }}>
               <BookOpen size={48} style={{ color: 'var(--text-disabled)', marginBottom: 12 }} />

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useSearchParams, useOutletContext } from 'react-router-dom'
-import { Plus, Users, Loader2, Download, Upload } from 'lucide-react'
+import { Plus, Users, Download, Upload } from 'lucide-react'
 import { clientApi } from './services/api'
 import { useClients, useInvalidate } from '../../hooks/useApi'
 import useLiveData from '../../hooks/useLiveData'
@@ -10,6 +10,7 @@ import Avatar from '../ui/Avatar'
 import PageHeader from '../ui/PageHeader'
 import FilterBar from '../ui/FilterBar'
 import EmptyState from '../ui/EmptyState'
+import { SkeletonList } from '../ui/Skeleton'
 import ClientCreateModal from './components/ClientCreateModal'
 import ClientImportModal from './components/ClientImportModal'
 import { stageMap } from './components/constants'
@@ -84,7 +85,7 @@ export default function ClientList() {
       />
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
+        <SkeletonList rows={5} />
       ) : filtered.length === 0 ? (
         <EmptyState icon={Users} title={clients.length === 0 ? '暂无客户' : '无匹配客户'}
           subtitle={clients.length === 0 ? '点击右上角新增客户' : '调整筛选条件试试'}

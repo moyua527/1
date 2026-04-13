@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react'
 import { useOutletContext, useNavigate } from 'react-router-dom'
-import { Bell, CheckCheck, Loader2, ExternalLink, Trash2 } from 'lucide-react'
+import { Bell, CheckCheck, ExternalLink, Trash2 } from 'lucide-react'
 import { fetchApi } from '../../bootstrap'
 import { useNotifications, useInvalidate } from '../../hooks/useApi'
 import PageHeader from '../ui/PageHeader'
+import { SkeletonList } from '../ui/Skeleton'
 import { typeIcon } from './constants'
 
 export default function NotificationCenter() {
@@ -102,7 +103,7 @@ export default function NotificationCenter() {
       <PageHeader title="通知中心" subtitle={`共 ${notifications.length} 条通知${unread > 0 ? ` · ${unread} 条未读` : ''}`} actions={actionBtns} />
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>
+        <SkeletonList rows={5} />
       ) : !selected ? (
         displayed.length === 0 ? (
           <div style={{ textAlign: 'center', padding: isMobile ? 60 : 80, color: 'var(--text-tertiary)', background: 'var(--bg-primary)', borderRadius: 12, border: '1px solid var(--border-primary)' }}>

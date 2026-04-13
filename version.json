@@ -1,7 +1,7 @@
 {
-  "version": "1.4.40",
-  "versionCode": 450,
+  "version": "1.4.41",
+  "versionCode": 451,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "APK热更新改为用户确认后再应用，不再强制刷新打断使用"
+  "changelog": "全面优化：骨架屏/零停机部署/npm漏洞修复/Nginx SSL同步/一键回滚"
 }

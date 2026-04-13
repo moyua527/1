@@ -151,9 +151,9 @@ def main():
     remote_dist = f'{REMOTE_BASE}/frontend/duijieReact/dist'
     remote_dist_new = f'{REMOTE_BASE}/frontend/duijieReact/dist_new'
     remote_dist_old = f'{REMOTE_BASE}/frontend/duijieReact/dist_old'
-    run_cmd(ssh, f'rm -rf {remote_dist_new} {remote_dist_old}')
+    run_cmd(ssh, f'rm -rf {remote_dist_new}')
     upload_dir(sftp, local_dist, remote_dist_new)
-    run_cmd(ssh, f'mv {remote_dist} {remote_dist_old} 2>/dev/null; mv {remote_dist_new} {remote_dist}; rm -rf {remote_dist_old}')
+    run_cmd(ssh, f'rm -rf {remote_dist_old}; mv {remote_dist} {remote_dist_old} 2>/dev/null; mv {remote_dist_new} {remote_dist}')
 
     # 4.5. Upload version.json + CHANGELOG.md
     print('\n[4.5/5] Uploading version.json + CHANGELOG.md...')
@@ -185,7 +185,7 @@ def main():
 
     # 5. Restart
     print('\n[5/7] Restarting backend...')
-    run_cmd(ssh, 'pm2 restart duijie', 'PM2 restart')
+    run_cmd(ssh, 'pm2 reload duijie', 'PM2 reload')
     run_cmd(ssh, 'pm2 status', 'PM2 status')
 
     # 5.5. Run JS data migrations
@@ -222,5 +222,25 @@ def main():
     ssh.close()
     print(f'\n✅ Deploy complete! (v{version})')
 
+def rollback():
+    ssh, sftp = ssh_connect()
+    remote_dist = f'{REMOTE_BASE}/frontend/duijieReact/dist'
+    remote_dist_old = f'{REMOTE_BASE}/frontend/duijieReact/dist_old'
+    print('🔄 Rolling back frontend to previous version...')
+    try:
+        sftp.stat(remote_dist_old)
+    except:
+        print('❌ No previous version found (dist_old does not exist)')
+        ssh.close()
+        return
+    run_cmd(ssh, f'rm -rf {remote_dist}; mv {remote_dist_old} {remote_dist}')
+    run_cmd(ssh, 'pm2 reload duijie', 'PM2 reload')
+    print('✅ Rollback complete. Previous frontend version restored.')
+    sftp.close()
+    ssh.close()
+
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == '--rollback':
+        rollback()
+    else:
+        main()
