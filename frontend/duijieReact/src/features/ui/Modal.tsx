@@ -44,14 +44,34 @@ export default function Modal({ open, onClose, title, children, width = 600, hei
   const [visible, setVisible] = useState(false)
   const [closing, setClosing] = useState(false)
 
+  const historyPushedRef = useRef(false)
+  const closedByPopRef = useRef(false)
+
   useEffect(() => {
     if (open) {
       setVisible(true); setClosing(false)
       lockBody(); setOffset({ x: 0, y: 0 })
       _closeStack.push(onClose)
+
+      closedByPopRef.current = false
+      historyPushedRef.current = true
+      window.history.pushState({ modal: true }, '')
+
+      const onPop = () => {
+        historyPushedRef.current = false
+        closedByPopRef.current = true
+        onClose()
+      }
+      window.addEventListener('popstate', onPop)
+
       return () => {
+        window.removeEventListener('popstate', onPop)
         const idx = _closeStack.indexOf(onClose)
         if (idx >= 0) _closeStack.splice(idx, 1)
+        if (historyPushedRef.current) {
+          historyPushedRef.current = false
+          window.history.back()
+        }
         unlockBody()
       }
     } else if (visible) {

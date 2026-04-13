@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense, useRef, useCallback } from 'react'
+import { useState, useEffect, lazy, Suspense, useRef, useCallback } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import { FolderKanban, Users, ListTodo, CheckCircle, TrendingUp, Clock, FileSignature, LogOut, Settings, HelpCircle, ChevronRight, Info, X } from 'lucide-react'
 import { SkeletonDashboard } from '../ui/Skeleton'
@@ -47,10 +47,28 @@ export default function Dashboard() {
   const [confirmGuide, setConfirmGuide] = useState(false)
   const drawerRef = useRef<HTMLDivElement>(null)
 
+  const drawerHistoryRef = useRef(false)
   const closeDrawer = useCallback(() => {
     setDrawerClosing(true)
+    if (drawerHistoryRef.current) {
+      drawerHistoryRef.current = false
+      window.history.back()
+    }
     setTimeout(() => { setDrawerOpen(false); setDrawerClosing(false) }, 220)
   }, [])
+
+  useEffect(() => {
+    if (!drawerOpen) return
+    drawerHistoryRef.current = true
+    window.history.pushState({ drawer: true }, '')
+    const onPop = () => {
+      drawerHistoryRef.current = false
+      setDrawerClosing(true)
+      setTimeout(() => { setDrawerOpen(false); setDrawerClosing(false) }, 220)
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [drawerOpen])
 
   
 

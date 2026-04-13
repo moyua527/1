@@ -1,7 +1,7 @@
 {
-  "version": "1.4.41",
-  "versionCode": 451,
+  "version": "1.4.42",
+  "versionCode": 452,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "全面优化：骨架屏/零停机部署/npm漏洞修复/Nginx SSL同步/一键回滚"
+  "changelog": "弹窗/抽屉支持侧滑返回关闭：打开时推虚拟历史记录,侧滑先关闭弹窗不退页面"
 }
