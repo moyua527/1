@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { User, Bell, Settings2, Globe, Save, Copy, ArrowLeft, Check, Loader2, Lock, Smartphone, Monitor, Trash2, LogOut, ChevronRight, Mail, Phone, KeyRound, Camera, Volume2 } from 'lucide-react'
+import { User, Bell, Settings2, Globe, Save, Copy, ArrowLeft, Check, Loader2, Lock, Smartphone, Monitor, Trash2, LogOut, ChevronRight, Mail, Phone, KeyRound, Camera, Volume2, Shield, Eye, Palette, HardDrive, HelpCircle, Info } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { fetchApi } from '../../bootstrap'
 import useUserStore from '../../stores/useUserStore'
@@ -10,9 +10,10 @@ import Button from '../ui/Button'
 import { toast } from '../ui/Toast'
 import useIsMobile from '../ui/useIsMobile'
 import PageHeader from '../ui/PageHeader'
+import { APP_VERSION } from '../../utils/capacitor'
 
 type Tab = 'account' | 'preference' | 'notification'
-type AccountSub = 'profile' | 'password' | 'devices' | 'phone' | 'email' | null
+type AccountSub = 'profile' | 'password' | 'devices' | 'phone' | 'email' | 'security' | 'notification' | 'appearance' | 'privacy' | 'storage' | 'feedback' | 'about' | null
 
 const TABS: { key: Tab; label: string; icon: typeof User }[] = [
   { key: 'account', label: '账号与安全', icon: User },
@@ -85,7 +86,7 @@ export default function UserSettings() {
   const isMobile = useIsMobile()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { user, updateProfile } = useUserStore()
+  const { user, updateProfile, logout } = useUserStore()
   const { mode, setMode } = useThemeStore()
 
   const initialTab = (searchParams.get('tab') as Tab) || 'account'
@@ -290,10 +291,47 @@ export default function UserSettings() {
             <div>
               {/* ── 移动端：子页面模式 ── */}
               {isMobile ? (
-                accountSub === 'profile' ? (
+                !accountSub ? (
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 4px', marginBottom: 8 }}>
                       <button onClick={() => navigate('/my')} style={{ display: 'flex', alignItems: 'center', padding: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+                        <ArrowLeft size={20} />
+                      </button>
+                      <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-heading)' }}>设置</div>
+                    </div>
+
+                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-tertiary)', padding: '8px 16px 4px' }}>账号</div>
+                    <div style={{ background: 'var(--bg-primary)', borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
+                      <SettingsMenuItem icon={User} label="个人资料" desc={user.nickname || user.username} onClick={() => navigate('/user-settings?sub=profile')} />
+                      <SettingsMenuItem icon={Shield} label="账号安全" onClick={() => navigate('/user-settings?sub=security')} />
+                      <SettingsMenuItem icon={Eye} label="个人信息与权限" onClick={() => navigate('/user-settings?sub=privacy')} last />
+                    </div>
+
+                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-tertiary)', padding: '8px 16px 4px' }}>通用</div>
+                    <div style={{ background: 'var(--bg-primary)', borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
+                      <SettingsMenuItem icon={Bell} label="通知" onClick={() => navigate('/user-settings?sub=notification')} />
+                      <SettingsMenuItem icon={Palette} label="界面与显示" desc={mode === 'dark' ? '深色模式' : mode === 'light' ? '浅色模式' : '跟随系统'} onClick={() => navigate('/user-settings?sub=appearance')} />
+                      <SettingsMenuItem icon={HardDrive} label="存储空间" onClick={() => navigate('/user-settings?sub=storage')} last />
+                    </div>
+
+                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-tertiary)', padding: '8px 16px 4px' }}>帮助与关于</div>
+                    <div style={{ background: 'var(--bg-primary)', borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
+                      <SettingsMenuItem icon={HelpCircle} label="帮助与反馈" onClick={() => navigate('/user-settings?sub=feedback')} />
+                      <SettingsMenuItem icon={Info} label="关于 DuiJie" desc={`v${APP_VERSION}`} onClick={() => navigate('/user-settings?sub=about')} last />
+                    </div>
+
+                    <div onClick={logout} style={{
+                      marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      padding: 16, borderRadius: 16, background: 'var(--bg-primary)', cursor: 'pointer',
+                      color: 'var(--color-danger)', fontSize: 15, fontWeight: 500,
+                    }}>
+                      <LogOut size={16} /> 退出登录
+                    </div>
+                  </div>
+                ) : accountSub === 'profile' ? (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 4px', marginBottom: 8 }}>
+                      <button onClick={() => navigate('/user-settings')} style={{ display: 'flex', alignItems: 'center', padding: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
                         <ArrowLeft size={20} />
                       </button>
                       <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-heading)' }}>个人资料</div>
@@ -401,7 +439,7 @@ export default function UserSettings() {
                     )}
                   </div>
                 ) : accountSub === 'password' ? (
-                  <MobileSubPage title="密码设置" onBack={() => navigate('/user-settings?tab=account')}>
+                  <MobileSubPage title="密码设置" onBack={() => navigate('/user-settings?sub=security')}>
                     {(user.phone || user.email) ? (() => {
                       const usePhone = !!user.phone
                       const verifyTarget = usePhone ? user.phone : user.email!
@@ -443,7 +481,7 @@ export default function UserSettings() {
                     )}
                   </MobileSubPage>
                 ) : accountSub === 'devices' ? (
-                  <MobileSubPage title="登录设备管理" onBack={() => navigate('/user-settings?tab=account')}>
+                  <MobileSubPage title="登录设备管理" onBack={() => navigate('/user-settings?sub=security')}>
                     {sessionsLoading ? (
                       <div style={{ fontSize: 13, color: 'var(--text-tertiary)', padding: 24, textAlign: 'center' }}>
                         <Loader2 size={16} style={{ animation: 'spin 1s linear infinite', verticalAlign: -3 }} /> 加载中...
@@ -499,19 +537,23 @@ export default function UserSettings() {
                     )}
                   </MobileSubPage>
                 ) : accountSub === 'phone' ? (
-                  <MobileSubPage title="绑定手机号" onBack={() => navigate('/user-settings?tab=account')}>
+                  <MobileSubPage title="绑定手机号" onBack={() => navigate('/user-settings?sub=security')}>
                     <BindContactBlock type="phone" currentValue={user.phone || ''} userId={user.id}
                       onUpdated={(val) => { updateProfile({ phone: val }); toast('手机号已更新', 'success') }} />
                   </MobileSubPage>
                 ) : accountSub === 'email' ? (
-                  <MobileSubPage title="绑定邮箱" onBack={() => navigate('/user-settings?tab=account')}>
+                  <MobileSubPage title="绑定邮箱" onBack={() => navigate('/user-settings?sub=security')}>
                     <BindContactBlock type="email" currentValue={user.email || ''} userId={user.id}
                       onUpdated={(val) => { updateProfile({ email: val }); toast('邮箱已更新', 'success') }} />
                   </MobileSubPage>
-                ) : (
-                  /* 移动端主菜单 */
+                ) : accountSub === 'security' ? (
                   <div>
-                    {/* 安全设置菜单 */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 4px', marginBottom: 8 }}>
+                      <button onClick={() => navigate('/user-settings')} style={{ display: 'flex', alignItems: 'center', padding: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+                        <ArrowLeft size={20} />
+                      </button>
+                      <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-heading)' }}>账号安全</div>
+                    </div>
                     <div style={{ background: 'var(--bg-primary)', borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
                       {([
                         { key: 'password' as const, icon: KeyRound, label: '密码设置', desc: '修改登录密码' },
@@ -519,7 +561,7 @@ export default function UserSettings() {
                         { key: 'phone' as const, icon: Phone, label: '绑定手机号', desc: user.phone ? user.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') : '未绑定' },
                         { key: 'email' as const, icon: Mail, label: '绑定邮箱', desc: user.email || '未绑定' },
                       ]).map((item, i, arr) => (
-                        <div key={item.key} onClick={() => navigate(`/user-settings?tab=account&sub=${item.key}`)}
+                        <div key={item.key} onClick={() => navigate(`/user-settings?sub=${item.key}`)}
                           style={{
                             display: 'flex', alignItems: 'center', gap: 12, padding: '15px 16px', cursor: 'pointer',
                             borderBottom: i < arr.length - 1 ? '1px solid var(--border-secondary)' : 'none',
@@ -533,8 +575,6 @@ export default function UserSettings() {
                         </div>
                       ))}
                     </div>
-
-                    {/* 邀请码 */}
                     {user.personal_invite_code && (
                       <div style={{ background: 'var(--bg-primary)', borderRadius: 16, padding: 16 }}>
                         <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-body)', marginBottom: 10 }}>我的专属邀请码</div>
@@ -549,7 +589,194 @@ export default function UserSettings() {
                       </div>
                     )}
                   </div>
-                )
+                ) : accountSub === 'notification' ? (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 4px', marginBottom: 8 }}>
+                      <button onClick={() => navigate('/user-settings')} style={{ display: 'flex', alignItems: 'center', padding: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+                        <ArrowLeft size={20} />
+                      </button>
+                      <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-heading)' }}>通知设置</div>
+                    </div>
+                    <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: '0 0 16px', padding: '0 4px' }}>按模块管理你希望接收的通知类型</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {NOTIF_GROUPS.map(group => {
+                        const allOn = group.items.every(i => notifPrefs[i.key] !== false)
+                        const someOn = group.items.some(i => notifPrefs[i.key] !== false)
+                        return (
+                          <div key={group.key} style={{ borderRadius: 16, overflow: 'hidden', background: 'var(--bg-primary)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: '1px solid var(--border-secondary)' }}>
+                              <div style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: allOn ? 'var(--brand)' : someOn ? '#f59e0b' : 'var(--border-primary)' }} />
+                              <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)', flex: 1 }}>{group.label}</span>
+                              <span style={{ fontSize: 12, color: 'var(--text-tertiary)', marginRight: 8 }}>{group.items.filter(i => notifPrefs[i.key] !== false).length}/{group.items.length}</span>
+                              <ToggleSwitch on={allOn} onToggle={() => toggleGroupNotif(group.key)} />
+                            </div>
+                            {group.items.map((item, idx) => (
+                              <div key={item.key} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: idx < group.items.length - 1 ? '1px solid var(--border-secondary)' : 'none' }}>
+                                <div style={{ flex: 1 }}>
+                                  <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{item.label}</div>
+                                  <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{item.desc}</div>
+                                </div>
+                                <ToggleSwitch on={notifPrefs[item.key] !== false} onToggle={() => toggleNotif(item.key)} />
+                              </div>
+                            ))}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ) : accountSub === 'appearance' ? (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 4px', marginBottom: 8 }}>
+                      <button onClick={() => navigate('/user-settings')} style={{ display: 'flex', alignItems: 'center', padding: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+                        <ArrowLeft size={20} />
+                      </button>
+                      <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-heading)' }}>界面与显示</div>
+                    </div>
+                    <div style={{ background: 'var(--bg-primary)', borderRadius: 16, padding: 16, marginBottom: 12 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)', marginBottom: 12 }}>外观主题</div>
+                      <div style={{ display: 'flex', gap: 10 }}>
+                        {([
+                          { value: 'light' as const, label: '浅色', emoji: '☀️' },
+                          { value: 'dark' as const, label: '深色', emoji: '🌙' },
+                          { value: 'system' as const, label: '跟随系统', emoji: '💻' },
+                        ]).map(opt => (
+                          <div key={opt.value} onClick={() => setMode(opt.value)} style={{
+                            flex: 1, padding: '14px 8px', borderRadius: 12, cursor: 'pointer',
+                            border: mode === opt.value ? '2px solid var(--brand)' : '2px solid var(--border-primary)',
+                            background: mode === opt.value ? 'var(--bg-selected)' : 'var(--bg-secondary)',
+                            textAlign: 'center',
+                          }}>
+                            <div style={{ fontSize: 24 }}>{opt.emoji}</div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: mode === opt.value ? 'var(--brand)' : 'var(--text-heading)', marginTop: 4 }}>{opt.label}</div>
+                            {mode === opt.value && <Check size={14} style={{ color: 'var(--brand)', marginTop: 2 }} />}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{ background: 'var(--bg-primary)', borderRadius: 16, padding: 16, marginBottom: 12 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)', marginBottom: 12 }}>声音提示</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                        <Volume2 size={16} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
+                        <input type="range" min={0} max={100} value={soundVolume} onChange={e => handleVolumeChange(Number(e.target.value))} style={{ flex: 1, accentColor: 'var(--brand)' }} />
+                        <span style={{ fontSize: 12, color: 'var(--text-secondary)', minWidth: 36, textAlign: 'right' }}>{soundVolume}%</span>
+                      </div>
+                      {SOUND_ITEMS.map((item, idx) => (
+                        <div key={item.key} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: idx < SOUND_ITEMS.length - 1 ? '1px solid var(--border-secondary)' : 'none' }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>{item.label}</div>
+                            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{item.desc}</div>
+                          </div>
+                          <ToggleSwitch on={soundPrefs[item.key] !== false} onToggle={() => toggleSound(item.key)} />
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ background: 'var(--bg-primary)', borderRadius: 16, padding: 16 }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-heading)', marginBottom: 12 }}>语言与时区</div>
+                      <div style={{ padding: '12px 14px', borderRadius: 12, border: '2px solid var(--brand)', background: 'var(--bg-selected)', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                        <Globe size={18} style={{ color: 'var(--brand)' }} />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--brand)' }}>简体中文</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>Chinese Simplified</div>
+                        </div>
+                        <Check size={14} style={{ color: 'var(--brand)' }} />
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', padding: '8px 0' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-heading)' }}>时区</div>
+                          <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>影响日期时间的显示</div>
+                        </div>
+                        <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>UTC+8</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : accountSub === 'privacy' ? (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 4px', marginBottom: 8 }}>
+                      <button onClick={() => navigate('/user-settings')} style={{ display: 'flex', alignItems: 'center', padding: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+                        <ArrowLeft size={20} />
+                      </button>
+                      <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-heading)' }}>个人信息与权限</div>
+                    </div>
+                    <div style={{ background: 'var(--bg-primary)', borderRadius: 16, overflow: 'hidden' }}>
+                      {[
+                        { label: '显示在线状态', desc: '让团队成员看到你的在线状态' },
+                        { label: '允许通过手机号查找', desc: '其他用户可通过手机号搜索到你' },
+                        { label: '允许通过邮箱查找', desc: '其他用户可通过邮箱搜索到你' },
+                      ].map((item, idx, arr) => (
+                        <div key={item.label} style={{ display: 'flex', alignItems: 'center', padding: '15px 16px', borderBottom: idx < arr.length - 1 ? '1px solid var(--border-secondary)' : 'none' }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-heading)' }}>{item.label}</div>
+                            <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{item.desc}</div>
+                          </div>
+                          <ToggleSwitch on={true} onToggle={() => toast('功能开发中', 'info')} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : accountSub === 'storage' ? (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 4px', marginBottom: 8 }}>
+                      <button onClick={() => navigate('/user-settings')} style={{ display: 'flex', alignItems: 'center', padding: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+                        <ArrowLeft size={20} />
+                      </button>
+                      <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-heading)' }}>存储空间</div>
+                    </div>
+                    <div style={{ background: 'var(--bg-primary)', borderRadius: 16, padding: 16, marginBottom: 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <div>
+                          <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-heading)' }}>缓存数据</div>
+                          <div style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>包括页面缓存和临时文件</div>
+                        </div>
+                      </div>
+                      <button onClick={() => {
+                        if ('caches' in window) caches.keys().then(names => names.forEach(name => caches.delete(name)))
+                        localStorage.removeItem('notif_prefs')
+                        localStorage.removeItem('sound_prefs')
+                        localStorage.removeItem('sound_volume')
+                        toast('缓存已清理', 'success')
+                      }} style={{
+                        width: '100%', padding: '12px 0', borderRadius: 12, border: '1px solid var(--border-primary)',
+                        background: 'transparent', color: 'var(--color-danger)', fontSize: 15, fontWeight: 500, cursor: 'pointer',
+                      }}>
+                        清除全部缓存
+                      </button>
+                    </div>
+                  </div>
+                ) : accountSub === 'feedback' ? (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 4px', marginBottom: 8 }}>
+                      <button onClick={() => navigate('/user-settings')} style={{ display: 'flex', alignItems: 'center', padding: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+                        <ArrowLeft size={20} />
+                      </button>
+                      <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-heading)' }}>帮助与反馈</div>
+                    </div>
+                    <div style={{ background: 'var(--bg-primary)', borderRadius: 16, overflow: 'hidden', marginBottom: 12 }}>
+                      <div style={{ padding: '15px 16px', borderBottom: '1px solid var(--border-secondary)' }}>
+                        <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-heading)' }}>常见问题</div>
+                        <div style={{ fontSize: 13, color: 'var(--text-tertiary)', marginTop: 4, lineHeight: 1.6 }}>如遇到问题，请先检查网络连接。如果问题持续存在，请联系管理员。</div>
+                      </div>
+                      <div style={{ padding: '15px 16px' }}>
+                        <div style={{ fontSize: 15, fontWeight: 500, color: 'var(--text-heading)' }}>联系我们</div>
+                        <div style={{ fontSize: 13, color: 'var(--text-tertiary)', marginTop: 4, lineHeight: 1.6 }}>如有建议或反馈，请联系系统管理员。</div>
+                      </div>
+                    </div>
+                  </div>
+                ) : accountSub === 'about' ? (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 4px', marginBottom: 8 }}>
+                      <button onClick={() => navigate('/user-settings')} style={{ display: 'flex', alignItems: 'center', padding: 6, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}>
+                        <ArrowLeft size={20} />
+                      </button>
+                      <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-heading)' }}>关于 DuiJie</div>
+                    </div>
+                    <div style={{ background: 'var(--bg-primary)', borderRadius: 16, padding: 24, textAlign: 'center' }}>
+                      <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--brand)', marginBottom: 8 }}>DuiJie</div>
+                      <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 4 }}>企业级项目管理与客户协作平台</div>
+                      <div style={{ fontSize: 13, color: 'var(--text-tertiary)', marginBottom: 16 }}>版本 {APP_VERSION}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-disabled)' }}>© 2024-{new Date().getFullYear()} DuiJie</div>
+                    </div>
+                  </div>
+                ) : null
               ) : (
                 /* ── PC端：保持原有布局 ── */
                 <div>
@@ -716,8 +943,8 @@ export default function UserSettings() {
             </div>
           )}
 
-          {/* ===== 偏好设置 ===== */}
-          {tab === 'preference' && (
+          {/* ===== 偏好设置（仅PC） ===== */}
+          {!isMobile && tab === 'preference' && (
             <div>
               <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-heading)', margin: '0 0 20px' }}>偏好设置</h2>
 
@@ -790,8 +1017,8 @@ export default function UserSettings() {
             </div>
           )}
 
-          {/* ===== 通知设置 ===== */}
-          {tab === 'notification' && (
+          {/* ===== 通知设置（仅PC） ===== */}
+          {!isMobile && tab === 'notification' && (
             <div>
               <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-heading)', margin: '0 0 4px' }}>通知设置</h2>
               <p style={{ fontSize: 13, color: 'var(--text-tertiary)', margin: '0 0 24px' }}>按模块管理你希望接收的通知类型</p>
@@ -873,6 +1100,22 @@ function ToggleSwitch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
         left: on ? 21 : 3, transition: 'left 0.2s',
         boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
       }} />
+    </div>
+  )
+}
+
+function SettingsMenuItem({ icon: Icon, label, desc, onClick, last }: {
+  icon: React.ComponentType<any>; label: string; desc?: string; onClick?: () => void; last?: boolean
+}) {
+  return (
+    <div onClick={onClick} style={{
+      display: 'flex', alignItems: 'center', gap: 12, padding: '15px 16px', cursor: onClick ? 'pointer' : 'default',
+      borderBottom: last ? 'none' : '1px solid var(--border-secondary)',
+    }}>
+      <Icon size={20} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
+      <span style={{ flex: 1, fontSize: 15, color: 'var(--text-primary)' }}>{label}</span>
+      {desc && <span style={{ fontSize: 14, color: 'var(--text-tertiary)' }}>{desc}</span>}
+      {onClick && <ChevronRight size={16} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />}
     </div>
   )
 }

@@ -1,7 +1,7 @@
 {
-  "version": "1.4.37",
-  "versionCode": 443,
+  "version": "1.4.38",
+  "versionCode": 444,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "移除移动端账号与安全页面顶部用户信息卡片和编辑表单"
+  "changelog": "移动端设置页重构为微信风格分组列表（账号/通用/帮助与关于），新增6个子页面"
 }

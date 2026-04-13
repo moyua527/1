@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useOutletContext, useNavigate } from 'react-router-dom'
-import { LogOut, Palette, HelpCircle, ChevronRight, Shield, Info } from 'lucide-react'
+import { LogOut, HelpCircle, ChevronRight, Info, Settings } from 'lucide-react'
 import useUserStore from '../../stores/useUserStore'
 import Avatar from '../ui/Avatar'
 import EnterpriseSwitcher from '../ui/EnterpriseSwitcher'
@@ -22,8 +22,7 @@ export default function MyPage() {
   if (!user) return null
 
   const menuItems = [
-    { icon: Shield, label: '账号与安全', action: () => navigate('/user-settings?tab=account') },
-    { icon: Palette, label: '偏好设置', action: () => navigate('/user-settings?tab=preference') },
+    { icon: Settings, label: '设置', action: () => navigate('/user-settings') },
     { icon: HelpCircle, label: '新手引导', action: () => setConfirmGuide(true) },
   ]
 
