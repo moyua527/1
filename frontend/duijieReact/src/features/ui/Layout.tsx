@@ -582,8 +582,8 @@ export default function Layout() {
           flexShrink: 0, background: 'var(--bg-primary)',
           borderTop: '1px solid var(--border-primary)',
           display: 'flex', justifyContent: 'space-around', padding: '6px 0 env(safe-area-inset-bottom, 6px)',
-          zIndex: 100,
-        }}>
+          zIndex: 100, WebkitTouchCallout: 'none', userSelect: 'none',
+        }} onContextMenu={e => e.preventDefault()}>
           <NavLink to="/" end data-tour="mobile-home"
             style={{
               display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', gap: 2,

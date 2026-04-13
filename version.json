@@ -1,7 +1,7 @@
 {
-  "version": "1.4.38.1",
-  "versionCode": 445,
+  "version": "1.4.38.2",
+  "versionCode": 446,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "首页左上角与底部导航互换：头像入口移到左上角，服务网格移到底部tab"
+  "changelog": "移除服务页星标收藏功能"
 }
