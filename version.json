@@ -1,7 +1,7 @@
 {
-  "version": "1.4.36",
-  "versionCode": 440,
+  "version": "1.4.36.1",
+  "versionCode": 441,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "审计/设置/合作方/企业模块审查：删除partner4个死文件、handleSave/handleCopyKey加try-catch、更新PROJECT.md 3.17(去掉连接测试等未实现功能)"
+  "changelog": "更新PROJECT.md 3.19(测试文件25个非24个)/3.34(补充vendor-charts chunk)"
 }

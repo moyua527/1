@@ -2,6 +2,7 @@
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.4.36.1 | 2026-04-13 | 文档修正：PROJECT.md 3.19 API测试从2文件24用例更新为25个测试文件完整列表、3.34 Vite构建补充vendor-charts(~400KB Recharts)独立chunk |
 | v1.4.36 | 2026-04-13 | 3.14-3.18模块审查：删除partner/PartnerCard.tsx+PartnerFormModal.tsx+AppViewer.tsx+constants.ts共4个死文件、Settings handleSave加try-catch、Partner handleCopyKey加catch、知识库CRUD加try-catch、更新PROJECT.md 3.13.2(分类扁平列表/移动端详情页/防抖/分页)/3.17(去掉未实现的连接测试/启用禁用/权限选择/补充嵌入容错重试按钮) |
 | v1.4.35.1 | 2026-04-12 | 知识库模块优化：saveArticle/deleteArticle/saveCat/deleteCat加try-catch防网络错误、更新PROJECT.md 3.13.2(分类列表非树改扁平列表描述/补充移动端详情页KnowledgeDetailPage/搜索防抖300ms/分页20条) |
 | v1.4.35 | 2026-04-12 | 通知系统优化：typeIcon从notification/index.tsx和NotificationBell.tsx提取到notification/constants.ts共享、markRead/deleteNotif加try-catch防网络错误、displayed列表加useMemo、更新PROJECT.md 3.13(分类Tab改为3个主分类+项目子分类/补充删除清空/通知中心独立页面/MobilePushBridge描述) |

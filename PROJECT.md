@@ -396,9 +396,7 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 - **框架**：Jest + supertest
 - **运行**：`cd server/duijie && npm test`
 - **架构**：`app.js` 导出可测试Express实例，`standalone.js` 为启动层
-- **测试用例**（24个）：
-  - `auth.test.js`：登录验证（空凭据/错误密码拒绝）、Token认证、角色权限守卫
-  - `enterprise.test.js`：企业CRUD全流程（创建/查询/更新/删除）、部门CRUD、成员CRUD、系统管理员权限
+- **测试文件**（25个）：`auth` / `enterprise` / `invite` / `file` / `opportunity` / `client` / `contract` / `partner` / `search` / `system` / `isolation` / `ticket` / `followUp` / `task` / `dashboard` / `project` / `user` / `dm` / `knowledge` / `loginLogs` / `message` / `notification` / `contact` / `ai` / `tag`
 
 ### 3.20 统一输入校验层
 
@@ -551,7 +549,10 @@ DuiJie 是一个**客户项目管理与交付对接平台**，用于管理外部
 
 ### 3.34 Vite 构建优化
 
-- **代码分割**：`manualChunks` 配置 `vendor-react`（React/ReactDOM/React Router，~166KB）和 `vendor-ui`（Zustand/Socket.IO Client，~42KB）独立 chunk
+- **代码分割**：`manualChunks` 配置 3 个 vendor chunk：
+  - `vendor-react`（React/ReactDOM/React Router，~166KB）
+  - `vendor-ui`（Zustand/Socket.IO Client，~42KB）
+  - `vendor-charts`（Recharts，~400KB）
 - **缓存命中率**：vendor chunk 仅在依赖版本变化时失效，业务代码更新不影响 vendor 缓存
 
 ### 3.35 移动端适配
