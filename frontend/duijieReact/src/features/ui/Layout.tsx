@@ -99,6 +99,23 @@ export default function Layout() {
   const location = useLocation()
   const prevPathRef = useRef(location.pathname)
   const pageAnimRef = useRef('')
+  const lastClickXRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (!isMobile) return
+    const handler = (e: MouseEvent | TouchEvent) => {
+      const nav = (e.target as HTMLElement).closest('[data-tour="mobile-nav"]')
+      if (nav) { lastClickXRef.current = null; return }
+      const x = 'touches' in e ? e.touches[0]?.clientX : e.clientX
+      if (x != null) lastClickXRef.current = x
+    }
+    document.addEventListener('click', handler, true)
+    document.addEventListener('touchstart', handler, true)
+    return () => {
+      document.removeEventListener('click', handler, true)
+      document.removeEventListener('touchstart', handler, true)
+    }
+  }, [isMobile])
   const role = user?.role || 'member'
   const NAV_ITEMS = navItems().filter(n => !n.perm || can(role, n.perm))
 
@@ -144,9 +161,17 @@ export default function Layout() {
     const tabPages = ['/', '/projects', '/services']
     const wasTab = tabPages.includes(prev)
     const isTab = tabPages.includes(location.pathname)
-    if (wasTab && isTab) pageAnimRef.current = ''
-    else if (isTab && !wasTab) pageAnimRef.current = 'page-slide-left'
-    else pageAnimRef.current = 'page-slide-right'
+    if (wasTab && isTab) {
+      pageAnimRef.current = ''
+    } else if (lastClickXRef.current != null) {
+      const mid = window.innerWidth / 2
+      pageAnimRef.current = lastClickXRef.current >= mid ? 'page-slide-right' : 'page-slide-left'
+    } else if (isTab && !wasTab) {
+      pageAnimRef.current = 'page-slide-left'
+    } else {
+      pageAnimRef.current = 'page-slide-right'
+    }
+    lastClickXRef.current = null
     prevPathRef.current = location.pathname
   }
 

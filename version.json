@@ -1,7 +1,7 @@
 {
-  "version": "1.4.38.2",
-  "versionCode": 446,
+  "version": "1.4.38.3",
+  "versionCode": 447,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "移除服务页星标收藏功能"
+  "changelog": "页面切换动画方向跟随按钮位置"
 }
