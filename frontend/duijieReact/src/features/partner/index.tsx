@@ -163,8 +163,10 @@ export default function PartnerManagement() {
   }
 
   const handleCopyKey = async (key: string) => {
-    await navigator.clipboard?.writeText(key)
-    toast('API Key 已复制', 'success')
+    try {
+      await navigator.clipboard?.writeText(key)
+      toast('API Key 已复制', 'success')
+    } catch { toast('复制失败', 'error') }
   }
 
   const handleResetKey = async (p: Partner) => {

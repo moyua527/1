@@ -58,10 +58,12 @@ export default function SystemSettings() {
 
   const handleSave = async () => {
     setSaving(true)
-    const r = await fetchApi('/api/system/config', { method: 'PUT', body: JSON.stringify(config) })
+    try {
+      const r = await fetchApi('/api/system/config', { method: 'PUT', body: JSON.stringify(config) })
+      if (r.success) toast('配置已保存', 'success')
+      else toast(r.message || '保存失败', 'error')
+    } catch { toast('网络错误', 'error') }
     setSaving(false)
-    if (r.success) toast('配置已保存', 'success')
-    else toast(r.message || '保存失败', 'error')
   }
 
   if (loading) return <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}><Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} /></div>

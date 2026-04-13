@@ -2,6 +2,7 @@
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
+| v1.4.36 | 2026-04-13 | 3.14-3.18模块审查：删除partner/PartnerCard.tsx+PartnerFormModal.tsx+AppViewer.tsx+constants.ts共4个死文件、Settings handleSave加try-catch、Partner handleCopyKey加catch、知识库CRUD加try-catch、更新PROJECT.md 3.13.2(分类扁平列表/移动端详情页/防抖/分页)/3.17(去掉未实现的连接测试/启用禁用/权限选择/补充嵌入容错重试按钮) |
 | v1.4.35.1 | 2026-04-12 | 知识库模块优化：saveArticle/deleteArticle/saveCat/deleteCat加try-catch防网络错误、更新PROJECT.md 3.13.2(分类列表非树改扁平列表描述/补充移动端详情页KnowledgeDetailPage/搜索防抖300ms/分页20条) |
 | v1.4.35 | 2026-04-12 | 通知系统优化：typeIcon从notification/index.tsx和NotificationBell.tsx提取到notification/constants.ts共享、markRead/deleteNotif加try-catch防网络错误、displayed列表加useMemo、更新PROJECT.md 3.13(分类Tab改为3个主分类+项目子分类/补充删除清空/通知中心独立页面/MobilePushBridge描述) |
 | v1.4.34 | 2026-04-12 | 客户门户/工单/报表模块优化：修复TicketCreateModal渲染阶段setState(违反React规则改useEffect)、工单typeMap/priorityMap/statusMap/fmtSize提取到constants.ts消除index.tsx和TicketDetail.tsx重复、statusTabs和filtered加useMemo、Report.tsx计算值(funnelMax/followMax等)useMemo化、更新PROJECT.md 3.10客户门户(去掉未实现里程碑/工单独立路由)/3.11工单系统(手动状态切换/附件上传/满意度评价细化)/3.12报表(5档时间筛选/漏斗含流失/条形图非折线图) |

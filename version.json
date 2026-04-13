@@ -1,7 +1,7 @@
 {
-  "version": "1.4.35.1",
-  "versionCode": 439,
+  "version": "1.4.36",
+  "versionCode": 440,
   "minVersion": "1.0.0",
   "nativeMinVersion": "1.0.0",
-  "changelog": "知识库模块优化：文章/分类CRUD加try-catch、更新PROJECT.md 3.13.2(分类列表非树/移动端详情页/搜索防抖/分页)"
+  "changelog": "审计/设置/合作方/企业模块审查：删除partner4个死文件、handleSave/handleCopyKey加try-catch、更新PROJECT.md 3.17(去掉连接测试等未实现功能)"
 }
